@@ -11,22 +11,22 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'DiasporaBase',
+  title: 'NSTIF',
   description: 'Connect volunteers with opportunities and manage agencies and projects.',
   generator: 'Next.js',
-  applicationName: 'DiasporaBase',
+  applicationName: 'NSTIF',
   keywords: ['volunteer', 'community', 'non-profit', 'agency management', 'project management', 'volunteer opportunities'],
   authors: [{ name: 'DiasporaBase Team', url: 'https://diasporabase.com' }],
   creator: 'DiasporaBase Team',
   publisher: 'DiasporaBase',
   openGraph: {
-    title: 'DiasporaBase',
+    title: 'NSTIF',
     description: 'Connect volunteers with opportunities and manage agencies and projects.',
     url: 'https://diasporabase.com',
-    siteName: 'DiasporaBase',
+    siteName: 'NSTIF',
     images: [
       {
-        url: 'https://diasporabase.com/og-image.png', // Ensure this matches your production domain
+        url: 'https://diasporabase.com/og-image.png', 
         width: 1200,
         height: 630,
         alt: 'DiasporaBase Open Graph Image',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'DiasporaBase',
+    title: 'NSTIF',
     description: 'Connect volunteers with opportunities and manage agencies and projects.',
     images: ['https://diasporabase.com/og-image.png'],
   },

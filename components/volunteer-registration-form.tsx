@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import SigninWithGoogleBtn from "./signinwithGoogleBtn";
 
 export default function VolunteerRegistrationForm() {
   const [formData, setFormData] = useState({
@@ -224,6 +225,7 @@ export default function VolunteerRegistrationForm() {
             </Link>
           </div>
         </form>
+        <SigninWithGoogleBtn/>
       </CardContent>
     </Card>
   );

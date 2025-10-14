@@ -1,9 +1,9 @@
-import React from 'react'
+// import React from 'react'
 
-const AgencyWaitForAccess = () => {
-  return (
-    <div>agency-checkmail</div>
-  )
-}
+// const AgencyWaitForAccess = () => {
+//   return (
+//     <div>agency-checkmail</div>
+//   )
+// }
 
-export default AgencyWaitForAccess;
+// export default AgencyWaitForAccess;
