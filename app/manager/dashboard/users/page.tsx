@@ -1,4 +1,4 @@
-import UsersPage from '@/parts/manager/users'
+import UsersPage from '@/parts/manager/users/UserRolesDesign'
 import React from 'react'
 
 const UsersScreen = () => {
