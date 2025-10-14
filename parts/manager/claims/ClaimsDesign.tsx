@@ -16,7 +16,6 @@ import {
 } from "recharts";
 import { getStatusBadgeColor, getTypeTextColor } from "@/lib/utils";
 import { ChartDataPoint, Claim, StatCard } from "@/lib/types";
-import { Button } from "@/components/ui/button";
 
 export const StatisticsCards: React.FC<{ stats: StatCard[] }> = ({ stats }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -123,12 +122,15 @@ export const SearchAndFilters: React.FC<{
         onChange={(e) => onSearchChange(e.target.value)}
       />
     </div>
-    <Button
+    <button
+      type="button"
       onClick={onFilterClick}
-      className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600"
+      title="Filter claims"
+      className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
+      aria-label="Filter claims"
     >
       <Filter className="w-4 h-4" />
-    </Button>
+    </button>
   </div>
 );
 
