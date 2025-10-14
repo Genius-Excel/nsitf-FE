@@ -1,6 +1,5 @@
-"use client"
+"use client";
 import NavBar from "@/components/navbar";
-import Footer from "@/parts/landingPage/footer";
 
 export default function LoginLayout({
   children,
@@ -11,7 +10,6 @@ export default function LoginLayout({
     <div>
       <NavBar />
       {children}
-      <Footer />
     </div>
   );
 }

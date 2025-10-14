@@ -1,10 +1,12 @@
-import UsersPage from '@/parts/manager/users/UserRolesDesign'
-import React from 'react'
+import UsersPage from "@/parts/admin/users";
+import React from "react";
 
 const UsersScreen = () => {
   return (
-    <div><UsersPage/></div>
-  )
-}
+    <div>
+      <UsersPage />
+    </div>
+  );
+};
 
-export default UsersScreen
+export default UsersScreen;
