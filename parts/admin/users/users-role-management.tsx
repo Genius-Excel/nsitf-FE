@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  UsersTable,
-  SearchAndFilter,
-  RolePermissionsOverview,
-  UserFormModal,
-  DeleteConfirmationDialog,
-} from "./UserRolesDesign";
-import { ROLES } from "@/lib/Constants/constants";
-import { User, NewUserForm } from "@/lib/types/types";
 import { mockUsers } from "@/lib/Constants/constants";
+import { DeleteConfirmationDialog, RolePermissionsOverview, SearchAndFilter, UserFormModal, UsersTable } from "./users-table";
+import { NewUserForm, User } from "@/lib/types";
 
 export default function UsersRolesManagement() {
   // ============== STATE ==============
@@ -94,69 +87,11 @@ export default function UsersRolesManagement() {
       return;
     }
 
+    const fullName = `${formData.first_name} ${formData.last_name}`.trim();
+
     try {
-      const fullName = `${formData.first_name} ${formData.last_name}`.trim();
-
       if (editingUserId) {
-        // UPDATE USER
-        const response = await fetch(`/api/users/${editingUserId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: fullName,
-            email: formData.email,
-            phone: formData.phone,
-            role: formData.role,
-            department: formData.department,
-            branch: formData.branch,
-          }),
-        });
-
-        if (response.ok) {
-          setUsers(
-            users.map((user) =>
-              user.id === editingUserId
-                ? {
-                    ...user,
-                    name: fullName,
-                    email: formData.email,
-                    role: formData.role,
-                  }
-                : user
-            )
-          );
-          alert("User updated successfully");
-        }
-      } else {
-        // CREATE NEW USER
-        const response = await fetch("/api/users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: fullName,
-            email: formData.email,
-            phone: formData.phone,
-            role: formData.role,
-            department: formData.department,
-            branch: formData.branch,
-            status: "Active",
-            dateAdded: new Date().toISOString().split("T")[0],
-          }),
-        });
-
-        if (response.ok) {
-          const newUser = await response.json();
-          setUsers([...users, newUser]);
-          alert("User created successfully");
-        }
-      }
-
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error("Error saving user:", error);
-      // Mock fallback
-      const fullName = `${formData.first_name} ${formData.last_name}`.trim();
-      if (editingUserId) {
+        // UPDATE USER (Mock implementation)
         setUsers(
           users.map((user) =>
             user.id === editingUserId
@@ -169,7 +104,9 @@ export default function UsersRolesManagement() {
               : user
           )
         );
+        alert("User updated successfully");
       } else {
+        // CREATE NEW USER (Mock implementation)
         const newUser: User = {
           id: Date.now().toString(),
           name: fullName,
@@ -179,8 +116,13 @@ export default function UsersRolesManagement() {
           date_added: new Date().toISOString().split("T")[0],
         };
         setUsers([...users, newUser]);
+        alert("User created successfully");
       }
+
       setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error saving user:", error);
+      alert("Failed to save user. Please try again.");
     }
   };
 
@@ -196,18 +138,12 @@ export default function UsersRolesManagement() {
     if (!userToDelete) return;
 
     try {
-      const response = await fetch(`/api/users/${userToDelete.id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        setUsers(users.filter((user) => user.id !== userToDelete.id));
-        alert("User deleted successfully");
-      }
+      // Mock deletion (remove user from state)
+      setUsers(users.filter((user) => user.id !== userToDelete.id));
+      alert("User deleted successfully");
     } catch (error) {
       console.error("Error deleting user:", error);
-      // Mock fallback
-      setUsers(users.filter((user) => user.id !== userToDelete.id));
+      alert("Failed to delete user. Please try again.");
     }
 
     setIsDeleteDialogOpen(false);

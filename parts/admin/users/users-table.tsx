@@ -25,9 +25,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ROLES } from "@/lib/Constants/constants";
-import { User, NewUserForm } from "@/lib/types/types";
 import { getRoleBadgeColor } from "@/lib/utils";
+import { NewUserForm, User } from "@/lib/types";
+import { ROLES } from "@/lib/Constants/constants";
 
 export const UsersTable: React.FC<{
   users: User[];
@@ -91,12 +91,14 @@ export const UsersTable: React.FC<{
             <td className="px-6 py-4 text-sm flex gap-2">
               <Button
                 onClick={() => onEdit(user)}
+                variant={"outline"}
                 className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
               >
                 <Edit2 className="w-4 h-4" />
               </Button>
               <Button
                 onClick={() => onDeleteClick(user.id)}
+                variant={"outline"}
                 className="p-2 hover:bg-red-50 rounded-md transition-colors text-red-600 hover:text-red-900"
               >
                 <Trash2 className="w-4 h-4" />

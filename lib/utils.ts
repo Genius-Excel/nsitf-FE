@@ -7,7 +7,6 @@ import { Database } from "./database/types";
 
 const supabase = createClient();
 
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -32,7 +31,7 @@ export async function getUserId() {
   } catch (err) {
     //@ts-ignore
     return {
-      data: null,//@ts-ignore
+      data: null, //@ts-ignore
       error: `Unexpected error fetching user ID: ${err.message}`,
     };
   }
@@ -123,7 +122,6 @@ export async function handleEmailConfirmationRedirect() {
   }
 }
 
-
 interface Item {
   id: string;
   label: string;
@@ -177,7 +175,6 @@ export async function getSkillsets(): Promise<Item[]> {
   }
 }
 
-
 export async function getUnreadNotificationCount(): Promise<{
   data: number | null;
   error: string | null;
@@ -185,7 +182,8 @@ export async function getUnreadNotificationCount(): Promise<{
   try {
     const { data: userId, error: userIdError } = await getUserId();
     if (userIdError) return { data: null, error: userIdError };
-    if (!userId) return { data: null, error: "Please log in to check notifications." };
+    if (!userId)
+      return { data: null, error: "Please log in to check notifications." };
 
     const { count, error } = await supabase
       .from("notifications")
@@ -193,15 +191,17 @@ export async function getUnreadNotificationCount(): Promise<{
       .eq("user_id", userId)
       .eq("is_read", false);
 
-    if (error) return { data: null, error: "Error counting notifications: " + error.message };
+    if (error)
+      return {
+        data: null,
+        error: "Error counting notifications: " + error.message,
+      };
 
     return { data: count, error: null };
   } catch (err: any) {
     return { data: null, error: err.message };
   }
 }
-
-
 
 // export type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -283,7 +283,6 @@ export async function getUnreadNotificationCount(): Promise<{
 //   }
 // };
 
-
 // lib/checkAgencyStatus.ts
 interface Volunteer {
   id: string;
@@ -293,32 +292,38 @@ interface Volunteer {
 }
 
 export function checkAgencyStatus(volunteer: Volunteer): {
-  status: 'success' | 'error';
+  status: "success" | "error";
   message: string;
   isAgencyActive?: boolean;
 } {
   try {
-    if (!volunteer || typeof volunteer !== 'object') {
-      return { status: 'error', message: 'Invalid volunteer data provided' };
+    if (!volunteer || typeof volunteer !== "object") {
+      return { status: "error", message: "Invalid volunteer data provided" };
     }
-    if (volunteer.role.toLowerCase() !== 'agency') {
-      return { status: 'error', message: 'User is not an agency' };
+    if (volunteer.role.toLowerCase() !== "agency") {
+      return { status: "error", message: "User is not an agency" };
     }
-    if (typeof volunteer.is_active !== 'boolean') {
-      return { status: 'error', message: 'Agency active status is not defined or invalid' };
+    if (typeof volunteer.is_active !== "boolean") {
+      return {
+        status: "error",
+        message: "Agency active status is not defined or invalid",
+      };
     }
     return {
-      status: 'success',
-      message: `Agency is ${volunteer.is_active ? 'active' : 'inactive'}`,
+      status: "success",
+      message: `Agency is ${volunteer.is_active ? "active" : "inactive"}`,
       isAgencyActive: volunteer.is_active,
     };
   } catch (error: any) {
-    return { status: 'error', message: `Error checking agency status: ${error.message}` };
+    return {
+      status: "error",
+      message: `Error checking agency status: ${error.message}`,
+    };
   }
 }
 
-
-export function checkIfAgencyIsActive() {//@ts-ignore
+export function checkIfAgencyIsActive() {
+  //@ts-ignore
   const { data: userIdData, error: userError } = getUserId();
 
   if (userError || !userIdData?.userId) {
@@ -330,22 +335,25 @@ export function checkIfAgencyIsActive() {//@ts-ignore
     .from("profiles")
     .select("role, is_active")
     .eq("id", userIdData.userId)
-    .single()//@ts-ignore
+    .single() //@ts-ignore
     .then(({ data: profile, error: profileError }) => {
       if (profileError || !profile) {
         toast.error("Failed to fetch user profile");
         return false;
       }
 
-      const isAgencyActive = profile.role === "agency" && profile.is_active === true;
+      const isAgencyActive =
+        profile.role === "agency" && profile.is_active === true;
 
       if (!isAgencyActive) {
-        toast.error("Agency account is not active. Contact admin for approval.");
+        toast.error(
+          "Agency account is not active. Contact admin for approval."
+        );
         return false;
       }
 
-      return true; 
-    })//@ts-ignore
+      return true;
+    }) //@ts-ignore
     .catch((err) => {
       console.error("Unexpected error:", err);
       toast.error("An error occurred checking agency status");
@@ -353,19 +361,47 @@ export function checkIfAgencyIsActive() {//@ts-ignore
     });
 }
 
+//please do not remove the functions below.
 
-
-
-//Please Do not remove this function. It is used in UserRolesDesign.tsx
 export const getRoleBadgeColor = (role: string): string => {
   const colors: Record<string, string> = {
-    Admin: 'bg-blue-100 text-blue-700',
-    Actuary: 'bg-purple-100 text-purple-700',
-    Inspector: 'bg-cyan-100 text-cyan-700',
-    Legal: 'bg-orange-100 text-orange-700',
-    'HSE Officer': 'bg-amber-100 text-amber-700',
-    'Compliance Officer': 'bg-pink-100 text-pink-700',
-    'Economy Officer': 'bg-indigo-100 text-indigo-700',
+    Admin: "bg-blue-100 text-blue-700",
+    Actuary: "bg-purple-100 text-purple-700",
+    Inspector: "bg-cyan-100 text-cyan-700",
+    Legal: "bg-orange-100 text-orange-700",
+    "HSE Officer": "bg-amber-100 text-amber-700",
+    "Compliance Officer": "bg-pink-100 text-pink-700",
+    "Economy Officer": "bg-indigo-100 text-indigo-700",
   };
-  return colors[role] || 'bg-gray-100 text-gray-700';
+  return colors[role] || "bg-gray-100 text-gray-700";
+};
+
+export const getStatusBadgeColor = (status: string): string => {
+  const colors: Record<string, string> = {
+    Paid: "bg-green-100 text-green-700",
+    Pending: "bg-amber-100 text-amber-700",
+    "Under Review": "bg-blue-100 text-blue-700",
+    Rejected: "bg-red-100 text-red-700",
+  };
+  return colors[status] || "bg-gray-100 text-gray-700";
+};
+
+export const getTypeColor = (type: string): string => {
+  const colors: Record<string, string> = {
+    "Medical Refund": "bg-green-50 border-l-4 border-green-500",
+    Disability: "bg-blue-50 border-l-4 border-blue-500",
+    "Death Claim": "bg-purple-50 border-l-4 border-purple-500",
+    "Loss of Productivity": "bg-yellow-50 border-l-4 border-yellow-500",
+  };
+  return colors[type] || "bg-gray-50 border-l-4 border-gray-500";
+};
+
+export const getTypeTextColor = (type: string): string => {
+  const colors: Record<string, string> = {
+    "Medical Refund": "text-green-700",
+    Disability: "text-blue-700",
+    "Death Claim": "text-purple-700",
+    "Loss of Productivity": "text-yellow-700",
+  };
+  return colors[type] || "text-gray-700";
 };
