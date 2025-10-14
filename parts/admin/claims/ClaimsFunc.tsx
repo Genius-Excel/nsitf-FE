@@ -19,6 +19,8 @@ export default function ClaimsManagement() {
 
   // ============== INITIALIZATION ==============
   useEffect(() => {
+    console.log("mockClaims:", mockClaims);
+    console.log("chartData:", chartData);
     setClaims(mockClaims);
     setFilteredClaims(mockClaims);
   }, []);

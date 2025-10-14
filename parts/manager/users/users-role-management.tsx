@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { mockUsers } from "@/lib/Constants/constants";
-import { DeleteConfirmationDialog, RolePermissionsOverview, SearchAndFilter, UserFormModal, UsersTable } from "./users-table";
+import { mockUsers } from "@/lib/Constants";
+import {
+  DeleteConfirmationDialog,
+  RolePermissionsOverview,
+  SearchAndFilter,
+  UserFormModal,
+  UsersTable,
+} from "./users-table";
 import { NewUserForm, User } from "@/lib/types";
 
 export default function UsersRolesManagement() {

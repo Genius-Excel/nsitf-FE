@@ -27,7 +27,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { getRoleBadgeColor } from "@/lib/utils";
 import { NewUserForm, User } from "@/lib/types";
-import { ROLES } from "@/lib/Constants/constants";
+import { ROLES } from "@/lib/Constants";
 
 export const UsersTable: React.FC<{
   users: User[];
