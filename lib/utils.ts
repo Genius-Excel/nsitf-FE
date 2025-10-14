@@ -352,3 +352,16 @@ export function checkIfAgencyIsActive() {//@ts-ignore
       return false;
     });
 }
+
+export const getRoleBadgeColor = (role: string): string => {
+  const colors: Record<string, string> = {
+    Admin: 'bg-blue-100 text-blue-700',
+    Actuary: 'bg-purple-100 text-purple-700',
+    Inspector: 'bg-cyan-100 text-cyan-700',
+    Legal: 'bg-orange-100 text-orange-700',
+    'HSE Officer': 'bg-amber-100 text-amber-700',
+    'Compliance Officer': 'bg-pink-100 text-pink-700',
+    'Economy Officer': 'bg-indigo-100 text-indigo-700',
+  };
+  return colors[role] || 'bg-gray-100 text-gray-700';
+};
