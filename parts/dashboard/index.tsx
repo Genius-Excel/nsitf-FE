@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Shield, ClipboardCheck, HardHat, Scale, ArrowUp } from "lucide-react"
+import { Users, Shield, ClipboardCheck, HardHat, Scale } from "lucide-react"
 import { getUserFromStorage, User } from "@/lib/auth"
 import { RoleBadge } from "@/components/role-badge"
 
@@ -15,22 +15,22 @@ export default function DashboardPage() {
 
   const stats = [
     {
-      title: "Total Employees Registered",
+      title: "Active Users",
       value: "248",
       icon: Users,
-      description: "12.5% fromn last months",
+      description: "12 new this week",
     },
     {
-      title: "Compliance Rate",
-      value: "92%",
+      title: "Compliance Items",
+      value: "42",
       icon: Shield,
       description: "8 pending review",
     },
     {
-      title: "Claims Procesed (YTD)",
+      title: "Open Claims",
       value: "15",
       icon: ClipboardCheck,
-      description: "8.3% fromlast month",
+      description: "3 require attention",
     },
     {
       title: "HSE Incidents",
@@ -51,10 +51,10 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-semibold tracking-tight text-balance">Dashboard Overview</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-balance">Welcome back, {user?.name}</h1>
           {user && <RoleBadge role={user.role} />}
         </div>
-        <p className="text-muted-foreground text-balance">Welcome to NSITF operations platform.</p>
+        <p className="text-muted-foreground text-balance">Here's an overview of your business operations</p>
       </div>
 
       {/* Stats Grid */}
@@ -62,16 +62,16 @@ export default function DashboardPage() {
         {stats.map((stat) => {
           const Icon = stat.icon
           return (
-            <Card key={stat.title} className="border-border/50 shadow-sm">
+            <Card key={stat.title} className="border-border/50">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-gray-400 font-normal">{stat.title}</CardTitle>
-                <div className="h-8 w-8 rounded-md bg-blue-100 flex items-center justify-center">
-                  <Icon className="h-4 w-4 text-blue-500" />
+                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <Icon className="h-4 w-4 text-primary" />
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-semibold">{stat.value}</div>
-                <p className="mt-1 text-green-700 flex gap-1 items-start"><ArrowUp className="w-4 h-4"/>{stat.description}</p>
+                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
               </CardContent>
             </Card>
           )
