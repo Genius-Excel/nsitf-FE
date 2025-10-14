@@ -1,4 +1,4 @@
-import UsersPage from "@/parts/admin/users";
+import UsersPage from "@/parts/manager/users";
 import React from "react";
 
 const UsersScreen = () => {
