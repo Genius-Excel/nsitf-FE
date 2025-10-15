@@ -36,7 +36,7 @@ export default function CompliancePage() {
     <div className="p-8 space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight">Compliance Management</h1>
+          <h1 className="text-3xl tracking-tight">Compliance Management</h1>
           <p className="text-muted-foreground">Track and manage compliance requirements</p>
         </div>
         <PermissionGuard permission="manage_compliance" fallback={null}>
