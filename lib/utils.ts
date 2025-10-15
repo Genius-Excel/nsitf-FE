@@ -405,3 +405,12 @@ export const getTypeTextColor = (type: string): string => {
   };
   return colors[type] || "text-gray-700";
 };
+
+export const getActivityStatusColor = (status: string): string => {
+  const colors: Record<string, string> = {
+    Completed: "bg-green-100 text-green-700",
+    "Under Investigation": "bg-yellow-100 text-yellow-700",
+    "Follow-up Required": "bg-blue-100 text-blue-700",
+  };
+  return colors[status] || "bg-gray-100 text-gray-700";
+};
