@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { LayoutDashboard, Users, Shield, ClipboardCheck, HardHat, Scale, LogOut, Building2 } from "lucide-react"
+import { LayoutDashboard, Users, Shield, ClipboardCheck, HardHat, Scale, LogOut, Building2, FileCheck, ShieldCheck, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -21,7 +21,8 @@ const navigationItems = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["admin", "manager", "user"] },
   { title: "User and Role", href: "/dashboard/users", icon: Users, roles: ["admin", "manager"] },
   { title: "Compliance", href: "/dashboard/compliance", icon: Shield, roles: ["admin", "manager"] },
-  { title: "Claims Inspection", href: "/dashboard/claims", icon: ClipboardCheck, roles: ["admin", "manager", "user"] },
+  { title: "Claims", href: "/dashboard/claims", icon: FileText, roles: ["admin", "manager", "user"] },
+  { title: "Inspection", href: "/dashboard/inspections", icon: ShieldCheck, roles: ["admin", "manager", "user"] },
   { title: "HSE", href: "/dashboard/hse", icon: HardHat, roles: ["admin", "manager", "user"] },
   { title: "Legal", href: "/dashboard/legal", icon: Scale, roles: ["admin", "manager"] },
 ]
