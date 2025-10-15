@@ -1,6 +1,4 @@
-import { Role, User } from "../types";
-import { Claim } from "../types";
-import { ChartDataPoint } from "../types";
+import { Role, User, HSEActivity, ChartDataPoint, Claim } from "@/lib/types";
 
 export const ROLES: Role[] = [
   {
@@ -174,4 +172,47 @@ export const chartData: ChartDataPoint[] = [
   { month: "Jul", processed: 62, target: 60 },
   { month: "Aug", processed: 55, target: 50 },
   { month: "Sep", processed: 60, target: 50 },
+];
+
+export const mockHSEActivities: HSEActivity[] = [
+  {
+    id: "1",
+    type: "OSH Awareness",
+    organization: "ABC Manufacturing Ltd",
+    date: "2025-09-15",
+    status: "Completed",
+    details:
+      "Comprehensive occupational safety and health awareness training completed. All employees attended the session.",
+    icon: "🛡️",
+  },
+  {
+    id: "2",
+    type: "Safety Audit",
+    organization: "XYZ Construction",
+    date: "2025-09-20",
+    status: "Completed",
+    details:
+      "Comprehensive safety audit revealed 3 minor violations. Corrective action plan submitted and approved.",
+    icon: "✓",
+  },
+  {
+    id: "3",
+    type: "Accident Investigation",
+    organization: "Tech Solutions Inc",
+    date: "2025-09-22",
+    status: "Under Investigation",
+    details:
+      "Workplace accident reported on site. Investigation in progress. Preliminary findings suggest equipment malfunction.",
+    icon: "⚠️",
+  },
+  {
+    id: "4",
+    type: "Letter Issued",
+    organization: "Green Energy Ltd",
+    date: "2025-09-25",
+    status: "Follow-up Required",
+    details:
+      "Safety compliance letter issued. Organization has 30 days to submit corrective measures plan.",
+    icon: "📋",
+  },
 ];
