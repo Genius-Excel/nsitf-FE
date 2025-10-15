@@ -1,47 +1,60 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Lock, Mail, AlertCircle } from "lucide-react"
-import { login, saveUserToStorage } from "@/lib/auth"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Lock, Mail, AlertCircle } from "lucide-react";
+import { login, saveUserToStorage } from "@/lib/auth";
+import Link from "next/link";
 
 export function LoginForm() {
-  const router = useRouter()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setIsLoading(true)
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
     try {
-      const user = await login(email, password)
+      const user = await login(email, password);
       if (user) {
-        saveUserToStorage(user)
-        router.push(`/${user.role}/dashboard`)
+        saveUserToStorage(user);
+        router.push(`/${user.role}/dashboard`);
       } else {
-        setError("Invalid email or password")
+        setError("Invalid email or password");
       }
     } catch (err) {
-      setError("An error occurred. Please try again.")
+      setError("An error occurred. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
+
+  const routeToResetPassword = () => {
+    router.push("/reset-password");
+  };
 
   return (
     <Card className="w-full max-w-md border-border/50">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-semibold tracking-tight">Sign in</CardTitle>
+        <CardTitle className="text-2xl font-semibold tracking-tight">
+          Sign in
+        </CardTitle>
         <CardDescription className="text-muted-foreground">
           Enter your credentials to access your account
         </CardDescription>
@@ -90,19 +103,35 @@ export function LoginForm() {
             </div>
           )}
 
-          <Button type="submit" className="w-full bg-green-500 text-white hover:bg-green-300" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full bg-green-500 text-white hover:bg-green-300"
+            disabled={isLoading}
+          >
             {isLoading ? "Signing in..." : "Sign in"}
           </Button>
 
           <div className="mt-4 p-3 bg-muted/30 rounded-md border border-border/50">
-            <p className="text-xs text-muted-foreground mb-2 font-medium">Demo Credentials:</p>
+            <p className="text-xs text-muted-foreground mb-2 font-medium">
+              Demo Credentials:
+            </p>
             <div className="space-y-1 text-xs text-muted-foreground">
               <p>Admin: admin@company.com / admin123</p>
               <p>Manager: manager@company.com / manager123</p>
             </div>
           </div>
+          <Button
+            asChild
+            variant="link"
+            className={`text-sm text-muted-foreground focus:ring-offset-2 mx-auto transition-colors duration-200 `}
+            onClick={routeToResetPassword}
+            aria-label="Reset your password"
+          
+          >
+            <Link href="/reset-password">Reset Password</Link>
+          </Button>
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
