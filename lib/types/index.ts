@@ -54,7 +54,16 @@ export interface HSEActivity {
   date: string;
   status: "Completed" | "Under Investigation" | "Follow-up Required";
   details?: string;
+  recommendations?: string;
   icon: React.ReactNode;
+}
+export interface HSEFormData {
+  type: string;
+  organization: string;
+  date: string;
+  status: string;
+  details: string;
+  recommendations: string;
 }
 
 export interface StatCard {

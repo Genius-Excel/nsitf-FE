@@ -1,5 +1,5 @@
 "use client"
-import HSEManagement from "./hseFunc"
+import HSEManagement from "../../admin/hse/hseFunc"
 
 
 export default function HSEPage() {

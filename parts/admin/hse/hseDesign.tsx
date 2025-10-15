@@ -2,9 +2,23 @@
 import React from "react";
 import { Eye, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { HSEActivity, StatCard } from "@/lib/types";
+import { HSEActivity, HSEFormData, StatCard } from "@/lib/types";
 import { getActivityStatusColor } from "@/lib/utils";
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 export const StatisticsCards: React.FC<{ stats: StatCard[] }> = ({ stats }) => {
   if (!stats || stats.length === 0) {
@@ -16,7 +30,10 @@ export const StatisticsCards: React.FC<{ stats: StatCard[] }> = ({ stats }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       {stats.map((stat, idx) => (
-        <div key={idx} className="bg-white rounded-lg border border-gray-200 p-4">
+        <div
+          key={idx}
+          className="bg-white rounded-lg border border-gray-200 p-4"
+        >
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-gray-600 font-medium">{stat.title}</p>
@@ -37,7 +54,9 @@ export const StatisticsCards: React.FC<{ stats: StatCard[] }> = ({ stats }) => {
 
 export const RecentHSEActivities: React.FC<{
   activities: HSEActivity[];
-}> = ({ activities }) => {
+  onViewDetails: (activity: HSEActivity) => void;
+  onEdit: (activity: HSEActivity) => void;
+}> = ({ activities, onViewDetails, onEdit }) => {
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
 
   if (!activities || activities.length === 0) {
@@ -57,7 +76,10 @@ export const RecentHSEActivities: React.FC<{
       </div>
       <div className="divide-y divide-gray-200">
         {activities.map((activity) => (
-          <div key={activity.id} className="p-4 hover:bg-gray-50 transition-colors">
+          <div
+            key={activity.id}
+            className="p-4 hover:bg-gray-50 transition-colors"
+          >
             <div
               className="flex items-start justify-between cursor-pointer"
               onClick={() =>
@@ -98,12 +120,14 @@ export const RecentHSEActivities: React.FC<{
                 <div className="flex gap-3 mt-4">
                   <button
                     type="button"
+                    onClick={() => onViewDetails(activity)}
                     className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                   >
                     View Full Report
                   </button>
                   <button
                     type="button"
+                    onClick={() => onEdit(activity)}
                     className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900"
                   >
                     Edit
@@ -176,3 +200,241 @@ export const ComplianceRate: React.FC<{
     <p className="text-center text-sm text-gray-600 mt-4">{change}</p>
   </div>
 );
+
+// ============== ADD/EDIT HSE MODAL ==============
+export const HSEFormModal: React.FC<{
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: () => void;
+  formData: HSEFormData;
+  onFormChange: (data: HSEFormData) => void;
+  isEditing: boolean;
+}> = ({ isOpen, onOpenChange, onSave, formData, onFormChange, isEditing }) => (
+  <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle className="text-lg font-semibold">
+          {isEditing ? "Edit HSE Record" : "Add New HSE Record"}
+        </DialogTitle>
+      </DialogHeader>
+
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs font-semibold text-gray-900">
+            Record Type *
+          </label>
+          <Select
+            value={formData.type}
+            onValueChange={(value) =>
+              onFormChange({ ...formData, type: value })
+            }
+          >
+            <SelectTrigger className="mt-1 border-gray-200 text-sm">
+              <SelectValue placeholder="Select a type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Letter Issued">Letter Issued</SelectItem>
+              <SelectItem value="OSH Awareness">OSH Awareness</SelectItem>
+              <SelectItem value="Safety Audit">Safety Audit</SelectItem>
+              <SelectItem value="Accident Investigation">
+                Accident Investigation
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-gray-900">
+            Employer/Organization *
+          </label>
+          <Input
+            placeholder="Enter employer name"
+            value={formData.organization}
+            onChange={(e) =>
+              onFormChange({ ...formData, organization: e.target.value })
+            }
+            className="mt-1 border-gray-200 text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-gray-900">Date *</label>
+          <Input
+            type="date"
+            placeholder="mm/dd/yyyy"
+            value={formData.date}
+            onChange={(e) =>
+              onFormChange({ ...formData, date: e.target.value })
+            }
+            className="mt-1 border-gray-200 text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-gray-900">
+            Status *
+          </label>
+          <Select
+            value={formData.status}
+            onValueChange={(value) =>
+              onFormChange({ ...formData, status: value })
+            }
+          >
+            <SelectTrigger className="mt-1 border-gray-200 text-sm">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Completed">Completed</SelectItem>
+              <SelectItem value="Under Investigation">
+                Under Investigation
+              </SelectItem>
+              <SelectItem value="Follow-up Required">
+                Follow-up Required
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-gray-900">
+            Details *
+          </label>
+          <textarea
+            placeholder="Enter detailed description of the HSE activity or incident"
+            value={formData.details}
+            onChange={(e) =>
+              onFormChange({ ...formData, details: e.target.value })
+            }
+            className="mt-1 border-gray-200 text-sm w-full p-2 border rounded-md min-h-[80px]"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-gray-900">
+            Recommendations/Actions
+          </label>
+          <textarea
+            placeholder="Enter recommendations or corrective actions"
+            value={formData.recommendations}
+            onChange={(e) =>
+              onFormChange({ ...formData, recommendations: e.target.value })
+            }
+            className="mt-1 border-gray-200 text-sm w-full p-2 border rounded-md min-h-[80px]"
+          />
+        </div>
+      </div>
+
+      <DialogFooter className="mt-6">
+        <button
+          type="button"
+          onClick={() => onOpenChange(false)}
+          className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={onSave}
+          style={{ backgroundColor: "#00a63e" }}
+          className="px-4 py-2 text-sm text-white rounded-md hover:opacity-90"
+        >
+          {isEditing ? "Save Changes" : "Save Record"}
+        </button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+);
+
+// ============== VIEW FULL DETAILS MODAL ==============
+export const ViewDetailsModal: React.FC<{
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  activity: HSEActivity | null;
+}> = ({ isOpen, onOpenChange, activity }) => {
+  if (!activity) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <DialogTitle className="text-xl font-bold">
+                {activity.type}
+              </DialogTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                {activity.organization} • {activity.date}
+              </p>
+            </div>
+            <Badge
+              className={`${getActivityStatusColor(
+                activity.status
+              )} font-medium text-xs`}
+            >
+              {activity.status}
+            </Badge>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-6 mt-4">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">
+              Details:
+            </h3>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              {activity.details}
+            </p>
+          </div>
+
+          {activity.recommendations && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                Recommendations/Actions:
+              </h3>
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {activity.recommendations}
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+            <div>
+              <p className="text-xs text-gray-600">Record Type</p>
+              <p className="text-sm font-medium text-gray-900 mt-1">
+                {activity.type}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-600">Status</p>
+              <p className="text-sm font-medium text-gray-900 mt-1">
+                {activity.status}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-600">Organization</p>
+              <p className="text-sm font-medium text-gray-900 mt-1">
+                {activity.organization}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-600">Date</p>
+              <p className="text-sm font-medium text-gray-900 mt-1">
+                {activity.date}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="mt-6">
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Close
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
