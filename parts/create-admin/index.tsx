@@ -1,7 +1,5 @@
-"use client";
-
+"use client"
 import type React from "react";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -10,14 +8,15 @@ import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { User, Mail, Phone, Lock, AlertCircle } from "lucide-react";
 import { z } from "zod";
-// import { createAdmin } from "@/lib/admin";
 import Link from "next/link";
+import { useCreateAdmin } from "@/services/auth";
+import { toast } from "sonner";
 
 // Zod schema for form validation
 const adminSchema = z
@@ -59,48 +58,54 @@ export function CreateAdminForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
+  const handleSucess =()=>{
+    toast.success("Account created")
+      router.push("/");
+  }
+  const { createAdminData, createAdminError, createAdminPayload } = useCreateAdmin(handleSucess);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
     setIsLoading(true);
 
+    // Prepare form data
+    const formData = {
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      password,
+      confirmPassword,
+    };
+
     try {
-      // Validate form data with Zod
-      const formData = {
-        firstName,
-        lastName,
-        email,
-        phoneNumber,
-        password,
-        confirmPassword,
-      };
       const validatedData = adminSchema.parse(formData);
 
-      // Call createAdmin with validated data
-    //   const admin = await createAdmin({
-    //     firstName: validatedData.firstName,
-    //     lastName: validatedData.lastName,
-    //     email: validatedData.email,
-    //     phoneNumber: validatedData.phoneNumber,
-    //     password: validatedData.password,
-    //   });
+       createAdminPayload({
+        first_name: validatedData.firstName,
+        last_name: validatedData.lastName,
+        email: validatedData.email,
+        phone_number: validatedData.phoneNumber,
+        password: validatedData.password,
+      });
 
-    //   if (admin) {
-    //     router.push("/admin/dashboard");
-    //   } else {
-    //     setErrors({ general: "Failed to create admin account" });
-    //   }
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        // Map Zod errors to form fields
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        // Handle validation errors
         const fieldErrors: Record<string, string> = {};
-        err.errors.forEach((error) => {
-          const field = error.path[0] as string;
-          fieldErrors[field] = error.message;
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0]] = err.message;
+          }
         });
         setErrors(fieldErrors);
+      } else if (createAdminError) {
+        // Handle API errors from createAdminPayload
+        setErrors({ general: createAdminError || "Failed to create admin account" });
       } else {
-        setErrors({ general: "An error occurred. Please try again." });
+        // Handle unexpected errors
+        setErrors({ general: "An unexpected error occurred" });
       }
     } finally {
       setIsLoading(false);
@@ -108,7 +113,7 @@ export function CreateAdminForm() {
   };
 
   const routeToLogin = () => {
-    router.push("/login");
+    router.push("/");
   };
 
   return (
@@ -132,7 +137,7 @@ export function CreateAdminForm() {
               <Input
                 id="firstName"
                 type="text"
-                placeholder="John"
+                placeholder="Enter first Name"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
@@ -154,7 +159,7 @@ export function CreateAdminForm() {
               <Input
                 id="lastName"
                 type="text"
-                placeholder="Doe"
+                placeholder="Enter last Name"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 required
@@ -176,7 +181,7 @@ export function CreateAdminForm() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@company.com"
+                placeholder="Enter email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -196,7 +201,7 @@ export function CreateAdminForm() {
               <Input
                 id="phoneNumber"
                 type="tel"
-                placeholder="+1234567890"
+                placeholder="Enter Phone"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 required
@@ -276,7 +281,7 @@ export function CreateAdminForm() {
             onClick={routeToLogin}
             aria-label="Back to login"
           >
-            <Link href="/login">Back to Login</Link>
+            <Link href="/">Back to Login</Link>
           </Button>
         </form>
       </CardContent>
