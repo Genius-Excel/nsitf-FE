@@ -12,7 +12,7 @@ import { Calendar, TrendingUp, TriangleAlert } from "lucide-react";
 
 const Inspetion = () => {
   return (
-    <div className="space-y-10">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl tracking-tight">Inspection Management</h1>
