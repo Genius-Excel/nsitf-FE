@@ -73,3 +73,12 @@ export interface StatCard {
   icon: React.ReactNode;
   bgColor: string;
 }
+
+export interface ResetEmailFormData {
+  email: string;
+}
+
+export interface NewPasswordFormData {
+  password: string;
+  confirmPassword: string;
+}

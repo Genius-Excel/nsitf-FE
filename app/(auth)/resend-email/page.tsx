@@ -1,10 +1,10 @@
-import EmailConfirmationFlow from "@/parts/auth/confirm-email/confirm-email_func";
+import ResendConfirmationEmail from "@/parts/auth/resend-email/resend-confirm_email";
 import React from "react";
 
 const ConfirmEmailPage = () => {
   return (
     <div>
-      <EmailConfirmationFlow />
+      <ResendConfirmationEmail />
     </div>
   );
 };
