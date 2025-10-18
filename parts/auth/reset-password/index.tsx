@@ -1,9 +1,8 @@
-import React from 'react'
+import React from "react";
+import ResetPasswordFlow from "./reset-password_func";
 
 const ResetPassword = () => {
-  return (
-    <div>ResetPassword</div>
-  )
-}
+  return <ResetPasswordFlow />;
+};
 
-export default ResetPassword
+export default ResetPassword;
