@@ -1,9 +1,7 @@
-import React from 'react'
+import EmailConfirmationFlow from "./confirm-email_func";
 
 const ConfirmEmail = () => {
-  return (
-    <div>ConfirmEmail</div>
-  )
-}
+  return <EmailConfirmationFlow />;
+};
 
-export default ConfirmEmail
+export default ConfirmEmail;
