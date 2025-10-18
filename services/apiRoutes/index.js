@@ -12,6 +12,8 @@ export const routes = {
   resetPasswordEmailRequest:()=> "/api/auth/password-reset-email",
   resetPassword:()=> "",
   changePassword:()=> "/api/auth/change-password",
+
+  verifyEmailToken:(token)=> `/api/auth/confirm-email?token=${token}`,
   
   
   // Inventory

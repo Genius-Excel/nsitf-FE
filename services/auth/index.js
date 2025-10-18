@@ -67,7 +67,24 @@ export const useLogin =(handleSuccess)=>{
   };
 }
 
-
+export const useGetConfirmEmail = ({ enabled = false }) => {
+  const { data, error, isLoading, refetch, setFilter } = useFetchItem({
+    queryKey: ["ConfirmEmailWithToken"],
+    queryFn: (token) => {
+      return httpService.getDataWithoutToken(routes.verifyEmailToken(token));
+    },
+    enabled,
+    retry: 2,
+  });
+  console.log(data);
+  return {
+    isVerifyingToken: isLoading,
+    verifiedTokenData: data?.data?.message || null,
+    verifyTokenError: ErrorHandler(error),
+    refetchVerifyToken: refetch,
+    filterVerifyToken: setFilter,
+  };
+};
 
 
 export const useVerifyEmail = (handleSuccess) => {
