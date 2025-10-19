@@ -91,7 +91,16 @@ export function AppSidebar({
   useEffect(() => {
     try {
       const storedUser = getUserFromStorage()
-      setUser(storedUser)
+
+      const tempUser:User= {
+        email: "ogbechiemicheal@gmail.com",
+        id: "54244535353570q",
+        name: "Micheal Ogbechie",
+        role: "admin"
+      }
+
+
+      setUser(tempUser)
     } catch (error) {
       console.error("Failed to fetch user:", error)
     } finally {
@@ -193,7 +202,7 @@ export function AppSidebar({
         </nav>
 
         {/* User Info & Logout */}
-        <div className="mt-auto border-t border-sidebar-border p-2">
+        <div className="mt-auto border-t border-sidebar-border p-2 bg-white">
           {isCollapsed ? (
             <div className="space-y-2">
               <div

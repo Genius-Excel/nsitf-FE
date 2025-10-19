@@ -67,6 +67,25 @@ export const useLogin =(handleSuccess)=>{
   };
 }
 
+export const useGetUserProfile =({enabled = false})=>{
+   const { data, error, isLoading, refetch, setFilter } = useFetchItem({
+    queryKey: ["GetUserData"],
+    queryFn: () => {
+      return httpService.getData(routes.getUserProfileDetails());
+    },
+    enabled,
+    retry: 2,
+  });
+  console.log(data);
+  return {
+    gettingUserData: isLoading,
+    userData: data?.data?.message || null,
+    userDataError: ErrorHandler(error),
+    refetchUserData: refetch,
+    filterUserData: setFilter,
+  };
+}
+
 export const useGetConfirmEmail = ({ enabled = false }) => {
   const { data, error, isLoading, refetch, setFilter } = useFetchItem({
     queryKey: ["ConfirmEmailWithToken"],

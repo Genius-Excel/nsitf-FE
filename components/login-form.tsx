@@ -17,7 +17,7 @@ import {
 import { Lock, Mail, AlertCircle } from "lucide-react";
 import { login, saveUserToStorage } from "@/lib/auth";
 import Link from "next/link";
-import { useLogin } from "@/services/auth";
+import { useGetUserProfile, useLogin } from "@/services/auth";
 import { toast } from "sonner";
 
 export function LoginForm() {
@@ -31,6 +31,7 @@ export function LoginForm() {
     toast.success("Logging Successful")
   }
   const {loginData, loginPayload, loginIsLoading, loginError} = useLogin(handleSuccess)
+  const {filterUserData, gettingUserData, refetchUserData, userData, userDataError} = useGetUserProfile({enabled:false})
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +51,10 @@ export function LoginForm() {
   useEffect(()=>{
 
     if(loginData){
+      console.log(loginData)
       localStorage.setItem("token", loginData.token)
       setUserRole(loginData.role)
+      saveUserToStorage(loginData)
     }
     if(userRole){
       router.push(`${userRole}/dashboard`)

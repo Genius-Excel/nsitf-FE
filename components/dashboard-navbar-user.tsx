@@ -21,13 +21,13 @@ const getRandomColor = () => {
 }
 
 // Utility to get user initials
-const getInitials = (name: string) => {
-  const names = name.trim().split(" ")
-  const initials = names.length > 1
-    ? `${names[0][0]}${names[names.length - 1][0]}`
-    : names[0].slice(0, 2)
-  return initials.toUpperCase()
-}
+// const getInitials = (name: string) => {
+//   const names = name.trim().split(" ")
+//   const initials = names.length > 1
+//     ? `${names[0][0]}${names[names.length - 1][0]}`
+//     : names[0].slice(0, 2)
+//   return initials.toUpperCase()
+// }
 
 // Utility to format date and time
 const formatDateTime = (date: Date) => {
@@ -102,7 +102,7 @@ export function DashboardNavbarUser() {
                 )}
                 aria-label={`Avatar with initials for ${user.name}`}
               >
-                {getInitials(user.name)}
+                {/* {getInitials(user.name)} */}
               </div>
             )}
             <div className="flex flex-col">
