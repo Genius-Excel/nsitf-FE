@@ -79,7 +79,7 @@ export const useGetUserProfile =({enabled = false})=>{
   console.log(data);
   return {
     gettingUserData: isLoading,
-    userData: data?.data?.message || null,
+    userData: data?.data || null,
     userDataError: ErrorHandler(error),
     refetchUserData: refetch,
     filterUserData: setFilter,

@@ -86,6 +86,7 @@ export function AppSidebar({
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  
 
   // Fetch user data
   useEffect(() => {

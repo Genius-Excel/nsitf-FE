@@ -424,7 +424,17 @@ export function getLocalStorageItem(key:string) {
 
 export function getAccessToken() {
   if (typeof window !== "undefined") {
-    return localStorage.getItem("accessToken"); 
+    try {
+      const userData = localStorage.getItem("user"); 
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        return parsedData["access-token"] || null; 
+      }
+      return null;
+    } catch (error) {
+      console.error("Error accessing or parsing localStorage:", error);
+      return null;
+    }
   }
   return null;
 }
