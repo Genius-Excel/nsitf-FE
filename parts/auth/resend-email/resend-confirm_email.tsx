@@ -1,65 +1,43 @@
-// ResendConfirmationEmail.tsx
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Mail, AlertCircle, Building2 } from "lucide-react";
-
-const BACKEND_URL = "https://nsitf-be.geniusexcel.tech";
+import { useResendConfirmationEmail } from "@/services/auth"; // Fixed typo in hook name
 
 export default function ResendConfirmationEmail() {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [error, setError]= useState("")
+  const [isResendLoading, setIsresendLoading] = useState(false)
+  const [isResendSuccess, setisResendSuccess] = useState<string | null>(null)
+  const [errorMessage, SeterrorMessage] = useState<string | null>(null)
 
-  const handleResendEmail = async () => {
+  const handleSuccess =()=>{
+        setEmail("");
+        setIsresendLoading(resendConfirmationIsLoading)
+        setisResendSuccess("success")
+  }
+  const {
+    resendConfirmationData, resendConfirmationError, resendConfirmationIsLoading, resendConfirmationIsSuccess, resendConfirmationPayload
+  } = useResendConfirmationEmail(handleSuccess);
+
+  const handleResendEmail = (e: React.FormEvent) => {
+    e.preventDefault(); 
     if (!email) {
       setError("Please enter your email address");
       return;
     }
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("Please enter a valid email address");
       return;
     }
-
-    setIsLoading(true);
-    setError("");
-    setSuccess(false);
-
-    try {
-      // Adjust this endpoint based on your backend API
-      // You may need to create this endpoint or use an existing one
-      const response = await fetch(
-        `${BACKEND_URL}/api/auth/resend-confirmation-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess(true);
-        setEmail("");
-      } else {
-        setError(data.error || "Failed to resend confirmation email");
-      }
-    } catch (err) {
-      console.error("Error resending confirmation email:", err);
-      setError("Network error. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
+    resendConfirmationPayload({"email":email})
   };
+
+ 
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -92,7 +70,7 @@ export default function ResendConfirmationEmail() {
           </div>
 
           {/* Success Message */}
-          {success && (
+          {isResendSuccess && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <p className="text-sm text-green-700">
                 Confirmation email sent! Please check your inbox (and spam
@@ -102,53 +80,47 @@ export default function ResendConfirmationEmail() {
           )}
 
           {/* Error Message */}
-          {error && (
+          {errorMessage && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 mb-4">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{error}</p>
+              <p className="text-sm text-red-700">{errorMessage}</p>
             </div>
           )}
 
           {/* Form */}
-          <div className="space-y-4">
+          <form onSubmit={handleResendEmail} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">
                 Email Address
               </label>
               <Input
                 type="email"
-                placeholder="user@nsitf.gov.ng"
+                placeholder="your.email@domain.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="border-gray-200"
-                disabled={isLoading}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleResendEmail();
-                  }
-                }}
+                disabled={isResendLoading}
               />
             </div>
 
             <button
-              type="button"
-              onClick={handleResendEmail}
-              disabled={isLoading || !email}
-              style={{ backgroundColor: "#00a63e" }}
-              className="w-full py-3 text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+              type="submit"
+              disabled={isResendLoading || !email}
+              className="w-full py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isLoading ? "Sending..." : "Resend Confirmation Email"}
+              {isResendLoading ? "Sending..." : "Resend Confirmation Email"}
             </button>
 
             <div className="text-center pt-4">
               <button
+                type="button"
                 onClick={() => router.push("/")}
                 className="text-sm font-medium text-gray-600 hover:text-gray-900"
               >
                 ← Back to Login
               </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>

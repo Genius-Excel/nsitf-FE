@@ -414,3 +414,17 @@ export const getActivityStatusColor = (status: string): string => {
   };
   return colors[status] || "bg-gray-100 text-gray-700";
 };
+
+export function getLocalStorageItem(key:string) {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem(key);
+  }
+  return null;
+}
+
+export function getAccessToken() {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("accessToken"); 
+  }
+  return null;
+}

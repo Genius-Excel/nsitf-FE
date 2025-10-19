@@ -86,6 +86,28 @@ export const useGetConfirmEmail = ({ enabled = false }) => {
   };
 };
 
+export const useResendConfirmationEmail =(handleSuccess)=>{
+   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+    mutationFn: (payload) =>
+      httpService.postDataWithoutToken(
+        payload,
+        routes.resendConfirmation()
+      ),
+    onSuccess: (requestParams) => {
+      const resData = requestParams?.data || {};
+      // console.log(requestParams?.data);
+      handleSuccess(resData);
+    },
+  });
+
+  return {
+    resendConfirmationData: data || {},
+    resendConfirmationError: error ? ErrorHandler(error) : null,
+    resendConfirmationIsLoading: isPending,
+    resendConfirmationPayload: (requestPayload) => mutate(requestPayload),
+    resendConfirmationIsSuccess: isSuccess,
+  };
+}
 
 export const useVerifyEmail = (handleSuccess) => {
   const { data, error, isPending, mutate } = useMutateItem({
