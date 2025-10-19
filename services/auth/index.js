@@ -59,7 +59,7 @@ export const useLogin =(handleSuccess)=>{
   });
 
   return {
-    loginData: data || {},
+    loginData: data?.data || {},
     loginError: error ? ErrorHandler(error) : null,
     loginIsLoading: isPending,
     loginPayload: (requestPayload) => mutate(requestPayload),
