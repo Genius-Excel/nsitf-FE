@@ -12,7 +12,7 @@ import { Calendar, TrendingUp, TriangleAlert } from "lucide-react";
 
 const Inspetion = () => {
   return (
-    <div className="space-y-10">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl tracking-tight">Inspection Management</h1>
@@ -84,8 +84,8 @@ const Inspetion = () => {
       </Card>
       <div className="grid grid-cols-3 gap-6">
         <BigBtns desription="Plan upcoming sites visit" icon={<Calendar className="text-green-700"/>} title="Schedule new inspection" color="green"/>
-        <BigBtns desription="View Inspection Analyticd" icon={<TrendingUp className="text-blue-700"/>} title="Schedule new inspection" color="blue"/>
-        <BigBtns desription="View Outstanding Cases" icon={<TriangleAlert className="text-yellow-700"/>} title="Schedule new inspection" color="yellow"/>
+        <BigBtns desription="Plan upcoming sites visit" icon={<TrendingUp className="text-blue-700"/>} title="Schedule new inspection" color="blue"/>
+        <BigBtns desription="Plan upcoming sites visit" icon={<TriangleAlert className="text-yellow-700"/>} title="Schedule new inspection" color="yellow"/>
       </div>
     </div>
   );

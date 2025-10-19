@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,8 @@ import {
 import { Lock, Mail, AlertCircle } from "lucide-react";
 import { login, saveUserToStorage } from "@/lib/auth";
 import Link from "next/link";
+import { useLogin } from "@/services/auth";
+import { toast } from "sonner";
 
 export function LoginForm() {
   const router = useRouter();
@@ -24,26 +26,26 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const handleSuccess =()=> {
+    toast.success("Logging Successful")
+  }
+  const {loginData, loginPayload, loginIsLoading, loginError} = useLogin(handleSuccess)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setIsLoading(true);
-
-    try {
-      const user = await login(email, password);
-      if (user) {
-        saveUserToStorage(user);
-        router.push(`/${user.role}/dashboard`);
-      } else {
-        setError("Invalid email or password");
-      }
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
+    setIsLoading(loginIsLoading);
+    const payload ={
+      email:email,
+      password:password,
     }
+    loginPayload(payload)
   };
+  useEffect(()=>{
+    if(loginError){
+      toast.error(loginError || "Could not sign in")
+    }
+  },[loginError])
 
   const routeToResetPassword = () => {
     router.push("/reset-password");

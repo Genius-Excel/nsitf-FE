@@ -44,6 +44,49 @@ export const useCreateAdmin = (handleSuccess) => {
   };
 };
 
+export const useLogin =(handleSuccess)=>{
+   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+    mutationFn: (payload) =>
+      httpService.postDataWithoutToken(
+        payload,
+        routes.login()
+      ),
+    onSuccess: (requestParams) => {
+      const resData = requestParams?.data || {};
+      // console.log(requestParams?.data);
+      handleSuccess(resData);
+    },
+  });
+
+  return {
+    loginData: data || {},
+    loginError: error ? ErrorHandler(error) : null,
+    loginIsLoading: isPending,
+    loginPayload: (requestPayload) => mutate(requestPayload),
+    loginIsSuccess: isSuccess,
+  };
+}
+
+export const useGetConfirmEmail = ({ enabled = false }) => {
+  const { data, error, isLoading, refetch, setFilter } = useFetchItem({
+    queryKey: ["ConfirmEmailWithToken"],
+    queryFn: (token) => {
+      return httpService.getDataWithoutToken(routes.verifyEmailToken(token));
+    },
+    enabled,
+    retry: 2,
+  });
+  console.log(data);
+  return {
+    isVerifyingToken: isLoading,
+    verifiedTokenData: data?.data?.message || null,
+    verifyTokenError: ErrorHandler(error),
+    refetchVerifyToken: refetch,
+    filterVerifyToken: setFilter,
+  };
+};
+
+
 export const useVerifyEmail = (handleSuccess) => {
   const { data, error, isPending, mutate } = useMutateItem({
     mutationFn: (payload) =>
