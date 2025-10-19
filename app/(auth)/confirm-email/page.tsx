@@ -1,10 +1,12 @@
 import EmailConfirmationFlow from "@/parts/auth/confirm-email/confirm-email_func";
-import React from "react";
+import React, { Suspense } from "react";
 
 const ConfirmEmailPage = () => {
   return (
     <div>
-      <EmailConfirmationFlow />
+      <Suspense fallback={<div>Loading ...</div>}>
+        <EmailConfirmationFlow />
+      </Suspense>
     </div>
   );
 };

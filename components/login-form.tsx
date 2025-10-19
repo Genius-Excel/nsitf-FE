@@ -26,6 +26,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [userRole, setUserRole] =useState<string | null>(null)
   const handleSuccess =()=> {
     toast.success("Logging Successful")
   }
@@ -46,6 +47,17 @@ export function LoginForm() {
       toast.error(loginError || "Could not sign in")
     }
   },[loginError])
+  useEffect(()=>{
+
+    if(loginData){
+      localStorage.setItem("token", loginData.token)
+      setUserRole(loginData.role)
+    }
+    if(userRole){
+      router.push(`${userRole}/dashboard`)
+    }
+
+  },[loginData, userRole])
 
   const routeToResetPassword = () => {
     router.push("/reset-password");
