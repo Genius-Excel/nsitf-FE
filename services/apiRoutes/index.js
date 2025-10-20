@@ -14,6 +14,9 @@ export const routes = {
   changePassword:()=> "/api/auth/change-password",
 
   verifyEmailToken:(token)=> `/api/auth/confirm-email?token=${token}`,
+  adminAddUsers:()=> "/api/admin/users",
+  adminGetUsers:()=> "/api/admin/users",
+  editUser:(userId)=> `/api/admin/users/${userId}`,
   
   
   // Inventory

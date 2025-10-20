@@ -49,11 +49,11 @@ export function LoginForm() {
   useEffect(()=>{
 
     if(loginData){
-      localStorage.setItem("token", loginData.token)
+      localStorage.setItem("user", JSON.stringify(loginData))
       setUserRole(loginData.role)
     }
     if(userRole){
-      router.push(`${userRole}/dashboard`)
+      router.push(`${userRole.toLowerCase()}/dashboard`)
     }
 
   },[loginData, userRole])

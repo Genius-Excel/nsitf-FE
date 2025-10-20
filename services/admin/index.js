@@ -9,69 +9,33 @@ import { getLocalStorageItem, getUserIdFromSession } from "@/lib/utils";
 const httpService = new HttpService();
 const storage = new Storage();
 
-export const useCreateAdmin = (handleSuccess) => {
-  const { data, error, isPending, mutate, isSuccess } = useMutateItem({
-    mutationFn: (payload) =>
-      httpService.postDataWithoutToken(
-        payload,
-        routes.createAdmin()
-      ),
-    onSuccess: (requestParams) => {
-      const resData = requestParams?.data || {};
-      // console.log("Signup Response Data:", resData?.data);
-      if (typeof window !== "undefined" && resData?.data) {
-        try {
-          Storage.set("user_id", resData?.data[0]?.user_id || "");
-          Storage.set("role", resData?.data[0]?.role || "");
-          Storage.set("email", resData?.data[0]?.email || "");
-          Storage.set("email_verified", resData?.data[0]?.email || "");
-        } catch (storageError) {
-          console.error("Storage error:", storageError);
-        }
-      }
-      if (handleSuccess) {
-        handleSuccess(resData);
-      }
-    },
-  });
-
-  return {
-    createAdminData: data || {},
-    createAdminError: error ? ErrorHandler(error) : null,
-    createAdminIsLoading: isPending,
-    createAdminPayload: (requestPayload) => mutate(requestPayload),
-    createAdminIsSuccess: isSuccess,
-  };
-};
-
-export const useLogin =(handleSuccess)=>{
+export const useAddUser =(handleSuccess)=>{
    const { data, error, isPending, mutate, isSuccess } = useMutateItem({
     mutationFn: (payload) =>
-      httpService.postDataWithoutToken(
+      httpService.postData(
         payload,
-        routes.login()
+        routes.adminAddUsers()
       ),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log(requestParams?.data);
       handleSuccess(resData);
     },
   });
 
   return {
-    loginData: data?.data || {},
-    loginError: error ? ErrorHandler(error) : null,
-    loginIsLoading: isPending,
-    loginPayload: (requestPayload) => mutate(requestPayload),
-    loginIsSuccess: isSuccess,
+    addUserData: data?.data || {},
+    addUserError: error ? ErrorHandler(error) : null,
+    addUserIsLoading: isPending,
+    addUserPayload: (requestPayload) => mutate(requestPayload),
+    addUserIsSuccess: isSuccess,
   };
 }
 
-export const useGetUserProfile =({enabled = false})=>{
+export const useGetUsers =({enabled = false})=>{
    const { data, error, isLoading, refetch, setFilter } = useFetchItem({
-    queryKey: ["GetUserData"],
+    queryKey: ["GetEnteredUserData"],
     queryFn: () => {
-      return httpService.getData(routes.getUserProfileDetails());
+      return httpService.getData(routes.adminGetUsers());
     },
     enabled,
     retry: 2,
@@ -83,6 +47,28 @@ export const useGetUserProfile =({enabled = false})=>{
     userDataError: ErrorHandler(error),
     refetchUserData: refetch,
     filterUserData: setFilter,
+  };
+}
+
+export const useEditUser =(handleSuccess)=>{
+   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+    mutationFn: (payload) =>
+      httpService.patchData(
+        payload,
+        routes.editUser(userId)
+      ),
+    onSuccess: (requestParams) => {
+      const resData = requestParams?.data || {};
+      handleSuccess(resData);
+    },
+  });
+
+  return {
+    editUserData: data?.data || {},
+    editUserError: error ? ErrorHandler(error) : null,
+    editUserIsLoading: isPending,
+    editUserPayload: (requestPayload) => mutate(requestPayload),
+    editUserIsSuccess: isSuccess,
   };
 }
 

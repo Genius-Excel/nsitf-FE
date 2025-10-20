@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { getRoleBadgeColor } from "@/lib/utils";
+import { formatDate, getRoleBadgeColor } from "@/lib/utils";
 import { NewUserForm, User } from "@/lib/types";
 import { ROLES } from "@/lib/Constants";
 
@@ -62,7 +62,7 @@ export const UsersTable: React.FC<{
         {users.map((user) => (
           <tr key={user.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-6 py-4 text-sm font-medium text-gray-900">
-              {user.name}
+              {user.first_name} {user.last_name}
             </td>
             <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
             <td className="px-6 py-4 text-sm">
@@ -82,11 +82,13 @@ export const UsersTable: React.FC<{
                     : "bg-blue-100 text-blue-700 font-medium text-xs"
                 }
               >
-                {user.status}
+                {user.account_status}
               </Badge>
             </td>
-            <td className="px-6 py-4 text-sm text-gray-600">
-              {user.date_added}
+            <td className="px-6 py-4 text-sm text-gray-600"> 
+              
+              {//@ts-ignore
+              formatDate(user.created_at)}
             </td>
             <td className="px-6 py-4 text-sm flex gap-2">
               <Button
