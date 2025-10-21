@@ -10,7 +10,12 @@ import {
   UsersTable,
 } from "./users-table";
 import { NewUserForm, User } from "@/lib/types";
-import { useGetUsers } from "@/services/admin/index";
+import {
+  useAddUser,
+  useDeleteUser,
+  useEditUser,
+  useGetUsers,
+} from "@/services/admin/index";
 
 export default function UsersRolesManagement() {
   // ============== STATE ==============
@@ -34,7 +39,23 @@ export default function UsersRolesManagement() {
     department: "",
     branch: "",
   });
-  const { gettingUserData, refetchUserData, userData, userDataError } = useGetUsers({ enabled: true });
+  const { gettingUserData, refetchUserData, userData, userDataError } =
+    useGetUsers({ enabled: true });
+
+  const { addUserData, addUserError, addUserIsLoading, addUserPayload } =
+    useAddUser();
+  const { editUserData, editUserError, editUserIsLoading, editUserPayload } =
+    useEditUser();
+  const {
+    deleteUSerData,
+    deleteUserError,
+    deleteUserIsLoading,
+    deleteUserPath,
+  } = useDeleteUser(() => {
+    toast.success("User deleted");
+    setIsDeleteDialogOpen(false);
+    setUserToDelete(null);
+  });
 
   // ============== EFFECTS ==============
   useEffect(() => {
@@ -54,9 +75,9 @@ export default function UsersRolesManagement() {
 
     if (searchTerm) {
       filtered = filtered.filter(
-        (user) => //@ts-ignore
-          user?.first_name.toLowerCase().includes(searchTerm.toLowerCase()) || //@ts-ignore
-          user?.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (user) =>
+          user?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user?.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -84,9 +105,9 @@ export default function UsersRolesManagement() {
 
   const handleEditUser = (user: User) => {
     setEditingUserId(user.id);
-    setFormData({//@ts-ignore
-      first_name: user?.first_name,//@ts-ignore
-      last_name: user?.last_name,
+    setFormData({
+      first_name: user?.first_name || "",
+      last_name: user?.last_name || "",
       email: user.email,
       phone: user.phone_number || "",
       role: user.role,
@@ -102,36 +123,65 @@ export default function UsersRolesManagement() {
       return;
     }
 
-    const fullName = `${formData.first_name} ${formData.last_name}`.trim();
-
     try {
       if (editingUserId) {
-        // Placeholder for updating user via API
-        // Replace with actual API call, e.g., updateUser({ id: editingUserId, ...formData })
-        await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
+        // Editing an existing user
+        const payload = {
+          id: editingUserId,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          phone_number: formData.phone,
+          role: formData.role,
+          department: formData.department,
+          region: formData.branch,
+        };
+
+        await editUserPayload(payload); // Await the API call
+
+        if (editUserError) {
+          throw new Error(editUserError || "Failed to update user");
+        }
+
+        // Update local state with the edited user data
         setUsers(
           users.map((user) =>
             user.id === editingUserId
               ? {
                   ...user,
-                  name: fullName,
+                  name: `${formData.first_name} ${formData.last_name}`.trim(),
                   email: formData.email,
                   role: formData.role,
-                  phone: formData.phone,
+                  phone_number: formData.phone,
                   department: formData.department,
-                  branch: formData.branch,
+                  region: formData.branch,
                 }
               : user
           )
         );
         toast.success("User updated successfully");
       } else {
-        // Placeholder for creating user via API
-        // Replace with actual API call, e.g., createUser({ ...formData })
-        await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
-        const newUser: User = {
-          id: `temp-${Date.now()}`, // Temporary ID; real ID should come from API
-          name: fullName,
+        // Adding a new user
+        const payload = {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          phone_number: formData.phone,
+          role: formData.role,
+          department: formData.department,
+          region: formData.branch,
+          password: "Nstif@12345",
+        };
+
+        const newUser = await addUserPayload(payload); 
+
+        if (addUserError) {
+          throw new Error(addUserError || "Failed to create user");
+        }
+
+        const createdUser: User = { //@ts-ignore
+          id: newUser.id || `temp-${Date.now()}`, 
+          name: `${formData.first_name} ${formData.last_name}`.trim(),
           email: formData.email,
           role: formData.role,
           status: "Active",
@@ -140,15 +190,16 @@ export default function UsersRolesManagement() {
           department: formData.department,
           region: formData.branch,
         };
-        setUsers([...users, newUser]);
+        setUsers([...users, createdUser]);
         toast.success("User created successfully");
       }
 
-      setIsModalOpen(false);
-      refetchUserData(); // Refresh user data after save
+      setIsModalOpen(false); // Close modal only on success
+      refetchUserData(); // Refresh user data
     } catch (error) {
       console.error("Error saving user:", error);
       toast.error("Failed to save user. Please try again.");
+      // Modal stays open on error
     }
   };
 
@@ -164,19 +215,15 @@ export default function UsersRolesManagement() {
     if (!userToDelete) return;
 
     try {
-      // Placeholder for deleting user via API
-      // Replace with actual API call, e.g., deleteUser(userToDelete.id)
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
-      setUsers(users.filter((user) => user.id !== userToDelete.id));
+      await deleteUserPath(userToDelete.id); // Await the API call
       toast.success("User deleted successfully");
-      refetchUserData(); // Refresh user data after deletion
+      setIsDeleteDialogOpen(false); // Close dialog only on success
+      setUserToDelete(null);
     } catch (error) {
       console.error("Error deleting user:", error);
       toast.error("Failed to delete user. Please try again.");
+      // Dialog stays open on error
     }
-
-    setIsDeleteDialogOpen(false);
-    setUserToDelete(null);
   };
 
   const handleResetFilters = () => {
@@ -191,7 +238,9 @@ export default function UsersRolesManagement() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Users & Roles Management</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Users & Roles Management
+            </h1>
             <p className="text-sm text-gray-500 mt-1">
               Manage staff accounts and role assignments
             </p>
@@ -210,8 +259,8 @@ export default function UsersRolesManagement() {
         {userDataError && (
           <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg flex justify-between items-center">
             <span>Failed to load users. Please try again.</span>
-            <Button
-              // onClick={refetchUserData}
+            <Button //@ts-ignore
+              onClick={refetchUserData}
               className="bg-red-600 hover:bg-red-700 text-white"
               aria-label="Retry loading users"
             >
@@ -228,7 +277,6 @@ export default function UsersRolesManagement() {
             filterRole={filterRole}
             onFilterChange={setFilterRole}
           />
-         
         </div>
 
         {/* Loading State */}
@@ -241,7 +289,9 @@ export default function UsersRolesManagement() {
         {/* No Data State */}
         {!gettingUserData && filteredUsers.length === 0 && (
           <div className="text-center py-12 bg-white shadow-md rounded-lg">
-            <p className="text-gray-500">No users found. Try adjusting your search or filters.</p>
+            <p className="text-gray-500">
+              No users found. Try adjusting your search or filters.
+            </p>
           </div>
         )}
 
@@ -264,7 +314,13 @@ export default function UsersRolesManagement() {
         {/* Modals */}
         <UserFormModal
           isOpen={isModalOpen}
-          onOpenChange={setIsModalOpen}
+          onOpenChange={(open) => {
+            // Prevent closing if API call is in progress
+            if (!open && (addUserIsLoading || editUserIsLoading)) {
+              return;
+            }
+            setIsModalOpen(open);
+          }}
           onSave={handleSaveUser}
           formData={formData}
           onFormChange={setFormData}
@@ -273,7 +329,14 @@ export default function UsersRolesManagement() {
 
         <DeleteConfirmationDialog
           isOpen={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
+          onOpenChange={(open) => {
+            // Prevent closing if delete operation is in progress
+            if (!open && deleteUserIsLoading) {
+              return;
+            }
+            setIsDeleteDialogOpen(open);
+            if (!open) setUserToDelete(null);
+          }}
           onConfirm={handleConfirmDelete}
           userName={userToDelete?.name || ""}
         />

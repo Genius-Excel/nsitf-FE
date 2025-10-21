@@ -70,7 +70,7 @@ export function CreateAdminForm() {
       title: "Success",
       description: "Admin account created successfully",
     });
-    router.push("/");
+    router.push("/signup-success");
   });
 
   // Initialize react-hook-form with Zod resolver

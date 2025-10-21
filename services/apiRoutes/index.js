@@ -17,6 +17,7 @@ export const routes = {
   adminAddUsers:()=> "/api/admin/users",
   adminGetUsers:()=> "/api/admin/users",
   editUser:(userId)=> `/api/admin/users/${userId}`,
+  deleteUser:(userId)=> `/api/admin/users/${userId}`,
   
   
   // Inventory

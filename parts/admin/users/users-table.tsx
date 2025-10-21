@@ -294,9 +294,9 @@ export const UserFormModal: React.FC<{
               <SelectValue placeholder="Select branch" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="headquarters">Headquarters</SelectItem>
-              <SelectItem value="regional">Regional</SelectItem>
-              <SelectItem value="local">Local</SelectItem>
+              <SelectItem value="Abuja">Abuja</SelectItem>
+              <SelectItem value="lagos">Lagos</SelectItem>
+              <SelectItem value="kano">Kano</SelectItem>
             </SelectContent>
           </Select>
         </div>

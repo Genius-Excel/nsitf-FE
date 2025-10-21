@@ -72,6 +72,25 @@ export const useEditUser =(handleSuccess)=>{
   };
 }
 
+export const useDeleteUser = (handleSuccess) => {
+  const { data, error, isPending, mutate } = useMutateItem({
+    mutationFn: (userId) =>
+      httpService.deleteData(routes.deleteUser(userId)),
+    onSuccess: (requestParams) => {
+      const resData = requestParams?.data || {};
+
+      handleSuccess(resData);
+    },
+  });
+
+  return {
+    deleteUSerData: data,
+    deleteUserError: ErrorHandler(error),
+    deleteUserIsLoading: isPending,
+    deleteUserPath: (userId) => mutate(userId),
+  };
+};
+
 export const useGetConfirmEmail = ({ enabled = false }) => {
   const { data, error, isLoading, refetch, setFilter } = useFetchItem({
     queryKey: ["ConfirmEmailWithToken"],
