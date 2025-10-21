@@ -7,7 +7,7 @@ import UpcomingSectionCard from "./upcoming-section-cards";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BigBtns from "./bigBtns";
-import { Calendar, TrendingUp, TriangleAlert } from "lucide-react";
+import { Calendar, Plus, TrendingUp, TriangleAlert } from "lucide-react";
 import ScheduleInspectionModal from "@/components/shedule-inspection";
 import ViewAllInspectionsModal from "@/components/view-all-inspection";
 
@@ -60,12 +60,13 @@ const Inspetion = () => {
           </p>
         </div>
         <PermissionGuard permission="manage_compliance" fallback={null}>
-          <Button
+          <button
             onClick={() => setIsScheduleModalOpen(true)}
-            className="bg-green-600 hover:bg-green-700"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
           >
+            <Plus size={16} />
             Schedule Inspection
-          </Button>
+          </button>
         </PermissionGuard>
       </div>
 

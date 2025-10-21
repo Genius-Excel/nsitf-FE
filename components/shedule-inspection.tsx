@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
+import { Button } from "./ui/button";
+import { DialogFooter } from "./ui/dialog";
 
 interface ScheduleInspectionModalProps {
   isOpen: boolean;
@@ -153,20 +155,21 @@ export default function ScheduleInspectionModal({
           </div>
         </div>
 
-        <div className="flex gap-3 mt-6">
-          <button
+        <DialogFooter className="mt-6">
+          <Button
+            variant="outline"
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50"
+            className="text-sm"
           >
             Cancel
-          </button>
+          </Button>
           <button
             onClick={handleScheduleInspection}
-            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
           >
             Schedule Inspection
           </button>
-        </div>
+        </DialogFooter>
       </div>
     </div>
   );

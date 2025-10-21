@@ -82,3 +82,42 @@ export interface NewPasswordFormData {
   password: string;
   confirmPassword: string;
 }
+
+export interface LegalCase {
+  id: string;
+  title: string;
+  description: string;
+  created: string;
+  filed: string;
+  amountClaimed: string;
+  nextHearing: string;
+  status: "pending" | "closed" | "assigned-obtained";
+  outcome?: string;
+}
+
+export interface DemandNotice {
+  id: string;
+  title: string;
+  company: string;
+  amount: string;
+  date: string;
+}
+
+export interface DemandNoticeFormProps {
+  onClose: () => void;
+  onSubmit: (data: DemandNoticeData) => void;
+}
+
+export interface DemandNoticeData {
+  noticeId: string;
+  companyName: string;
+  contactPerson: string;
+  email: string;
+  phone: string;
+  amountDue: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate: string;
+  description: string;
+  attachments: File[];
+}
