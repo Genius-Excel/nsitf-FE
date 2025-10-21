@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { createClient } from "./supabase/client";
 import { toast } from "sonner";
+import { parse, format } from "date-fns";
 // import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Database } from "./database/types";
 
@@ -424,10 +425,30 @@ export function getLocalStorageItem(key: string) {
 
 export function getAccessToken() {
   if (typeof window !== "undefined") {
-    return localStorage.getItem("accessToken");
+    try {
+      const userData = localStorage.getItem("user"); 
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        return parsedData["access-token"] || null;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error accessing or parsing localStorage:", error);
+      return null;
+    }
   }
   return null;
 }
+
+export const formatDate = (dateString: string): string => {
+  try {
+    const date = parse(dateString, "yyyy-MM-dd HH:mm:ss", new Date());
+    return format(date, "MMMM d, yyyy, h:mm a");
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return dateString; // Fallback to original string if parsing fails
+  }
+};
 
 export const getStatusColor = (status: string) => {
   switch (status) {

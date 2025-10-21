@@ -51,7 +51,6 @@ class HttpService {
   };
 
   getData = async (url,) => {
-    // console.log(url);
     const AuthStr = "Bearer ".concat(getAccessToken());
     // console.log("AuthStr: =>", AuthStr);
     return axios.get(`${this.baseUrl}${url}`, {

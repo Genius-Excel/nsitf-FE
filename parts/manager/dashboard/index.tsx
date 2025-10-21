@@ -52,7 +52,7 @@ export default function DashboardPage() {
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-semibold tracking-tight text-balance">Welcome back, {user?.name}</h1>
-          {user && <RoleBadge role={user.role} />}
+          {/* {user && <RoleBadge role={user.role} />} */}
         </div>
         <p className="text-muted-foreground text-balance">Here's an overview of your business operations</p>
       </div>

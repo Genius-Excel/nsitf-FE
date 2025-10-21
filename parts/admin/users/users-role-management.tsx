@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { mockUsers } from "@/lib/Constants";
+import toast from "react-hot-toast";
 import {
   DeleteConfirmationDialog,
   RolePermissionsOverview,
@@ -10,11 +10,17 @@ import {
   UsersTable,
 } from "./users-table";
 import { NewUserForm, User } from "@/lib/types";
+import {
+  useAddUser,
+  useDeleteUser,
+  useEditUser,
+  useGetUsers,
+} from "@/services/admin/index";
 
 export default function UsersRolesManagement() {
   // ============== STATE ==============
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("All Roles");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,8 +39,32 @@ export default function UsersRolesManagement() {
     department: "",
     branch: "",
   });
+  const { gettingUserData, refetchUserData, userData, userDataError } =
+    useGetUsers({ enabled: true });
+
+  const { addUserData, addUserError, addUserIsLoading, addUserPayload } =
+    useAddUser();
+  const { editUserData, editUserError, editUserIsLoading, editUserPayload } =
+    useEditUser();
+  const {
+    deleteUSerData,
+    deleteUserError,
+    deleteUserIsLoading,
+    deleteUserPath,
+  } = useDeleteUser(() => {
+    toast.success("User deleted");
+    setIsDeleteDialogOpen(false);
+    setUserToDelete(null);
+  });
 
   // ============== EFFECTS ==============
+  useEffect(() => {
+    if (userData) {
+      setFilteredUsers(userData);
+      setUsers(userData);
+    }
+  }, [userData]);
+
   useEffect(() => {
     filterUsers();
   }, [searchTerm, filterRole, users]);
@@ -46,7 +76,8 @@ export default function UsersRolesManagement() {
     if (searchTerm) {
       filtered = filtered.filter(
         (user) =>
-          user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user?.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -73,62 +104,102 @@ export default function UsersRolesManagement() {
   };
 
   const handleEditUser = (user: User) => {
-    const [first_name, ...lastNameParts] = user.name.split(" ");
     setEditingUserId(user.id);
     setFormData({
-      first_name,
-      last_name: lastNameParts.join(" "),
+      first_name: user?.first_name || "",
+      last_name: user?.last_name || "",
       email: user.email,
-      phone: "",
+      phone: user.phone_number || "",
       role: user.role,
-      department: "",
-      branch: "",
+      department: user.department || "",
+      branch: user.region || "",
     });
     setIsModalOpen(true);
   };
 
   const handleSaveUser = async () => {
     if (!formData.first_name || !formData.email || !formData.role) {
-      alert("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
       return;
     }
 
-    const fullName = `${formData.first_name} ${formData.last_name}`.trim();
-
     try {
       if (editingUserId) {
-        // UPDATE USER (Mock implementation)
+        // Editing an existing user
+        const payload = {
+          id: editingUserId,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          phone_number: formData.phone,
+          role: formData.role,
+          department: formData.department,
+          region: formData.branch,
+        };
+
+        await editUserPayload(payload); // Await the API call
+
+        if (editUserError) {
+          throw new Error(editUserError || "Failed to update user");
+        }
+
+        // Update local state with the edited user data
         setUsers(
           users.map((user) =>
             user.id === editingUserId
               ? {
                   ...user,
-                  name: fullName,
+                  name: `${formData.first_name} ${formData.last_name}`.trim(),
                   email: formData.email,
                   role: formData.role,
+                  phone_number: formData.phone,
+                  department: formData.department,
+                  region: formData.branch,
                 }
               : user
           )
         );
-        alert("User updated successfully");
+        toast.success("User updated successfully");
       } else {
-        // CREATE NEW USER (Mock implementation)
-        const newUser: User = {
-          id: Date.now().toString(),
-          name: fullName,
+        // Adding a new user
+        const payload = {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          phone_number: formData.phone,
+          role: formData.role,
+          department: formData.department,
+          region: formData.branch,
+          password: "Nstif@12345",
+        };
+
+        const newUser = await addUserPayload(payload); 
+
+        if (addUserError) {
+          throw new Error(addUserError || "Failed to create user");
+        }
+
+        const createdUser: User = { //@ts-ignore
+          id: newUser.id || `temp-${Date.now()}`, 
+          name: `${formData.first_name} ${formData.last_name}`.trim(),
           email: formData.email,
           role: formData.role,
           status: "Active",
           date_added: new Date().toISOString().split("T")[0],
+          phone_number: formData.phone,
+          department: formData.department,
+          region: formData.branch,
         };
-        setUsers([...users, newUser]);
-        alert("User created successfully");
+        setUsers([...users, createdUser]);
+        toast.success("User created successfully");
       }
 
-      setIsModalOpen(false);
+      setIsModalOpen(false); // Close modal only on success
+      refetchUserData(); // Refresh user data
     } catch (error) {
       console.error("Error saving user:", error);
-      alert("Failed to save user. Please try again.");
+      toast.error("Failed to save user. Please try again.");
+      // Modal stays open on error
     }
   };
 
@@ -144,77 +215,132 @@ export default function UsersRolesManagement() {
     if (!userToDelete) return;
 
     try {
-      // Mock deletion (remove user from state)
-      setUsers(users.filter((user) => user.id !== userToDelete.id));
-      alert("User deleted successfully");
+      await deleteUserPath(userToDelete.id); // Await the API call
+      toast.success("User deleted successfully");
+      setIsDeleteDialogOpen(false); // Close dialog only on success
+      setUserToDelete(null);
     } catch (error) {
       console.error("Error deleting user:", error);
-      alert("Failed to delete user. Please try again.");
+      toast.error("Failed to delete user. Please try again.");
+      // Dialog stays open on error
     }
+  };
 
-    setIsDeleteDialogOpen(false);
-    setUserToDelete(null);
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setFilterRole("All Roles");
   };
 
   // ============== RENDER ==============
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-start mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-900">
               Users & Roles Management
             </h1>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-500 mt-1">
               Manage staff accounts and role assignments
             </p>
           </div>
           <Button
             onClick={handleAddNewUser}
-            style={{ backgroundColor: "#00a63e" }}
-            className="text-white text-sm font-medium hover:opacity-90"
+            className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors duration-200"
+            aria-label="Add new user"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add New User
           </Button>
         </div>
 
+        {/* Error State */}
+        {userDataError && (
+          <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg flex justify-between items-center">
+            <span>Failed to load users. Please try again.</span>
+            <Button //@ts-ignore
+              onClick={refetchUserData}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              aria-label="Retry loading users"
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+
         {/* Search and Filter */}
-        <SearchAndFilter
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          filterRole={filterRole}
-          onFilterChange={setFilterRole}
-        />
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <SearchAndFilter
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            filterRole={filterRole}
+            onFilterChange={setFilterRole}
+          />
+        </div>
+
+        {/* Loading State */}
+        {gettingUserData && (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
+          </div>
+        )}
+
+        {/* No Data State */}
+        {!gettingUserData && filteredUsers.length === 0 && (
+          <div className="text-center py-12 bg-white shadow-md rounded-lg">
+            <p className="text-gray-500">
+              No users found. Try adjusting your search or filters.
+            </p>
+          </div>
+        )}
 
         {/* Users Table */}
-        <UsersTable
-          users={filteredUsers}
-          onEdit={handleEditUser}
-          onDeleteClick={handleDeleteClick}
-        />
+        {!gettingUserData && filteredUsers.length > 0 && (
+          <div className="bg-white shadow-md rounded-lg overflow-hidden">
+            <UsersTable
+              users={filteredUsers}
+              onEdit={handleEditUser}
+              onDeleteClick={handleDeleteClick}
+            />
+          </div>
+        )}
 
         {/* Role Permissions Overview */}
-        <RolePermissionsOverview />
+        <div className="mt-6">
+          <RolePermissionsOverview />
+        </div>
+
+        {/* Modals */}
+        <UserFormModal
+          isOpen={isModalOpen}
+          onOpenChange={(open) => {
+            // Prevent closing if API call is in progress
+            if (!open && (addUserIsLoading || editUserIsLoading)) {
+              return;
+            }
+            setIsModalOpen(open);
+          }}
+          onSave={handleSaveUser}
+          formData={formData}
+          onFormChange={setFormData}
+          isEditing={editingUserId !== null}
+        />
+
+        <DeleteConfirmationDialog
+          isOpen={isDeleteDialogOpen}
+          onOpenChange={(open) => {
+            // Prevent closing if delete operation is in progress
+            if (!open && deleteUserIsLoading) {
+              return;
+            }
+            setIsDeleteDialogOpen(open);
+            if (!open) setUserToDelete(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          userName={userToDelete?.name || ""}
+        />
       </div>
-
-      {/* Modals */}
-      <UserFormModal
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        onSave={handleSaveUser}
-        formData={formData}
-        onFormChange={setFormData}
-        isEditing={editingUserId !== null}
-      />
-
-      <DeleteConfirmationDialog
-        isOpen={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onConfirm={handleConfirmDelete}
-        userName={userToDelete?.name || ""}
-      />
     </div>
   );
 }

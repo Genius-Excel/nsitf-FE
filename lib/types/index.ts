@@ -4,7 +4,15 @@ export interface User {
   email: string;
   role: string;
   status: "Active" | "Inactive";
-  date_added: string;
+  date_added?: string;
+  first_name?: string | undefined;
+  last_name?: string | undefined;
+  phone_number?: string;
+  department?: string;
+  region?: string;
+  created_at?: string;
+  updated_at?: string;
+  account_status?: string;
 }
 
 export interface Claim {
@@ -82,6 +90,7 @@ export interface NewPasswordFormData {
   password: string;
   confirmPassword: string;
 }
+
 
 export interface LegalCase {
   id: string;
