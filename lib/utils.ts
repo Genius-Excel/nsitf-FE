@@ -416,7 +416,7 @@ export const getActivityStatusColor = (status: string): string => {
   return colors[status] || "bg-gray-100 text-gray-700";
 };
 
-export function getLocalStorageItem(key:string) {
+export function getLocalStorageItem(key: string) {
   if (typeof window !== "undefined") {
     return localStorage.getItem(key);
   }
@@ -429,7 +429,7 @@ export function getAccessToken() {
       const userData = localStorage.getItem("user"); 
       if (userData) {
         const parsedData = JSON.parse(userData);
-        return parsedData["access-token"] || null; 
+        return parsedData["access-token"] || null;
       }
       return null;
     } catch (error) {
@@ -447,5 +447,31 @@ export const formatDate = (dateString: string): string => {
   } catch (error) {
     console.error("Error formatting date:", error);
     return dateString; // Fallback to original string if parsing fails
+  }
+};
+
+export const getStatusColor = (status: string) => {
+  switch (status) {
+    case "pending":
+      return "bg-blue-500";
+    case "closed":
+      return "bg-green-500";
+    case "assigned-obtained":
+      return "bg-purple-500";
+    default:
+      return "bg-gray-500";
+  }
+};
+
+export const getStatusLabel = (status: string) => {
+  switch (status) {
+    case "pending":
+      return "Pending";
+    case "closed":
+      return "Closed";
+    case "assigned-obtained":
+      return "Assigned Obtained";
+    default:
+      return status;
   }
 };

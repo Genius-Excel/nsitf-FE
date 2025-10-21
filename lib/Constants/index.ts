@@ -1,4 +1,12 @@
-import { Role, User, HSEActivity, ChartDataPoint, Claim } from "@/lib/types";
+import {
+  Role,
+  User,
+  HSEActivity,
+  ChartDataPoint,
+  Claim,
+  LegalCase,
+  DemandNotice,
+} from "@/lib/types";
 
 export const ROLES: Role[] = [
   {
@@ -214,5 +222,75 @@ export const mockHSEActivities: HSEActivity[] = [
     details:
       "Safety compliance letter issued. Organization has 30 days to submit corrective measures plan.",
     icon: "📋",
+  },
+];
+
+export const cases: LegalCase[] = [
+  {
+    id: "LEG-001",
+    title: "Delta Manufacturing Ltd",
+    description: "Breach of contract and cancellation",
+    created: "On 2025-09-05",
+    filed: "On 2021-04-05",
+    amountClaimed: "₦2,340,000",
+    nextHearing: "2025-10-20",
+    status: "pending",
+  },
+  {
+    id: "LEG-002",
+    title: "Sunrise Textiles",
+    description: "Intellectual Compensation Dispute",
+    created: "On 2025-02-02",
+    filed: "On 2025-08-02",
+    amountClaimed: "₦1,890,000",
+    nextHearing: "",
+    status: "closed",
+    outcome: "Employer agreed to pay full amount in installments",
+  },
+  {
+    id: "LEG-003",
+    title: "Tech Park Solutions",
+    description: "Labor Contract Issues",
+    created: "On 2025-09-08",
+    filed: "On 2025-08-22",
+    amountClaimed: "₦2,340,000",
+    nextHearing: "2025-11-05",
+    status: "pending",
+  },
+  {
+    id: "LEG-004",
+    title: "Coastal Logistics",
+    description: "Late Payment Penalties",
+    created: "On 2025-02-08",
+    filed: "On 2025-08-18",
+    amountClaimed: "₦950,000",
+    nextHearing: "",
+    status: "assigned-obtained",
+    outcome:
+      "Court ruled in favor of 05/2017. Full payment received within 10 days.",
+  },
+];
+
+export const demandNotices: DemandNotice[] = [
+  {
+    id: "DN 2025-079",
+    title: "Green Manufacturing Co",
+    company: "Green Manufacturing Co",
+    amount: "₦1,290,500",
+    date: "2025-09-29",
+  },
+  {
+    id: "DN 2025-071",
+    title: "White Constructions Ltd",
+    company: "White Constructions Ltd",
+    amount: "₦2,109,800",
+    date: "2025-09-10",
+  },
+  {
+    id: "DN 2025-072",
+    title: "Metro Retail Stores",
+    company: "Metro Retail Stores",
+    amount: "₦850,000",
+    date: "2025-10-01",
   },
 ];
