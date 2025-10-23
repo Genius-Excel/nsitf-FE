@@ -475,3 +475,35 @@ export const getStatusLabel = (status: string) => {
       return status;
   }
 };
+
+// export const getRoleBadgeColor = (role: string): string => {
+//   const colors: Record<string, string> = {
+//     admin: "bg-purple-100 text-purple-700",
+//     actuary: "bg-blue-100 text-blue-700",
+//     inspector: "bg-green-100 text-green-700",
+//     legal: "bg-orange-100 text-orange-700",
+//     "hse officer": "bg-yellow-100 text-yellow-700",
+//     "compliance officer": "bg-pink-100 text-pink-700",
+//   };
+//   return colors[role.toLowerCase()] || "bg-gray-100 text-gray-700";
+// };
+
+export const formatProfileDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
+export const formatDateTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
