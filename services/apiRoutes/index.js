@@ -12,6 +12,7 @@ export const routes = {
   resetPasswordEmailRequest:()=> "/api/auth/password-reset-email",
   resetPassword:()=> "",
   changePassword:()=> "/api/auth/change-password",
+  userProfile:()=> `/api/user-profile`,
 
   verifyEmailToken:(token)=> `/api/auth/confirm-email?token=${token}`,
   adminAddUsers:()=> "/api/admin/users",

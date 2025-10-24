@@ -11,11 +11,19 @@ import {
   Eye,
   EyeOff,
   ArrowLeft,
+  Mail,
 } from "lucide-react";
+import { useChangePassword } from "@/services/auth";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
 
+  // Email state
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [isEmailValidated, setIsEmailValidated] = useState(false);
+
+  // Password states
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,6 +35,14 @@ export default function ChangePasswordPage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Hooks
+  const {
+    changePasswordData,
+    changePasswordError,
+    changePasswordIsLoading,
+    changePasswordPayload,
+  } = useChangePassword();
 
   // Password validation
   const passwordStrength = {
@@ -45,8 +61,25 @@ export default function ChangePasswordPage() {
     passwordStrength.hasSpecialChar &&
     newPassword === confirmPassword;
 
+  // Email validation function
+  const handleEmailValidation = () => {
+    if (!email) {
+      setEmailError("Please enter your email address");
+      return;
+    }
+
+    // More robust email regex
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      setEmailError("Please enter a valid email address");
+      return;
+    }
+
+    setEmailError("");
+    setIsEmailValidated(true);
+  };
+
   const handleChangePassword = async () => {
-    // Validation
     if (!currentPassword) {
       setError("Please enter your current password");
       return;
@@ -77,58 +110,27 @@ export default function ChangePasswordPage() {
     setSuccess(false);
 
     try {
-      // Get access token from localStorage or your auth state
-      const accessToken = localStorage.getItem("ACCESS_TOKEN");
+      const payload = {
+        email,
+        current_password: currentPassword,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      };
 
-      if (!accessToken) {
-        setError("You must be logged in to change your password");
-        router.push("/login");
-        return;
-      }
+      await changePasswordPayload(payload);
 
-      const formData = new FormData();
-      formData.append("current_password", currentPassword);
-      formData.append("new_password", newPassword);
-      formData.append("confirm_password", confirmPassword);
-
-      const response = await fetch(
-        "https://nsitf-be.geniusexcel.tech/api/auth/change-password",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
+      if (changePasswordData) {
         setSuccess(true);
-        // Clear form
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
-
         // Optional: Redirect after success
-        setTimeout(() => {
-          router.push("/dashboard"); // or wherever you want to redirect
-        }, 3000);
+        // setTimeout(() => router.push("/dashboard"), 3000);
       } else {
-        if (response.status === 401) {
-          setError("Session expired. Please log in again.");
-          router.push("/login");
-        } else if (response.status === 400) {
-          setError(
-            data.message ||
-              "Failed to change password. Please check your current password."
-          );
-        } else {
-          setError(
-            data.message || "Failed to change password. Please try again."
-          );
-        }
+        setError(
+          changePasswordError ||
+            "Failed to change password. Please check your email or current password."
+        );
       }
     } catch (err) {
       console.error("Error changing password:", err);
@@ -139,8 +141,12 @@ export default function ChangePasswordPage() {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && isPasswordValid && currentPassword) {
-      handleChangePassword();
+    if (e.key === "Enter") {
+      if (!isEmailValidated) {
+        handleEmailValidation();
+      } else if (isPasswordValid && currentPassword) {
+        handleChangePassword();
+      }
     }
   };
 
@@ -170,7 +176,9 @@ export default function ChangePasswordPage() {
               Change Password
             </h1>
             <p className="text-sm text-gray-600">
-              Update your account password
+              {isEmailValidated
+                ? "Update your account password"
+                : "Enter your email to proceed"}
             </p>
           </div>
 
@@ -190,277 +198,322 @@ export default function ChangePasswordPage() {
           )}
 
           {/* Error Message */}
-          {error && (
+          {(error || emailError) && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 mb-4">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{error}</p>
+              <p className="text-sm text-red-700">{error || emailError}</p>
             </div>
           )}
 
           {/* Form */}
-          <div className="space-y-4">
-            {/* Current Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Current Password
-              </label>
-              <div className="relative">
-                <Input
-                  type={showCurrentPassword ? "text" : "password"}
-                  placeholder="Enter current password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  className="border-gray-200 pr-10"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  disabled={isLoading}
-                >
-                  {showCurrentPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* New Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                New Password
-              </label>
-              <div className="relative">
-                <Input
-                  type={showNewPassword ? "text" : "password"}
-                  placeholder="Enter new password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  className="border-gray-200 pr-10"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  disabled={isLoading}
-                >
-                  {showNewPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Confirm New Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Confirm New Password
-              </label>
-              <div className="relative">
-                <Input
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  className="border-gray-200 pr-10"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  disabled={isLoading}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Password Requirements */}
-            {newPassword && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-xs font-semibold text-gray-900 mb-3">
-                  Password must contain:
-                </p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                        passwordStrength.hasMinLength
-                          ? "bg-green-500"
-                          : "bg-gray-300"
-                      }`}
-                    >
-                      {passwordStrength.hasMinLength && (
-                        <Check className="w-3 h-3 text-white" />
-                      )}
-                    </div>
-                    <span
-                      className={`text-xs ${
-                        passwordStrength.hasMinLength
-                          ? "text-green-700"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      At least 8 characters
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                        passwordStrength.hasUppercase
-                          ? "bg-green-500"
-                          : "bg-gray-300"
-                      }`}
-                    >
-                      {passwordStrength.hasUppercase && (
-                        <Check className="w-3 h-3 text-white" />
-                      )}
-                    </div>
-                    <span
-                      className={`text-xs ${
-                        passwordStrength.hasUppercase
-                          ? "text-green-700"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      One uppercase letter
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                        passwordStrength.hasLowercase
-                          ? "bg-green-500"
-                          : "bg-gray-300"
-                      }`}
-                    >
-                      {passwordStrength.hasLowercase && (
-                        <Check className="w-3 h-3 text-white" />
-                      )}
-                    </div>
-                    <span
-                      className={`text-xs ${
-                        passwordStrength.hasLowercase
-                          ? "text-green-700"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      One lowercase letter
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                        passwordStrength.hasNumber
-                          ? "bg-green-500"
-                          : "bg-gray-300"
-                      }`}
-                    >
-                      {passwordStrength.hasNumber && (
-                        <Check className="w-3 h-3 text-white" />
-                      )}
-                    </div>
-                    <span
-                      className={`text-xs ${
-                        passwordStrength.hasNumber
-                          ? "text-green-700"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      One number
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                        passwordStrength.hasSpecialChar
-                          ? "bg-green-500"
-                          : "bg-gray-300"
-                      }`}
-                    >
-                      {passwordStrength.hasSpecialChar && (
-                        <Check className="w-3 h-3 text-white" />
-                      )}
-                    </div>
-                    <span
-                      className={`text-xs ${
-                        passwordStrength.hasSpecialChar
-                          ? "text-green-700"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      One special character
-                    </span>
-                  </div>
+          {!isEmailValidated ? (
+            <div className="space-y-4">
+              {/* Email Input */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    className="border-gray-200 pr-10"
+                    disabled={isLoading}
+                  />
+                  <Mail className="w-5 h-5 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2" />
                 </div>
               </div>
-            )}
 
-            {/* Password Match Indicator */}
-            {confirmPassword && (
-              <div
-                className={`flex items-center gap-2 text-sm ${
-                  newPassword === confirmPassword
-                    ? "text-green-600"
-                    : "text-red-600"
-                }`}
+              {/* Validate Email Button */}
+              <button
+                type="button"
+                onClick={handleEmailValidation}
+                disabled={isLoading || !email}
+                style={{ backgroundColor: "#00a63e" }}
+                className="w-full py-3 text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
               >
-                {newPassword === confirmPassword ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    <span>Passwords match</span>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="w-4 h-4" />
-                    <span>Passwords do not match</span>
-                  </>
-                )}
+                {isLoading ? "Validating Email..." : "Validate Email"}
+              </button>
+
+              {/* Back Button */}
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="w-full py-3 text-gray-700 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                disabled={isLoading}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Current Password */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Current Password
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showCurrentPassword ? "text" : "password"}
+                    placeholder="Enter current password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    className="border-gray-200 pr-10"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    disabled={isLoading}
+                  >
+                    {showCurrentPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               </div>
-            )}
 
-            {/* Submit Button */}
-            <button
-              type="button"
-              onClick={handleChangePassword}
-              disabled={
-                isLoading ||
-                !currentPassword ||
-                !newPassword ||
-                !confirmPassword ||
-                !isPasswordValid
-              }
-              style={{ backgroundColor: "#00a63e" }}
-              className="w-full py-3 text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-            >
-              {isLoading ? "Changing Password..." : "Change Password"}
-            </button>
+              {/* New Password */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  New Password
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    className="border-gray-200 pr-10"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    disabled={isLoading}
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
 
-            {/* Back Button */}
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="w-full py-3 text-gray-700 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-              disabled={isLoading}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </button>
-          </div>
+              {/* Confirm New Password */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    className="border-gray-200 pr-10"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    disabled={isLoading}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Password Requirements */}
+              {newPassword && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-xs font-semibold text-gray-900 mb-3">
+                    Password must contain:
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                          passwordStrength.hasMinLength
+                            ? "bg-green-500"
+                            : "bg-gray-300"
+                        }`}
+                      >
+                        {passwordStrength.hasMinLength && (
+                          <Check className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+                      <span
+                        className={`text-xs ${
+                          passwordStrength.hasMinLength
+                            ? "text-green-700"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        At least 8 characters
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                          passwordStrength.hasUppercase
+                            ? "bg-green-500"
+                            : "bg-gray-300"
+                        }`}
+                      >
+                        {passwordStrength.hasUppercase && (
+                          <Check className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+                      <span
+                        className={`text-xs ${
+                          passwordStrength.hasUppercase
+                            ? "text-green-700"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        One uppercase letter
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                          passwordStrength.hasLowercase
+                            ? "bg-green-500"
+                            : "bg-gray-300"
+                        }`}
+                      >
+                        {passwordStrength.hasLowercase && (
+                          <Check className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+                      <span
+                        className={`text-xs ${
+                          passwordStrength.hasLowercase
+                            ? "text-green-700"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        One lowercase letter
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                          passwordStrength.hasNumber
+                            ? "bg-green-500"
+                            : "bg-gray-300"
+                        }`}
+                      >
+                        {passwordStrength.hasNumber && (
+                          <Check className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+                      <span
+                        className={`text-xs ${
+                          passwordStrength.hasNumber
+                            ? "text-green-700"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        One number
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                          passwordStrength.hasSpecialChar
+                            ? "bg-green-500"
+                            : "bg-gray-300"
+                        }`}
+                      >
+                        {passwordStrength.hasSpecialChar && (
+                          <Check className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+                      <span
+                        className={`text-xs ${
+                          passwordStrength.hasSpecialChar
+                            ? "text-green-700"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        One special character
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Password Match Indicator */}
+              {confirmPassword && (
+                <div
+                  className={`flex items-center gap-2 text-sm ${
+                    newPassword === confirmPassword
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {newPassword === confirmPassword ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Passwords match</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-4 h-4" />
+                      <span>Passwords do not match</span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="button"
+                onClick={handleChangePassword}
+                disabled={
+                  isLoading ||
+                  !currentPassword ||
+                  !newPassword ||
+                  !confirmPassword ||
+                  !isPasswordValid
+                }
+                style={{ backgroundColor: "#00a63e" }}
+                className="w-full py-3 text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+              >
+                {isLoading ? "Changing Password..." : "Change Password"}
+              </button>
+
+              {/* Back Button */}
+              <button
+                type="button"
+                onClick={() => setIsEmailValidated(false)}
+                className="w-full py-3 text-gray-700 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                disabled={isLoading}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Email
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
