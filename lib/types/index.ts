@@ -130,3 +130,23 @@ export interface DemandNoticeData {
   description: string;
   attachments: File[];
 }
+
+export interface UserProfile {
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
+  profile_image: string;
+  alternative_number: string | null;
+  email_verified: boolean;
+  role: string;
+  date_joined: string;
+  last_login: string;
+  is_active: boolean;
+  permissions: string[];
+}
+
+export interface EditProfileFormData {
+  email: string;
+}
