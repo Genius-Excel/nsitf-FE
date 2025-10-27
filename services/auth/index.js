@@ -98,6 +98,29 @@ export const useGetUserProfile =({enabled = false})=>{
   };
 }
 
+export const useEditUserProfile =(handleSuccess)=>{
+   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+    mutationFn: (payload) =>
+      httpService.patchData(
+        payload,
+        routes.editUserProfile()
+      ),
+     onSuccess: (requestParams) => {
+      const resData = requestParams?.data || {};
+      // console.log(requestParams?.data);
+      handleSuccess(resData);
+    },
+  });
+
+  return {
+    editUserProfileData: data?.data || {},
+    editUserProfileError: error ? ErrorHandler(error) : null,
+    editUserProfileIsLoading: isPending,
+    editUserProfilePayload: (requestPayload) => mutate(requestPayload),
+    editUserProfileIsSuccess: isSuccess,
+  };
+}
+
 export const useGetConfirmEmail = ({ enabled = false }) => {
   const { data, error, isLoading, refetch, setFilter } = useFetchItem({
     queryKey: ["ConfirmEmailWithToken"],
