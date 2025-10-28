@@ -199,19 +199,32 @@ export default function CompliancePage() {
         </PermissionGuard>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         <ComplianceCard
           color="green"
-          heading="Total Collected"
+          heading="Total Actual Contributions"
           value="N54.00M"
         />
-        <ComplianceCard color="blue" heading="Total Target" value="N67.00M" />
+        <ComplianceCard
+          color="blue"
+          heading="Contributions Target"
+          value="N67.00M"
+        />
         <ComplianceCard
           color="green"
-          heading="Compliance Rate"
+          heading="Performance Rate"
           value="80.60%"
         />
-        <ComplianceCard color="blue" heading="Total Employers" value="1,690" />
+        <ComplianceCard 
+        color="blue" 
+        heading="Total Employers" 
+        value="1,690" 
+        />
+        <ComplianceCard
+          color="green"
+          heading="Total Employees"
+          value="80.60%"
+        />
       </div>
 
       <div className="">

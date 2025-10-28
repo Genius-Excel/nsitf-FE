@@ -80,6 +80,7 @@ export interface StatCard {
   description: string;
   icon: React.ReactNode;
   bgColor: string;
+  change: string;
 }
 
 export interface ResetEmailFormData {
@@ -90,7 +91,6 @@ export interface NewPasswordFormData {
   password: string;
   confirmPassword: string;
 }
-
 
 export interface LegalCase {
   id: string;

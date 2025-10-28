@@ -70,25 +70,30 @@ const Inspetion = () => {
         </PermissionGuard>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         <InspectionCard
           color="blue"
-          heading="Letters Served (YTD)"
+          heading="Total Inspections"
           value="538"
         />
         <InspectionCard
           color="green"
-          heading="Employers Inspected (YTD)"
+          heading="Demand Notice"
           value="472"
         />
         <InspectionCard
           color="yellow"
-          heading="Debts Established (YTD)"
+          heading="Total Debt Established"
           value="161"
         />
         <InspectionCard
           color="green"
-          heading="Debts Recovered (YTD)"
+          heading="Debt Recovered"
+          value="125"
+        />
+        <InspectionCard
+          color="blue"
+          heading="Performance Rate"
           value="125"
         />
       </div>
