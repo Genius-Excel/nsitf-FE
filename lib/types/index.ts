@@ -53,11 +53,7 @@ export interface ChartDataPoint {
 
 export interface HSEActivity {
   id: string;
-  type:
-    | "OSH Awareness"
-    | "Safety Audit"
-    | "Accident Investigation"
-    | "Letter Issued";
+  type: "Letter Issued" | "OSH Awareness" | "Safety Audit" | "Accident Investigation";
   organization: string;
   date: string;
   status: "Completed" | "Under Investigation" | "Follow-up Required";
@@ -65,18 +61,19 @@ export interface HSEActivity {
   recommendations?: string;
   icon: React.ReactNode;
 }
+
 export interface HSEFormData {
-  type: string;
+  type: "Letter Issued" | "OSH Awareness" | "Safety Audit" | "Accident Investigation" | "";
   organization: string;
   date: string;
-  status: string;
+  status: "Completed" | "Under Investigation" | "Follow-up Required" | "";
   details: string;
   recommendations: string;
 }
 
 export interface StatCard {
   title: string;
-  value: number;
+  value: number | string;
   description: string;
   icon: React.ReactNode;
   bgColor: string;
@@ -149,4 +146,34 @@ export interface UserProfile {
 
 export interface EditProfileFormData {
   email: string;
+}
+
+export interface ComplianceEntry {
+  id: string;
+  region: string;
+  branch: string;
+  contributionCollected: number;
+  target: number;
+  achievement: number;
+  employersRegistered: number;
+  employees: number;
+  period: string;
+}
+
+export interface DashboardMetrics {
+  totalActualContributions: number;
+  contributionsTarget: number;
+  performanceRate: number;
+  totalEmployers: number;
+  totalEmployees: number;
+}
+
+export interface FormData {
+  region: string;
+  branch: string;
+  contributionCollected: number;
+  target: number;
+  employersRegistered: number;
+  employees: number;
+  period: string;
 }

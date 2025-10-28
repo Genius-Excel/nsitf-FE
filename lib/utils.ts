@@ -3,8 +3,9 @@ import { twMerge } from "tailwind-merge";
 import { createClient } from "./supabase/client";
 import { toast } from "sonner";
 import { parse, format } from "date-fns";
+import { ComplianceEntry, DashboardMetrics } from "@/types";
 // import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Database } from "./database/types";
+// import { Database } from "./database/types";
 
 const supabase = createClient();
 
@@ -426,7 +427,7 @@ export function getLocalStorageItem(key: string) {
 export function getAccessToken() {
   if (typeof window !== "undefined") {
     try {
-      const userData = localStorage.getItem("user"); 
+      const userData = localStorage.getItem("user");
       if (userData) {
         const parsedData = JSON.parse(userData);
         return parsedData["access-token"] || null;
@@ -506,4 +507,160 @@ export const formatDateTime = (dateString: string): string => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+export const STORAGE_KEY = "compliance-data";
+
+export const REGIONS = [
+  "Lagos",
+  "Abuja",
+  "Kano",
+  "Port Harcourt",
+  "Ibadan",
+  "Enugu",
+  "Kaduna",
+];
+
+export const DUMMY_DATA: ComplianceEntry[] = [
+  {
+    id: "1",
+    region: "Lagos",
+    branch: "Ikeja",
+    contributionCollected: 15000000,
+    target: 20000000,
+    achievement: 75.0,
+    employersRegistered: 450,
+    employees: 5600,
+    period: "June 2025",
+  },
+  {
+    id: "2",
+    region: "Abuja",
+    branch: "Central",
+    contributionCollected: 12000000,
+    target: 15000000,
+    achievement: 80.0,
+    employersRegistered: 380,
+    employees: 4800,
+    period: "June 2025",
+  },
+  {
+    id: "3",
+    region: "Kano",
+    branch: "Kano Central",
+    contributionCollected: 8500000,
+    target: 10000000,
+    achievement: 85.0,
+    employersRegistered: 280,
+    employees: 3500,
+    period: "June 2025",
+  },
+  {
+    id: "4",
+    region: "Port Harcourt",
+    branch: "GRA",
+    contributionCollected: 11000000,
+    target: 13000000,
+    achievement: 84.6,
+    employersRegistered: 320,
+    employees: 4200,
+    period: "June 2025",
+  },
+  {
+    id: "5",
+    region: "Ibadan",
+    branch: "Bodija",
+    contributionCollected: 7500000,
+    target: 9000000,
+    achievement: 83.3,
+    employersRegistered: 250,
+    employees: 3200,
+    period: "June 2025",
+  },
+];
+
+// Format currency
+export const formatCurrency = (amount: number): string => {
+  return `₦${(amount / 1000000).toFixed(2)}M`;
+};
+
+// Calculate dashboard metrics
+export const calculateMetrics = (entries: ComplianceEntry[]): DashboardMetrics => {
+  const totalActualContributions = entries.reduce((sum, e) => sum + e.contributionCollected, 0);
+  const contributionsTarget = entries.reduce((sum, e) => sum + e.target, 0);
+  const performanceRate = contributionsTarget > 0 
+    ? (totalActualContributions / contributionsTarget) * 100 
+    : 0;
+  const totalEmployers = entries.reduce((sum, e) => sum + e.employersRegistered, 0);
+  const totalEmployees = entries.reduce((sum, e) => sum + e.employees, 0);
+
+  return {
+    totalActualContributions,
+    contributionsTarget,
+    performanceRate,
+    totalEmployers,
+    totalEmployees
+  };
+};
+
+// Storage operations
+export const loadFromStorage = async (): Promise<ComplianceEntry[]> => {
+  try {
+    const result = await window.storage.get(STORAGE_KEY);
+    if (result?.value) {
+      return JSON.parse(result.value);
+    }
+    return DUMMY_DATA;
+  } catch (error) {
+    console.log('No existing data found, using dummy data');
+    return DUMMY_DATA;
+  }
+};
+
+export const saveToStorage = async (entries: ComplianceEntry[]): Promise<void> => {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(entries));
+  } catch (error) {
+    console.error('Failed to save data:', error);
+  }
+};
+
+// Validation functions
+export const validateExcelRow = (row: any, index: number): string | null => {
+  if (!row.Region || !row.Branch || !row['Contribution Collected'] || 
+      !row.Target || !row['Employers Registered'] || !row.Employees || !row.Period) {
+    return `Row ${index + 2}: Missing required fields`;
+  }
+  return null;
+};
+
+export const parseExcelRow = (row: any, index: number): ComplianceEntry => {
+  const achievement = row.Target > 0 
+    ? (row['Contribution Collected'] / row.Target) * 100 
+    : 0;
+
+  return {
+    id: `${Date.now()}-${index}`,
+    region: row.Region,
+    branch: row.Branch,
+    contributionCollected: Number(row['Contribution Collected']),
+    target: Number(row.Target),
+    achievement,
+    employersRegistered: Number(row['Employers Registered']),
+    employees: Number(row.Employees),
+    period: row.Period
+  };
+};
+
+// Search/Filter functions
+export const filterEntries = (entries: ComplianceEntry[], searchTerm: string): ComplianceEntry[] => {
+  return entries.filter(entry =>
+    entry.region.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    entry.branch.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+};
+
+// Calculate achievement
+export const calculateAchievement = (collected: number, target: number): number => {
+  return target > 0 ? (collected / target) * 100 : 0;
 };

@@ -95,65 +95,30 @@ export default function HSEManagement() {
 
       if (editingActivityId) {
         // UPDATE ACTIVITY
-        const response = await fetch(`/api/hse/${editingActivityId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-
-        //     if (response.ok) {
-        //       setActivities(
-        //         activities.map((activity) =>
-        //           activity.id === editingActivityId
-        //             ? { ...activity, ...formData, icon }
-        //             : activity
-        //         )
-        //       );
-        //       alert("HSE record updated successfully");
-        //     }
-        //   } else {
-        //     // CREATE NEW ACTIVITY
-        //     const response = await fetch("/api/hse", {
-        //       method: "POST",
-        //       headers: { "Content-Type": "application/json" },
-        //       body: JSON.stringify(formData),
-        //     });
-
-        //     if (response.ok) {
-        //       const newActivity = await response.json();
-        //       setActivities([newActivity, ...activities]);
-        //       alert("HSE record created successfully");
-        //     }
-        //   }
-
-        //   setIsFormModalOpen(false);
-        // } catch (error) {
-        //   console.error("Error saving HSE record:", error);
-        //   // Mock fallback
-        //   const icon =
-        //     formData.type === "OSH Awareness"
-        //       ? "🛡️"
-        //       : formData.type === "Safety Audit"
-        //       ? "✓"
-        //       : formData.type === "Accident Investigation"
-        //       ? "⚠️"
-        //       : "📋";
-
-        //   if (editingActivityId) {
-        //     setActivities(
-        //       activities.map((activity) =>
-        //         activity.id === editingActivityId
-        //           ? { ...activity, ...formData, icon }
-        //           : activity
-        //       )
-        //     );
+        setActivities(
+          activities.map((activity) =>
+            activity.id === editingActivityId
+              ? {
+                  ...activity,
+                  type: formData.type as HSEActivity["type"],
+                  organization: formData.organization,
+                  date: formData.date,
+                  status: formData.status as HSEActivity["status"],
+                  details: formData.details,
+                  recommendations: formData.recommendations,
+                  icon,
+                }
+              : activity
+          )
+        );
       } else {
+        // CREATE NEW ACTIVITY
         const newActivity: HSEActivity = {
           id: Date.now().toString(),
-          type: formData.type as any,
+          type: formData.type as HSEActivity["type"],
           organization: formData.organization,
           date: formData.date,
-          status: formData.status as any,
+          status: formData.status as HSEActivity["status"],
           details: formData.details,
           recommendations: formData.recommendations,
           icon,
@@ -168,22 +133,30 @@ export default function HSEManagement() {
   };
 
   // ============== CALCULATIONS ==============
-  const lettersIssued = activities.filter(
-    (a) => a.type === "Letter Issued"
-  ).length;
-  const oshAwarenessCount = activities.filter(
-    (a) => a.type === "OSH Awareness"
-  ).length;
-  const safetyAuditsCount = activities.filter(
-    (a) => a.type === "Safety Audit"
-  ).length;
-  const accidentInvestigationsCount = activities.filter(
-    (a) => a.type === "Accident Investigation"
-  ).length;
+  // Total actual OSH activities (all activities)
+  const actualOsh = activities.length;
 
+  // Target OSH activities (you may want to set this as a constant or fetch from config)
+  const targetOsh = 50; // Example target
+
+  // Performance rate calculation (completed / total * 100)
   const completedCount = activities.filter(
     (a) => a.status === "Completed"
   ).length;
+  const performanceRate =
+    actualOsh > 0 ? Math.round((completedCount / actualOsh) * 100) : 0;
+
+  // Count by activity type
+  const OshEnlightenment = activities.filter(
+    (a) => a.type === "OSH Awareness"
+  ).length;
+
+  const OshAudit = activities.filter((a) => a.type === "Safety Audit").length;
+
+  const AccidentIncidentInvestigation = activities.filter(
+    (a) => a.type === "Accident Investigation"
+  ).length;
+
   const underInvestigationCount = activities.filter(
     (a) => a.status === "Under Investigation"
   ).length;
@@ -197,32 +170,52 @@ export default function HSEManagement() {
   // ============== STATISTICS ==============
   const stats: StatCard[] = [
     {
-      title: "Letters Issued",
-      value: lettersIssued,
-      description: "Safety compliance letters",
+      title: "Total Actual OSH Activities",
+      value: actualOsh,
+      description: "All HSE activities recorded",
+      change: "",
       icon: <FileText />,
       bgColor: "#00a63e",
     },
     {
-      title: "OSH Awareness Sessions",
-      value: oshAwarenessCount,
-      description: "Training & awareness programs",
+      title: "Target OSH Activities",
+      value: targetOsh,
+      description: "Monthly target activities",
+      change: "",
       icon: <Shield />,
       bgColor: "#00a63e",
     },
     {
-      title: "Safety Audits",
-      value: safetyAuditsCount,
-      description: "Completed workplace audits",
+      title: "Performance Rate",
+      value: `${performanceRate}%`,
+      description: "Completion rate",
+      change: "",
       icon: <CheckCircle />,
       bgColor: "#3b82f6",
     },
     {
-      title: "Accident Investigations",
-      value: accidentInvestigationsCount,
-      description: "Incident investigations",
-      icon: <AlertCircle />,
+      title: "OSH Enlightenment & Awareness",
+      value: OshEnlightenment,
+      description: "Training & awareness programs",
+      change: "",
+      icon: <Shield />,
       bgColor: "#a855f7",
+    },
+    {
+      title: "OSH Inspection & Audit",
+      value: OshAudit,
+      description: "Completed workplace audits",
+      change: "",
+      icon: <CheckCircle />,
+      bgColor: "#3b82f6",
+    },
+    {
+      title: "Accident & Incident Investigation",
+      value: AccidentIncidentInvestigation,
+      description: "Incident investigations",
+      change: "",
+      icon: <AlertCircle />,
+      bgColor: "#ef4444",
     },
   ];
 
