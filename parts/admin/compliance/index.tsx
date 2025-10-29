@@ -1,4 +1,3 @@
-"use client";
 import React, { useState, useEffect } from "react";
 import { X, Upload, Download, Filter, Search, Plus } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -341,19 +340,25 @@ const ComplianceDashboard: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex gap-3 mb-6 justify-end">
-          <label className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+          <label
+            htmlFor="file-upload"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
+          >
             <Upload size={18} />
             <span>Upload Excel/CSV</span>
             <input
+              id="file-upload"
               type="file"
               accept=".xlsx,.xls,.csv"
               onChange={handleFileUpload}
               className="hidden"
+              aria-label="Upload Excel or CSV file"
             />
           </label>
           <button
             onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            aria-label="Export data to Excel"
           >
             <Download size={18} />
             Export Data
@@ -364,6 +369,7 @@ const ComplianceDashboard: React.FC = () => {
               setIsAddModalOpen(true);
             }}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            aria-label="Add new entry"
           >
             <Plus size={18} />
             Add Entry
@@ -398,19 +404,27 @@ const ComplianceDashboard: React.FC = () => {
         {/* Search and Filters */}
         <div className="flex gap-3 mb-4">
           <div className="flex-1 relative">
+            <label htmlFor="search-input" className="sr-only">
+              Search by region or branch
+            </label>
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               size={18}
             />
             <input
+              id="search-input"
               type="text"
               placeholder="Search by region or branch..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg"
+              aria-label="Search by region or branch"
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+          <button
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            aria-label="Open filters"
+          >
             <Filter size={18} />
             Filters
           </button>
@@ -499,6 +513,7 @@ const ComplianceDashboard: React.FC = () => {
             <button
               onClick={handleDownloadTemplate}
               className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              aria-label="Download Excel template"
             >
               <Download size={18} />
               Download Template
@@ -514,7 +529,7 @@ const ComplianceDashboard: React.FC = () => {
                 <h2 className="text-xl font-bold">Add Compliance Data Entry</h2>
                 <button
                   onClick={() => setIsAddModalOpen(false)}
-                  aria-label="cancle"
+                  aria-label="Close modal"
                 >
                   <X size={24} />
                 </button>
@@ -522,29 +537,38 @@ const ComplianceDashboard: React.FC = () => {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="region-select"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Region
-                    <select
-                      value={formData.region}
-                      onChange={(e) =>
-                        setFormData({ ...formData, region: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    >
-                      <option value="">Select region</option>
-                      {REGIONS.map((region) => (
-                        <option key={region} value={region}>
-                          {region}
-                        </option>
-                      ))}
-                    </select>
                   </label>
+                  <select
+                    id="region-select"
+                    value={formData.region}
+                    onChange={(e) =>
+                      setFormData({ ...formData, region: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    aria-label="Select region"
+                  >
+                    <option value="">Select region</option>
+                    {REGIONS.map((region) => (
+                      <option key={region} value={region}>
+                        {region}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="target-input"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Target (₦)
                   </label>
                   <input
+                    id="target-input"
                     type="number"
                     value={formData.target}
                     onChange={(e) =>
@@ -555,6 +579,7 @@ const ComplianceDashboard: React.FC = () => {
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     placeholder="0.00"
+                    aria-label="Enter target amount"
                   />
                 </div>
               </div>
@@ -587,7 +612,7 @@ const ComplianceDashboard: React.FC = () => {
                 </h2>
                 <button
                   onClick={() => setIsEditModalOpen(false)}
-                  aria-label="cancle"
+                  aria-label="Close modal"
                 >
                   <X size={24} />
                 </button>
@@ -595,21 +620,30 @@ const ComplianceDashboard: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-region"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Region
-                    <input
-                      type="text"
-                      value={formData.region}
-                      disabled
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                    />
                   </label>
+                  <input
+                    id="edit-region"
+                    type="text"
+                    value={formData.region}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    aria-label="Region (read-only)"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-branch"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Branch
                   </label>
                   <input
+                    id="edit-branch"
                     type="text"
                     value={formData.branch}
                     onChange={(e) =>
@@ -617,13 +651,18 @@ const ComplianceDashboard: React.FC = () => {
                     }
                     placeholder="Enter branch name"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    aria-label="Enter branch name"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-contribution"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Contribution Collected (₦)
                   </label>
                   <input
+                    id="edit-contribution"
                     type="number"
                     value={formData.contributionCollected}
                     onChange={(e) =>
@@ -633,24 +672,35 @@ const ComplianceDashboard: React.FC = () => {
                       })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="0.00"
+                    aria-label="Enter contribution collected"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-target"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Target (₦)
-                    <input
-                      type="number"
-                      value={formData.target}
-                      disabled
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                    />
                   </label>
+                  <input
+                    id="edit-target"
+                    type="number"
+                    value={formData.target}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                    aria-label="Target (read-only)"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-employers"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Employers Registered
                   </label>
                   <input
+                    id="edit-employers"
                     type="number"
                     value={formData.employersRegistered}
                     onChange={(e) =>
@@ -660,13 +710,19 @@ const ComplianceDashboard: React.FC = () => {
                       })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="0"
+                    aria-label="Enter number of employers registered"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-employees"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Employees
                   </label>
                   <input
+                    id="edit-employees"
                     type="number"
                     value={formData.employees}
                     onChange={(e) =>
@@ -676,13 +732,19 @@ const ComplianceDashboard: React.FC = () => {
                       })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="0"
+                    aria-label="Enter number of employees"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="edit-period"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Month/Period
                   </label>
                   <input
+                    id="edit-period"
                     type="text"
                     value={formData.period}
                     onChange={(e) =>
@@ -690,6 +752,7 @@ const ComplianceDashboard: React.FC = () => {
                     }
                     placeholder="e.g., June 2025"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    aria-label="Enter month or period"
                   />
                 </div>
               </div>

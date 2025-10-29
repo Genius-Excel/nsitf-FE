@@ -139,28 +139,6 @@ const Inspetion = () => {
         </CardContent>
       </Card>
 
-      {/* <div className="grid grid-cols-3 gap-6">
-        <BigBtns
-          desription="Plan upcoming sites visit"
-          icon={<Calendar className="text-green-700" />}
-          title="Schedule new inspection"
-          color="green"
-          onclick={() => setIsScheduleModalOpen(true)}
-        />
-        <BigBtns
-          desription="View Inspection Analyticd"
-          icon={<TrendingUp className="text-blue-700" />}
-          title="Generate Report"
-          color="blue"
-        />
-        <BigBtns
-          desription="View Outstanding Cases"
-          icon={<TriangleAlert className="text-yellow-700" />}
-          title="Non-Compliant Employers"
-          color="yellow"
-        />
-      </div> */}
-
       {/* Modals at root level */}
       <ScheduleInspectionModal
         isOpen={isScheduleModalOpen}

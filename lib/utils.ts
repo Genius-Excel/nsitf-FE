@@ -3,7 +3,7 @@ import { twMerge } from "tailwind-merge";
 import { createClient } from "./supabase/client";
 import { toast } from "sonner";
 import { parse, format } from "date-fns";
-import { ComplianceEntry, DashboardMetrics } from "@/types";
+import { ComplianceEntry, DashboardMetrics } from "./types";
 // import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 // import { Database } from "./database/types";
 
