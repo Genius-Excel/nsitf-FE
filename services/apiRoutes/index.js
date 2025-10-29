@@ -21,20 +21,16 @@ export const routes = {
   editUser:(userId)=> `/api/admin/users/${userId}`,
   deleteUser:(userId)=> `/api/admin/users/${userId}`,
   
-  
-  // Inventory
-  createRestaurantStore:(restaurantId) => `/api/inventory/create-store/${restaurantId}`,
-  getRestaurantStore:(restaurantId) => `/api/inventory/get-stores/${restaurantId}`,
-  getRestaurantStoreItems:(restaurantId, storeId) => `/api/inventory/get-store-items/${restaurantId}/${storeId}`,
-  createRestaurantStockItem:(restaurantId, storeId) => `/api/inventory/stock-item/${restaurantId}/${storeId}`,
-  updateRestaurantStockItem:(restaurantId, storeId, stockItemId) => `/api/inventory/update-stock-item/${restaurantId}/${storeId}/${stockItemId}`,
-  deleteRestaurantStockItem:(restaurantId, storeId, stockItemId) => `/api/inventory/update-stock-item/${restaurantId}/${storeId}/${stockItemId}`,
-  getRestaurantStockItem:(restaurantId, storeId, stockItemId) => `/api/inventory/stock-item/${restaurantId}/${storeId}`,
-  updateRestaurantStore:(restaurantId, storeId) => `/api/inventory/update-store/${restaurantId}/${storeId}`,
-  deleteRestaurantStore:(restaurantId, storeId) => `/api/inventory/delete-store/${restaurantId}/${storeId}`,
-  addRestaurantStoreItem:(restaurantId, storeId) => `/api/inventory/add-store-item/${restaurantId}/${storeId}`,
-  getResturantStoreStockItem: (restaurantId, storeId, stockItemId) => `api/inventory/stock-item/${restaurantId}/${storeId}/${stockItemId}`,
+  createHSE:()=> "/api/hse-ops/hse-records",
+  getHseRecords:()=> "/api/hse-ops/hse-records",
+  getSingleHseRecord:(recordId)=> `/api/hse-ops/hse-records/${recordId}`,
+  editHseRecord:(recordId)=> `/api/hse-ops/hse-records/${recordId}`,
+  deleteHseRecord:(recordId)=> `/api/hse-ops/hse-records/${recordId}`,
+  getHSEDashboardMerics:()=> "/api/hse-ops/hse-dashboard-metrics",
 
-  // cutomlink
-  createAndUpdateCustomLink:(businessId) => `/api/update-custom-link/${businessId}`,
+  createInspection:()=> "/api/inspection-ops/inspections",
+  getInspections:()=> "/api/inspection-ops/inspections",
+  getSingleInspection:(inspectionId)=> `/api/inspection-ops/inspections/${inspectionId}`,
+  editInspection:(inspectionId)=> `/api/inspection-ops/inspections/${inspectionId}`,
+  deleteInspection:(inspectionId)=> `/api/inspection-ops/inspections/${inspectionId}`,
 };

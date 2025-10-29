@@ -219,9 +219,10 @@ export const HSEFormModal: React.FC<{
       </DialogHeader>
 
       <div className="space-y-4">
+        {/* Record Type */}
         <div>
           <label className="text-xs font-semibold text-gray-900">
-            Record Type *
+            Record Type <span className="text-red-500">*</span>
           </label>
           <Select
             value={formData.type}
@@ -233,19 +234,18 @@ export const HSEFormModal: React.FC<{
               <SelectValue placeholder="Select a type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Letter Issued">Letter Issued</SelectItem>
-              <SelectItem value="OSH Awareness">OSH Awareness</SelectItem>
-              <SelectItem value="Safety Audit">Safety Audit</SelectItem>
-              <SelectItem value="Accident Investigation">
-                Accident Investigation
-              </SelectItem>
+              <SelectItem value="letter issued">Letter Issued</SelectItem>
+              <SelectItem value="inspection">Inspection</SelectItem>
+              <SelectItem value="incident report">Incident Report</SelectItem>
+              <SelectItem value="compliance notice">Compliance Notice</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
+        {/* Employer */}
         <div>
           <label className="text-xs font-semibold text-gray-900">
-            Employer/Organization *
+            Employer/Organization <span className="text-red-500">*</span>
           </label>
           <Input
             placeholder="Enter employer name"
@@ -257,11 +257,13 @@ export const HSEFormModal: React.FC<{
           />
         </div>
 
+        {/* Date */}
         <div>
-          <label className="text-xs font-semibold text-gray-900">Date *</label>
+          <label className="text-xs font-semibold text-gray-900">
+            Date <span className="text-red-500">*</span>
+          </label>
           <Input
             type="date"
-            placeholder="mm/dd/yyyy"
             value={formData.date}
             onChange={(e) =>
               onFormChange({ ...formData, date: e.target.value })
@@ -270,9 +272,10 @@ export const HSEFormModal: React.FC<{
           />
         </div>
 
+        {/* Status */}
         <div>
           <label className="text-xs font-semibold text-gray-900">
-            Status *
+            Status <span className="text-red-500">*</span>
           </label>
           <Select
             value={formData.status}
@@ -295,9 +298,37 @@ export const HSEFormModal: React.FC<{
           </Select>
         </div>
 
+        {/* Safety Compliance Rate */}
         <div>
           <label className="text-xs font-semibold text-gray-900">
-            Details *
+            Safety Compliance Rate (%)
+          </label>
+          <Input
+            type="number"
+            min="0"
+            max="100"
+            placeholder="e.g. 95"
+            value={formData.safetyComplianceRate || ""}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (
+                val === "" ||
+                (/^\d{0,3}$/.test(val) && parseInt(val) <= 100)
+              ) {
+                onFormChange({ ...formData, safetyComplianceRate: val });
+              }
+            }}
+            className="mt-1 border-gray-200 text-sm"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Optional. Enter a value between 0 and 100.
+          </p>
+        </div>
+
+        {/* Details */}
+        <div>
+          <label className="text-xs font-semibold text-gray-900">
+            Details <span className="text-red-500">*</span>
           </label>
           <textarea
             placeholder="Enter detailed description of the HSE activity or incident"
@@ -305,10 +336,11 @@ export const HSEFormModal: React.FC<{
             onChange={(e) =>
               onFormChange({ ...formData, details: e.target.value })
             }
-            className="mt-1 border-gray-200 text-sm w-full p-2 border rounded-md min-h-[80px]"
+            className="mt-1 border-gray-200 text-sm w-full p-2 border rounded-md min-h-[80px] resize-none"
           />
         </div>
 
+        {/* Recommendations */}
         <div>
           <label className="text-xs font-semibold text-gray-900">
             Recommendations/Actions
@@ -319,7 +351,7 @@ export const HSEFormModal: React.FC<{
             onChange={(e) =>
               onFormChange({ ...formData, recommendations: e.target.value })
             }
-            className="mt-1 border-gray-200 text-sm w-full p-2 border rounded-md min-h-[80px]"
+            className="mt-1 border-gray-200 text-sm w-full p-2 border rounded-md min-h-[80px] resize-none"
           />
         </div>
       </div>
@@ -328,7 +360,7 @@ export const HSEFormModal: React.FC<{
         <button
           type="button"
           onClick={() => onOpenChange(false)}
-          className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+          className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
         >
           Cancel
         </button>
@@ -336,7 +368,7 @@ export const HSEFormModal: React.FC<{
           type="button"
           onClick={onSave}
           style={{ backgroundColor: "#00a63e" }}
-          className="px-4 py-2 text-sm text-white rounded-md hover:opacity-90"
+          className="px-4 py-2 text-sm text-white rounded-md hover:opacity-90 transition-opacity"
         >
           {isEditing ? "Save Changes" : "Save Record"}
         </button>

@@ -60,7 +60,7 @@ export interface HSEActivity {
     | "Letter Issued";
   organization: string;
   date: string;
-  status: "Completed" | "Under Investigation" | "Follow-up Required";
+  status: "pending" | "progress" | "resolved" | "closed";
   details?: string;
   recommendations?: string;
   icon: React.ReactNode;
@@ -72,6 +72,7 @@ export interface HSEFormData {
   status: string;
   details: string;
   recommendations: string;
+  safetyComplianceRate?: number | string;
 }
 
 export interface StatCard {
