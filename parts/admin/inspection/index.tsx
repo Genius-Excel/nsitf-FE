@@ -70,25 +70,30 @@ const Inspetion = () => {
         </PermissionGuard>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         <InspectionCard
           color="blue"
-          heading="Letters Served (YTD)"
+          heading="Total Inspections"
           value="538"
         />
         <InspectionCard
           color="green"
-          heading="Employers Inspected (YTD)"
+          heading="Demand Notice"
           value="472"
         />
         <InspectionCard
           color="yellow"
-          heading="Debts Established (YTD)"
+          heading="Total Debt Established"
           value="161"
         />
         <InspectionCard
           color="green"
-          heading="Debts Recovered (YTD)"
+          heading="Debt Recovered"
+          value="125"
+        />
+        <InspectionCard
+          color="blue"
+          heading="Performance Rate"
           value="125"
         />
       </div>
@@ -133,28 +138,6 @@ const Inspetion = () => {
           />
         </CardContent>
       </Card>
-
-      {/* <div className="grid grid-cols-3 gap-6">
-        <BigBtns
-          desription="Plan upcoming sites visit"
-          icon={<Calendar className="text-green-700" />}
-          title="Schedule new inspection"
-          color="green"
-          onclick={() => setIsScheduleModalOpen(true)}
-        />
-        <BigBtns
-          desription="View Inspection Analyticd"
-          icon={<TrendingUp className="text-blue-700" />}
-          title="Generate Report"
-          color="blue"
-        />
-        <BigBtns
-          desription="View Outstanding Cases"
-          icon={<TriangleAlert className="text-yellow-700" />}
-          title="Non-Compliant Employers"
-          color="yellow"
-        />
-      </div> */}
 
       {/* Modals at root level */}
       <ScheduleInspectionModal
