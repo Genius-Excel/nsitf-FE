@@ -531,6 +531,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 75.0,
     employersRegistered: 450,
     employees: 5600,
+    certificateFees: 7500000,
     period: "June 2025",
   },
   {
@@ -542,6 +543,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 80.0,
     employersRegistered: 380,
     employees: 4800,
+    certificateFees: 5000000,
     period: "June 2025",
   },
   {
@@ -553,6 +555,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 85.0,
     employersRegistered: 280,
     employees: 3500,
+    certificateFees: 30000000,
     period: "June 2025",
   },
   {
@@ -564,6 +567,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 84.6,
     employersRegistered: 320,
     employees: 4200,
+    certificateFees: 6000000,
     period: "June 2025",
   },
   {
@@ -575,6 +579,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 83.3,
     employersRegistered: 250,
     employees: 3200,
+    certificateFees: 2500000,
     period: "June 2025",
   },
 ];
@@ -585,13 +590,22 @@ export const formatCurrency = (amount: number): string => {
 };
 
 // Calculate dashboard metrics
-export const calculateMetrics = (entries: ComplianceEntry[]): DashboardMetrics => {
-  const totalActualContributions = entries.reduce((sum, e) => sum + e.contributionCollected, 0);
+export const calculateMetrics = (
+  entries: ComplianceEntry[]
+): DashboardMetrics => {
+  const totalActualContributions = entries.reduce(
+    (sum, e) => sum + e.contributionCollected,
+    0
+  );
   const contributionsTarget = entries.reduce((sum, e) => sum + e.target, 0);
-  const performanceRate = contributionsTarget > 0 
-    ? (totalActualContributions / contributionsTarget) * 100 
-    : 0;
-  const totalEmployers = entries.reduce((sum, e) => sum + e.employersRegistered, 0);
+  const performanceRate =
+    contributionsTarget > 0
+      ? (totalActualContributions / contributionsTarget) * 100
+      : 0;
+  const totalEmployers = entries.reduce(
+    (sum, e) => sum + e.employersRegistered,
+    0
+  );
   const totalEmployees = entries.reduce((sum, e) => sum + e.employees, 0);
 
   return {
@@ -599,7 +613,7 @@ export const calculateMetrics = (entries: ComplianceEntry[]): DashboardMetrics =
     contributionsTarget,
     performanceRate,
     totalEmployers,
-    totalEmployees
+    totalEmployees,
   };
 };
 
@@ -612,55 +626,71 @@ export const loadFromStorage = async (): Promise<ComplianceEntry[]> => {
     }
     return DUMMY_DATA;
   } catch (error) {
-    console.log('No existing data found, using dummy data');
+    console.log("No existing data found, using dummy data");
     return DUMMY_DATA;
   }
 };
 
-export const saveToStorage = async (entries: ComplianceEntry[]): Promise<void> => {
+export const saveToStorage = async (
+  entries: ComplianceEntry[]
+): Promise<void> => {
   try {
     await window.storage.set(STORAGE_KEY, JSON.stringify(entries));
   } catch (error) {
-    console.error('Failed to save data:', error);
+    console.error("Failed to save data:", error);
   }
 };
 
 // Validation functions
 export const validateExcelRow = (row: any, index: number): string | null => {
-  if (!row.Region || !row.Branch || !row['Contribution Collected'] || 
-      !row.Target || !row['Employers Registered'] || !row.Employees || !row.Period) {
+  if (
+    !row.Region ||
+    !row.Branch ||
+    !row["Contribution Collected"] ||
+    !row.Target ||
+    !row["Employers Registered"] ||
+    !row.Employees ||
+    !row.Period
+  ) {
     return `Row ${index + 2}: Missing required fields`;
   }
   return null;
 };
 
 export const parseExcelRow = (row: any, index: number): ComplianceEntry => {
-  const achievement = row.Target > 0 
-    ? (row['Contribution Collected'] / row.Target) * 100 
-    : 0;
+  const achievement =
+    row.Target > 0 ? (row["Contribution Collected"] / row.Target) * 100 : 0;
 
   return {
     id: `${Date.now()}-${index}`,
     region: row.Region,
     branch: row.Branch,
-    contributionCollected: Number(row['Contribution Collected']),
+    contributionCollected: Number(row["Contribution Collected"]),
     target: Number(row.Target),
     achievement,
-    employersRegistered: Number(row['Employers Registered']),
+    employersRegistered: Number(row["Employers Registered"]),
     employees: Number(row.Employees),
-    period: row.Period
+    certificateFees: Number(row["Certificate Fees"] || 0),
+    period: row.Period,
   };
 };
 
 // Search/Filter functions
-export const filterEntries = (entries: ComplianceEntry[], searchTerm: string): ComplianceEntry[] => {
-  return entries.filter(entry =>
-    entry.region.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    entry.branch.toLowerCase().includes(searchTerm.toLowerCase())
+export const filterEntries = (
+  entries: ComplianceEntry[],
+  searchTerm: string
+): ComplianceEntry[] => {
+  return entries.filter(
+    (entry) =>
+      entry.region.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.branch.toLowerCase().includes(searchTerm.toLowerCase())
   );
 };
 
 // Calculate achievement
-export const calculateAchievement = (collected: number, target: number): number => {
+export const calculateAchievement = (
+  collected: number,
+  target: number
+): number => {
   return target > 0 ? (collected / target) * 100 : 0;
 };

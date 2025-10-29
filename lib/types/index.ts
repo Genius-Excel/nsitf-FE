@@ -157,6 +157,7 @@ export interface ComplianceEntry {
   achievement: number;
   employersRegistered: number;
   employees: number;
+  certificateFees: number;
   period: string;
 }
 

@@ -25,6 +25,7 @@ const ComplianceDashboard: React.FC = () => {
     target: 0,
     employersRegistered: 0,
     employees: 0,
+    certificateFees: 0,
     period: "",
   });
 
@@ -75,6 +76,10 @@ const ComplianceDashboard: React.FC = () => {
       0
     );
     const totalEmployees = entries.reduce((sum, e) => sum + e.employees, 0);
+    const totalCertificateFees = entries.reduce(
+      (sum, e) => sum + e.certificateFees,
+      0
+    );
 
     return {
       totalActualContributions,
@@ -82,6 +87,7 @@ const ComplianceDashboard: React.FC = () => {
       performanceRate,
       totalEmployers,
       totalEmployees,
+      totalCertificateFees,
     };
   };
 
@@ -102,6 +108,7 @@ const ComplianceDashboard: React.FC = () => {
       achievement: 0,
       employersRegistered: 0,
       employees: 0,
+      certificateFees: 0,
       period: "",
     };
 
@@ -127,6 +134,7 @@ const ComplianceDashboard: React.FC = () => {
             employersRegistered: formData.employersRegistered,
             employees: formData.employees,
             period: formData.period,
+            certificateFees: formData.certificateFees,
             achievement,
           }
         : entry
@@ -146,6 +154,7 @@ const ComplianceDashboard: React.FC = () => {
       target: 0,
       employersRegistered: 0,
       employees: 0,
+      certificateFees: 0,
       period: "",
     });
   };
@@ -159,6 +168,7 @@ const ComplianceDashboard: React.FC = () => {
       target: entry.target,
       employersRegistered: entry.employersRegistered,
       employees: entry.employees,
+      certificateFees: entry.certificateFees,
       period: entry.period,
     });
     setIsEditModalOpen(true);
@@ -195,6 +205,7 @@ const ComplianceDashboard: React.FC = () => {
           !row.Target ||
           !row["Employers Registered"] ||
           !row.Employees ||
+          !row.CertificateFees ||
           !row.Period
         ) {
           errors.push(`Row ${index + 2}: Missing required fields`);
@@ -215,6 +226,7 @@ const ComplianceDashboard: React.FC = () => {
           achievement,
           employersRegistered: Number(row["Employers Registered"]),
           employees: Number(row.Employees),
+          certificateFees: Number(row.CertificateFees),
           period: row.Period,
         });
       });
@@ -252,6 +264,7 @@ const ComplianceDashboard: React.FC = () => {
       Achievement: `${e.achievement.toFixed(1)}%`,
       "Employers Registered": e.employersRegistered,
       Employees: e.employees,
+      "Certificate Fees": e.certificateFees,
       Period: e.period,
     }));
 
@@ -270,6 +283,7 @@ const ComplianceDashboard: React.FC = () => {
         Target: 20000000,
         "Employers Registered": 450,
         Employees: 5600,
+        CertificateFees: 5000000,
         Period: "June 2025",
       },
     ];
@@ -304,7 +318,7 @@ const ComplianceDashboard: React.FC = () => {
         </div>
 
         {/* Dashboard Cards */}
-        <div className="grid grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-6 gap-4 mb-6">
           <div className="bg-green-50 p-4 rounded-lg">
             <p className="text-sm text-gray-600 mb-1">
               Total Actual Contributions
@@ -335,6 +349,12 @@ const ComplianceDashboard: React.FC = () => {
             <p className="text-sm text-gray-600 mb-1">Total Employees</p>
             <p className="text-2xl font-bold text-green-700">
               {metrics.totalEmployees.toLocaleString()}
+            </p>
+          </div>
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600 mb-1">Total Certificate Fees</p>
+            <p className="text-2xl font-bold text-blue-700">
+              {formatCurrency(metrics.totalCertificateFees)}
             </p>
           </div>
         </div>
@@ -370,10 +390,10 @@ const ComplianceDashboard: React.FC = () => {
               setIsAddModalOpen(true);
             }}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            aria-label="Add new entry"
+            aria-label="Add regional data"
           >
             <Plus size={18} />
-            Add Entry
+            Add Regional Data
           </button>
         </div>
 
@@ -449,13 +469,16 @@ const ComplianceDashboard: React.FC = () => {
                   Target
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                  Achievement
+                  Performancece Rate
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                   Employers Registered
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                  Employees
+                  Employees Coverage
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  Certificate Fees
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                   Period
@@ -493,6 +516,9 @@ const ComplianceDashboard: React.FC = () => {
                   </td>
                   <td className="px-4 py-3 text-sm">
                     {entry.employees.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {formatCurrency(entry.certificateFees)}
                   </td>
                   <td className="px-4 py-3 text-sm">{entry.period}</td>
                 </tr>
