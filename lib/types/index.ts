@@ -25,9 +25,50 @@ export interface Claim {
     | "Disability"
     | "Death Claim"
     | "Loss of Productivity";
-  amount: number;
+  amountRequested: number;
+  amountPaid: number;
+
   status: "Paid" | "Pending" | "Under Review" | "Rejected";
+  dateProcessed: string;
+  datePaid: string;
+  sector: string;
+  class: string;
   date: string;
+}
+
+export interface InspectionRecord {
+  id: string;
+  branch: string;
+  inspectionsConducted: number;
+  debtEstablished: number;
+  debtRecovered: number;
+  performanceRate: number; // percentage
+  demandNotice: number;
+  period: string; // e.g., "Q1 2024", "Jan 2024"
+}
+
+export interface InspectionStatCard {
+  title: string;
+  value: string | number;
+  description?: string;
+  change?: string;
+  icon: React.ReactNode;
+  bgColor: string;
+}
+
+export interface UpcomingInspection {
+  id: number;
+  employer: string;
+  location: string;
+  date: string;
+  inspector: string;
+  status: "Scheduled" | "Pending";
+}
+
+export interface MonthlyChartData {
+  month: string;
+  debtsEstablished: number;
+  debtsRecovered: number;
 }
 
 export interface NewUserForm {
@@ -51,6 +92,57 @@ export interface ChartDataPoint {
   target: number;
 }
 
+// export interface HSEActivity {
+//   id: string;
+//   type:
+//     | "Letter Issued"
+//     | "OSH Awareness"
+//     | "Safety Audit"
+//     | "Accident Investigation";
+//   organization: string;
+//   date: string;
+//   status: "Completed" | "Under Investigation" | "Follow-up Required";
+//   details?: string;
+//   recommendations?: string;
+//   icon: React.ReactNode;
+// }
+
+// export interface HSEFormData {
+//   type:
+//     | "Letter Issued"
+//     | "OSH Awareness"
+//     | "Safety Audit"
+//     | "Accident Investigation"
+//     | "";
+//   organization: string;
+//   date: string;
+//   status: "Completed" | "Under Investigation" | "Follow-up Required" | "";
+//   details: string;
+//   recommendations: string;
+// }
+
+export interface HSERecord {
+  id: string;
+  region: string;
+  branch: string;
+  totalActualOSH: number;
+  targetOSH: number;
+  performanceRate: number; // percentage
+  oshEnlightenment: number;
+  oshInspectionAudit: number;
+  accidentInvestigation: number;
+  activitiesPeriod: string; // e.g., "Q3 2024", "Jan 2024"
+}
+
+export interface HSEStatCard {
+  title: string;
+  value: string | number;
+  description?: string;
+  change?: string;
+  icon: React.ReactNode;
+  bgColor: string;
+}
+
 export interface HSEActivity {
   id: string;
   type: "Letter Issued" | "OSH Awareness" | "Safety Audit" | "Accident Investigation";
@@ -59,14 +151,14 @@ export interface HSEActivity {
   status: "Completed" | "Under Investigation" | "Follow-up Required";
   details?: string;
   recommendations?: string;
-  icon: React.ReactNode;
+  icon: string;
 }
 
 export interface HSEFormData {
-  type: "Letter Issued" | "OSH Awareness" | "Safety Audit" | "Accident Investigation" | "";
+  type: string;
   organization: string;
   date: string;
-  status: "Completed" | "Under Investigation" | "Follow-up Required" | "";
+  status: string;
   details: string;
   recommendations: string;
 }
@@ -157,6 +249,7 @@ export interface ComplianceEntry {
   achievement: number;
   employersRegistered: number;
   employees: number;
+  certificateFees: number;
   period: string;
 }
 
@@ -181,10 +274,23 @@ export interface FormData {
 declare global {
   export interface Window {
     storage: {
-      get: (key: string, shared?: boolean) => Promise<{ key: string; value: string; shared: boolean } | null>;
-      set: (key: string, value: string, shared?: boolean) => Promise<{ key: string; value: string; shared: boolean } | null>;
-      delete: (key: string, shared?: boolean) => Promise<{ key: string; deleted: boolean; shared: boolean } | null>;
-      list: (prefix?: string, shared?: boolean) => Promise<{ keys: string[]; prefix?: string; shared: boolean } | null>;
+      get: (
+        key: string,
+        shared?: boolean
+      ) => Promise<{ key: string; value: string; shared: boolean } | null>;
+      set: (
+        key: string,
+        value: string,
+        shared?: boolean
+      ) => Promise<{ key: string; value: string; shared: boolean } | null>;
+      delete: (
+        key: string,
+        shared?: boolean
+      ) => Promise<{ key: string; deleted: boolean; shared: boolean } | null>;
+      list: (
+        prefix?: string,
+        shared?: boolean
+      ) => Promise<{ keys: string[]; prefix?: string; shared: boolean } | null>;
     };
   }
 }

@@ -173,14 +173,15 @@ export default function UsersRolesManagement() {
           password: "Nstif@12345",
         };
 
-        const newUser = await addUserPayload(payload); 
+        const newUser = await addUserPayload(payload);
 
         if (addUserError) {
           throw new Error(addUserError || "Failed to create user");
         }
 
-        const createdUser: User = { //@ts-ignore
-          id: newUser.id || `temp-${Date.now()}`, 
+        const createdUser: User = {
+          //@ts-ignore
+          id: newUser.id || `temp-${Date.now()}`,
           name: `${formData.first_name} ${formData.last_name}`.trim(),
           email: formData.email,
           role: formData.role,
@@ -270,14 +271,12 @@ export default function UsersRolesManagement() {
         )}
 
         {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <SearchAndFilter
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            filterRole={filterRole}
-            onFilterChange={setFilterRole}
-          />
-        </div>
+        <SearchAndFilter
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          filterRole={filterRole}
+          onFilterChange={setFilterRole}
+        />
 
         {/* Loading State */}
         {gettingUserData && (

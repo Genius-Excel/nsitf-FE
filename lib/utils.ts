@@ -3,7 +3,7 @@ import { twMerge } from "tailwind-merge";
 import { createClient } from "./supabase/client";
 import { toast } from "sonner";
 import { parse, format } from "date-fns";
-import { ComplianceEntry, DashboardMetrics } from "./types";
+import { ComplianceEntry, DashboardMetrics, HSERecord } from "./types";
 // import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 // import { Database } from "./database/types";
 
@@ -531,6 +531,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 75.0,
     employersRegistered: 450,
     employees: 5600,
+    certificateFees: 7500000,
     period: "June 2025",
   },
   {
@@ -542,6 +543,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 80.0,
     employersRegistered: 380,
     employees: 4800,
+    certificateFees: 5000000,
     period: "June 2025",
   },
   {
@@ -553,6 +555,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 85.0,
     employersRegistered: 280,
     employees: 3500,
+    certificateFees: 30000000,
     period: "June 2025",
   },
   {
@@ -564,6 +567,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 84.6,
     employersRegistered: 320,
     employees: 4200,
+    certificateFees: 6000000,
     period: "June 2025",
   },
   {
@@ -575,6 +579,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 83.3,
     employersRegistered: 250,
     employees: 3200,
+    certificateFees: 2500000,
     period: "June 2025",
   },
 ];
@@ -585,13 +590,22 @@ export const formatCurrency = (amount: number): string => {
 };
 
 // Calculate dashboard metrics
-export const calculateMetrics = (entries: ComplianceEntry[]): DashboardMetrics => {
-  const totalActualContributions = entries.reduce((sum, e) => sum + e.contributionCollected, 0);
+export const calculateMetrics = (
+  entries: ComplianceEntry[]
+): DashboardMetrics => {
+  const totalActualContributions = entries.reduce(
+    (sum, e) => sum + e.contributionCollected,
+    0
+  );
   const contributionsTarget = entries.reduce((sum, e) => sum + e.target, 0);
-  const performanceRate = contributionsTarget > 0 
-    ? (totalActualContributions / contributionsTarget) * 100 
-    : 0;
-  const totalEmployers = entries.reduce((sum, e) => sum + e.employersRegistered, 0);
+  const performanceRate =
+    contributionsTarget > 0
+      ? (totalActualContributions / contributionsTarget) * 100
+      : 0;
+  const totalEmployers = entries.reduce(
+    (sum, e) => sum + e.employersRegistered,
+    0
+  );
   const totalEmployees = entries.reduce((sum, e) => sum + e.employees, 0);
 
   return {
@@ -599,7 +613,7 @@ export const calculateMetrics = (entries: ComplianceEntry[]): DashboardMetrics =
     contributionsTarget,
     performanceRate,
     totalEmployers,
-    totalEmployees
+    totalEmployees,
   };
 };
 
@@ -612,55 +626,158 @@ export const loadFromStorage = async (): Promise<ComplianceEntry[]> => {
     }
     return DUMMY_DATA;
   } catch (error) {
-    console.log('No existing data found, using dummy data');
+    console.log("No existing data found, using dummy data");
     return DUMMY_DATA;
   }
 };
 
-export const saveToStorage = async (entries: ComplianceEntry[]): Promise<void> => {
+export const saveToStorage = async (
+  entries: ComplianceEntry[]
+): Promise<void> => {
   try {
     await window.storage.set(STORAGE_KEY, JSON.stringify(entries));
   } catch (error) {
-    console.error('Failed to save data:', error);
+    console.error("Failed to save data:", error);
   }
 };
 
 // Validation functions
 export const validateExcelRow = (row: any, index: number): string | null => {
-  if (!row.Region || !row.Branch || !row['Contribution Collected'] || 
-      !row.Target || !row['Employers Registered'] || !row.Employees || !row.Period) {
+  if (
+    !row.Region ||
+    !row.Branch ||
+    !row["Contribution Collected"] ||
+    !row.Target ||
+    !row["Employers Registered"] ||
+    !row.Employees ||
+    !row.Period
+  ) {
     return `Row ${index + 2}: Missing required fields`;
   }
   return null;
 };
 
 export const parseExcelRow = (row: any, index: number): ComplianceEntry => {
-  const achievement = row.Target > 0 
-    ? (row['Contribution Collected'] / row.Target) * 100 
-    : 0;
+  const achievement =
+    row.Target > 0 ? (row["Contribution Collected"] / row.Target) * 100 : 0;
 
   return {
     id: `${Date.now()}-${index}`,
     region: row.Region,
     branch: row.Branch,
-    contributionCollected: Number(row['Contribution Collected']),
+    contributionCollected: Number(row["Contribution Collected"]),
     target: Number(row.Target),
     achievement,
-    employersRegistered: Number(row['Employers Registered']),
+    employersRegistered: Number(row["Employers Registered"]),
     employees: Number(row.Employees),
-    period: row.Period
+    certificateFees: Number(row["Certificate Fees"] || 0),
+    period: row.Period,
   };
 };
 
 // Search/Filter functions
-export const filterEntries = (entries: ComplianceEntry[], searchTerm: string): ComplianceEntry[] => {
-  return entries.filter(entry =>
-    entry.region.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    entry.branch.toLowerCase().includes(searchTerm.toLowerCase())
+export const filterEntries = (
+  entries: ComplianceEntry[],
+  searchTerm: string
+): ComplianceEntry[] => {
+  return entries.filter(
+    (entry) =>
+      entry.region.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.branch.toLowerCase().includes(searchTerm.toLowerCase())
   );
 };
 
 // Calculate achievement
-export const calculateAchievement = (collected: number, target: number): number => {
+export const calculateAchievement = (
+  collected: number,
+  target: number
+): number => {
   return target > 0 ? (collected / target) * 100 : 0;
 };
+
+export const mockHSERecords: HSERecord[] = [
+  {
+    id: "1",
+    region: "South West",
+    branch: "Lagos - Ikeja",
+    totalActualOSH: 156,
+    targetOSH: 150,
+    performanceRate: 92,
+    oshEnlightenment: 62,
+    oshInspectionAudit: 58,
+    accidentInvestigation: 36,
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "2",
+    region: "North Central",
+    branch: "Abuja - Wuse",
+    totalActualOSH: 134,
+    targetOSH: 140,
+    performanceRate: 88,
+    oshEnlightenment: 54,
+    oshInspectionAudit: 48,
+    accidentInvestigation: 32,
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "3",
+    region: "South South",
+    branch: "Port Harcourt - GRA",
+    totalActualOSH: 98,
+    targetOSH: 120,
+    performanceRate: 75,
+    oshEnlightenment: 42,
+    oshInspectionAudit: 35,
+    accidentInvestigation: 21,
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "4",
+    region: "North West",
+    branch: "Kano - Industrial",
+    totalActualOSH: 87,
+    targetOSH: 100,
+    performanceRate: 82,
+    oshEnlightenment: 38,
+    oshInspectionAudit: 32,
+    accidentInvestigation: 17,
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "5",
+    region: "South West",
+    branch: "Ibadan - Bodija",
+    totalActualOSH: 72,
+    targetOSH: 90,
+    performanceRate: 78,
+    oshEnlightenment: 32,
+    oshInspectionAudit: 26,
+    accidentInvestigation: 14,
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "6",
+    region: "South East",
+    branch: "Enugu - Independence Layout",
+    totalActualOSH: 65,
+    targetOSH: 80,
+    performanceRate: 85,
+    oshEnlightenment: 28,
+    oshInspectionAudit: 24,
+    accidentInvestigation: 13,
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "7",
+    region: "North East",
+    branch: "Maiduguri - GRA",
+    totalActualOSH: 45,
+    targetOSH: 70,
+    performanceRate: 65,
+    oshEnlightenment: 20,
+    oshInspectionAudit: 16,
+    accidentInvestigation: 9,
+    activitiesPeriod: "Q3 2024",
+  },
+];
