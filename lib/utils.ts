@@ -3,7 +3,7 @@ import { twMerge } from "tailwind-merge";
 import { createClient } from "./supabase/client";
 import { toast } from "sonner";
 import { parse, format } from "date-fns";
-import { ComplianceEntry, DashboardMetrics } from "./types";
+import { ComplianceEntry, DashboardMetrics, HSERecord } from "./types";
 // import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 // import { Database } from "./database/types";
 
@@ -694,3 +694,90 @@ export const calculateAchievement = (
 ): number => {
   return target > 0 ? (collected / target) * 100 : 0;
 };
+
+export const mockHSERecords: HSERecord[] = [
+  {
+    id: "1",
+    region: "South West",
+    branch: "Lagos - Ikeja",
+    totalActualOSH: 156,
+    targetOSH: 150,
+    performanceRate: 92,
+    oshEnlightenment: 62,
+    oshInspectionAudit: 58,
+    accidentInvestigation: 36,
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "2",
+    region: "North Central",
+    branch: "Abuja - Wuse",
+    totalActualOSH: 134,
+    targetOSH: 140,
+    performanceRate: 88,
+    oshEnlightenment: 54,
+    oshInspectionAudit: 48,
+    accidentInvestigation: 32,
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "3",
+    region: "South South",
+    branch: "Port Harcourt - GRA",
+    totalActualOSH: 98,
+    targetOSH: 120,
+    performanceRate: 75,
+    oshEnlightenment: 42,
+    oshInspectionAudit: 35,
+    accidentInvestigation: 21,
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "4",
+    region: "North West",
+    branch: "Kano - Industrial",
+    totalActualOSH: 87,
+    targetOSH: 100,
+    performanceRate: 82,
+    oshEnlightenment: 38,
+    oshInspectionAudit: 32,
+    accidentInvestigation: 17,
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "5",
+    region: "South West",
+    branch: "Ibadan - Bodija",
+    totalActualOSH: 72,
+    targetOSH: 90,
+    performanceRate: 78,
+    oshEnlightenment: 32,
+    oshInspectionAudit: 26,
+    accidentInvestigation: 14,
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "6",
+    region: "South East",
+    branch: "Enugu - Independence Layout",
+    totalActualOSH: 65,
+    targetOSH: 80,
+    performanceRate: 85,
+    oshEnlightenment: 28,
+    oshInspectionAudit: 24,
+    accidentInvestigation: 13,
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "7",
+    region: "North East",
+    branch: "Maiduguri - GRA",
+    totalActualOSH: 45,
+    targetOSH: 70,
+    performanceRate: 65,
+    oshEnlightenment: 20,
+    oshInspectionAudit: 16,
+    accidentInvestigation: 9,
+    activitiesPeriod: "Q3 2024",
+  },
+];
