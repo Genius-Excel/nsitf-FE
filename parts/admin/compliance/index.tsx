@@ -939,7 +939,7 @@ const ComplianceDashboard: React.FC = () => {
                         />
                       </div>
 
-                      <div>
+                      {/* <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Branch
                         </label>
@@ -952,9 +952,9 @@ const ComplianceDashboard: React.FC = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                           placeholder="Optional"
                         />
-                      </div>
+                      </div> */}
 
-                      <div>
+                      {/* <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Period
                         </label>
@@ -967,7 +967,7 @@ const ComplianceDashboard: React.FC = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                           placeholder="e.g., June 2025"
                         />
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 
