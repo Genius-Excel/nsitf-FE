@@ -228,7 +228,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
                 </div>
 
                 <div>
-                  <label
+                  {/* <label
                     htmlFor="branch-input"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
@@ -270,8 +270,8 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
                   />
                   <p id="period-help" className="text-xs text-gray-500 mt-1">
                     Reporting period (e.g., June 2025)
-                  </p>
-                </div>
+                  </p>*/}
+                </div> 
               </div>
             </div>
 

@@ -402,7 +402,7 @@ const ComplianceDashboard: React.FC = () => {
               aria-label="Upload regional data"
             >
               <Upload size={18} aria-hidden="true" />
-              <span>Upload</span>
+              <span>Upload Regional Data</span>
             </button>
             <button
               onClick={handleExport}
