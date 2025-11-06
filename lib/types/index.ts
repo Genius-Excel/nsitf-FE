@@ -92,34 +92,6 @@ export interface ChartDataPoint {
   target: number;
 }
 
-// export interface HSEActivity {
-//   id: string;
-//   type:
-//     | "Letter Issued"
-//     | "OSH Awareness"
-//     | "Safety Audit"
-//     | "Accident Investigation";
-//   organization: string;
-//   date: string;
-//   status: "Completed" | "Under Investigation" | "Follow-up Required";
-//   details?: string;
-//   recommendations?: string;
-//   icon: React.ReactNode;
-// }
-
-// export interface HSEFormData {
-//   type:
-//     | "Letter Issued"
-//     | "OSH Awareness"
-//     | "Safety Audit"
-//     | "Accident Investigation"
-//     | "";
-//   organization: string;
-//   date: string;
-//   status: "Completed" | "Under Investigation" | "Follow-up Required" | "";
-//   details: string;
-//   recommendations: string;
-// }
 
 export interface HSERecord {
   id: string;
@@ -240,6 +212,8 @@ export interface EditProfileFormData {
   email: string;
 }
 
+// ============= CORE TYPES =============
+
 export interface ComplianceEntry {
   id: string;
   region: string;
@@ -251,6 +225,8 @@ export interface ComplianceEntry {
   employees: number;
   certificateFees: number;
   period: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface DashboardMetrics {
@@ -259,6 +235,62 @@ export interface DashboardMetrics {
   performanceRate: number;
   totalEmployers: number;
   totalEmployees: number;
+  // totalCertificateFees: number;
+}
+
+export interface UploadError {
+  row: number;
+  column: string;
+  message: string;
+  value?: string;
+}
+
+export interface ParseProgress {
+  stage: "idle" | "reading" | "parsing" | "validating" | "complete" | "error";
+  percentage: number;
+  message: string;
+}
+
+export interface Notification {
+  type: "success" | "error" | "info" | "warning";
+  message: string;
+  id: string;
+}
+
+// ============= SORTING & FILTERING =============
+
+export type SortField = 
+  | "region" 
+  | "branch" 
+  | "contributionCollected" 
+  | "target" 
+  | "achievement" 
+  | "employersRegistered" 
+  | "employees" 
+  | "certificateFees" 
+  | "period";
+
+export type SortDirection = "asc" | "desc";
+
+export interface SortConfig {
+  field: SortField;
+  direction: SortDirection;
+}
+
+export interface FilterConfig {
+  regions: string[];
+  achievementMin: number;
+  achievementMax: number;
+  periodSearch: string;
+  branchSearch: string;
+}
+
+// ============= STORAGE =============
+
+export interface StorageAdapter {
+  get: (key: string) => Promise<{ value: string } | null>;
+  set: (key: string, value: string) => Promise<void>;
+  remove: (key: string) => Promise<void>;
 }
 
 export interface FormData {
@@ -294,3 +326,4 @@ declare global {
     };
   }
 }
+
