@@ -68,12 +68,12 @@ export default function DashboardPage() {
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-semibold tracking-tight text-balance">
-            Dashboard Overview
+            Dashboard
           </h1>
           {/* {user && <RoleBadge role={user.role} />} */}
         </div>
         <p className="text-muted-foreground text-balance">
-          Welcome to NSITF operations platform.
+          Automated and Digitalized Actuarial Data Structure
         </p>
       </div>
 
