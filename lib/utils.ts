@@ -3,7 +3,7 @@ import { twMerge } from "tailwind-merge";
 import { createClient } from "./supabase/client";
 import { toast } from "sonner";
 import { parse, format } from "date-fns";
-import { ComplianceEntry, DashboardMetrics, HSERecord } from "./types";
+import { ComplianceEntry, DashboardMetrics, HSERecord, SortConfig, FilterConfig } from "./types";
 // import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 // import { Database } from "./database/types";
 
@@ -441,15 +441,15 @@ export function getAccessToken() {
   return null;
 }
 
-export const formatDate = (dateString: string): string => {
-  try {
-    const date = parse(dateString, "yyyy-MM-dd HH:mm:ss", new Date());
-    return format(date, "MMMM d, yyyy, h:mm a");
-  } catch (error) {
-    console.error("Error formatting date:", error);
-    return dateString; // Fallback to original string if parsing fails
-  }
-};
+// export const formatDate = (dateString: string): string => {
+//   try {
+//     const date = parse(dateString, "yyyy-MM-dd HH:mm:ss", new Date());
+//     return format(date, "MMMM d, yyyy, h:mm a");
+//   } catch (error) {
+//     console.error("Error formatting date:", error);
+//     return dateString; // Fallback to original string if parsing fails
+//   }
+// };
 
 export const getStatusColor = (status: string) => {
   switch (status) {
@@ -585,9 +585,9 @@ export const DUMMY_DATA: ComplianceEntry[] = [
 ];
 
 // Format currency
-export const formatCurrency = (amount: number): string => {
-  return `₦${(amount / 1000000).toFixed(2)}M`;
-};
+// export const formatCurrency = (amount: number): string => {
+//   return `₦${(amount / 1000000).toFixed(2)}M`;
+// };
 
 // Calculate dashboard metrics
 export const calculateMetrics = (
@@ -676,24 +676,24 @@ export const parseExcelRow = (row: any, index: number): ComplianceEntry => {
 };
 
 // Search/Filter functions
-export const filterEntries = (
-  entries: ComplianceEntry[],
-  searchTerm: string
-): ComplianceEntry[] => {
-  return entries.filter(
-    (entry) =>
-      entry.region.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.branch.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-};
+// export const filterEntries = (
+//   entries: ComplianceEntry[],
+//   searchTerm: string
+// ): ComplianceEntry[] => {
+//   return entries.filter(
+//     (entry) =>
+//       entry.region.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       entry.branch.toLowerCase().includes(searchTerm.toLowerCase())
+//   );
+// };
 
 // Calculate achievement
-export const calculateAchievement = (
-  collected: number,
-  target: number
-): number => {
-  return target > 0 ? (collected / target) * 100 : 0;
-};
+// export const calculateAchievement = (
+//   collected: number,
+//   target: number
+// ): number => {
+//   return target > 0 ? (collected / target) * 100 : 0;
+// };
 
 export const mockHSERecords: HSERecord[] = [
   {
@@ -781,3 +781,175 @@ export const mockHSERecords: HSERecord[] = [
     activitiesPeriod: "Q3 2024",
   },
 ];
+
+// ============= FORMATTING =============
+
+export const formatCurrency = (amount: number): string => {
+  return `₦${(amount / 1000000).toFixed(2)}M`;
+};
+
+export const formatCurrencyFull = (amount: number): string => {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+// export const formatNumber = (num: number): string => {
+//   return num.toLocaleString();
+// };
+
+// ============= SORTING =============
+
+export const sortEntries = (
+  entries: ComplianceEntry[],
+  sortConfig: SortConfig | null
+): ComplianceEntry[] => {
+  if (!sortConfig) return entries;
+
+  return [...entries].sort((a, b) => {
+    const aValue = a[sortConfig.field];
+    const bValue = b[sortConfig.field];
+
+    // Handle string comparison
+    if (typeof aValue === "string" && typeof bValue === "string") {
+      const comparison = aValue.localeCompare(bValue);
+      return sortConfig.direction === "asc" ? comparison : -comparison;
+    }
+
+    // Handle number comparison
+    if (typeof aValue === "number" && typeof bValue === "number") {
+      return sortConfig.direction === "asc" 
+        ? aValue - bValue 
+        : bValue - aValue;
+    }
+
+    return 0;
+  });
+};
+
+// ============= FILTERING =============
+
+export const filterEntries = (
+  entries: ComplianceEntry[],
+  filterConfig: FilterConfig,
+  searchTerm: string
+): ComplianceEntry[] => {
+  return entries.filter((entry) => {
+    // Region filter
+    if (filterConfig.regions.length > 0 && !filterConfig.regions.includes(entry.region)) {
+      return false;
+    }
+
+    // Achievement range filter
+    if (
+      entry.achievement < filterConfig.achievementMin ||
+      entry.achievement > filterConfig.achievementMax
+    ) {
+      return false;
+    }
+
+    // Period filter
+    if (
+      filterConfig.periodSearch &&
+      !entry.period.toLowerCase().includes(filterConfig.periodSearch.toLowerCase())
+    ) {
+      return false;
+    }
+
+    // Branch filter
+    if (
+      filterConfig.branchSearch &&
+      !entry.branch.toLowerCase().includes(filterConfig.branchSearch.toLowerCase())
+    ) {
+      return false;
+    }
+
+    // Global search term
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      return (
+        entry.region.toLowerCase().includes(search) ||
+        entry.branch.toLowerCase().includes(search) ||
+        entry.period.toLowerCase().includes(search)
+      );
+    }
+
+    return true;
+  });
+};
+
+// ============= VALIDATION =============
+
+export const validateEntry = (entry: Partial<ComplianceEntry>): string[] => {
+  const errors: string[] = [];
+
+  if (!entry.region?.trim()) {
+    errors.push("Region is required");
+  }
+
+  if (!entry.target || entry.target <= 0) {
+    errors.push("Target must be greater than 0");
+  }
+
+  if (entry.contributionCollected && entry.contributionCollected < 0) {
+    errors.push("Contribution collected cannot be negative");
+  }
+
+  if (entry.employersRegistered && entry.employersRegistered < 0) {
+    errors.push("Employers registered cannot be negative");
+  }
+
+  if (entry.employees && entry.employees < 0) {
+    errors.push("Employees cannot be negative");
+  }
+
+  if (entry.certificateFees && entry.certificateFees < 0) {
+    errors.push("Certificate fees cannot be negative");
+  }
+
+  return errors;
+};
+
+// ============= CALCULATIONS =============
+
+export const calculateAchievement = (collected: number, target: number): number => {
+  return target > 0 ? (collected / target) * 100 : 0;
+};
+
+export const getAchievementColor = (achievement: number): string => {
+  if (achievement >= 90) return "text-green-600 bg-green-50";
+  if (achievement >= 70) return "text-yellow-600 bg-yellow-50";
+  if (achievement >= 50) return "text-orange-600 bg-orange-50";
+  return "text-red-600 bg-red-50";
+};
+
+export const getAchievementTextColor = (achievement: number): string => {
+  if (achievement >= 90) return "text-green-600";
+  if (achievement >= 70) return "text-yellow-600";
+  if (achievement >= 50) return "text-orange-600";
+  return "text-red-600";
+};
+
+// ============= UNIQUE ID GENERATION =============
+
+export const generateId = (): string => {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
+
+// ============= DATE FORMATTING =============
+
+export const formatDate = (date: string | Date): string => {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
+export const formatNumber = (num: number): string => {
+  return num.toLocaleString();
+};

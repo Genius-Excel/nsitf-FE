@@ -6,7 +6,9 @@ import {
   Claim,
   LegalCase,
   DemandNotice,
+  ComplianceEntry
 } from "@/lib/types";
+
 
 export const ROLES: Role[] = [
   {
@@ -329,3 +331,100 @@ export const demandNotices: DemandNotice[] = [
     date: "2025-10-01",
   },
 ];
+
+export const STORAGE_KEY = "compliance_entries";
+export const REGIONS_KEY = "compliance_regions";
+
+export const DEFAULT_REGIONS = [
+  "Lagos",
+  "Abuja",
+  "Port Harcourt",
+  "Kano",
+  "Ibadan",
+  "Enugu",
+];
+
+export const DUMMY_DATA: ComplianceEntry[] = [
+  {
+    id: "1",
+    region: "Lagos",
+    branch: "Ikeja",
+    contributionCollected: 15000000,
+    target: 20000000,
+    achievement: 75,
+    employersRegistered: 450,
+    employees: 5600,
+    certificateFees: 5000000,
+    period: "June 2025",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "2",
+    region: "Abuja",
+    branch: "Wuse",
+    contributionCollected: 12000000,
+    target: 15000000,
+    achievement: 80,
+    employersRegistered: 380,
+    employees: 4200,
+    certificateFees: 4200000,
+    period: "June 2025",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "3",
+    region: "Port Harcourt",
+    branch: "GRA",
+    contributionCollected: 8500000,
+    target: 10000000,
+    achievement: 85,
+    employersRegistered: 220,
+    employees: 2800,
+    certificateFees: 2500000,
+    period: "June 2025",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+// ============= EXCEL COLUMN MAPPINGS =============
+
+export const REQUIRED_COLUMNS = [
+  "Branch",
+  "Contribution Collected",
+  "Target",
+  "Employers Registered",
+  "Employees",
+  "Certificate Fees",
+  "Period",
+];
+
+export const COLUMN_TYPES: Record<string, string> = {
+  Branch: "string",
+  "Contribution Collected": "number",
+  Target: "number",
+  "Employers Registered": "number",
+  Employees: "number",
+  "Certificate Fees": "number",
+  Period: "string",
+};
+
+// ============= ACHIEVEMENT THRESHOLDS =============
+
+export const ACHIEVEMENT_LEVELS = {
+  EXCELLENT: 90,
+  GOOD: 70,
+  AVERAGE: 50,
+  POOR: 0,
+};
+
+// ============= KEYBOARD SHORTCUTS =============
+
+export const KEYBOARD_SHORTCUTS = {
+  ADD_REGION: "ctrl+n",
+  EXPORT: "ctrl+e",
+  SEARCH: "ctrl+f",
+  CLOSE_MODAL: "escape",
+};
