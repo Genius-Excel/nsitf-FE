@@ -249,6 +249,7 @@ const ComplianceDashboard: React.FC = () => {
         achievement: 0,
         employersRegistered: 0,
         employees: 0,
+        registrationFees: 0,
         certificateFees: 0,
         period: data.period,
         createdAt: new Date().toISOString(),
@@ -283,6 +284,7 @@ const ComplianceDashboard: React.FC = () => {
       Achievement: `${e.achievement.toFixed(1)}%`,
       "Employers Registered": e.employersRegistered,
       Employees: e.employees,
+      "Registeration Fees": e.registrationFees,
       "Certificate Fees": e.certificateFees,
       Period: e.period,
     }));

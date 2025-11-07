@@ -592,8 +592,8 @@ export const ComplianceTable: React.FC<{
                 align="right"
               />
               <TableHeader
-                label="Achievement"
-                field="achievement"
+                label="Performance Rate"
+                field="performanceRate"
                 sortConfig={sortConfig}
                 onSort={onSort}
                 align="right"
@@ -608,6 +608,13 @@ export const ComplianceTable: React.FC<{
               <TableHeader
                 label="Employees"
                 field="employees"
+                sortConfig={sortConfig}
+                onSort={onSort}
+                align="right"
+              />
+              <TableHeader
+                label="Registration Fees"
+                field="registrationFees"
                 sortConfig={sortConfig}
                 onSort={onSort}
                 align="right"
@@ -665,6 +672,9 @@ export const ComplianceTable: React.FC<{
                 </td>
                 <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
                   {entry.employees.toLocaleString()}
+                </td>
+                <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
+                  {formatCurrency(entry.registrationFees)}
                 </td>
                 <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
                   {formatCurrency(entry.certificateFees)}
@@ -1054,9 +1064,10 @@ export const ComplianceUploadModal: React.FC<{
             branch: row["Branch"],
             contributionCollected,
             target,
-            achievement,
+            achievement: Number(achievement.toFixed(2)),
             employersRegistered: Number(row["Employers Registered"]),
             employees: Number(row["Employees"]),
+            registrationFees: Number(row["Registration Fees"]),
             certificateFees: Number(row["Certificate Fees"]),
             period: row["Period"],
             createdAt: new Date().toISOString(),

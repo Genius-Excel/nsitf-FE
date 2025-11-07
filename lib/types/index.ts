@@ -223,6 +223,7 @@ export interface ComplianceEntry {
   achievement: number;
   employersRegistered: number;
   employees: number;
+  registrationFees: number;
   certificateFees: number;
   period: string;
   createdAt?: string;
@@ -264,9 +265,10 @@ export type SortField =
   | "branch" 
   | "contributionCollected" 
   | "target" 
-  | "achievement" 
+  | "performanceRate" 
   | "employersRegistered" 
-  | "employees" 
+  | "employees"
+  | "registrationFees" 
   | "certificateFees" 
   | "period";
 

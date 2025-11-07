@@ -170,7 +170,7 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                     isTargetMet ? "bg-green-50 border-green-200" : "bg-orange-50 border-orange-200"
                   } p-4 rounded-lg border`}
                 >
-                  <p className="text-xs text-gray-600 uppercase mb-1">Achievement</p>
+                  <p className="text-xs text-gray-600 uppercase mb-1">Performance Rate</p>
                   <p
                     className={`text-xl sm:text-2xl font-bold ${
                       isTargetMet ? "text-green-700" : "text-orange-700"
