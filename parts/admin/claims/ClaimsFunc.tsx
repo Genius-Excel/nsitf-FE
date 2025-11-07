@@ -231,7 +231,7 @@ export default function ClaimsManagement() {
         {/* Header */}
         <header className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
-            Claims Management
+            Claims and Compensation Management
           </h1>
           <p className="text-sm text-gray-600 mt-1">
             Track and process employee compensation claims
