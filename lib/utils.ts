@@ -3,7 +3,13 @@ import { twMerge } from "tailwind-merge";
 import { createClient } from "./supabase/client";
 import { toast } from "sonner";
 import { parse, format } from "date-fns";
-import { ComplianceEntry, DashboardMetrics, HSERecord, SortConfig, FilterConfig } from "./types";
+import {
+  ComplianceEntry,
+  DashboardMetrics,
+  HSERecord,
+  SortConfig,
+  FilterConfig,
+} from "./types";
 // import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 // import { Database } from "./database/types";
 
@@ -531,7 +537,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 75.0,
     employersRegistered: 450,
     employees: 5600,
-    registrationFees: 8900000,
+    registrationFees: 5500000,  // ← ADDED THIS (was missing)
     certificateFees: 7500000,
     period: "June 2025",
   },
@@ -544,7 +550,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 80.0,
     employersRegistered: 380,
     employees: 4800,
-    registrationFees: 4000000,
+    registrationFees: 4200000,  // ← ADDED THIS (was missing)
     certificateFees: 5000000,
     period: "June 2025",
   },
@@ -557,7 +563,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 85.0,
     employersRegistered: 280,
     employees: 3500,
-    registrationFees: 6000000,
+    registrationFees: 3000000,  // ← ADDED THIS (was missing)
     certificateFees: 30000000,
     period: "June 2025",
   },
@@ -570,7 +576,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 84.6,
     employersRegistered: 320,
     employees: 4200,
-    registrationFees: 5660000,
+    registrationFees: 3500000,  // ← ADDED THIS (was missing)
     certificateFees: 6000000,
     period: "June 2025",
   },
@@ -583,18 +589,12 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 83.3,
     employersRegistered: 250,
     employees: 3200,
-    registrationFees: 9800000,
+    registrationFees: 2800000,  // ← ADDED THIS (was missing)
     certificateFees: 2500000,
     period: "June 2025",
   },
 ];
 
-// Format currency
-// export const formatCurrency = (amount: number): string => {
-//   return `₦${(amount / 1000000).toFixed(2)}M`;
-// };
-
-// Calculate dashboard metrics
 export const calculateMetrics = (
   entries: ComplianceEntry[]
 ): DashboardMetrics => {
@@ -675,6 +675,7 @@ export const parseExcelRow = (row: any, index: number): ComplianceEntry => {
     achievement,
     employersRegistered: Number(row["Employers Registered"]),
     employees: Number(row.Employees),
+    registrationFees: Number(row["Registration Fees"] || 0),
     certificateFees: Number(row["Certificate Fees"] || 0),
     period: row.Period,
   };
@@ -699,93 +700,6 @@ export const parseExcelRow = (row: any, index: number): ComplianceEntry => {
 // ): number => {
 //   return target > 0 ? (collected / target) * 100 : 0;
 // };
-
-export const mockHSERecords: HSERecord[] = [
-  {
-    id: "1",
-    region: "South West",
-    branch: "Lagos - Ikeja",
-    totalActualOSH: 156,
-    targetOSH: 150,
-    performanceRate: 92,
-    oshEnlightenment: 62,
-    oshInspectionAudit: 58,
-    accidentInvestigation: 36,
-    activitiesPeriod: "Q3 2024",
-  },
-  {
-    id: "2",
-    region: "North Central",
-    branch: "Abuja - Wuse",
-    totalActualOSH: 134,
-    targetOSH: 140,
-    performanceRate: 88,
-    oshEnlightenment: 54,
-    oshInspectionAudit: 48,
-    accidentInvestigation: 32,
-    activitiesPeriod: "Q3 2024",
-  },
-  {
-    id: "3",
-    region: "South South",
-    branch: "Port Harcourt - GRA",
-    totalActualOSH: 98,
-    targetOSH: 120,
-    performanceRate: 75,
-    oshEnlightenment: 42,
-    oshInspectionAudit: 35,
-    accidentInvestigation: 21,
-    activitiesPeriod: "Q3 2024",
-  },
-  {
-    id: "4",
-    region: "North West",
-    branch: "Kano - Industrial",
-    totalActualOSH: 87,
-    targetOSH: 100,
-    performanceRate: 82,
-    oshEnlightenment: 38,
-    oshInspectionAudit: 32,
-    accidentInvestigation: 17,
-    activitiesPeriod: "Q3 2024",
-  },
-  {
-    id: "5",
-    region: "South West",
-    branch: "Ibadan - Bodija",
-    totalActualOSH: 72,
-    targetOSH: 90,
-    performanceRate: 78,
-    oshEnlightenment: 32,
-    oshInspectionAudit: 26,
-    accidentInvestigation: 14,
-    activitiesPeriod: "Q3 2024",
-  },
-  {
-    id: "6",
-    region: "South East",
-    branch: "Enugu - Independence Layout",
-    totalActualOSH: 65,
-    targetOSH: 80,
-    performanceRate: 85,
-    oshEnlightenment: 28,
-    oshInspectionAudit: 24,
-    accidentInvestigation: 13,
-    activitiesPeriod: "Q3 2024",
-  },
-  {
-    id: "7",
-    region: "North East",
-    branch: "Maiduguri - GRA",
-    totalActualOSH: 45,
-    targetOSH: 70,
-    performanceRate: 65,
-    oshEnlightenment: 20,
-    oshInspectionAudit: 16,
-    accidentInvestigation: 9,
-    activitiesPeriod: "Q3 2024",
-  },
-];
 
 // ============= FORMATTING =============
 
@@ -826,9 +740,7 @@ export const sortEntries = (
 
     // Handle number comparison
     if (typeof aValue === "number" && typeof bValue === "number") {
-      return sortConfig.direction === "asc" 
-        ? aValue - bValue 
-        : bValue - aValue;
+      return sortConfig.direction === "asc" ? aValue - bValue : bValue - aValue;
     }
 
     return 0;
@@ -844,7 +756,10 @@ export const filterEntries = (
 ): ComplianceEntry[] => {
   return entries.filter((entry) => {
     // Region filter
-    if (filterConfig.regions.length > 0 && !filterConfig.regions.includes(entry.region)) {
+    if (
+      filterConfig.regions.length > 0 &&
+      !filterConfig.regions.includes(entry.region)
+    ) {
       return false;
     }
 
@@ -859,7 +774,9 @@ export const filterEntries = (
     // Period filter
     if (
       filterConfig.periodSearch &&
-      !entry.period.toLowerCase().includes(filterConfig.periodSearch.toLowerCase())
+      !entry.period
+        .toLowerCase()
+        .includes(filterConfig.periodSearch.toLowerCase())
     ) {
       return false;
     }
@@ -867,7 +784,9 @@ export const filterEntries = (
     // Branch filter
     if (
       filterConfig.branchSearch &&
-      !entry.branch.toLowerCase().includes(filterConfig.branchSearch.toLowerCase())
+      !entry.branch
+        .toLowerCase()
+        .includes(filterConfig.branchSearch.toLowerCase())
     ) {
       return false;
     }
@@ -920,7 +839,10 @@ export const validateEntry = (entry: Partial<ComplianceEntry>): string[] => {
 
 // ============= CALCULATIONS =============
 
-export const calculateAchievement = (collected: number, target: number): number => {
+export const calculateAchievement = (
+  collected: number,
+  target: number
+): number => {
   return target > 0 ? (collected / target) * 100 : 0;
 };
 

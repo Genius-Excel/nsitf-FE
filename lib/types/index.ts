@@ -265,7 +265,7 @@ export type SortField =
   | "branch" 
   | "contributionCollected" 
   | "target" 
-  | "performanceRate" 
+  | "achievement" 
   | "employersRegistered" 
   | "employees"
   | "registrationFees" 

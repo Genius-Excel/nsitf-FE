@@ -593,7 +593,7 @@ export const ComplianceTable: React.FC<{
               />
               <TableHeader
                 label="Performance Rate"
-                field="performanceRate"
+                field="achievement"
                 sortConfig={sortConfig}
                 onSort={onSort}
                 align="right"
@@ -806,55 +806,6 @@ export const AddRegionModal: React.FC<{
               </div>
             )}
 
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-3">
-                Region Details
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Region <span className="text-red-500">*</span>
-                    <select
-                      value={formData.region}
-                      onChange={(e) =>
-                        setFormData({ ...formData, region: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                      required
-                    >
-                      <option value="">Select region</option>
-                      {regions.map((region) => (
-                        <option key={region} value={region}>
-                          {region}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Target (₦) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.target || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        target: Number(e.target.value),
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="20000000"
-                    required
-                  />
-                </div>
-
-              </div>
-            </div>
-
             <div className="bg-white rounded-lg p-4 border border-gray-200">
               <h3 className="font-semibold text-gray-900 mb-2">
                 Manage Regions
@@ -905,6 +856,56 @@ export const AddRegionModal: React.FC<{
                 ))}
               </div>
             </div>
+
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-3">
+                Region Details
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Region <span className="text-red-500">*</span>
+                    <select
+                      value={formData.region}
+                      onChange={(e) =>
+                        setFormData({ ...formData, region: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      required
+                    >
+                      <option value="">Select region</option>
+                      {regions.map((region) => (
+                        <option key={region} value={region}>
+                          {region}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Target (₦) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.target || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        target: Number(e.target.value),
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="20000000"
+                    required
+                  />
+                </div>
+
+              </div>
+            </div>
+
           </form>
 
           <div className="sticky bottom-0 bg-gray-50 border-t px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-end gap-3">
@@ -1131,6 +1132,7 @@ export const ComplianceUploadModal: React.FC<{
         Target: "",
         "Employers Registered": "",
         Employees: "",
+        "Registration Fees": "",
         "Certificate Fees": "",
         Period: "",
       },
