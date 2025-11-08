@@ -145,7 +145,7 @@ export default function DashboardLayout({
                 Nigeria Social Insurance Trust Fund
               </h2>
               <p className="text-gray-400 text-sm">
-                Automated and Digital Actuarial Data Structure
+                Automated and Digital Actuarial Data Structure
               </p>
             </div>
           </div>
