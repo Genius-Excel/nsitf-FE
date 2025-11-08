@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { User as UserIcon } from "lucide-react"
-import { getUserFromStorage, type User } from "@/lib/auth"
-import { cn } from "@/lib/utils"
+import { useEffect, useState } from "react";
+import { User as UserIcon } from "lucide-react";
+import { getUserFromStorage, type User } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 
 // Sample avatar background colors
 const avatarColors = [
@@ -13,12 +13,12 @@ const avatarColors = [
   "bg-red-500",
   "bg-purple-500",
   "bg-teal-500",
-]
+];
 
 // Utility to get random color
 const getRandomColor = () => {
-  return avatarColors[Math.floor(Math.random() * avatarColors.length)]
-}
+  return avatarColors[Math.floor(Math.random() * avatarColors.length)];
+};
 
 // Utility to get user initials
 // const getInitials = (name: string) => {
@@ -36,44 +36,44 @@ const formatDateTime = (date: Date) => {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }
+  };
   const timeOptions: Intl.DateTimeFormatOptions = {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
-  }
+  };
   return {
     date: date.toLocaleDateString("en-US", dateOptions),
     time: date.toLocaleTimeString("en-US", timeOptions),
-  }
-}
+  };
+};
 
 export function DashboardNavbarUser() {
-  const [user, setUser] = useState<User | null>(null)
-  const [dateTime, setDateTime] = useState(formatDateTime(new Date()))
-  const [avatarBg, setAvatarBg] = useState(getRandomColor())
+  const [user, setUser] = useState<User | null>(null);
+  const [dateTime, setDateTime] = useState(formatDateTime(new Date()));
+  const [avatarBg, setAvatarBg] = useState(getRandomColor());
 
   // Fetch user data
   useEffect(() => {
     try {
-      const storedUser = getUserFromStorage()
-      setUser(storedUser)
+      const storedUser = getUserFromStorage();
+      setUser(storedUser);
       //@ts-ignore
       if (!storedUser?.image) {
-        setAvatarBg(getRandomColor())
+        setAvatarBg(getRandomColor());
       }
     } catch (error) {
-      console.error("Failed to fetch user:", error)
+      console.error("Failed to fetch user:", error);
     }
-  }, [])
+  }, []);
 
   // Update time every second
   useEffect(() => {
     const interval = setInterval(() => {
-      setDateTime(formatDateTime(new Date()))
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [])
+      setDateTime(formatDateTime(new Date()));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="flex items-center gap-4 p-4 bg-sidebar border-b border-sidebar-border">
@@ -85,7 +85,7 @@ export function DashboardNavbarUser() {
 
       {/* User Image or Avatar */}
       <div className="ml-auto flex items-center gap-3">
-        {user? (
+        {user ? (
           <>
             {user.image ? (
               <img
@@ -109,7 +109,9 @@ export function DashboardNavbarUser() {
               <span className="text-sm font-medium text-sidebar-foreground">
                 {user.name}
               </span>
-              <span className="text-xs text-muted-foreground">{user.email}</span>
+              <span className="text-xs text-muted-foreground">
+                {user.email}
+              </span>
             </div>
           </>
         ) : (
@@ -125,5 +127,5 @@ export function DashboardNavbarUser() {
         )}
       </div>
     </div>
-  )
+  );
 }
