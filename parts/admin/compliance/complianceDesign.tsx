@@ -221,7 +221,7 @@ export const DashboardCards: React.FC<{ metrics: DashboardMetrics }> = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         <MetricCard
-          label="Contributions"
+          label="Total Actual Contributions"
           value={formatCurrency(metrics.totalActualContributions)}
           icon={<TrendingUp className="w-5 h-5 text-green-600" />}
           colorClass="bg-green-50 border-green-200"
@@ -231,7 +231,7 @@ export const DashboardCards: React.FC<{ metrics: DashboardMetrics }> = ({
         />
 
         <MetricCard
-          label="Target"
+          label="Contributions Target"
           value={formatCurrency(metrics.contributionsTarget)}
           icon={<Target className="w-5 h-5 text-blue-600" />}
           colorClass="bg-blue-50 border-blue-200"
@@ -241,7 +241,7 @@ export const DashboardCards: React.FC<{ metrics: DashboardMetrics }> = ({
         />
 
         <MetricCard
-          label="Performance"
+          label="Performance Rate"
           value={`${metrics.performanceRate.toFixed(1)}%`}
           icon={<TrendingUp className="w-5 h-5 text-green-600" />}
           colorClass="bg-green-50 border-green-200"
@@ -251,7 +251,7 @@ export const DashboardCards: React.FC<{ metrics: DashboardMetrics }> = ({
         />
 
         <MetricCard
-          label="Employers"
+          label="Total Employers"
           value={metrics.totalEmployers.toLocaleString()}
           icon={<Building2 className="w-5 h-5 text-blue-600" />}
           colorClass="bg-blue-50 border-blue-200"
@@ -259,7 +259,7 @@ export const DashboardCards: React.FC<{ metrics: DashboardMetrics }> = ({
         />
 
         <MetricCard
-          label="Employees"
+          label="Total Employees"
           value={metrics.totalEmployees.toLocaleString()}
           icon={<UserCheck className="w-5 h-5 text-green-600" />}
           colorClass="bg-green-50 border-green-200"
@@ -578,14 +578,14 @@ export const ComplianceTable: React.FC<{
                 onSort={onSort}
               />
               <TableHeader
-                label="Collected"
+                label="Actual Contributions Collected"
                 field="contributionCollected"
                 sortConfig={sortConfig}
                 onSort={onSort}
                 align="right"
               />
               <TableHeader
-                label="Target"
+                label="Contributions Target"
                 field="target"
                 sortConfig={sortConfig}
                 onSort={onSort}
@@ -599,14 +599,14 @@ export const ComplianceTable: React.FC<{
                 align="right"
               />
               <TableHeader
-                label="Employers"
+                label="Employers Registered"
                 field="employersRegistered"
                 sortConfig={sortConfig}
                 onSort={onSort}
                 align="right"
               />
               <TableHeader
-                label="Employees"
+                label="Employees Coverage"
                 field="employees"
                 sortConfig={sortConfig}
                 onSort={onSort}
@@ -620,7 +620,7 @@ export const ComplianceTable: React.FC<{
                 align="right"
               />
               <TableHeader
-                label="Cert. Fees"
+                label="Certificate Fees"
                 field="certificateFees"
                 sortConfig={sortConfig}
                 onSort={onSort}
@@ -902,10 +902,8 @@ export const AddRegionModal: React.FC<{
                     required
                   />
                 </div>
-
               </div>
             </div>
-
           </form>
 
           <div className="sticky bottom-0 bg-gray-50 border-t px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-end gap-3">
