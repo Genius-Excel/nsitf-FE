@@ -678,7 +678,9 @@ export const HSEFormModal: React.FC<{
               <SelectItem value="letter issued">Letter Issued</SelectItem>
               <SelectItem value="inspection">Inspection</SelectItem>
               <SelectItem value="incident report">Incident Report</SelectItem>
-              <SelectItem value="compliance notice">Compliance Notice</SelectItem>
+              <SelectItem value="compliance notice">
+                Compliance Notice
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -964,7 +966,7 @@ export const HSERecordsTable: React.FC<{
                 OSH Enlightenment
               </th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                OSH Insp & Audit
+                OSH Inspection & Audit
               </th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
                 Accident Investigation
@@ -979,7 +981,10 @@ export const HSERecordsTable: React.FC<{
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
             {records.map((record) => (
-              <tr key={record.id} className="hover:bg-gray-50 transition-colors">
+              <tr
+                key={record.id}
+                className="hover:bg-gray-50 transition-colors"
+              >
                 <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                   {record.region}
                 </td>
@@ -993,7 +998,11 @@ export const HSERecordsTable: React.FC<{
                   {record.targetOSH.toLocaleString()}
                 </td>
                 <td className="px-4 py-4 text-sm whitespace-nowrap text-center">
-                  <Badge className={`${getPerformanceBadge(record.performanceRate)} font-semibold`}>
+                  <Badge
+                    className={`${getPerformanceBadge(
+                      record.performanceRate
+                    )} font-semibold`}
+                  >
                     {record.performanceRate}%
                   </Badge>
                 </td>

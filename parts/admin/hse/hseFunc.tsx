@@ -326,7 +326,6 @@ import {
 import { HSEActivity, StatCard, HSEFormData, HSERecord } from "@/lib/types";
 import { mockHSEActivities, mockHSERecords } from "@/lib/Constants";
 import { HSETableDetailModal } from "./hseModal";
-import {useCreateHSERecord, useEditHseRecord, useGEtDashboardMetrics} from "@/services/HSE"
 
 export default function HSEManagement() {
   // ============== STATE ==============
@@ -353,13 +352,7 @@ export default function HSEManagement() {
     status: "",
     details: "",
     recommendations: "",
-    safetyComplianceRate: ""
   });
-
-  // ============== QUERIES / MUTATIONS ==============
-  const { HSERecordPayload } = useCreateHSERecord();
-  const { editHSEPayload } = useEditHseRecord();
-  const { HSEData, gettingHSErData, HSEError } = useGEtDashboardMetrics({ enabled: true });
 
   // ============== INITIALIZATION ==============
   useEffect(() => {
@@ -367,47 +360,6 @@ export default function HSEManagement() {
     setActivities(mockHSEActivities);
     setHseRecords(mockHSERecords);
   }, []);
-
-  // ============== TRANSFORM API → HSEActivity ==============
-  useEffect(() => {
-    if (!HSEData) return;
-
-    const typeToIcon: Record<string, React.ReactNode> = {
-      "Letter Issued": <FileText className="w-5 h-5" />,
-      "OSH Awareness": <Shield className="w-5 h-5" />,
-      "Safety Audit": <CheckCircle className="w-5 h-5" />,
-      "Accident Investigation": <AlertCircle className="w-5 h-5" />,
-    };
-
-    const apiActivities: HSEActivity[] = HSEData.recent_activities.map((a: any) => {
-      const recordTypeMap: Record<string, string> = {
-        letter_issued: "Letter Issued",
-        osh_awareness: "OSH Awareness",
-        safety_audit: "Safety Audit",
-        incident_investigation: "Accident Investigation",
-      };
-
-      const statusMap: Record<string, string> = {
-        completed: "Completed",
-        pending: "Under Investigation",
-        follow_up_required: "Follow-up Required",
-      };
-
-      const type = recordTypeMap[a.record_type] || a.record_type;
-      return {
-        id: a.id,
-        type,
-        organization: a.employer,
-        date: a.date_logged,
-        status: statusMap[a.status] || a.status,
-        details: a.details || "",
-        recommendations: a.recommendations || "",
-        icon: typeToIcon[type] || <FileText className="w-5 h-5" />,
-      } as HSEActivity;
-    });
-
-    setActivities(apiActivities);
-  }, [HSEData]);
 
   // ============== HANDLERS ==============
   const handleAddNew = () => {
@@ -447,90 +399,127 @@ export default function HSEManagement() {
   };
 
   const handleSave = async () => {
-    if (!formData.type || !formData.organization || !formData.date || !formData.status || !formData.details) {
+    if (
+      !formData.type ||
+      !formData.organization ||
+      !formData.date ||
+      !formData.status ||
+      !formData.details
+    ) {
       alert("Please fill in all required fields");
       return;
     }
 
-    const payload = {
-      record_type: formData.type.toLowerCase().replace(/\s+/g, "_"),
-      employer: formData.organization,
-      status: formData.status.toLowerCase().replace(/\s+/g, "_"),
-      date_logged: formData.date,
-      details: formData.details,
-      recommendations: formData.recommendations,
-      safety_compliance_rate: formData.safetyComplianceRate ? Number(formData.safetyComplianceRate) : undefined,
-    };
-
     try {
+      const icon = getIconForType(formData.type);
+
       if (editingActivityId) {
-         editHSEPayload({ id: editingActivityId, ...payload });
+        // UPDATE ACTIVITY
+        setActivities(
+          activities.map((activity) =>
+            activity.id === editingActivityId
+              ? {
+                  ...activity,
+                  type: formData.type as HSEActivity["type"],
+                  organization: formData.organization,
+                  date: formData.date,
+                  status: formData.status as HSEActivity["status"],
+                  details: formData.details,
+                  recommendations: formData.recommendations,
+                  icon,
+                }
+              : activity
+          )
+        );
       } else {
-        const tempId = Date.now().toString();
+        // CREATE NEW ACTIVITY
         const newActivity: HSEActivity = {
-          id: tempId,//@ts-ignore
-          type: formData.type,
+          id: Date.now().toString(),
+          type: formData.type as HSEActivity["type"],
           organization: formData.organization,
-          date: formData.date,//@ts-ignore
-          status: formData.status,
+          date: formData.date,
+          status: formData.status as HSEActivity["status"],
           details: formData.details,
-          recommendations: formData.recommendations, //@ts-ignore
-          icon: getIconForType(formData.type),
+          recommendations: formData.recommendations,
+          icon,
         };
-        setActivities(prev => [newActivity, ...prev]);
-         HSERecordPayload(payload);
+        setActivities([newActivity, ...activities]);
       }
       setIsFormModalOpen(false);
     } catch (error) {
-      console.error("Save error:", error);
-      alert("Failed to save record.");
+      console.error("Error saving HSE record:", error);
+      alert("An error occurred while saving the HSE record.");
     }
   };
 
-  const getIconForType = (type: string): React.ReactNode => {
-    const map: Record<string, React.ReactNode> = {
-      "Letter Issued": <FileText className="w-5 h-5" />,
-      "OSH Awareness": <Shield className="w-5 h-5" />,
-      "Safety Audit": <CheckCircle className="w-5 h-5" />,
-      "Accident Investigation": <AlertCircle className="w-5 h-5" />,
+  const getIconForType = (type: string): string => {
+    const map: Record<string, string> = {
+      "Letter Issued": "📋",
+      "OSH Awareness": "🛡️",
+      "Safety Audit": "✓",
+      "Accident Investigation": "⚠️",
     };
-    return map[type] || <FileText className="w-5 h-5" />;
+    return map[type] || "📋";
   };
 
-  // ============== STATISTICS (from API) ==============
-  const totals = HSEData?.totals_by_record_type ?? {
-    letter_issued: 0,
-    osh_awareness: 0,
-    safety_audit: 0,
-    incident_investigation: 0,
-  };
+  // ============== CALCULATIONS ==============
+  // Count by activity type
+  const letterIssuedCount = activities.filter(
+    (a) => a.type === "Letter Issued"
+  ).length;
 
+  const OshEnlightenment = activities.filter(
+    (a) => a.type === "OSH Awareness"
+  ).length;
+
+  const OshAudit = activities.filter((a) => a.type === "Safety Audit").length;
+
+  const AccidentIncidentInvestigation = activities.filter(
+    (a) => a.type === "Accident Investigation"
+  ).length;
+
+  // ============== STATISTICS ==============
   const stats: StatCard[] = [
     {
-      title: "Letters Issued",
-      value: totals.letter_issued,
+      title: "Total Actual OSH Activities",
+      value: letterIssuedCount,
       description: "Safety compliance letters",
       icon: <FileText />,
       bgColor: "#00a63e",
     },
     {
-      title: "OSH Awareness Sessions",
-      value: totals.osh_awareness,
+      title: "Target OSH Activities",
+      value: OshEnlightenment,
       description: "Training & awareness programs",
       icon: <Shield />,
       bgColor: "#00a63e",
     },
     {
-      title: "Safety Audits",
-      value: totals.safety_audit,
+      title: "Performance Rate",
+      value: OshAudit,
       description: "Completed workplace audits",
       change: "",
       icon: <CheckCircle />,
       bgColor: "#3b82f6",
     },
     {
-      title: "Accident Investigations",
-      value: totals.incident_investigation,
+      title: "OSH Enlightenment & Awareness",
+      value: AccidentIncidentInvestigation,
+      description: "Incident investigations",
+      change: "",
+      icon: <AlertCircle />,
+      bgColor: "blue",
+    },
+    {
+      title: "OSH Inspection & Audit",
+      value: letterIssuedCount,
+      description: "Safety compliance letters",
+      icon: <FileText />,
+      bgColor: "#00a63e",
+    },
+    {
+      title: "Accident & Incident  Investigation",
+      value: AccidentIncidentInvestigation,
       description: "Incident investigations",
       change: "",
       icon: <AlertCircle />,
@@ -539,56 +528,32 @@ export default function HSEManagement() {
   ];
 
   // ============== MONTHLY SUMMARY ==============
-  const monthly = HSEData?.monthly_summary ?? {
-    total_activities: 0,
-    completed: 0,
-    under_investigation: 0,
-    follow_up_required: 0,
-  };
+  const completedCount = activities.filter(
+    (a) => a.status === "resolved"
+  ).length;
+
+  const underInvestigationCount = activities.filter(
+    (a) => a.status === "progress"
+  ).length;
+
+  const followUpRequiredCount = activities.filter(
+    (a) => a.status === "closed"
+  ).length;
 
   const monthlySummaryData = [
-    { label: "Total Activities", value: monthly.total_activities },
-    { label: "Completed", value: monthly.completed },
-    { label: "Under Investigation", value: monthly.under_investigation },
-    { label: "Follow-up Required", value: monthly.follow_up_required },
+    { label: "Total Activities", value: activities.length },
+    { label: "Completed", value: completedCount },
+    { label: "Under Investigation", value: underInvestigationCount },
+    { label: "Follow-up Required", value: followUpRequiredCount },
   ];
 
   // ============== COMPLIANCE RATE ==============
-  const compliance = HSEData?.safety_compliance ?? { overall_rate: 0, percentage_increase: 0 };
-  const compliancePercentage = compliance.overall_rate;
-  const complianceChange = compliance.percentage_increase
-    ? `${compliance.percentage_increase > 0 ? "Up" : "Down"} ${Math.abs(compliance.percentage_increase)}% from last month`
-    : "No change";
+  const compliancePercentage = 92;
+  const complianceChange = "↑ 3% from last month";
 
-  // ============== LOADING / ERROR ==============
-  if (!isClient) return null;
-
-  if (gettingHSErData) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-64"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
-              ))}
-            </div>
-            <div className="h-64 bg-gray-200 rounded-lg"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (HSEError) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto text-center text-red-600">
-          Failed to load HSE data. Please try again later.
-        </div>
-      </div>
-    );
+  // Don't render until client-side
+  if (!isClient) {
+    return null;
   }
 
   // ============== RENDER ==============
