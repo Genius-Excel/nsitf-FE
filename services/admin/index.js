@@ -152,73 +152,6 @@ export const useVerifyEmail = (handleSuccess) => {
   };
 };
 
-export const useLoginWithEmail = (handleSuccess) => {
-  const { data, error, isPending, mutate } = useMutateItem({
-    mutationFn: (payload) =>
-      httpService.postDataWithoutToken(payload, routes.loginWithEmail()),
-
-    onSuccess: (requestParams) => {
-      const resData = requestParams?.data || {};
-
-      if (
-        typeof window !== "undefined" &&
-        resData?.access &&
-        resData?.refresh
-      ) {
-        try {
-          Storage.set("accessToken", resData.access - token);
-          Storage.set("refreshToken", resData.refresh - token);
-          Storage.set("user_id", resData.user_id || "");
-          Storage.set("role", resData.role || "");
-        } catch (storageError) {
-          console.error("Storage error:", storageError);
-        }
-      }
-      if (typeof handleSuccess === "function") {
-        handleSuccess(resData);
-      }
-    },
-    onError: (err) => {
-      console.error("Login error:", err);
-    },
-  });
-
-  return {
-    loginWithEmailData: data?.data,
-    loginWithEmailError: ErrorHandler(error),
-    loginWithEmailLoading: isPending,
-    loginWithEmailPayload: (requestPayload) => {
-      if (!requestPayload?.email || !requestPayload?.password) {
-        console.error("Invalid payload: Missing email or password");
-        return;
-      }
-      mutate(requestPayload);
-    },
-  };
-};
-
-export const useLoginWithPhoneNumber = (handleSuccess) => {
-  const { data, error, isPending, mutate } = useMutateItem({
-    mutationFn: (payload) =>
-      httpService.postDataWithoutToken(payload, routes.loginWithPhonenumber()),
-    onSuccess: (requestParams) => {
-      const resData = requestParams?.data || {};
-      if (typeof window !== "undefined") {
-        Storage.set("accessToken", resData?.access - token);
-        Storage.set("refreshToken", resData?.refresh - token);
-        Storage.set("user_id", resData?.user_id);
-        Storage.set("role", resData?.role);
-      }
-      handleSuccess(resData);
-    },
-  });
-  return {
-    loginWithPhoneNumberData: data,
-    loginWithPhoneNumberError: ErrorHandler(error),
-    loginWithPhoneNumberIsLoading: isPending,
-    loginWithPhoneNumberPayload: (requestPayload) => mutate(requestPayload),
-  };
-};
 
 export const useResendEmail = (handleSuccess) => {
   const { data, error, isPending, mutate } = useMutateItem({
@@ -236,60 +169,6 @@ export const useResendEmail = (handleSuccess) => {
     resendEmaiError: ErrorHandler(error),
     resendEmaiIsLoading: isPending,
     resendEmaiPayload: (requestPayload) => mutate(requestPayload),
-  };
-};
-export const useOnboardingStepOne = (handleSuccess) => {
-  const userId = getLocalStorageItem("user_id");
-  const { data, error, isPending, mutate, isSuccess } = useMutateItem({
-    mutationFn: (payload) =>
-      httpService.postDataWithoutToken(
-        payload,
-        routes.onboardingStepOne(userId)
-      ),
-    onSuccess: (requestParams) => {
-      const resData = requestParams?.data || {};
-      // console.log("onboardingStepOne Response Data:", resData?.error);
-      if (handleSuccess) {
-        handleSuccess(resData);
-        if (typeof window !== "undefined") {
-          Storage.set("business_id", resData?.data[0]?.business_id);
-        }
-      }
-    },
-  });
-
-  return {
-    onboardingStepOneData: data || {},
-    onboardingStepOneError: error ? ErrorHandler(error) : null,
-    onboardingStepOneIsLoading: isPending,
-    onboardingStepOnePayload: (requestPayload) => mutate(requestPayload),
-    onboardingStepOneIsSuccess: isSuccess,
-  };
-};
-
-export const useOnboardingStepTwo = (handleSuccess) => {
-  const businessId = getLocalStorageItem("business_id");
-  const { data, error, isPending, mutate, isSuccess } = useMutateItem({
-    mutationFn: (payload) =>
-      httpService.postFormDataWithoutToken(
-        payload,
-        routes.onboardingStepTwo(businessId)
-      ),
-    onSuccess: (requestParams) => {
-      const resData = requestParams?.data || {};
-      // console.log("onboardingStepTwo Response Data:", resData);
-      if (handleSuccess) {
-        handleSuccess(resData);
-      }
-    },
-  });
-
-  return {
-    onboardingStepTwoData: data || {},
-    onboardingStepTwoError: error ? ErrorHandler(error) : null,
-    onboardingStepTwoIsLoading: isPending,
-    onboardingStepTwoPayload: (requestPayload) => mutate(requestPayload),
-    onboardingStepTwoIsSuccess: isSuccess,
   };
 };
 
@@ -390,21 +269,3 @@ export const useGetVerificationStatus = ({ enabled = false, businessId }) => {
   };
 };
 
-export const useCreateOrUpdateCustomLink = (businessId, handleSuccess) => {
-  const { data, error, isPending, isSuccess, mutate } = useMutateItem({
-    mutationFn: (payload) =>
-      httpService.patchDataJson(payload, routes.createAndUpdateCustomLink(businessId)),
-    onSuccess: (requestParams) => {
-      const resData = requestParams?.data || {};
-      handleSuccess?.(resData);
-    },
-  });
-
-  return {
-    customLinkData: data || {},
-    customLinkError: error ? ErrorHandler(error) : null,
-    customLinkIsLoading: isPending,
-    mutateCustomLink: (requestPayload) => mutate(requestPayload),
-    customLinkIsSuccess: isSuccess,
-  };
-};

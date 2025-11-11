@@ -383,7 +383,7 @@ export function AppSidebar({
 
       {/* Logout Confirmation Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-sidebar text-sidebar-foreground border-sidebar-border">
+        <DialogContent className="sm:max-w-[425px] bg-sidebar text-sidebar-foreground border-sidebar-border bg-white">
           <DialogHeader>
             <DialogTitle>Confirm Logout</DialogTitle>
             <DialogDescription>
