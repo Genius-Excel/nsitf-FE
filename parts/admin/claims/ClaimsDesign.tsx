@@ -18,7 +18,7 @@ import { getStatusBadgeColor, getTypeTextColor } from "@/lib/utils";
 import { ChartDataPoint, Claim, StatCard } from "@/lib/types";
 
 export const StatisticsCards: React.FC<{ stats: StatCard[] }> = ({ stats }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
     {stats.map((stat, idx) => (
       <div key={idx} className="bg-white rounded-lg border border-gray-200 p-4">
         <div className="flex justify-between items-start">

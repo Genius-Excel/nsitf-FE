@@ -31,27 +31,33 @@ export default function DashboardPage() {
 
   const stats = [
     {
-      title: "Total Employees Registered",
+      title: "Total Actual Contributions",
       value: "248",
       icon: Users,
       description: "12.5% fromn last months",
     },
     {
-      title: "Compliance Rate",
+      title: "Total Registered Employers",
       value: "92%",
       icon: Shield,
       description: "8 pending review",
     },
     {
-      title: "Claims Procesed (YTD)",
+      title: "Total Claims Paid",
       value: "15",
       icon: ClipboardCheck,
       description: "8.3% fromlast month",
     },
     {
-      title: "Total Contributions",
+      title: "Total Claims Beneficiaries",
       value: "N2.4B",
       icon: HardHat,
+      description: "15% from last month",
+    },
+    {
+      title: "Total OSH Activities",
+      value: "N2.4B",
+      icon: Scale,
       description: "15% from last month",
     },
   ];
@@ -72,7 +78,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (

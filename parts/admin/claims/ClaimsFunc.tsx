@@ -90,7 +90,7 @@ export default function ClaimsManagement() {
     claims?.filter((c) => c.type === "Disability").length || 0;
   const deathClaims =
     claims?.filter((c) => c.type === "Death Claim").length || 0;
-  const lossOfProductivity =
+  const retireeBenefit =
     claims?.filter((c) => c.type === "Loss of Productivity").length || 0;
 
   const lastMonthClaims = claims?.length ? claims.length - 1 : 0;
@@ -112,8 +112,9 @@ export default function ClaimsManagement() {
   // ============== STATISTICS ==============
   const stats: StatCard[] = [
     {
-      title: "Total Claims Received",
+      title: "Total Claims Paid",
       value: totalClaims,
+      description: "",
       change: `${
         Number(changePercent) > 0 ? "+" : ""
       }${changePercent}% from last month`,
@@ -121,22 +122,36 @@ export default function ClaimsManagement() {
       bgColor: "#00a63e",
     },
     {
-      title: "Medical Refunds",
+      title: "Beneficiaries Rehabilitated",
+      description: "",
       value: medicalRefunds,
+      change: `${Number(changePercent) > 0 ? "+" : ""}${changePercent}% from last month`,
       icon: <Activity />,
       bgColor: "#00a63e",
     },
     {
-      title: "Disability Claims",
+      title: "NOK Beneficiaries",
+      description: "",
+      change: `${Number(changePercent) > 0 ? "+" : ""}${changePercent}% from last month`,
       value: disabilityClaims,
       icon: <DollarSign />,
       bgColor: "#3b82f6",
     },
     {
-      title: "Death Claims",
+      title: "Disabilities Beneficiaries",
+      description: "",
       value: deathClaims,
+      change: `${Number(changePercent) > 0 ? "+" : ""}${changePercent}% from last month`,
       icon: <BarChart3 />,
       bgColor: "#a855f7",
+    },
+    {
+      title: "Retiree Benefit  Beneficiaries",
+      description: "",
+      value: retireeBenefit,
+      change: `${Number(changePercent) > 0 ? "+" : ""}${changePercent}% from last month`,
+      icon: <BarChart3 />,
+      bgColor: "#f59e0b",
     },
   ];
 
@@ -157,8 +172,8 @@ export default function ClaimsManagement() {
       color: "bg-purple-50 border-l-4 border-purple-500",
     },
     {
-      type: "Loss of Productivity",
-      count: lossOfProductivity,
+      type: "Retiree Benefit Beneficiaries",
+      count: retireeBenefit,
       color: "bg-yellow-50 border-l-4 border-yellow-500",
     },
   ];

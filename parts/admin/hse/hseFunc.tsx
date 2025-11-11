@@ -197,6 +197,7 @@ export default function HSEManagement() {
       title: "Safety Audits",
       value: totals.safety_audit,
       description: "Completed workplace audits",
+      change: "",
       icon: <CheckCircle />,
       bgColor: "#3b82f6",
     },
@@ -204,8 +205,9 @@ export default function HSEManagement() {
       title: "Accident Investigations",
       value: totals.incident_investigation,
       description: "Incident investigations",
+      change: "",
       icon: <AlertCircle />,
-      bgColor: "#a855f7",
+      bgColor: "#ef4444",
     },
   ];
 
