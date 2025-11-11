@@ -24,10 +24,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  clearUserFromStorage,
-  getUserFromStorage,
-} from "@/lib/auth";
+import { clearUserFromStorage, getUserFromStorage } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -172,7 +169,7 @@ export function AppSidebar({
     refetchUserData,
     userData,
     userDataError,
-  } = useGetUserProfile({ enabled: true}); // Fetch only if no user
+  } = useGetUserProfile({ enabled: true }); // Fetch only if no user
 
   // Fetch and process user data
   useEffect(() => {
@@ -189,7 +186,7 @@ export function AppSidebar({
           name: `${userData[0].first_name} ${userData[0].last_name}`,
           role: userData[0].role.toLowerCase(),
         };
-        console.log("user data", userData[0])
+        console.log("user data", userData[0]);
         // Validate role
         if (!validRoles.includes(fetchedUser.role as Role)) {
           setError("Invalid user role detected.");
@@ -267,7 +264,7 @@ export function AppSidebar({
           {error || "Unable to load user data. Please log in again."}
           <Button
             variant="link"
-            onClick={() => router.push("/login")}
+            onClick={() => router.push("/")}
             className="mt-2"
           >
             Go to Login
@@ -293,7 +290,7 @@ export function AppSidebar({
           {!isCollapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-sidebar-foreground dark:text-gray-200">
-                NSTIF
+                NSITF
               </span>
               <span className="text-xs text-muted-foreground capitalize dark:text-gray-400">
                 {user.role}
@@ -314,7 +311,10 @@ export function AppSidebar({
         {/* Navigation */}
         <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
           {filteredNavItems.map((item) => {
-            const roleBasedHref = getRoleBasedRoute(user.role as Role, item.href);
+            const roleBasedHref = getRoleBasedRoute(
+              user.role as Role,
+              item.href
+            );
             const isActive = pathname === roleBasedHref;
             return (
               <NavItem

@@ -1,35 +1,35 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { Menu, PanelLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { DashboardNavbarUser } from "@/components/dashboard-navbar-user"
-import { cn } from "@/lib/utils"
-
-
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Menu, PanelLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
+import { DashboardNavbarUser } from "@/components/dashboard-navbar-user";
+import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(typeof window !== "undefined" && window.innerWidth >= 640)
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(typeof window !== "undefined" && window.innerWidth < 640)
-
-
+  const [isSidebarOpen, setIsSidebarOpen] = useState(
+    typeof window !== "undefined" && window.innerWidth >= 640
+  );
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    typeof window !== "undefined" && window.innerWidth < 640
+  );
 
   // Toggle sidebar visibility for mobile
   const toggleSidebar = () => {
-    setIsSidebarOpen((prev) => !prev)
-  }
+    setIsSidebarOpen((prev) => !prev);
+  };
 
   // Toggle sidebar collapse for desktop
   const toggleSidebarCollapse = () => {
-    setIsSidebarCollapsed((prev) => !prev)
-  }
+    setIsSidebarCollapsed((prev) => !prev);
+  };
 
   return (
     <SidebarProvider defaultOpen={isSidebarOpen}>
@@ -61,13 +61,19 @@ export default function DashboardLayout({
               size="icon"
               className="hidden sm:block"
               onClick={toggleSidebarCollapse}
-              aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={
+                isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+              }
             >
               <PanelLeft className="h-6 w-6 text-gray-600" />
             </Button>
             <div className="space-y-1">
-              <h2 className="text-xl text-green-700 font-semibold">Nigeria Social Insurance Trust Fund</h2>
-              <p className="text-gray-400 text-sm">Digitalized Actuarial and Operations Platform</p>
+              <h2 className="text-xl text-green-700 font-semibold">
+                Nigeria Social Insurance Trust Fund
+              </h2>
+              <p className="text-gray-400 text-sm">
+                Automated and Digitalized Actuarial Data Structure
+              </p>
             </div>
           </div>
           <DashboardNavbarUser />
@@ -82,5 +88,5 @@ export default function DashboardLayout({
         </main>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }
