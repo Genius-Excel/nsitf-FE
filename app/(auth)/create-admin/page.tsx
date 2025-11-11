@@ -12,7 +12,7 @@ const CreateAdminPage = () => {
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-balance ">Nigerian Social Insurance Trust Fund</h1>
           <p className="text-muted-foreground text-balance">
-            Secure access to compliance, claims, and legal management
+            Secure access to Automated and Digital Actuarial Data Structure
           </p>
         </div>
         <CreateAdminForm/>

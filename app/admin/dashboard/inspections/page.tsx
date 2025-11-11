@@ -1,9 +1,10 @@
+import InspectionManagement from '@/parts/admin/inspection/inspectionManagement_func'
 import React from 'react'
-import Inspetion from "@/parts/admin/inspection"
+
 
 const InspectionPage = () => {
   return (
-    <div><Inspetion/></div>
+    <div><InspectionManagement/></div>
   )
 }
 
