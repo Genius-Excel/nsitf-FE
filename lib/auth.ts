@@ -1,5 +1,3 @@
-// Simple authentication utilities for demo purposes
-// In production, use a proper auth solution like Supabase Auth
 
 export type UserRole = "admin" | "regional_manager"
 

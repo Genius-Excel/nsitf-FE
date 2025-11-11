@@ -2,12 +2,6 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import {
-  checkIfAgencyIsActive,
-  getUnreadNotificationCount,
-  getUserId,
-} from "@/lib/utils";
 import { Menu, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -16,8 +10,6 @@ import { DashboardNavbarUser } from "@/components/dashboard-navbar-user";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-
-const supabase = createClient();
 
 interface Profile {
   full_name: string;
@@ -29,11 +21,6 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [isActive, setIsActive] = useState<boolean | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(
     typeof window !== "undefined" && window.innerWidth >= 640
   );
@@ -53,57 +40,7 @@ export default function DashboardLayout({
     setIsSidebarCollapsed((prev) => !prev);
   };
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      setLoading(true);
-      try {
-        const { data: userId, error: userIdError } = await getUserId();
-        if (userIdError) throw new Error(userIdError);
-        if (!userId) throw new Error("Please log in to view the dashboard.");
-
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("full_name, profile_picture, role")
-          .eq("id", userId)
-          .single();
-
-        if (profileError)
-          throw new Error("Error fetching profile: " + profileError.message);
-        if (!profileData) throw new Error("Profile not found.");
-
-        setProfile({
-          full_name: profileData.full_name || "User",
-          profile_picture: profileData.profile_picture || null,
-        });
-        setUserRole(profileData.role);
-        localStorage.setItem("disporabase_fullName", profileData.full_name);
-      } catch (err: any) {
-        toast.error(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-    getUnreadNotificationCount().then(({ data }) =>
-      setUnreadNotifications(data || 0)
-    );
-
-    // Responsive sidebar visibility and collapse
-    const handleResize = () => {
-      const isMobile = window.innerWidth < 640;
-      setIsSidebarOpen(!isMobile);
-      setIsSidebarCollapsed(isMobile);
-    };
-    window.addEventListener("resize", handleResize);
-    handleResize(); // Initial check
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const handleRouteToNotifications = () => {
-    router.push(`/dashboard/${userRole}/notifications`);
-  };
-
+ 
   return (
     <SidebarProvider defaultOpen={isSidebarOpen}>
       {isSidebarOpen && (

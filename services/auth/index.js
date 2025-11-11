@@ -18,17 +18,6 @@ export const useCreateAdmin = (handleSuccess) => {
       ),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log("Signup Response Data:", resData?.data);
-      if (typeof window !== "undefined" && resData?.data) {
-        try {
-          Storage.set("user_id", resData?.data[0]?.user_id || "");
-          Storage.set("role", resData?.data[0]?.role || "");
-          Storage.set("email", resData?.data[0]?.email || "");
-          Storage.set("email_verified", resData?.data[0]?.email || "");
-        } catch (storageError) {
-          console.error("Storage error:", storageError);
-        }
-      }
       if (handleSuccess) {
         handleSuccess(resData);
       }
@@ -67,6 +56,29 @@ export const useLogin =(handleSuccess)=>{
   };
 }
 
+export const useChangePassword =(handleSuccess)=>{
+   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+    mutationFn: (payload) =>
+      httpService.postData(
+        payload,
+        routes.changePassword()
+      ),
+    onSuccess: (requestParams) => {
+      const resData = requestParams?.data || {};
+      // console.log(requestParams?.data);
+      handleSuccess(resData);
+    },
+  });
+
+  return {
+    changePasswordData: data?.data || {},
+    changePasswordError: error ? ErrorHandler(error) : null,
+    changePasswordIsLoading: isPending,
+    changePasswordPayload: (requestPayload) => mutate(requestPayload),
+    changePasswordIsSuccess: isSuccess,
+  };
+}
+
 export const useGetUserProfile =({enabled = false})=>{
    const { data, error, isLoading, refetch, setFilter } = useFetchItem({
     queryKey: ["GetUserData"],
@@ -83,6 +95,29 @@ export const useGetUserProfile =({enabled = false})=>{
     userDataError: ErrorHandler(error),
     refetchUserData: refetch,
     filterUserData: setFilter,
+  };
+}
+
+export const useEditUserProfile =(handleSuccess)=>{
+   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+    mutationFn: (payload) =>
+      httpService.patchData(
+        payload,
+        routes.editUserProfile()
+      ),
+     onSuccess: (requestParams) => {
+      const resData = requestParams?.data || {};
+      // console.log(requestParams?.data);
+      handleSuccess(resData);
+    },
+  });
+
+  return {
+    editUserProfileData: data?.data || {},
+    editUserProfileError: error ? ErrorHandler(error) : null,
+    editUserProfileIsLoading: isPending,
+    editUserProfilePayload: (requestPayload) => mutate(requestPayload),
+    editUserProfileIsSuccess: isSuccess,
   };
 }
 

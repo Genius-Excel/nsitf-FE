@@ -120,7 +120,7 @@ export interface HSEActivity {
   type: "Letter Issued" | "OSH Awareness" | "Safety Audit" | "Accident Investigation";
   organization: string;
   date: string;
-  status: "Completed" | "Under Investigation" | "Follow-up Required";
+  status: "pending" | "progress" | "resolved" | "closed";
   details?: string;
   recommendations?: string;
   icon: string;
@@ -133,6 +133,7 @@ export interface HSEFormData {
   status: string;
   details: string;
   recommendations: string;
+  safetyComplianceRate?: number | string;
 }
 
 export interface StatCard {
@@ -141,7 +142,7 @@ export interface StatCard {
   description: string;
   icon: React.ReactNode;
   bgColor: string;
-  change: string;
+  change?: string;
 }
 
 export interface ResetEmailFormData {

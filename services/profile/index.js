@@ -9,33 +9,12 @@ import { getLocalStorageItem, getUserIdFromSession } from "@/lib/utils";
 const httpService = new HttpService();
 const storage = new Storage();
 
-export const useAddUser =(handleSuccess)=>{
-   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
-    mutationFn: (payload) =>
-      httpService.postData(
-        payload,
-        routes.adminAddUsers()
-      ),
-    onSuccess: (requestParams) => {
-      const resData = requestParams?.data || {};
-      handleSuccess(resData);
-    },
-  });
 
-  return {
-    addUserData: data?.data || {},
-    addUserError: error ? ErrorHandler(error) : null,
-    addUserIsLoading: isPending,
-    addUserPayload: (requestPayload) => mutate(requestPayload),
-    addUserIsSuccess: isSuccess,
-  };
-}
-
-export const useGetUsers =({enabled = false})=>{
+export const useGetUserProfile =({enabled = false})=>{
    const { data, error, isLoading, refetch, setFilter } = useFetchItem({
-    queryKey: ["GetEnteredUserData"],
+    queryKey: ["GetUserData"],
     queryFn: () => {
-      return httpService.getData(routes.adminGetUsers());
+      return httpService.getData(routes.getUserProfileDetails());
     },
     enabled,
     retry: 2,
@@ -49,47 +28,6 @@ export const useGetUsers =({enabled = false})=>{
     filterUserData: setFilter,
   };
 }
-
-export const useEditUser =(handleSuccess)=>{
-   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
-    mutationFn: (payload) =>
-      httpService.patchData(
-        payload,
-        routes.editUser(userId)
-      ),
-    onSuccess: (requestParams) => {
-      const resData = requestParams?.data || {};
-      handleSuccess(resData);
-    },
-  });
-
-  return {
-    editUserData: data?.data || {},
-    editUserError: error ? ErrorHandler(error) : null,
-    editUserIsLoading: isPending,
-    editUserPayload: (requestPayload) => mutate(requestPayload),
-    editUserIsSuccess: isSuccess,
-  };
-}
-
-export const useDeleteUser = (handleSuccess) => {
-  const { data, error, isPending, mutate } = useMutateItem({
-    mutationFn: (userId) =>
-      httpService.deleteData(routes.deleteUser(userId)),
-    onSuccess: (requestParams) => {
-      const resData = requestParams?.data || {};
-
-      handleSuccess(resData);
-    },
-  });
-
-  return {
-    deleteUSerData: data,
-    deleteUserError: ErrorHandler(error),
-    deleteUserIsLoading: isPending,
-    deleteUserPath: (userId) => mutate(userId),
-  };
-};
 
 export const useGetConfirmEmail = ({ enabled = false }) => {
   const { data, error, isLoading, refetch, setFilter } = useFetchItem({
@@ -172,25 +110,6 @@ export const useResendEmail = (handleSuccess) => {
   };
 };
 
-export const useVerifyToken = ({ enabled = false }) => {
-  const { data, error, isLoading, refetch, setFilter } = useFetchItem({
-    queryKey: ["validateEmailToken"],
-    queryFn: (token) => {
-      return httpService.getDataWithoutToken(routes.verifyEmailToken(token));
-    },
-    enabled,
-    retry: 2,
-  });
-  console.log(data);
-  return {
-    isVerifyingToken: isLoading,
-    verifiedTokenData: data?.data?.message || null,
-    verifyTokenError: ErrorHandler(error),
-    refetchVerifyToken: refetch,
-    filterVerifyToken: setFilter,
-  };
-};
-
 export const useSendPasswordReset = (handleSuccess) => {
   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
     mutationFn: (payload) =>
@@ -235,37 +154,3 @@ export const useResetPassword = (handleSuccess) => {
     resetPasswordIsSuccess: isSuccess,
   };
 };
-
-export const useGetVerificationStatus = ({ enabled = false, businessId }) => {
-  const {
-    data: rawData,
-    error,
-    isLoading,
-    refetch,
-    setFilter,
-  } = useFetchItem({
-    queryKey: ['verify_business', businessId],
-    queryFn: async () => {
-      if (!businessId) {
-        throw new Error('Business ID is required');
-      }
-      const response = await httpService.getData(
-        routes.getVerificationStatus(businessId)
-      );
-      return response; 
-    },
-    enabled: enabled && !!businessId,
-    retry: 2,
-    staleTime: 5 * 60 * 1000, 
-    cacheTime: 10 * 60 * 1000, 
-  });
-   console.log("Verification Status Data:", rawData?.data);
-  return {
-    verificationIsLoading: isLoading,
-    verificationData: rawData?.data?.message,
-    verificationError: error ? ErrorHandler(error) : null,
-    refetchVerification: refetch,
-    filterVerification: setFilter,
-  };
-};
-

@@ -25,38 +25,39 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [userRole, setUserRole] =useState<string | null>(null)
-  const handleSuccess =()=> {
-    toast.success("Logging Successful")
-  }
-  const {loginData, loginPayload, loginIsLoading, loginError} = useLogin(handleSuccess)
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const handleSuccess = () => {
+    toast.success("Logging Successful");
+  };
+  const { loginData, loginPayload, loginIsLoading, loginError } =
+    useLogin(handleSuccess);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setIsLoading(loginIsLoading);
-    const payload ={
-      email:email,
-      password:password,
-    }
-    loginPayload(payload)
+    setIsLoading(true);
+    const payload = {
+      email: email,
+      password: password,
+    };
+    loginPayload(payload);
   };
-  useEffect(()=>{
-    if(loginError){
-      toast.error(loginError || "Could not sign in")
+  useEffect(() => {
+    if (loginError) {
+      toast.error(loginError || "Could not sign in");
+      setIsLoading(false);
     }
-  },[loginError])
-  useEffect(()=>{
-
-    if(loginData){
-      localStorage.setItem("user", JSON.stringify(loginData))
-      setUserRole(loginData.role)
+  }, [loginError]);
+  useEffect(() => {
+    if (loginData) {
+      localStorage.setItem("user", JSON.stringify(loginData));
+      setUserRole(loginData.role);
     }
-    if(userRole){
-      router.push(`${userRole.toLowerCase()}/dashboard`)
+    if (userRole) {
+      router.push(`${userRole.toLowerCase()}/dashboard`);
+    setIsLoading(false);
     }
-
-  },[loginData, userRole])
+  }, [loginData, userRole]);
 
   const routeToResetPassword = () => {
     router.push("/reset-password");
@@ -139,7 +140,6 @@ export function LoginForm() {
             className={`text-sm text-muted-foreground focus:ring-offset-2 mx-auto transition-colors duration-200 `}
             onClick={routeToResetPassword}
             aria-label="Reset your password"
-          
           >
             <Link href="/reset-password">Reset Password</Link>
           </Button>
