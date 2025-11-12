@@ -67,13 +67,10 @@ export default function DashboardPage() {
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-semibold tracking-tight text-balance">
-            Dashboard
+            APRD DASHBOARD VIEW FOR SUPER USER
           </h1>
           {/* {user && <RoleBadge role={user.role} />} */}
         </div>
-        <p className="text-muted-foreground text-balance">
-          Automated and Digitalized Actuarial Data Structure
-        </p>
       </div>
 
       {/* Stats Grid */}
