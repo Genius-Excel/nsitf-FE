@@ -80,9 +80,9 @@ export default function ClaimsManagement() {
         title: "Total Claims Paid",
         value: statistics.totalClaims,
         description: "",
-        change: `${
-          Number(statistics.changePercent) > 0 ? "+" : ""
-        }${statistics.changePercent}% from last month`,
+        change: `${Number(statistics.changePercent) > 0 ? "+" : ""}${
+          statistics.changePercent
+        }% from last month`,
         icon: <FileText />,
         bgColor: "#00a63e",
       },
@@ -90,18 +90,18 @@ export default function ClaimsManagement() {
         title: "Beneficiaries Rehabilitated",
         description: "",
         value: statistics.medicalRefunds,
-        change: `${
-          Number(statistics.changePercent) > 0 ? "+" : ""
-        }${statistics.changePercent}% from last month`,
+        change: `${Number(statistics.changePercent) > 0 ? "+" : ""}${
+          statistics.changePercent
+        }% from last month`,
         icon: <Activity />,
         bgColor: "#00a63e",
       },
       {
         title: "NOK Beneficiaries",
         description: "",
-        change: `${
-          Number(statistics.changePercent) > 0 ? "+" : ""
-        }${statistics.changePercent}% from last month`,
+        change: `${Number(statistics.changePercent) > 0 ? "+" : ""}${
+          statistics.changePercent
+        }% from last month`,
         value: statistics.disabilityClaims,
         icon: <DollarSign />,
         bgColor: "#3b82f6",
@@ -110,9 +110,9 @@ export default function ClaimsManagement() {
         title: "Disabilities Beneficiaries",
         description: "",
         value: statistics.deathClaims,
-        change: `${
-          Number(statistics.changePercent) > 0 ? "+" : ""
-        }${statistics.changePercent}% from last month`,
+        change: `${Number(statistics.changePercent) > 0 ? "+" : ""}${
+          statistics.changePercent
+        }% from last month`,
         icon: <BarChart3 />,
         bgColor: "#a855f7",
       },
@@ -120,9 +120,9 @@ export default function ClaimsManagement() {
         title: "Retiree Benefit Beneficiaries",
         description: "",
         value: statistics.retireeBenefit,
-        change: `${
-          Number(statistics.changePercent) > 0 ? "+" : ""
-        }${statistics.changePercent}% from last month`,
+        change: `${Number(statistics.changePercent) > 0 ? "+" : ""}${
+          statistics.changePercent
+        }% from last month`,
         icon: <BarChart3 />,
         bgColor: "#f59e0b",
       },
@@ -190,12 +190,12 @@ export default function ClaimsManagement() {
       "Date Paid",
       "Sector",
       "Class",
-      "Payment Period"
+      "Payment Period",
     ];
 
     const csvContent = [
       headers.join(","),
-      ...filteredClaims.map(claim =>
+      ...filteredClaims.map((claim) =>
         [
           claim.claimId,
           `"${claim.employer}"`,
@@ -208,9 +208,9 @@ export default function ClaimsManagement() {
           claim.datePaid || "",
           claim.sector || "",
           claim.class || "",
-          claim.date || ""
+          claim.date || "",
         ].join(",")
-      )
+      ),
     ].join("\n");
 
     // Download CSV
@@ -218,7 +218,9 @@ export default function ClaimsManagement() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `claims-export-${new Date().toISOString().split("T")[0]}.csv`;
+    link.download = `claims-export-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -231,7 +233,7 @@ export default function ClaimsManagement() {
         {/* Header */}
         <header className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
-            Claims and Compensation Management
+            Claims and Compensation View
           </h1>
           <p className="text-sm text-gray-600 mt-1">
             Track and process employee compensation claims
