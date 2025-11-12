@@ -594,7 +594,7 @@ const ComplianceDashboard: React.FC = () => {
       const entriesResult = await storage.get(STORAGE_KEY);
       if (entriesResult?.value) {
         const loadedEntries = JSON.parse(entriesResult.value);
-        
+
         // ============= DATA MIGRATION =============
         // Ensure all entries have required fields (registrationFees, achievement, timestamps)
         const migratedEntries = loadedEntries.map((entry: ComplianceEntry) => ({
@@ -602,12 +602,14 @@ const ComplianceDashboard: React.FC = () => {
           // Add registrationFees if missing (fixes NaN display issue)
           registrationFees: entry.registrationFees ?? 0,
           // Calculate achievement if missing
-          achievement: entry.achievement ?? calculateAchievement(entry.contributionCollected, entry.target),
+          achievement:
+            entry.achievement ??
+            calculateAchievement(entry.contributionCollected, entry.target),
           // Add timestamps if missing
           createdAt: entry.createdAt ?? new Date().toISOString(),
           updatedAt: entry.updatedAt ?? new Date().toISOString(),
         }));
-        
+
         setEntries(migratedEntries);
       } else {
         setEntries(DUMMY_DATA);
@@ -879,7 +881,7 @@ const ComplianceDashboard: React.FC = () => {
         {/* Header */}
         <header className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            Compliance Management
+            Compliance View
           </h1>
           <p className="text-sm sm:text-base text-gray-600">
             Track contributions, targets, and employer registration
