@@ -24,7 +24,6 @@ import { RegionChartBarMultiple } from "./region-chartbar-multiple";
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
-
   useEffect(() => {
     setUser(getUserFromStorage());
   }, []);

@@ -92,7 +92,6 @@ export interface ChartDataPoint {
   target: number;
 }
 
-
 export interface HSERecord {
   id: string;
   region: string;
@@ -117,7 +116,11 @@ export interface HSEStatCard {
 
 export interface HSEActivity {
   id: string;
-  type: "Letter Issued" | "OSH Awareness" | "Safety Audit" | "Accident Investigation";
+  type:
+    | "Letter Issued"
+    | "OSH Awareness"
+    | "Safety Audit"
+    | "Accident Investigation";
   organization: string;
   date: string;
   status: "pending" | "progress" | "resolved" | "closed";
@@ -261,16 +264,16 @@ export interface Notification {
 
 // ============= SORTING & FILTERING =============
 
-export type SortField = 
-  | "region" 
-  | "branch" 
-  | "contributionCollected" 
-  | "target" 
-  | "achievement" 
-  | "employersRegistered" 
+export type SortField =
+  | "region"
+  | "branch"
+  | "contributionCollected"
+  | "target"
+  | "achievement"
+  | "employersRegistered"
   | "employees"
-  | "registrationFees" 
-  | "certificateFees" 
+  | "registrationFees"
+  | "certificateFees"
   | "period";
 
 export type SortDirection = "asc" | "desc";
@@ -329,4 +332,3 @@ declare global {
     };
   }
 }
-
