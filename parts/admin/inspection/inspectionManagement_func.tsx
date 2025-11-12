@@ -402,7 +402,7 @@ const InspectionManagement = () => {
       icon: "notice",
     },
     {
-      title: "Demand Notices",
+      title: "Demand Notice",
       value: metric.total_demand_notice || 0,
       bgColor: "#22c55e",
       icon: "alert-circle",

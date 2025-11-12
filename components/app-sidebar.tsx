@@ -67,7 +67,7 @@ const navigationItems = [
     roles: ["admin", "manager"] as Role[],
   },
   {
-    title: "Claims",
+    title: "Claims and compensation view",
     href: "/dashboard/claims",
     icon: FileText,
     roles: ["admin", "manager", "user"] as Role[],

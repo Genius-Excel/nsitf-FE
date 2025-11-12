@@ -4,7 +4,13 @@ import { Search, Eye, Filter, Download, CircleCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import {
   BarChart,
   Bar,
@@ -15,17 +21,28 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { InspectionRecord, InspectionStatCard, UpcomingInspection, MonthlyChartData } from "@/lib/types";
+import {
+  InspectionRecord,
+  InspectionStatCard,
+  UpcomingInspection,
+  MonthlyChartData,
+} from "@/lib/types";
 
 // ============= STATISTICS CARDS =============
 interface InspectionStatisticsCardsProps {
   stats: InspectionStatCard[];
 }
 
-export const InspectionStatisticsCards: React.FC<InspectionStatisticsCardsProps> = ({ stats }) => (
+export const InspectionStatisticsCards: React.FC<
+  InspectionStatisticsCardsProps
+> = ({ stats }) => (
   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
     {stats.map((stat, idx) => (
-      <Card key={idx} className={`border-border/50`} style={{ backgroundColor: `${stat.bgColor}15` }}>
+      <Card
+        key={idx}
+        className={`border-border/50`}
+        style={{ backgroundColor: `${stat.bgColor}15` }}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-muted-foreground font-normal text-base">
             {stat.title}
@@ -33,7 +50,9 @@ export const InspectionStatisticsCards: React.FC<InspectionStatisticsCardsProps>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-medium" style={{ color: stat.bgColor }}>
-            {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
+            {typeof stat.value === "number"
+              ? stat.value.toLocaleString()
+              : stat.value}
           </div>
           {stat.change && (
             <p className="text-xs text-green-600 mt-2">{stat.change}</p>
@@ -49,7 +68,9 @@ interface InspectionBarChartProps {
   data: MonthlyChartData[];
 }
 
-export const InspectionBarChart: React.FC<InspectionBarChartProps> = ({ data }) => (
+export const InspectionBarChart: React.FC<InspectionBarChartProps> = ({
+  data,
+}) => (
   <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
     <CardHeader>
       <CardTitle className="text-2xl font-bold text-gray-900">
@@ -200,7 +221,10 @@ interface InspectionsTableProps {
   onView?: (inspection: InspectionRecord) => void;
 }
 
-export const InspectionsTable: React.FC<InspectionsTableProps> = ({ inspections, onView }) => {
+export const InspectionsTable: React.FC<InspectionsTableProps> = ({
+  inspections,
+  onView,
+}) => {
   if (!inspections || inspections.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
@@ -243,7 +267,7 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({ inspections,
                 Branch
               </th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Inspections Conducted
+                Inspection Conducted
               </th>
               <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
                 Debt Established (₦)
@@ -267,12 +291,19 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({ inspections,
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
             {inspections.map((inspection) => {
-              const recoveryRate = inspection.debtEstablished > 0
-                ? ((inspection.debtRecovered / inspection.debtEstablished) * 100).toFixed(1)
-                : "0";
+              const recoveryRate =
+                inspection.debtEstablished > 0
+                  ? (
+                      (inspection.debtRecovered / inspection.debtEstablished) *
+                      100
+                    ).toFixed(1)
+                  : "0";
 
               return (
-                <tr key={inspection.id} className="hover:bg-gray-50 transition-colors">
+                <tr
+                  key={inspection.id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
                   <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                     {inspection.branch}
                   </td>
@@ -293,7 +324,11 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({ inspections,
                     </div>
                   </td>
                   <td className="px-4 py-4 text-sm whitespace-nowrap text-center">
-                    <Badge className={`${getPerformanceBadge(inspection.performanceRate)} font-semibold`}>
+                    <Badge
+                      className={`${getPerformanceBadge(
+                        inspection.performanceRate
+                      )} font-semibold`}
+                    >
                       {inspection.performanceRate}%
                     </Badge>
                   </td>
