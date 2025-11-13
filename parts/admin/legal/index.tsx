@@ -381,7 +381,7 @@ const LegalManagementDashboard = () => {
       {showDemandNoticeForm && (
         <DemandNoticeForm
           onClose={() => setShowDemandNoticeForm(false)}
-          onSubmit={(data) => {
+          onSubmit={(data: any) => {
             console.log("Demand Notice submitted:", data);
             setShowDemandNoticeForm(false);
           }}
@@ -404,6 +404,7 @@ const LegalManagementDashboard = () => {
         onClose={() => setIsUploadModalOpen(false)}
         onUploadSuccess={handleUploadSuccess}
         regions={DEFAULT_REGIONS}
+        // regions={DEFAULT_REGIONS}
       />
     </div>
   );

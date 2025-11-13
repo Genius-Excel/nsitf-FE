@@ -9,6 +9,7 @@ interface ClaimsUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUploadSuccess: (data: Claim[]) => void;
+  regions: string[];
 }
 
 interface ParseProgress {
@@ -42,7 +43,9 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
   isOpen,
   onClose,
   onUploadSuccess,
+  regions,
 }) => {
+  const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [progress, setProgress] = useState<ParseProgress>({
@@ -131,12 +134,12 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
   };
 
   const processFile = async () => {
-    if (!file) {
+    if (!file || !selectedRegion) {
       setErrors([
         {
           row: 0,
           column: "System",
-          message: "Please upload a file",
+          message: "Please select a region and upload a file",
         },
       ]);
       return;
@@ -272,10 +275,12 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Template");
 
-    XLSX.writeFile(wb, `Claims_Template.xlsx`);
+    const regionName = selectedRegion || "All_Regions";
+    XLSX.writeFile(wb, `${regionName}_Claims_Template.xlsx`);
   };
 
   const handleClose = () => {
+    setSelectedRegion("");
     setFile(null);
     setErrors([]);
     setProgress({ stage: "idle", percentage: 0, message: "" });
@@ -316,20 +321,41 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
           </div>
 
           <div className="p-4 sm:p-6 space-y-6">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <span className="text-sm text-green-800">
-                  Download the template for claims data
-                </span>
-                <button
-                  onClick={handleDownloadTemplate}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Select Region <span className="text-red-500">*</span>
+                <select
+                  value={selectedRegion}
+                  onChange={(e) => setSelectedRegion(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  disabled={isProcessing}
                 >
-                  <Download className="w-4 h-4" />
-                  Download Template
-                </button>
-              </div>
+                  <option value="">Choose a region</option>
+                  {regions.map((region) => (
+                    <option key={region} value={region}>
+                      {region}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
+
+            {selectedRegion && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <span className="text-sm text-green-800">
+                    Download the template for {selectedRegion}
+                  </span>
+                  <button
+                    onClick={handleDownloadTemplate}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Template
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -338,7 +364,7 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
 
               <div
                 onClick={() => {
-                  if (!isProcessing) {
+                  if (selectedRegion && !isProcessing) {
                     fileInputRef.current?.click();
                   }
                 }}
@@ -349,7 +375,11 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
                       ? "border-green-500 bg-green-50"
                       : "border-gray-300 hover:border-gray-400"
                   }
-                  ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}
+                  ${
+                    !selectedRegion || isProcessing
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }
                 `}
               >
                 <input
@@ -360,7 +390,7 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
                     e.target.files?.[0] && setFile(e.target.files[0])
                   }
                   className="hidden"
-                  disabled={isProcessing}
+                  disabled={!selectedRegion || isProcessing}
                 />
                 <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                 <p className="text-sm font-medium text-gray-700 mb-1">
@@ -434,7 +464,7 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
             </button>
             <button
               onClick={processFile}
-              disabled={!file || isProcessing}
+              disabled={!file || !selectedRegion || isProcessing}
               className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
             >
               {isProcessing ? "Processing..." : "Upload & Validate"}

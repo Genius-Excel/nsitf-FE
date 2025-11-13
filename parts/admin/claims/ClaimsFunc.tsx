@@ -11,7 +11,7 @@ import {
 import { ClaimDetailModal } from "./ClaimModal";
 import { ClaimsUploadModal } from "./ClaimsUploadModal";
 import { Claim, StatCard } from "../../../lib/types";
-import { chartData, mockClaims } from "@/lib/Constants";
+import { chartData, mockClaims, DEFAULT_REGIONS } from "@/lib/Constants";
 
 export default function ClaimsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -281,6 +281,7 @@ export default function ClaimsManagement() {
           isOpen={isUploadModalOpen}
           onClose={() => setIsUploadModalOpen(false)}
           onUploadSuccess={handleUploadSuccess}
+          regions={DEFAULT_REGIONS}
         />
       </div>
     </div>
