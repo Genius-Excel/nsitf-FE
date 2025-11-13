@@ -20,20 +20,20 @@ interface StatisticsCardsProps {
 }
 
 export const StatisticsCards: React.FC<StatisticsCardsProps> = ({ stats }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
     {stats.map((stat, idx) => (
-      <div key={idx} className="bg-white rounded-lg border border-gray-200 p-4">
+      <div key={idx} className="bg-card rounded-lg border border-border p-6">
         <div className="flex justify-between items-start">
           <div>
-            <p className="text-sm text-gray-600 font-medium">{stat.title}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">
+            <p className="text-sm text-muted-foreground font-medium">{stat.title}</p>
+            <p className="text-2xl font-semibold text-foreground mt-2">
               {stat.value.toLocaleString()}
             </p>
             {stat.change && (
               <p className="text-xs text-green-600 mt-2">{stat.change}</p>
             )}
           </div>
-          <div style={{ color: stat.bgColor }} className="text-2xl">
+          <div className="text-2xl text-primary">
             {stat.icon}
           </div>
         </div>
@@ -49,19 +49,19 @@ interface ClaimsProcessingChartProps {
 export const ClaimsProcessingChart: React.FC<ClaimsProcessingChartProps> = ({
   data,
 }) => (
-  <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-    <h2 className="text-lg font-semibold text-gray-900 mb-4">
+  <div className="bg-card rounded-lg border border-border p-6 mb-6">
+    <h2 className="text-lg font-semibold text-foreground mb-4">
       Claims Processing: YTD vs Target
     </h2>
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-        <XAxis dataKey="month" stroke="#6b7280" />
-        <YAxis stroke="#6b7280" />
+        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+        <XAxis dataKey="month" className="text-muted-foreground" />
+        <YAxis className="text-muted-foreground" />
         <Tooltip
           contentStyle={{
-            backgroundColor: "#fff",
-            border: "1px solid #e5e7eb",
+            backgroundColor: "hsl(var(--card))",
+            border: "1px solid hsl(var(--border))",
             borderRadius: "8px",
           }}
           formatter={(value) => [value, ""]}
@@ -70,7 +70,7 @@ export const ClaimsProcessingChart: React.FC<ClaimsProcessingChartProps> = ({
         <Bar
           dataKey="processed"
           name="Claims Processed"
-          fill="#00a63e"
+          fill="#22c55e"
           radius={[8, 8, 0, 0]}
         />
         <Bar
@@ -89,25 +89,14 @@ interface ClaimTypeCardsProps {
 }
 
 export const ClaimTypeCards: React.FC<ClaimTypeCardsProps> = ({ claimTypes }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
     {claimTypes.map((item) => (
       <div
         key={item.type}
-        className={`rounded-lg border border-gray-200 p-4 ${item.color}`}
+        className={`rounded-lg border border-border p-6 ${item.color}`}
       >
-        <p className="text-sm font-medium text-gray-700">{item.type}</p>
-        <p
-          className="text-xl font-bold mt-2"
-          style={{
-            color: item.color.includes("green")
-              ? "#00a63e"
-              : item.color.includes("blue")
-              ? "#3b82f6"
-              : item.color.includes("purple")
-              ? "#a855f7"
-              : "#f59e0b",
-          }}
-        >
+        <p className="text-sm font-medium text-muted-foreground">{item.type}</p>
+        <p className="text-xl font-semibold mt-2 text-foreground">
           {item.count.toLocaleString()} claims
         </p>
       </div>
@@ -128,12 +117,12 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
   onFilterClick,
   onExport,
 }) => (
-  <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 flex gap-3 items-center">
+  <div className="bg-card rounded-lg border border-border p-6 mb-6 flex gap-4 items-center">
     <div className="flex-1 relative">
-      <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+      <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
       <Input
         placeholder="Search by claim ID, employer, or claimant..."
-        className="pl-10 border-gray-200 text-sm"
+        className="pl-10 text-sm"
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
       />
@@ -154,7 +143,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
       type="button"
       onClick={onFilterClick}
       title="Filter claims"
-      className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
+      className="p-2 hover:bg-secondary rounded-md transition-colors text-muted-foreground hover:text-foreground"
       aria-label="Filter claims"
     >
       <Filter className="w-4 h-4" />
@@ -170,8 +159,8 @@ interface ClaimsTableProps {
 export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
   if (!claims || claims.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
-        <p className="text-gray-500">No claims found</p>
+      <div className="bg-card rounded-lg border border-border p-6 text-center">
+        <p className="text-muted-foreground">No claims found</p>
       </div>
     );
   }
@@ -213,53 +202,53 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="bg-card rounded-lg border border-border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-muted border-b border-border">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Claim ID
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Employer
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Claimant
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Type
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Amount Requested (₦)
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Amount Paid (₦)
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Status
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Date Processed
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Date Paid
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Sector
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Class
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Payment Period
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
+          <tbody className="divide-y divide-border bg-card">
             {claims.map((claim) => {
               const difference = calculateDifference(
                 claim.amountRequested,
@@ -267,37 +256,37 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
               );
 
               return (
-                <tr key={claim.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                <tr key={claim.id} className="hover:bg-muted/50 transition-colors">
+                  <td className="px-6 py-4 text-sm font-medium text-foreground whitespace-nowrap">
                     {claim.claimId}
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-600 max-w-[200px] truncate">
+                  <td className="px-6 py-4 text-sm text-muted-foreground max-w-[200px] truncate">
                     {claim.employer}
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-600 max-w-[150px] truncate">
+                  <td className="px-6 py-4 text-sm text-muted-foreground max-w-[150px] truncate">
                     {claim.claimant}
                   </td>
-                  <td className="px-4 py-4 text-sm whitespace-nowrap">
+                  <td className="px-6 py-4 text-sm whitespace-nowrap">
                     <span className={getTypeTextColor(claim.type)}>
                       {claim.type}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-sm font-semibold text-gray-900 whitespace-nowrap text-right">
+                  <td className="px-6 py-4 text-sm font-semibold text-foreground whitespace-nowrap text-right">
                     {formatCurrency(claim.amountRequested)}
                   </td>
-                  <td className="px-4 py-4 text-sm whitespace-nowrap text-right">
+                  <td className="px-6 py-4 text-sm whitespace-nowrap text-right">
                     <div className="flex flex-col items-end">
-                      <span className="font-semibold text-green-700">
+                      <span className="font-semibold text-green-600">
                         {formatCurrency(claim.amountPaid)}
                       </span>
                       {difference && (
-                        <span className="text-xs text-red-600 mt-1">
+                        <span className="text-xs text-destructive mt-1">
                           {difference}
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-sm whitespace-nowrap text-center">
+                  <td className="px-6 py-4 text-sm whitespace-nowrap text-center">
                     <Badge
                       className={`${getStatusBadgeColor(
                         claim.status
@@ -306,37 +295,37 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
                       {claim.status}
                     </Badge>
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
+                  <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
                     {formatDate(claim.dateProcessed)}
                   </td>
-                  <td className="px-4 py-4 text-sm whitespace-nowrap">
+                  <td className="px-6 py-4 text-sm whitespace-nowrap">
                     <span
                       className={
                         claim.datePaid
-                          ? "text-gray-600"
-                          : "text-gray-400 italic"
+                          ? "text-muted-foreground"
+                          : "text-muted-foreground/60 italic"
                       }
                     >
                       {formatDate(claim.datePaid)}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
+                  <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
                     {claim.sector || "—"}
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
-                    <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">
+                  <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
+                    <span className="px-2 py-1 bg-muted rounded text-xs font-medium">
                       {claim.class || "—"}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
+                  <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
                     {claim.date || "—"}
                   </td>
-                  <td className="px-4 py-4 text-sm whitespace-nowrap text-center">
+                  <td className="px-6 py-4 text-sm whitespace-nowrap text-center">
                     <button
                       type="button"
                       onClick={() => onView?.(claim)}
                       title={`View details for claim ${claim.claimId}`}
-                      className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900 inline-flex items-center justify-center"
+                      className="p-2 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground inline-flex items-center justify-center"
                       aria-label={`View details for claim ${claim.claimId}`}
                     >
                       <Eye className="w-4 h-4" />

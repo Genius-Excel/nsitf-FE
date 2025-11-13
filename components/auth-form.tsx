@@ -123,7 +123,7 @@ export default function LoginForm() {
               aria-required="true"
             />
           </div>
-          <Button type="submit" className="w-full bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] hover:from-[#0EA5E9]/90 hover:to-[#0284C7]/90" disabled={loading}>
+          <Button type="submit" className="w-full bg-gradient-primary hover:bg-gradient-primary-hover text-white transition-all" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -135,7 +135,7 @@ export default function LoginForm() {
           </Button>
           {message && (
             <p
-              className={`text-center text-sm ${message.isError ? "text-red-500" : "text-green-500"}`}
+              className={`text-center text-sm ${message.isError ? "text-destructive" : "text-green-600"}`}
               aria-live="assertive"
             >
               {message.text}
