@@ -119,7 +119,7 @@ export function LoginForm() {
 
           <Button
             type="submit"
-            className="w-full bg-green-500 text-white hover:bg-green-300"
+            className="w-full bg-green-600 hover:bg-green-700 text-white transition-colors"
             disabled={isLoading}
           >
             {isLoading ? "Signing in..." : "Sign in"}

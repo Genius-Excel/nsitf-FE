@@ -118,15 +118,15 @@ export default function DashboardPage() {
           </h1>
         </div>
         {dashboard && (
-          <p className="text-gray-500 text-sm">
+          <p className="text-muted-foreground text-sm">
             {dashboard.data.filters.region_name} • {dashboard.data.filters.period}
           </p>
         )}
       </div>
 
       {/* Loading / Error */}
-      {loading && <p>Loading dashboard data...</p>}
-      {error && <p className="text-red-500">{error}</p>}
+      {loading && <p className="text-muted-foreground">Loading dashboard data...</p>}
+      {error && <p className="text-destructive">{error}</p>}
 
       {/* Metric Cards */}
       {!loading && statCards.length > 0 && (
@@ -142,28 +142,26 @@ export default function DashboardPage() {
 
             return (
               <Card key={card.title} className="border-border/50 shadow-sm">
-                <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-2">
-                  <CardTitle className="text-gray-400 font-normal text-sm sm:text-base">
-                    {card.title}
-                  </CardTitle>
-                  <div className="h-8 w-8 rounded-md bg-blue-100 flex items-center justify-center">
-                    <Icon className="h-4 w-4 text-blue-500" aria-hidden="true" />
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+                  <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center border border-primary/20">
+                    <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
                   </div>
                 </CardHeader>
-                <CardContent className="p-3 sm:p-4">
-                  <div className="text-lg sm:text-2xl font-semibold">
+                <CardContent className="pt-0">
+                  <div className="text-2xl font-semibold">
                     {card.format(card.metric.value)}
                   </div>
                   <p
-                    className={`mt-1 flex items-center gap-1 text-xs sm:text-sm ${
+                    className={`mt-1 flex items-center gap-1 text-xs ${
                       card.metric.trend === "up"
-                        ? "text-green-700"
+                        ? "text-green-600"
                         : card.metric.trend === "down"
-                        ? "text-red-600"
-                        : "text-gray-500"
+                        ? "text-destructive"
+                        : "text-muted-foreground"
                     }`}
                   >
-                    {TrendIcon && <TrendIcon className="w-3 h-3 sm:w-4 sm:h-4" aria-hidden="true" />}
+                    {TrendIcon && <TrendIcon className="w-4 h-4" aria-hidden="true" />}
                     {card.metric.change_percent}% from last month
                   </p>
                 </CardContent>
@@ -174,7 +172,7 @@ export default function DashboardPage() {
       )}
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <DashboardLineChart />
         <ClaimsPieChart />
       </div>
