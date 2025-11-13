@@ -1,5 +1,5 @@
 "use client";
-import { Search, Eye, Filter, Download } from "lucide-react";
+import { Search, Eye, Filter, Download, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -120,6 +120,7 @@ interface SearchAndFiltersProps {
   onSearchChange: (value: string) => void;
   onFilterClick?: () => void;
   onExport?: () => void;
+  onUpload?: () => void;
 }
 
 export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
@@ -127,6 +128,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
   onSearchChange,
   onFilterClick,
   onExport,
+  onUpload,
 }) => (
   <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 flex gap-3 items-center">
     <div className="flex-1 relative">
@@ -138,6 +140,18 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
         onChange={(e) => onSearchChange(e.target.value)}
       />
     </div>
+    {onUpload && (
+      <button
+        type="button"
+        onClick={onUpload}
+        title="Upload Claims Data"
+        className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-md transition-colors text-sm font-medium flex items-center gap-2"
+        aria-label="Upload claims data"
+      >
+        <Upload className="w-4 h-4" />
+        Upload Claims Data
+      </button>
+    )}
     {onExport && (
       <button
         type="button"
