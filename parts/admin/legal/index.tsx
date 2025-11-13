@@ -1,10 +1,13 @@
 "use client";
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp, FileText, Bell, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Bell, Plus, Upload, Eye } from "lucide-react";
 import { cases, demandNotices } from "@/lib/Constants";
 import { getStatusColor, getStatusLabel } from "@/lib/utils";
 import DemandNoticeForm from "./demandNoticeForm";
 import AddNewCaseForm from "./addNewCaseForm";
+import { LegalDetailModal } from "./legalDetailModal";
+import { LegalUploadModal } from "./legalUploadModal";
+import { LegalCase } from "@/lib/types";
 
 const LegalManagementDashboard = () => {
   const [expandedCases, setExpandedCases] = useState<Record<string, boolean>>(
@@ -12,7 +15,9 @@ const LegalManagementDashboard = () => {
   );
   const [showDemandNoticeForm, setShowDemandNoticeForm] = useState(false);
   const [showAddCaseForm, setShowAddCaseForm] = useState(false);
-  const [selectedCase, setSelectedCase] = useState<string | null>(null);
+  const [selectedCase, setSelectedCase] = useState<LegalCase | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filter, setFilter] = useState<
     "all" | "pending" | "closed" | "assigned-obtained"
   >("all");
@@ -35,9 +40,9 @@ const LegalManagementDashboard = () => {
     }));
   };
 
-  const handleViewDetails = (caseId: string) => {
-    setSelectedCase(caseId);
-    alert(`Opening details for case ${caseId}`);
+  const handleViewDetails = (legalCase: LegalCase) => {
+    setSelectedCase(legalCase);
+    setIsDetailModalOpen(true);
   };
 
   const handleDemandNotice = () => {
@@ -46,6 +51,11 @@ const LegalManagementDashboard = () => {
 
   const handleAddNewCase = () => {
     setShowAddCaseForm(true);
+  };
+
+  const handleUploadSuccess = (uploadedCases: LegalCase[]) => {
+    console.log("Uploaded cases:", uploadedCases);
+    // You can add the uploaded cases to your state here
   };
 
   return (
@@ -59,6 +69,13 @@ const LegalManagementDashboard = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => setIsUploadModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition"
+          >
+            <Upload size={16} />
+            Upload Legal Data
+          </button>
           <button
             onClick={handleDemandNotice}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition"
@@ -126,115 +143,75 @@ const LegalManagementDashboard = () => {
         </div>
       </div>
 
-      {/* Legal Cases Timeline */}
+      {/* Legal Cases Table */}
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            Legal Cases Timeline
+            Legal Cases
           </h2>
         </div>
 
-        <div className="p-4 space-y-3">
-          {filteredCases.map((legalCase) => (
-            <div
-              key={legalCase.id}
-              className="border border-gray-200 rounded-lg bg-gray-50"
-            >
-              {/* Collapsed View */}
-              <div className="p-4 flex items-start justify-between">
-                <div className="flex gap-3 flex-1">
-                  <div className="mt-0.5">
-                    <FileText size={18} className="text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-gray-900 text-sm">
-                        {legalCase.id}
-                      </h3>
-                      <span className="text-gray-600 text-sm">
-                        - {legalCase.title}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      {legalCase.description}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleViewDetails(legalCase.id)}
-                    className={`px-3 py-1 rounded-full text-white text-xs font-medium ${getStatusColor(
-                      legalCase.status
-                    )} hover:opacity-90 transition whitespace-nowrap`}
-                  >
-                    {getStatusLabel(legalCase.status)}
-                  </button>
-                  <button
-                    onClick={() => toggleCaseExpanded(legalCase.id)}
-                    className="p-1 hover:bg-gray-200 rounded transition"
-                  >
-                    {expandedCases[legalCase.id] ? (
-                      <ChevronUp size={18} />
-                    ) : (
-                      <ChevronDown size={18} />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Expanded Details */}
-              {expandedCases[legalCase.id] && (
-                <div className="px-4 pb-4 border-t border-gray-200 pt-3 bg-white">
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm mb-3">
-                    <div>
-                      <p className="text-gray-500 text-xs mb-0.5">Created</p>
-                      <p className="font-medium text-gray-900">
-                        {legalCase.created}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-xs mb-0.5">
-                        Amount Claimed
-                      </p>
-                      <p className="font-medium text-gray-900">
-                        {legalCase.amountClaimed}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-xs mb-0.5">
-                        Case Instituted
-                      </p>
-                      <p className="font-medium text-gray-900">
-                        {legalCase.filed}
-                      </p>
-                    </div>
-                    {legalCase.nextHearing && (
-                      <div>
-                        <p className="text-gray-500 text-xs mb-0.5">
-                          Next Hearing
-                        </p>
-                        <p className="font-medium text-gray-900">
-                          {legalCase.nextHearing}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {legalCase.outcome && (
-                    <div className="bg-green-50 p-3 rounded border border-green-200">
-                      <p className="text-xs text-green-700 font-medium mb-1">
-                        Outcome:
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        {legalCase.outcome}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Case ID
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Title
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Amount Claimed
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Filed
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredCases.map((legalCase) => (
+                <tr key={legalCase.id} className="hover:bg-gray-50 transition">
+                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                    {legalCase.id}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {legalCase.title}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {legalCase.amountClaimed}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {legalCase.filed}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-white text-xs font-medium ${getStatusColor(
+                        legalCase.status
+                      )}`}
+                    >
+                      {getStatusLabel(legalCase.status)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => handleViewDetails(legalCase)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition"
+                    >
+                      <Eye size={16} />
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -339,6 +316,23 @@ const LegalManagementDashboard = () => {
           }}
         />
       )}
+
+      {/* Legal Detail Modal */}
+      <LegalDetailModal
+        legalCase={selectedCase}
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedCase(null);
+        }}
+      />
+
+      {/* Legal Upload Modal */}
+      <LegalUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUploadSuccess={handleUploadSuccess}
+      />
     </div>
   );
 };

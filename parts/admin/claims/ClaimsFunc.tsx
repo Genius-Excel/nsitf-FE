@@ -9,6 +9,7 @@ import {
   ClaimsTable,
 } from "./ClaimsDesign";
 import { ClaimDetailModal } from "./ClaimModal";
+import { ClaimsUploadModal } from "./ClaimsUploadModal";
 import { Claim, StatCard } from "../../../lib/types";
 import { chartData, mockClaims } from "@/lib/Constants";
 
@@ -16,6 +17,7 @@ export default function ClaimsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // Memoize filtered claims to avoid unnecessary recalculations
   const filteredClaims = useMemo(() => {
@@ -227,6 +229,12 @@ export default function ClaimsManagement() {
     URL.revokeObjectURL(url);
   }, [filteredClaims]);
 
+  // Handler for upload success
+  const handleUploadSuccess = useCallback((uploadedClaims: Claim[]) => {
+    console.log("Uploaded claims:", uploadedClaims);
+    // You can add the uploaded claims to your state here
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -255,6 +263,7 @@ export default function ClaimsManagement() {
           onSearchChange={setSearchTerm}
           onFilterClick={handleFilterClick}
           onExport={handleExport}
+          onUpload={() => setIsUploadModalOpen(true)}
         />
 
         {/* Claims Table */}
@@ -265,6 +274,13 @@ export default function ClaimsManagement() {
           claim={selectedClaim}
           isOpen={isModalOpen}
           onClose={handleCloseModal}
+        />
+
+        {/* Claims Upload Modal */}
+        <ClaimsUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          onUploadSuccess={handleUploadSuccess}
         />
       </div>
     </div>
