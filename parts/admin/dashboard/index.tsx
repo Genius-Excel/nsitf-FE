@@ -117,11 +117,11 @@ export default function DashboardPage() {
             APRD DASHBOARD VIEW FOR SUPER USER
           </h1>
         </div>
-        {dashboard && (
+        {/* {dashboard && (
           <p className="text-muted-foreground text-sm">
             {dashboard.data.filters.region_name} • {dashboard.data.filters.period}
           </p>
-        )}
+        )} */}
       </div>
 
       {/* Loading / Error */}
