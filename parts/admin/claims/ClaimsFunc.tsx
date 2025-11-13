@@ -105,7 +105,7 @@ export default function ClaimsManagement() {
           statistics.changePercent
         }% from last month`,
         value: statistics.disabilityClaims,
-        icon: <DollarSign />,
+        icon: "",
         bgColor: "#3b82f6",
       },
       {
@@ -241,7 +241,7 @@ export default function ClaimsManagement() {
         {/* Header */}
         <header className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
-            Claims and Compensation View
+            Claims and compensation View
           </h1>
           <p className="text-sm text-gray-600 mt-1">
             Track and process employee compensation claims

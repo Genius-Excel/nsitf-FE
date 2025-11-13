@@ -80,18 +80,15 @@ const LegalManagementDashboard = () => {
           <h1 className="text-2xl font-bold text-gray-900">
             Legal Activities View
           </h1>
-          <p className="text-gray-600 text-sm">
-            Track legal activities, demand notices and regional performance
-          </p>
         </div>
         <div className="flex gap-2">
-          <button
+          {/* <button
             onClick={handleDemandNotice}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition"
           >
             <Bell size={16} />
             Issue Demand Notice
-          </button>
+          </button> */}
           <button
             onClick={() => setIsUploadModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
@@ -104,7 +101,7 @@ const LegalManagementDashboard = () => {
 
       {/* Dashboard Metrics - 6 Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
-        <div className="bg-gray-600 text-black p-4 rounded-lg">
+        <div className="bg-muted-foreground text-black p-4 rounded-lg">
           <p className="text-xs uppercase mb-1 opacity-90">
             Total Recalcitrant Employers
           </p>
@@ -112,7 +109,7 @@ const LegalManagementDashboard = () => {
             {dashboardMetrics.totalRecalcitrant}
           </p>
         </div>
-        <div className="bg-blue-600 text-white p-4 rounded-lg">
+        <div className="bg-muted-foreground text-black p-4 rounded-lg">
           <p className="text-xs uppercase mb-1 opacity-90">
             Total Defaulting Employers
           </p>
@@ -120,19 +117,19 @@ const LegalManagementDashboard = () => {
             {dashboardMetrics.totalDefaulting}
           </p>
         </div>
-        <div className="bg-blue-600 text-white p-4 rounded-lg">
+        <div className="bg-muted-foreground text-black p-4 rounded-lg">
           <p className="text-xs uppercase mb-1 opacity-90">Total Plan Issued</p>
           <p className="text-3xl font-bold">
             {dashboardMetrics.totalPlanIssued}
           </p>
         </div>
-        <div className="bg-blue-600 text-white p-4 rounded-lg">
+        <div className="bg-muted-foreground text-black p-4 rounded-lg">
           <p className="text-xs uppercase mb-1 opacity-90">
             Alternate Dispute Resolution (ADR)
           </p>
           <p className="text-3xl font-bold">{dashboardMetrics.totalADR}</p>
         </div>
-        <div className="bg-blue-600 text-white p-4 rounded-lg">
+        <div className="bg-muted-foreground text-black p-4 rounded-lg">
           <p className="text-xs uppercase mb-1 opacity-90">
             Cases Instituted in Court
           </p>
@@ -140,75 +137,18 @@ const LegalManagementDashboard = () => {
             {dashboardMetrics.totalCasesInstituted}
           </p>
         </div>
-        <div className="bg-blue-600 text-white p-4 rounded-lg">
+        <div className="bg-muted-foreground text-black p-4 rounded-lg">
           <p className="text-xs uppercase mb-1 opacity-90">Sectors</p>
           <p className="text-3xl font-bold">{dashboardMetrics.totalSectors}</p>
         </div>
       </div>
-
-      {/* Stats Cards - 4 Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Briefcase className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Branches</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats.totalBranches}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-orange-50 p-4 rounded-lg border-2 border-orange-200">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Users className="w-5 h-5 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-sm text-orange-800">Recalcitrant Employers</p>
-              <p className="text-2xl font-bold text-orange-900">
-                {stats.totalRecalcitrant}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-red-50 p-4 rounded-lg border-2 border-red-200">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <FileText className="w-5 h-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-red-800">Defaulting Employers</p>
-              <p className="text-2xl font-bold text-red-900">
-                {stats.totalDefaulting}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-200">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Scale className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-purple-800">Cases Instituted</p>
-              <p className="text-2xl font-bold text-purple-900">
-                {stats.totalCasesInstituted}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Legal Activities Table */}
       <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-4 border-b border-gray-200">
+        {/* <div className="p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
             Legal Activities View
           </h2>
-        </div>
+        </div> */}
 
         <div className="overflow-x-auto">
           <table className="w-full">

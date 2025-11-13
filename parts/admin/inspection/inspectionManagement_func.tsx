@@ -396,7 +396,7 @@ const InspectionManagement = () => {
   // ✅ Convert object stats → array for <InspectionStatisticsCards>
   const stats: InspectionStatCard[] = [
     {
-      title: "Total Inspections",
+      title: "Total Inspection",
       value: metric.total_inspections || 0,
       bgColor: "#3b82f6",
       icon: "notice",
@@ -422,7 +422,7 @@ const InspectionManagement = () => {
       icon: "naira-sign",
     },
     {
-      title: "Avg. Performance Rate",
+      title: "Performance Rate",
       value: `${metric.performance_rate || 0}%`,
       bgColor: "#3b82f6",
       icon: "trending-up",
@@ -499,7 +499,7 @@ const InspectionManagement = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl tracking-tight">Inspection Management</h1>
+          <h1 className="text-3xl tracking-tight">Inspection View</h1>
           <p className="text-muted-foreground">
             Track and manage employer inspections, compliance letters, and debt
             recovery.
