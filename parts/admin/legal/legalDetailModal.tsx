@@ -1,17 +1,16 @@
 "use client";
 import React, { useEffect, useRef } from "react";
 import { X, FileText, Download } from "lucide-react";
-import { LegalCase } from "@/lib/types";
-import { getStatusColor, getStatusLabel } from "@/lib/utils";
+import { LegalActivityRecord } from "@/lib/types";
 
 interface LegalDetailModalProps {
-  legalCase: LegalCase | null;
+  activity: LegalActivityRecord | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
 export const LegalDetailModal: React.FC<LegalDetailModalProps> = ({
-  legalCase,
+  activity,
   isOpen,
   onClose,
 }) => {
@@ -20,13 +19,9 @@ export const LegalDetailModal: React.FC<LegalDetailModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      // Focus on close button when modal opens
       closeButtonRef.current?.focus();
-
-      // Prevent body scroll
       document.body.style.overflow = "hidden";
 
-      // Handle escape key
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
           onClose();
@@ -41,39 +36,44 @@ export const LegalDetailModal: React.FC<LegalDetailModalProps> = ({
     }
   }, [isOpen, onClose]);
 
-  if (!isOpen || !legalCase) return null;
+  if (!isOpen || !activity) return null;
 
   const handleDownload = () => {
     const content = `
-LEGAL CASE DETAILS
-==================
-Case ID: ${legalCase.id}
-Title: ${legalCase.title}
-Status: ${getStatusLabel(legalCase.status)}
+LEGAL ACTIVITY DETAILS
+======================
+Region: ${activity.region}
+Branch: ${activity.branch}
+Period: ${activity.activitiesPeriod}
 
-CASE INFORMATION
+EMPLOYER METRICS
 ================
-Description: ${legalCase.description}
-Created: ${legalCase.created}
-Filed: ${legalCase.filed}
-Amount Claimed: ${legalCase.amountClaimed}
-${legalCase.nextHearing ? `Next Hearing: ${legalCase.nextHearing}` : ""}
+Recalcitrant Employers: ${activity.recalcitrantEmployers}
+Defaulting Employers: ${activity.defaultingEmployers}
+ECS Number: ${activity.ecsNo}
 
-${legalCase.outcome ? `OUTCOME\n=======\n${legalCase.outcome}` : ""}
+LEGAL ACTIONS
+=============
+Plan Issued: ${activity.planIssued}
+Alternate Dispute Resolution (ADR): ${activity.adr}
+Cases Instituted in Court: ${activity.casesInstituted}
+
+SECTORS
+=======
+${activity.sectors}
     `.trim();
 
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `legal-case-${legalCase.id.replace(/\s+/g, "-")}.txt`;
+    a.download = `legal-activity-${activity.region}-${activity.branch}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
-  // Trap focus within modal
   const handleTabKey = (e: React.KeyboardEvent) => {
     const focusableElements = modalRef.current?.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -81,7 +81,9 @@ ${legalCase.outcome ? `OUTCOME\n=======\n${legalCase.outcome}` : ""}
     if (!focusableElements || focusableElements.length === 0) return;
 
     const firstElement = focusableElements[0] as HTMLElement;
-    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+    const lastElement = focusableElements[
+      focusableElements.length - 1
+    ] as HTMLElement;
 
     if (e.key === "Tab") {
       if (e.shiftKey && document.activeElement === firstElement) {
@@ -120,14 +122,23 @@ ${legalCase.outcome ? `OUTCOME\n=======\n${legalCase.outcome}` : ""}
           <div className="sticky top-0 bg-white border-b px-4 sm:px-6 py-4 flex items-center justify-between z-10">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FileText className="w-5 h-5 text-blue-600" aria-hidden="true" />
+                <FileText
+                  className="w-5 h-5 text-blue-600"
+                  aria-hidden="true"
+                />
               </div>
               <div className="min-w-0">
-                <h2 id="modal-title" className="text-lg sm:text-xl font-bold text-gray-900 truncate">
-                  Legal Case Details
+                <h2
+                  id="modal-title"
+                  className="text-lg sm:text-xl font-bold text-gray-900 truncate"
+                >
+                  Legal Activity Details
                 </h2>
-                <p id="modal-description" className="text-xs sm:text-sm text-gray-600 truncate">
-                  {legalCase.id} - {legalCase.title}
+                <p
+                  id="modal-description"
+                  className="text-xs sm:text-sm text-gray-600 truncate"
+                >
+                  {activity.region} - {activity.branch}
                 </p>
               </div>
             </div>
@@ -143,65 +154,143 @@ ${legalCase.outcome ? `OUTCOME\n=======\n${legalCase.outcome}` : ""}
 
           {/* Content */}
           <div className="p-4 sm:p-6 space-y-6">
-            {/* Status Badge */}
-            <section aria-labelledby="status-heading">
-              <h3 id="status-heading" className="sr-only">Case Status</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Status:</span>
-                <span
-                  className={`px-3 py-1 rounded-full text-white text-xs font-medium ${getStatusColor(
-                    legalCase.status
-                  )}`}
-                >
-                  {getStatusLabel(legalCase.status)}
-                </span>
-              </div>
-            </section>
-
-            {/* Case Information */}
-            <section aria-labelledby="case-info-heading">
-              <h3 id="case-info-heading" className="text-sm font-semibold text-gray-900 mb-3">
-                Case Information
+            {/* Location Information */}
+            <section aria-labelledby="location-heading">
+              <h3
+                id="location-heading"
+                className="text-sm font-semibold text-gray-900 mb-3"
+              >
+                Location Information
               </h3>
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
-                <div>
-                  <p className="text-xs text-gray-600 uppercase mb-1">Description</p>
-                  <p className="text-sm text-gray-900">{legalCase.description}</p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <p className="text-xs text-gray-600 uppercase mb-1">Created</p>
-                    <p className="text-sm font-medium text-gray-900">{legalCase.created}</p>
+                    <p className="text-xs text-gray-600 uppercase mb-1">
+                      Region
+                    </p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {activity.region}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 uppercase mb-1">Case Instituted</p>
-                    <p className="text-sm font-medium text-gray-900">{legalCase.filed}</p>
+                    <p className="text-xs text-gray-600 uppercase mb-1">
+                      Branch
+                    </p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {activity.branch}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 uppercase mb-1">Amount Claimed</p>
-                    <p className="text-sm font-medium text-gray-900">{legalCase.amountClaimed}</p>
+                    <p className="text-xs text-gray-600 uppercase mb-1">
+                      Period
+                    </p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {activity.activitiesPeriod}
+                    </p>
                   </div>
-                  {legalCase.nextHearing && (
-                    <div>
-                      <p className="text-xs text-gray-600 uppercase mb-1">Next Hearing</p>
-                      <p className="text-sm font-medium text-gray-900">{legalCase.nextHearing}</p>
-                    </div>
-                  )}
                 </div>
               </div>
             </section>
 
-            {/* Outcome */}
-            {legalCase.outcome && (
-              <section aria-labelledby="outcome-heading">
-                <h3 id="outcome-heading" className="text-sm font-semibold text-gray-900 mb-3">
-                  Outcome
-                </h3>
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <p className="text-sm text-gray-900">{legalCase.outcome}</p>
+            {/* Employer Metrics */}
+            <section aria-labelledby="employer-heading">
+              <h3
+                id="employer-heading"
+                className="text-sm font-semibold text-gray-900 mb-3"
+              >
+                Employer Metrics
+              </h3>
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <p className="text-xs text-orange-600 uppercase mb-1">
+                      Recalcitrant Employers
+                    </p>
+                    <p className="text-2xl font-bold text-orange-900">
+                      {activity.recalcitrantEmployers}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-orange-600 uppercase mb-1">
+                      Defaulting Employers
+                    </p>
+                    <p className="text-2xl font-bold text-orange-900">
+                      {activity.defaultingEmployers}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-orange-600 uppercase mb-1">
+                      ECS Number
+                    </p>
+                    <p className="text-sm font-medium text-orange-900">
+                      {activity.ecsNo}
+                    </p>
+                  </div>
                 </div>
-              </section>
-            )}
+              </div>
+            </section>
+
+            {/* Legal Actions */}
+            <section aria-labelledby="actions-heading">
+              <h3
+                id="actions-heading"
+                className="text-sm font-semibold text-gray-900 mb-3"
+              >
+                Legal Actions Taken
+              </h3>
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <p className="text-xs text-blue-600 uppercase mb-1">
+                      Plan Issued
+                    </p>
+                    <p className="text-2xl font-bold text-blue-900">
+                      {activity.planIssued}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-blue-600 uppercase mb-1">ADR</p>
+                    <p className="text-2xl font-bold text-blue-900">
+                      {activity.adr}
+                    </p>
+                    <p className="text-xs text-blue-700 mt-1">
+                      Alternate Dispute Resolution
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-blue-600 uppercase mb-1">
+                      Cases Instituted
+                    </p>
+                    <p className="text-2xl font-bold text-blue-900">
+                      {activity.casesInstituted}
+                    </p>
+                    <p className="text-xs text-blue-700 mt-1">In Court</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Sectors */}
+            <section aria-labelledby="sectors-heading">
+              <h3
+                id="sectors-heading"
+                className="text-sm font-semibold text-gray-900 mb-3"
+              >
+                Sectors Covered
+              </h3>
+              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <div className="flex flex-wrap gap-2">
+                  {activity.sectors.split(", ").map((sector, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
+                    >
+                      {sector}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </section>
           </div>
 
           {/* Footer */}

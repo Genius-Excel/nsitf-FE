@@ -196,6 +196,20 @@ export interface DemandNoticeData {
   attachments: File[];
 }
 
+export interface LegalActivityRecord {
+  id: string;
+  region: string;
+  branch: string;
+  recalcitrantEmployers: number;
+  defaultingEmployers: number;
+  ecsNo: string;
+  planIssued: number;
+  adr: number; // Alternate Dispute Resolution
+  casesInstituted: number;
+  sectors: string;
+  activitiesPeriod: string;
+}
+
 export interface UserProfile {
   user_id: string;
   first_name: string;

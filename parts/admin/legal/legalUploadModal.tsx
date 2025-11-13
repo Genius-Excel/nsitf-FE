@@ -1,14 +1,21 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { X, Upload, Download, FileSpreadsheet, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  X,
+  Upload,
+  Download,
+  FileSpreadsheet,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 import * as XLSX from "xlsx";
-import { LegalCase } from "@/lib/types";
+import { LegalActivityRecord } from "@/lib/types";
 import { generateId } from "@/lib/utils";
 
 interface LegalUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUploadSuccess: (data: LegalCase[]) => void;
+  onUploadSuccess: (data: LegalActivityRecord[]) => void;
   regions: string[];
 }
 
@@ -26,34 +33,38 @@ interface UploadError {
 }
 
 const REQUIRED_COLUMNS = [
-  "Title",
-  "Description",
-  "Created",
-  "Filed",
-  "Amount Claimed",
-  "Status",
+  "Branch",
+  "Recalcitrant Employers",
+  "Defaulting Employers",
+  "ECS NO.",
+  "Plan Issued",
+  "ADR",
+  "Cases Instituted",
+  "Sectors",
+  "Activities Period",
 ];
 
 const COLUMN_TYPES: Record<string, "string" | "number"> = {
-  Title: "string",
-  Description: "string",
-  Created: "string",
-  Filed: "string",
-  "Amount Claimed": "string",
-  Status: "string",
-  "Next Hearing": "string",
-  Outcome: "string",
+  Branch: "string",
+  "Recalcitrant Employers": "number",
+  "Defaulting Employers": "number",
+  "ECS NO.": "string",
+  "Plan Issued": "number",
+  ADR: "number",
+  "Cases Instituted": "number",
+  Sectors: "string",
+  "Activities Period": "string",
 };
-
-const VALID_STATUSES = ["pending", "closed", "assigned-obtained"];
 
 export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
   isOpen,
   onClose,
   onUploadSuccess,
+  // regions,
   regions,
 }) => {
   const [selectedRegion, setSelectedRegion] = useState<string>("");
+  // const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [progress, setProgress] = useState<ParseProgress>({
@@ -88,30 +99,31 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
           value: String(value || ""),
         });
       }
-    });
 
-    // Validate status
-    if (row["Status"]) {
-      const status = String(row["Status"]).toLowerCase();
-      if (!VALID_STATUSES.includes(status)) {
-        rowErrors.push({
-          row: rowIndex + 2,
-          column: "Status",
-          message: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`,
-          value: String(row["Status"]),
-        });
+      const expectedType = COLUMN_TYPES[column];
+      if (value !== undefined && value !== null && value !== "") {
+        if (expectedType === "number" && isNaN(Number(value))) {
+          rowErrors.push({
+            row: rowIndex + 2,
+            column,
+            message: `Expected number, got ${typeof value}`,
+            value: String(value),
+          });
+        }
       }
-    }
+    });
 
     return rowErrors;
   };
 
   const processFile = async () => {
     if (!file || !selectedRegion) {
+    if (!file || !selectedRegion) {
       setErrors([
         {
           row: 0,
           column: "System",
+          message: "Please select a region and upload a file",
           message: "Please select a region and upload a file",
         },
       ]);
@@ -155,7 +167,7 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
       });
 
       const allErrors: UploadError[] = [];
-      const validRows: LegalCase[] = [];
+      const validRows: LegalActivityRecord[] = [];
 
       jsonData.forEach((row: any, index: number) => {
         const rowErrors = validateRow(row, index);
@@ -164,14 +176,16 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
         } else {
           validRows.push({
             id: generateId(),
-            title: String(row["Title"]),
-            description: String(row["Description"]),
-            created: String(row["Created"]),
-            filed: String(row["Filed"]),
-            amountClaimed: String(row["Amount Claimed"]),
-            nextHearing: row["Next Hearing"] ? String(row["Next Hearing"]) : "",
-            status: String(row["Status"]).toLowerCase() as "pending" | "closed" | "assigned-obtained",
-            outcome: row["Outcome"] ? String(row["Outcome"]) : undefined,
+            region: selectedRegion,
+            branch: String(row["Branch"]),
+            recalcitrantEmployers: Number(row["Recalcitrant Employers"]),
+            defaultingEmployers: Number(row["Defaulting Employers"]),
+            ecsNo: String(row["ECS NO."]),
+            planIssued: Number(row["Plan Issued"]),
+            adr: Number(row["ADR"]),
+            casesInstituted: Number(row["Cases Instituted"]),
+            sectors: String(row["Sectors"]),
+            activitiesPeriod: String(row["Activities Period"]),
           });
         }
 
@@ -226,14 +240,15 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
   const handleDownloadTemplate = () => {
     const templateData = [
       {
-        Title: "",
-        Description: "",
-        Created: "",
-        Filed: "",
-        "Amount Claimed": "",
-        "Next Hearing": "",
-        Status: "pending",
-        Outcome: "",
+        Branch: "",
+        "Recalcitrant Employers": 0,
+        "Defaulting Employers": 0,
+        "ECS NO.": "",
+        "Plan Issued": 0,
+        ADR: 0,
+        "Cases Instituted": 0,
+        Sectors: "",
+        "Activities Period": "",
       },
     ];
 
@@ -242,10 +257,11 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
     XLSX.utils.book_append_sheet(wb, ws, "Template");
 
     const regionName = selectedRegion || "All_Regions";
-    XLSX.writeFile(wb, `${regionName}_Legal_Cases_Template.xlsx`);
+    XLSX.writeFile(wb, `${regionName}_Legal_Activities_Template.xlsx`);
   };
 
   const handleClose = () => {
+    setSelectedRegion("");
     setSelectedRegion("");
     setFile(null);
     setErrors([]);
@@ -273,7 +289,7 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
             <div className="flex items-center gap-3">
               <FileSpreadsheet className="w-6 h-6 text-blue-600" />
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-                Upload Legal Cases
+                Upload Legal Activities
               </h2>
             </div>
             <button
@@ -322,6 +338,41 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
                 </div>
               </div>
             )}
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Select Region <span className="text-red-500">*</span>
+                <select
+                  value={selectedRegion}
+                  onChange={(e) => setSelectedRegion(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isProcessing}
+                >
+                  <option value="">Choose a region</option>
+                  {regions.map((region) => (
+                    <option key={region} value={region}>
+                      {region}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            {selectedRegion && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <span className="text-sm text-blue-800">
+                    Download the template for {selectedRegion}
+                  </span>
+                  <button
+                    onClick={handleDownloadTemplate}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Template
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -331,15 +382,20 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
               <div
                 onClick={() => {
                   if (selectedRegion && !isProcessing) {
+                  if (selectedRegion && !isProcessing) {
                     fileInputRef.current?.click();
                   }
-                }}
-                className={`
-                  border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer
+                }}}
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer
                   ${
                     isDragging
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-300 hover:border-gray-400"
+                  }
+                  ${
+                    !selectedRegion || isProcessing
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                   }
                   ${
                     !selectedRegion || isProcessing
@@ -356,6 +412,7 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
                     e.target.files?.[0] && setFile(e.target.files[0])
                   }
                   className="hidden"
+                  disabled={!selectedRegion || isProcessing}
                   disabled={!selectedRegion || isProcessing}
                 />
                 <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -430,6 +487,7 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
             </button>
             <button
               onClick={processFile}
+              disabled={!file || !selectedRegion || isProcessing}
               disabled={!file || !selectedRegion || isProcessing}
               className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             >

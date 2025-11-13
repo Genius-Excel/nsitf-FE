@@ -1,47 +1,65 @@
 "use client";
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp, FileText, Bell, Plus, Upload, Eye } from "lucide-react";
-import { cases, demandNotices, DEFAULT_REGIONS } from "@/lib/Constants";
-import { getStatusColor, getStatusLabel } from "@/lib/utils";
+import {
+  Bell,
+  Upload,
+  Eye,
+  FileText,
+  Briefcase,
+  Users,
+  Scale,
+} from "lucide-react";
+import {
+  mockLegalActivities,
+  demandNotices,
+  DEFAULT_REGIONS,
+} from "@/lib/Constants";
 import DemandNoticeForm from "./demandNoticeForm";
-import AddNewCaseForm from "./addNewCaseForm";
 import { LegalDetailModal } from "./legalDetailModal";
 import { LegalUploadModal } from "./legalUploadModal";
-import { LegalCase } from "@/lib/types";
+import { LegalActivityRecord } from "@/lib/types";
 
 const LegalManagementDashboard = () => {
-  const [expandedCases, setExpandedCases] = useState<Record<string, boolean>>(
-    {}
-  );
   const [showDemandNoticeForm, setShowDemandNoticeForm] = useState(false);
-  const [showAddCaseForm, setShowAddCaseForm] = useState(false);
-  const [selectedCase, setSelectedCase] = useState<LegalCase | null>(null);
+  const [selectedActivity, setSelectedActivity] =
+    useState<LegalActivityRecord | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [filter, setFilter] = useState<
-    "all" | "pending" | "closed" | "assigned-obtained"
-  >("all");
 
+  // Calculate dashboard metrics from mock data
+  const dashboardMetrics = {
+    totalRecalcitrant: mockLegalActivities.reduce(
+      (sum, item) => sum + item.recalcitrantEmployers,
+      0
+    ),
+    totalDefaulting: mockLegalActivities.reduce(
+      (sum, item) => sum + item.defaultingEmployers,
+      0
+    ),
+    totalPlanIssued: mockLegalActivities.reduce(
+      (sum, item) => sum + item.planIssued,
+      0
+    ),
+    totalADR: mockLegalActivities.reduce((sum, item) => sum + item.adr, 0),
+    totalCasesInstituted: mockLegalActivities.reduce(
+      (sum, item) => sum + item.casesInstituted,
+      0
+    ),
+    totalSectors: new Set(
+      mockLegalActivities.flatMap((item) => item.sectors.split(", "))
+    ).size,
+  };
+
+  // Calculate stats for the 4 cards
   const stats = {
-    total: cases.length,
-    ongoing: cases.filter((c) => c.status === "pending").length,
-    settled: cases.filter((c) => c.status === "closed").length,
-    assignedObtained: cases.filter((c) => c.status === "assigned-obtained")
-      .length,
+    totalBranches: mockLegalActivities.length,
+    totalRecalcitrant: dashboardMetrics.totalRecalcitrant,
+    totalDefaulting: dashboardMetrics.totalDefaulting,
+    totalCasesInstituted: dashboardMetrics.totalCasesInstituted,
   };
 
-  const filteredCases =
-    filter === "all" ? cases : cases.filter((c) => c.status === filter);
-
-  const toggleCaseExpanded = (caseId: string) => {
-    setExpandedCases((prev) => ({
-      ...prev,
-      [caseId]: !prev[caseId],
-    }));
-  };
-
-  const handleViewDetails = (legalCase: LegalCase) => {
-    setSelectedCase(legalCase);
+  const handleViewDetails = (activity: LegalActivityRecord) => {
+    setSelectedActivity(activity);
     setIsDetailModalOpen(true);
   };
 
@@ -49,13 +67,9 @@ const LegalManagementDashboard = () => {
     setShowDemandNoticeForm(true);
   };
 
-  const handleAddNewCase = () => {
-    setShowAddCaseForm(true);
-  };
-
-  const handleUploadSuccess = (uploadedCases: LegalCase[]) => {
-    console.log("Uploaded cases:", uploadedCases);
-    // You can add the uploaded cases to your state here
+  const handleUploadSuccess = (uploadedActivities: LegalActivityRecord[]) => {
+    console.log("Uploaded activities:", uploadedActivities);
+    // You can add the uploaded activities to your state here
   };
 
   return (
@@ -65,17 +79,10 @@ const LegalManagementDashboard = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Legal Management</h1>
           <p className="text-gray-600 text-sm">
-            Track legal cases, demand notices and outcomes
+            Track legal activities, demand notices and regional performance
           </p>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={() => setIsUploadModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition"
-          >
-            <Upload size={16} />
-            Upload Legal Data
-          </button>
           <button
             onClick={handleDemandNotice}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition"
@@ -84,70 +91,120 @@ const LegalManagementDashboard = () => {
             Issue Demand Notice
           </button>
           <button
-            onClick={handleAddNewCase}
+            onClick={() => setIsUploadModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
           >
-            <Plus size={16} />
-            Add New Case
+            <Upload size={16} />
+            Upload Legal Data
           </button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <div
-          onClick={() => setFilter("all")}
-          className={`bg-white p-4 rounded-lg border-2 cursor-pointer transition ${
-            filter === "all"
-              ? "border-blue-500"
-              : "border-transparent hover:border-gray-300"
-          }`}
-        >
-          <p className="text-sm text-gray-600">Total Cases (Unfiltered)</p>
-          <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-        </div>
-        <div
-          onClick={() => setFilter("pending")}
-          className={`bg-orange-50 p-4 rounded-lg border-2 cursor-pointer transition ${
-            filter === "pending"
-              ? "border-orange-500"
-              : "border-transparent hover:border-orange-300"
-          }`}
-        >
-          <p className="text-sm text-orange-800">Ongoing Cases</p>
-          <p className="text-3xl font-bold text-orange-900">{stats.ongoing}</p>
-        </div>
-        <div
-          onClick={() => setFilter("closed")}
-          className={`bg-green-50 p-4 rounded-lg border-2 cursor-pointer transition ${
-            filter === "closed"
-              ? "border-green-500"
-              : "border-transparent hover:border-green-300"
-          }`}
-        >
-          <p className="text-sm text-green-800">Settled Cases</p>
-          <p className="text-3xl font-bold text-green-900">{stats.settled}</p>
-        </div>
-        <div
-          onClick={() => setFilter("assigned-obtained")}
-          className={`bg-purple-50 p-4 rounded-lg border-2 cursor-pointer transition ${
-            filter === "assigned-obtained"
-              ? "border-purple-500"
-              : "border-transparent hover:border-purple-300"
-          }`}
-        >
-          <p className="text-sm text-purple-800">Assigned Obtained</p>
-          <p className="text-3xl font-bold text-purple-900">
-            {stats.assignedObtained}
+      {/* Dashboard Metrics - 6 Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+        <div className="bg-blue-600 text-white p-4 rounded-lg">
+          <p className="text-xs uppercase mb-1 opacity-90">
+            Total Recalcitrant Employers
           </p>
+          <p className="text-3xl font-bold">
+            {dashboardMetrics.totalRecalcitrant}
+          </p>
+        </div>
+        <div className="bg-blue-600 text-white p-4 rounded-lg">
+          <p className="text-xs uppercase mb-1 opacity-90">
+            Total Defaulting Employers
+          </p>
+          <p className="text-3xl font-bold">
+            {dashboardMetrics.totalDefaulting}
+          </p>
+        </div>
+        <div className="bg-blue-600 text-white p-4 rounded-lg">
+          <p className="text-xs uppercase mb-1 opacity-90">Total Plan Issued</p>
+          <p className="text-3xl font-bold">
+            {dashboardMetrics.totalPlanIssued}
+          </p>
+        </div>
+        <div className="bg-blue-600 text-white p-4 rounded-lg">
+          <p className="text-xs uppercase mb-1 opacity-90">
+            Alternate Dispute Resolution (ADR)
+          </p>
+          <p className="text-3xl font-bold">{dashboardMetrics.totalADR}</p>
+        </div>
+        <div className="bg-blue-600 text-white p-4 rounded-lg">
+          <p className="text-xs uppercase mb-1 opacity-90">
+            Cases Instituted in Court
+          </p>
+          <p className="text-3xl font-bold">
+            {dashboardMetrics.totalCasesInstituted}
+          </p>
+        </div>
+        <div className="bg-blue-600 text-white p-4 rounded-lg">
+          <p className="text-xs uppercase mb-1 opacity-90">Sectors</p>
+          <p className="text-3xl font-bold">{dashboardMetrics.totalSectors}</p>
         </div>
       </div>
 
-      {/* Legal Cases Table */}
+      {/* Stats Cards - 4 Cards */}
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Briefcase className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Total Branches</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats.totalBranches}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-orange-50 p-4 rounded-lg border-2 border-orange-200">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+              <Users className="w-5 h-5 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-sm text-orange-800">Recalcitrant Employers</p>
+              <p className="text-2xl font-bold text-orange-900">
+                {stats.totalRecalcitrant}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-red-50 p-4 rounded-lg border-2 border-red-200">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+              <FileText className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <p className="text-sm text-red-800">Defaulting Employers</p>
+              <p className="text-2xl font-bold text-red-900">
+                {stats.totalDefaulting}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-200">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+              <Scale className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-sm text-purple-800">Cases Instituted</p>
+              <p className="text-2xl font-bold text-purple-900">
+                {stats.totalCasesInstituted}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Legal Activities Table */}
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            Legal Cases
+            Legal Activities View
           </h2>
         </div>
 
@@ -156,19 +213,34 @@ const LegalManagementDashboard = () => {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Case ID
+                  Region
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Title
+                  Branch
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount Claimed
+                  Recalcitrant Employers
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Filed
+                  Defaulting Employers
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  ECS NO.
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Plan Issued
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Alternate Dispute Resolution (ADR)
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Cases Instituted in Court
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Sectors
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Activities Period
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -176,32 +248,41 @@ const LegalManagementDashboard = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredCases.map((legalCase) => (
-                <tr key={legalCase.id} className="hover:bg-gray-50 transition">
+              {mockLegalActivities.map((activity) => (
+                <tr key={activity.id} className="hover:bg-gray-50 transition">
                   <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                    {legalCase.id}
+                    {activity.region}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700">
-                    {legalCase.title}
+                    {activity.branch}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700">
-                    {legalCase.amountClaimed}
+                    {activity.recalcitrantEmployers}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700">
-                    {legalCase.filed}
+                    {activity.defaultingEmployers}
                   </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-white text-xs font-medium ${getStatusColor(
-                        legalCase.status
-                      )}`}
-                    >
-                      {getStatusLabel(legalCase.status)}
-                    </span>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {activity.ecsNo}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {activity.planIssued}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {activity.adr}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {activity.casesInstituted}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {activity.sectors}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {activity.activitiesPeriod}
                   </td>
                   <td className="px-4 py-3">
                     <button
-                      onClick={() => handleViewDetails(legalCase)}
+                      onClick={() => handleViewDetails(activity)}
                       className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition"
                     >
                       <Eye size={16} />
@@ -296,34 +377,24 @@ const LegalManagementDashboard = () => {
         </div>
       </div>
 
-      {/* Modals should be inside the JSX tree */}
+      {/* Modals */}
       {showDemandNoticeForm && (
         <DemandNoticeForm
           onClose={() => setShowDemandNoticeForm(false)}
-          onSubmit={(data) => {
+          onSubmit={(data: any) => {
             console.log("Demand Notice submitted:", data);
             setShowDemandNoticeForm(false);
           }}
         />
       )}
 
-      {showAddCaseForm && (
-        <AddNewCaseForm
-          onClose={() => setShowAddCaseForm(false)}
-          onSubmit={(data) => {
-            console.log("New Case submitted:", data);
-            setShowAddCaseForm(false);
-          }}
-        />
-      )}
-
       {/* Legal Detail Modal */}
       <LegalDetailModal
-        legalCase={selectedCase}
+        activity={selectedActivity}
         isOpen={isDetailModalOpen}
         onClose={() => {
           setIsDetailModalOpen(false);
-          setSelectedCase(null);
+          setSelectedActivity(null);
         }}
       />
 
@@ -333,6 +404,7 @@ const LegalManagementDashboard = () => {
         onClose={() => setIsUploadModalOpen(false)}
         onUploadSuccess={handleUploadSuccess}
         regions={DEFAULT_REGIONS}
+        // regions={DEFAULT_REGIONS}
       />
     </div>
   );
