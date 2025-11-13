@@ -1,328 +1,280 @@
 "use client";
-import { X, Download, Printer, FileText, TrendingUp, Building2, Target, Shield } from "lucide-react";
+
+import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { HSERecord } from "@/lib/types";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { HSEActivity, HSEFormData, HSERecordDetail } from "@/lib/types/hse";
+import { getActivityStatusColor } from "@/lib/utils";
 
-interface HSETableDetailModalProps {
-  record: HSERecord | null;
+// ================= HSE FORM MODAL =================
+export const HSEFormModal: React.FC<{
   isOpen: boolean;
-  onClose: () => void;
-}
+  onOpenChange: (open: boolean) => void;
+  onSave: () => void;
+  formData: HSEFormData;
+  onFormChange: (data: HSEFormData) => void;
+  isEditing: boolean;
+}> = ({ isOpen, onOpenChange, onSave, formData, onFormChange, isEditing }) => (
+  <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle className="text-lg font-semibold">
+          {isEditing ? "Edit HSE Record" : "Add New HSE Record"}
+        </DialogTitle>
+      </DialogHeader>
 
-export const HSETableDetailModal: React.FC<HSETableDetailModalProps> = ({
-  record,
-  isOpen,
-  onClose,
-}) => {
-  if (!isOpen || !record) return null;
+      <div className="space-y-4">
+        {/* Record Type */}
+        <div>
+          <label className="text-xs font-semibold text-gray-900">
+            Record Type <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={formData.type}
+            onChange={(e) => onFormChange({ ...formData, type: e.target.value })}
+            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2"
+          >
+            <option value="">Select a type</option>
+            <option value="letter issued">Letter Issued</option>
+            <option value="inspection">Inspection</option>
+            <option value="incident report">Incident Report</option>
+            <option value="compliance notice">Compliance Notice</option>
+          </select>
+        </div>
 
-  // Calculate metrics
-  const achievementRate = record.targetOSH > 0
-    ? ((record.totalActualOSH / record.targetOSH) * 100).toFixed(1)
-    : "0";
-  
-  const variance = record.totalActualOSH - record.targetOSH;
-  const totalActivities = record.oshEnlightenment + record.oshInspectionAudit + record.accidentInvestigation;
-  
-  // Activity breakdown percentages
-  const enlightenmentPercentage = totalActivities > 0 
-    ? ((record.oshEnlightenment / totalActivities) * 100).toFixed(1)
-    : "0";
-  const auditPercentage = totalActivities > 0
-    ? ((record.oshInspectionAudit / totalActivities) * 100).toFixed(1)
-    : "0";
-  const investigationPercentage = totalActivities > 0
-    ? ((record.accidentInvestigation / totalActivities) * 100).toFixed(1)
-    : "0";
+        {/* Organization */}
+        <div>
+          <label className="text-xs font-semibold text-gray-900">
+            Employer/Organization <span className="text-red-500">*</span>
+          </label>
+          <input
+            placeholder="Enter employer name"
+            value={formData.organization}
+            onChange={(e) => onFormChange({ ...formData, organization: e.target.value })}
+            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2"
+          />
+        </div>
 
-  // Helper to get performance badge color
-  const getPerformanceBadge = (rate: number): string => {
-    if (rate >= 80) return "bg-green-100 text-green-700 border-green-300";
-    if (rate >= 60) return "bg-yellow-100 text-yellow-700 border-yellow-300";
-    return "bg-red-100 text-red-700 border-red-300";
-  };
+        {/* Date */}
+        <div>
+          <label className="text-xs font-semibold text-gray-900">
+            Date <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="date"
+            value={formData.date}
+            onChange={(e) => onFormChange({ ...formData, date: e.target.value })}
+            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2"
+          />
+        </div>
 
-  // Helper to get achievement status
-  const getAchievementColor = (variance: number): string => {
-    if (variance >= 0) return "text-green-700";
-    return "text-red-700";
-  };
+        {/* Status */}
+        <div>
+          <label className="text-xs font-semibold text-gray-900">
+            Status <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={formData.status}
+            onChange={(e) => onFormChange({ ...formData, status: e.target.value })}
+            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2"
+          >
+            <option value="">Select status</option>
+            <option value="Completed">Completed</option>
+            <option value="Under Investigation">Under Investigation</option>
+            <option value="Follow-up Required">Follow-up Required</option>
+          </select>
+        </div>
 
-  const handlePrint = () => {
-    window.print();
-  };
+        {/* Safety Compliance Rate */}
+        <div>
+          <label className="text-xs font-semibold text-gray-900">Safety Compliance Rate (%)</label>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            placeholder="e.g. 95"
+            value={formData.safetyComplianceRate || ""}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "" || (/^\d{0,3}$/.test(val) && parseInt(val) <= 100)) {
+                onFormChange({ ...formData, safetyComplianceRate: val });
+              }
+            }}
+            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2"
+          />
+          <p className="text-xs text-gray-500 mt-1">Optional. Enter a value between 0 and 100.</p>
+        </div>
 
-  const handleDownload = () => {
-    const content = `
-HSE RECORD DETAILS
-==================
+        {/* Details */}
+        <div>
+          <label className="text-xs font-semibold text-gray-900">
+            Details <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            placeholder="Enter detailed description of the HSE activity or incident"
+            value={formData.details}
+            onChange={(e) => onFormChange({ ...formData, details: e.target.value })}
+            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2 min-h-[80px] resize-none"
+          />
+        </div>
 
-Region: ${record.region}
-Branch: ${record.branch}
-Period: ${record.activitiesPeriod}
-
-ACTIVITY SUMMARY
-================
-Total Actual OSH Activities: ${record.totalActualOSH.toLocaleString()}
-Target OSH Activities: ${record.targetOSH.toLocaleString()}
-Achievement Rate: ${achievementRate}%
-Variance: ${variance >= 0 ? '+' : ''}${variance}
-Performance Rate: ${record.performanceRate}%
-
-ACTIVITY BREAKDOWN
-==================
-OSH Enlightenment & Awareness: ${record.oshEnlightenment} (${enlightenmentPercentage}%)
-OSH Inspection & Audit: ${record.oshInspectionAudit} (${auditPercentage}%)
-Accident Investigation: ${record.accidentInvestigation} (${investigationPercentage}%)
-
-Generated on: ${new Date().toLocaleString()}
-    `.trim();
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `hse-record-${record.branch.replace(/\s+/g, '-')}-${record.activitiesPeriod}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">HSE Activity Record</h2>
-                <p className="text-sm text-gray-600">{record.branch} - {record.activitiesPeriod}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleDownload}
-                className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
-                title="Download HSE details"
-              >
-                <Download className="w-5 h-5" />
-              </button>
-              <button
-                onClick={handlePrint}
-                className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
-                title="Print HSE details"
-              >
-                <Printer className="w-5 h-5" />
-              </button>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
-                title="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 space-y-6">
-            {/* Region and Branch Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Building2 className="w-5 h-5 text-gray-600" />
-                  <h3 className="font-semibold text-gray-900">Location Information</h3>
-                </div>
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase">Region</p>
-                    <p className="text-sm font-medium text-gray-900">{record.region}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase">Branch</p>
-                    <p className="text-sm font-medium text-gray-900">{record.branch}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase">Period</p>
-                    <p className="text-sm font-medium text-gray-900">{record.activitiesPeriod}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-lg p-4 border border-green-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                  <h3 className="font-semibold text-gray-900">Performance Metrics</h3>
-                </div>
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase">Performance Rate</p>
-                    <Badge className={`${getPerformanceBadge(record.performanceRate)} font-semibold text-lg px-3 py-1 border`}>
-                      {record.performanceRate}%
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase">Achievement Rate</p>
-                    <p className={`text-xl font-bold ${Number(achievementRate) >= 100 ? 'text-green-700' : 'text-yellow-700'}`}>
-                      {achievementRate}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Target vs Actual */}
-            <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-              <div className="flex items-center gap-2 mb-4">
-                <Target className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold text-gray-900">Target vs Actual Activities</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <p className="text-xs text-gray-600 uppercase mb-1">Target OSH Activities</p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {record.targetOSH.toLocaleString()}
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <p className="text-xs text-gray-600 uppercase mb-1">Actual OSH Activities</p>
-                  <p className="text-3xl font-bold text-green-700">
-                    {record.totalActualOSH.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {achievementRate}% of target
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <p className="text-xs text-gray-600 uppercase mb-1">Variance</p>
-                  <p className={`text-3xl font-bold ${getAchievementColor(variance)}`}>
-                    {variance >= 0 ? '+' : ''}{variance}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {variance >= 0 ? 'Above target' : 'Below target'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Activity Breakdown */}
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-200">
-              <h3 className="font-semibold text-gray-900 mb-4">Activity Breakdown</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white rounded-lg p-4 border border-purple-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                    <p className="text-xs text-gray-600 uppercase">OSH Enlightenment</p>
-                  </div>
-                  <p className="text-2xl font-bold text-purple-700">
-                    {record.oshEnlightenment}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {enlightenmentPercentage}% of total activities
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border border-blue-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <p className="text-xs text-gray-600 uppercase">OSH Inspection & Audit</p>
-                  </div>
-                  <p className="text-2xl font-bold text-blue-700">
-                    {record.oshInspectionAudit}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {auditPercentage}% of total activities
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border border-red-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <p className="text-xs text-gray-600 uppercase">Accident Investigation</p>
-                  </div>
-                  <p className="text-2xl font-bold text-red-700">
-                    {record.accidentInvestigation}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {investigationPercentage}% of total activities
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-4 bg-white rounded-lg p-4 border border-gray-200">
-                <p className="text-xs text-gray-600 uppercase mb-1">Total Activities</p>
-                <p className="text-xl font-bold text-gray-900">
-                  {totalActivities.toLocaleString()}
-                </p>
-              </div>
-            </div>
-
-            {/* Summary Grid */}
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Summary</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-xs text-gray-600 uppercase">Region</p>
-                  <p className="text-sm font-medium text-gray-900">{record.region}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 uppercase">Branch</p>
-                  <p className="text-sm font-medium text-gray-900">{record.branch}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 uppercase">Period</p>
-                  <p className="text-sm font-medium text-gray-900">{record.activitiesPeriod}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 uppercase">Performance</p>
-                  <p className="text-sm font-medium text-gray-900">{record.performanceRate}%</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 uppercase">Achievement</p>
-                  <p className="text-sm font-medium text-gray-900">{achievementRate}%</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 uppercase">Total Activities</p>
-                  <p className="text-sm font-medium text-gray-900">{totalActivities}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-            >
-              Close
-            </button>
-            <button
-              onClick={handleDownload}
-              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
-            >
-              Download Report
-            </button>
-          </div>
+        {/* Recommendations */}
+        <div>
+          <label className="text-xs font-semibold text-gray-900">Recommendations/Actions</label>
+          <textarea
+            placeholder="Enter recommendations or corrective actions"
+            value={formData.recommendations}
+            onChange={(e) => onFormChange({ ...formData, recommendations: e.target.value })}
+            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2 min-h-[80px] resize-none"
+          />
         </div>
       </div>
-    </>
+
+      <DialogFooter className="mt-6 flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => onOpenChange(false)}
+          className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={onSave}
+          className="px-4 py-2 text-sm text-white rounded-md"
+          style={{ backgroundColor: "#00a63e" }}
+        >
+          {isEditing ? "Save Changes" : "Save Record"}
+        </button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+);
+
+// ================= VIEW FULL DETAILS MODAL =================
+export const ViewDetailsModal: React.FC<{
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  activity: HSEActivity | null;
+}> = ({ isOpen, onOpenChange, activity }) => {
+  if (!activity) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <DialogTitle className="text-xl font-bold">{activity.type}</DialogTitle>
+              <p className="text-sm text-gray-600 mt-1">{activity.organization} • {activity.date}</p>
+            </div>
+            <Badge className={`${getActivityStatusColor(activity.status)} font-medium text-xs`}>
+              {activity.status}
+            </Badge>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-6 mt-4">
+          {activity.details && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">Details:</h3>
+              <p className="text-sm text-gray-700 leading-relaxed">{activity.details}</p>
+            </div>
+          )}
+          {activity.recommendations && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">Recommendations/Actions:</h3>
+              <p className="text-sm text-gray-700 leading-relaxed">{activity.recommendations}</p>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="mt-6">
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Close
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// ================= TABLE DETAIL MODAL =================
+export const HSETableDetailModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  record: HSERecordDetail | null;
+}> = ({ isOpen, onClose, record }) => {
+  if (!record) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold mb-2">HSE Record Details</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-gray-600">Region</p>
+              <p className="text-sm font-medium text-gray-900">{record.location.region}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-600">Branch</p>
+              <p className="text-sm font-medium text-gray-900">{record.location.branch}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-600">Period</p>
+              <p className="text-sm font-medium text-gray-900">{record.location.period}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 pt-2 border-t border-gray-200">
+            <div>
+              <p className="text-xs text-gray-600">Total Activities</p>
+              <p className="text-sm font-medium text-gray-900">{record.activityBreakdown.totalActivities}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-600">Performance Rate</p>
+              <p className="text-sm font-medium text-gray-900">{record.performanceMetrics.performanceRate}%</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-600">Achievement Rate</p>
+              <p className="text-sm font-medium text-gray-900">{record.performanceMetrics.achievementRate}%</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 pt-2 border-t border-gray-200">
+            <div>
+              <p className="text-xs text-gray-600">OSH Enlightenment</p>
+              <p className="text-sm font-medium text-gray-900">{record.activityBreakdown.oshEnlightenment} ({record.activityBreakdown.oshEnlightenmentPct}%)</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-600">OSH Audits</p>
+              <p className="text-sm font-medium text-gray-900">{record.activityBreakdown.oshAudit} ({record.activityBreakdown.oshAuditPct}%)</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-600">Accident Investigations</p>
+              <p className="text-sm font-medium text-gray-900">{record.activityBreakdown.accidentInvestigation} ({record.activityBreakdown.accidentInvestigationPct}%)</p>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="mt-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Close
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
