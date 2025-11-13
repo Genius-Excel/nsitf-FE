@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp, FileText, Bell, Plus, Upload, Eye } from "lucide-react";
-import { cases, demandNotices } from "@/lib/Constants";
+import { cases, demandNotices, DEFAULT_REGIONS } from "@/lib/Constants";
 import { getStatusColor, getStatusLabel } from "@/lib/utils";
 import DemandNoticeForm from "./demandNoticeForm";
 import AddNewCaseForm from "./addNewCaseForm";
@@ -332,6 +332,7 @@ const LegalManagementDashboard = () => {
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         onUploadSuccess={handleUploadSuccess}
+        regions={DEFAULT_REGIONS}
       />
     </div>
   );
