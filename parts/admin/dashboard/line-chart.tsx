@@ -1,16 +1,8 @@
-"use client"
+"use client";
 
-import { TrendingUp } from "lucide-react"
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { useEffect, useState } from "react";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
@@ -18,37 +10,65 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
+import HttpService from "@/services/httpServices";
 
-export const description = "An area chart showing claims, compliance, and inspection trends"
+// --- Type for API response
+interface MonthlyPerformance {
+  month: string;
+  claims: number;
+  inspections: number;
+  hse: number;
+}
 
-// Sample data for claims, compliance, and inspection
-const chartData = [
-  { month: "January", claims: 120, compliance: 90, inspection: 150 },
-  { month: "February", claims: 200, compliance: 180, inspection: 220 },
-  { month: "March", claims: 160, compliance: 130, inspection: 190 },
-  { month: "April", claims: 80, compliance: 100, inspection: 170 },
-  { month: "May", claims: 180, compliance: 140, inspection: 200 },
-  { month: "June", claims: 210, compliance: 160, inspection: 230 },
-]
+interface DashboardLineChartResponse {
+  message: string;
+  data: {
+    monthly_performance_trend: MonthlyPerformance[];
+  };
+}
 
-// Chart configuration with updated labels and colors
-const chartConfig = {
-  claims: {
-    label: "Claims",
-    color: "#2563eb", // Blue
-  },
-  compliance: {
-    label: "Compliance",
-    color: "#16a34a", // Green
-  },
-  inspection: {
-    label: "Inspection",
-    color: "#eab308", // Yellow
-  },
-} satisfies ChartConfig
+export const description = "An area chart showing claims, compliance, and inspection trends";
+
+const chartConfig: ChartConfig = {
+  claims: { label: "Claims", color: "#2563eb" },
+  inspections: { label: "Inspections", color: "#eab308" },
+  hse: { label: "HSE Activities", color: "#16a34a" },
+};
 
 export function DashboardLineChart() {
+  const [data, setData] = useState<MonthlyPerformance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      const http = new HttpService();
+      try {
+        const res = await http.getData("/api/dashboard/summary");
+        const chartData: DashboardLineChartResponse = res.data;
+        // Map API fields to match recharts keys
+        const formattedData = chartData.data.monthly_performance_trend.map((item) => ({
+          month: item.month,
+          claims: item.claims,
+          inspections: item.inspections,
+          hse: item.hse,
+        }));
+        setData(formattedData);
+      } catch (err: any) {
+        console.error("Failed to fetch line chart data:", err);
+        setError(err.response?.data?.message || err.message || "Failed to fetch chart data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChartData();
+  }, []);
+
+  if (loading) return <p>Loading chart...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
+
   return (
     <Card>
       <CardHeader>
@@ -57,14 +77,8 @@ export function DashboardLineChart() {
       <CardContent>
         <ChartContainer config={chartConfig}>
           <AreaChart
-            accessibilityLayer
-            data={chartData}
-            margin={{
-              left: 12,
-              right: 12,
-              top: 10,
-              bottom: 10,
-            }}
+            data={data}
+            margin={{ left: 12, right: 12, top: 10, bottom: 10 }}
           >
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
             <XAxis
@@ -98,20 +112,20 @@ export function DashboardLineChart() {
               stackId="a"
             />
             <Area
-              dataKey="compliance"
+              dataKey="inspections"
               type="natural"
-              fill="var(--color-compliance)"
+              fill="var(--color-inspections)"
               fillOpacity={0.3}
-              stroke="var(--color-compliance)"
+              stroke="var(--color-inspections)"
               strokeWidth={2}
               stackId="a"
             />
             <Area
-              dataKey="inspection"
+              dataKey="hse"
               type="natural"
-              fill="var(--color-inspection)"
+              fill="var(--color-hse)"
               fillOpacity={0.3}
-              stroke="var(--color-inspection)"
+              stroke="var(--color-hse)"
               strokeWidth={2}
               stackId="a"
             />
@@ -120,5 +134,5 @@ export function DashboardLineChart() {
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }
