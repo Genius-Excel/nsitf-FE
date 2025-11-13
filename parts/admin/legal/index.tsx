@@ -77,7 +77,9 @@ const LegalManagementDashboard = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Legal Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Legal Activities View
+          </h1>
           <p className="text-gray-600 text-sm">
             Track legal activities, demand notices and regional performance
           </p>
@@ -102,7 +104,7 @@ const LegalManagementDashboard = () => {
 
       {/* Dashboard Metrics - 6 Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
-        <div className="bg-blue-600 text-white p-4 rounded-lg">
+        <div className="bg-gray-600 text-black p-4 rounded-lg">
           <p className="text-xs uppercase mb-1 opacity-90">
             Total Recalcitrant Employers
           </p>
