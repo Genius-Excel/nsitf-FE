@@ -30,7 +30,9 @@ import {
   StatCard,
   TableDetail,
 } from "@/lib/types/hse";
-import { inspect } from "util";
+import { PageHeader } from "@/components/design-system/PageHeader";
+import { LoadingState } from "@/components/design-system/LoadingState";
+import { ErrorState } from "@/components/design-system/ErrorState";
 
 const http = new HttpService();
 
@@ -224,58 +226,56 @@ export default function HSEManagement() {
     fetchRecordDetail(record.id);
 
   // ================= RENDER =================
-  if (loading)
-    return (
-      <div className="p-10 text-center text-gray-500">Loading HSE data...</div>
-    );
-  if (error)
-    return <div className="p-10 text-center text-red-500">{error}</div>;
+  if (loading) {
+    return <LoadingState message="Loading HSE data..." />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6 flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Occupational Safety & Health (OSH) View
-            </h1>
-          </div>
+        <PageHeader
+          title="Occupational Safety & Health (OSH) View"
+          action={
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode("activities")}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    viewMode === "activities"
+                      ? "bg-green-600 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  <Grid className="w-4 h-4" /> Activities
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    viewMode === "table"
+                      ? "bg-green-600 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  <List className="w-4 h-4" /> Table View
+                </button>
+              </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg p-1">
               <button
-                onClick={() => setViewMode("activities")}
-                className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  viewMode === "activities"
-                    ? "bg-green-600 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                type="button"
+                onClick={handleAddNew}
+                style={{ backgroundColor: "#00a63e" }}
+                className="px-4 py-2 text-sm text-white rounded-md hover:opacity-90 flex items-center gap-2"
               >
-                <Grid className="w-4 h-4" /> Activities
-              </button>
-              <button
-                onClick={() => setViewMode("table")}
-                className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  viewMode === "table"
-                    ? "bg-green-600 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                <List className="w-4 h-4" /> Table View
+                <Plus className="w-4 h-4" /> Add HSE Record
               </button>
             </div>
-
-            <button
-              type="button"
-              onClick={handleAddNew}
-              style={{ backgroundColor: "#00a63e" }}
-              className="px-4 py-2 text-sm text-white rounded-md hover:opacity-90 flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" /> Add HSE Record
-            </button>
-          </div>
-        </div>
+          }
+        />
 
         <StatisticsCards stats={stats} />
 

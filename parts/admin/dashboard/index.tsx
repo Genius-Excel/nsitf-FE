@@ -2,25 +2,21 @@
 
 import { useEffect, useState } from "react";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Users,
   Shield,
   ClipboardCheck,
   HardHat,
   Scale,
-  ArrowUp,
-  ArrowDown,
 } from "lucide-react";
 import { getUserFromStorage, User } from "@/lib/auth";
 import HttpService from "@/services/httpServices";
 import { DashboardLineChart } from "./line-chart";
 import { ClaimsPieChart } from "./claims-chart";
 import { RegionChartBarMultiple } from "./region-chartbar-multiple";
+import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
+import { PageHeader } from "@/components/design-system/PageHeader";
+import { LoadingState } from "@/components/design-system/LoadingState";
+import { ErrorState } from "@/components/design-system/ErrorState";
 
 // --- Type for API response ---
 interface Metric {
@@ -108,67 +104,69 @@ export default function DashboardPage() {
       ]
     : [];
 
+  // Retry function
+  const refetchDashboard = async () => {
+    setLoading(true);
+    setError(null);
+    const http = new HttpService();
+    try {
+      const res = await http.getData("/api/dashboard/summary");
+      setDashboard(res.data);
+    } catch (err: any) {
+      console.error("Dashboard fetch error:", err);
+      setError(err.response?.data?.message || err.message || "Failed to fetch data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Show loading state
+  if (loading) {
+    return <LoadingState message="Loading dashboard data..." />;
+  }
+
+  // Show error state
+  if (error) {
+    return <ErrorState message={error} onRetry={refetchDashboard} />;
+  }
+
   return (
     <div className="p-8 space-y-8">
       {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-semibold tracking-tight text-balance">
-            APRD DASHBOARD VIEW FOR SUPER USER
-          </h1>
-        </div>
-        {/* {dashboard && (
-          <p className="text-muted-foreground text-sm">
-            {dashboard.data.filters.region_name} • {dashboard.data.filters.period}
-          </p>
-        )} */}
-      </div>
-
-      {/* Loading / Error */}
-      {loading && <p className="text-muted-foreground">Loading dashboard data...</p>}
-      {error && <p className="text-destructive">{error}</p>}
+      <PageHeader
+        title="APRD Dashboard View for Super User"
+        description={
+          dashboard
+            ? `${dashboard.data.filters.region_name} • ${dashboard.data.filters.period}`
+            : undefined
+        }
+      />
 
       {/* Metric Cards */}
-      {!loading && statCards.length > 0 && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
-          {statCards.map((card) => {
+      {statCards.length > 0 && (
+        <MetricsGrid columns={5}>
+          {statCards.map((card, index) => {
             const Icon = card.icon;
-            const TrendIcon =
-              card.metric.trend === "up"
-                ? ArrowUp
-                : card.metric.trend === "down"
-                ? ArrowDown
-                : null;
+            const colorSchemes: Array<"green" | "blue" | "purple" | "orange" | "gray"> = [
+              "green",
+              "blue",
+              "purple",
+              "orange",
+              "green",
+            ];
 
             return (
-              <Card key={card.title} className="border-border/50 shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-                  <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center border border-primary/20">
-                    <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="text-2xl font-semibold">
-                    {card.format(card.metric.value)}
-                  </div>
-                  <p
-                    className={`mt-1 flex items-center gap-1 text-xs ${
-                      card.metric.trend === "up"
-                        ? "text-green-600"
-                        : card.metric.trend === "down"
-                        ? "text-destructive"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {TrendIcon && <TrendIcon className="w-4 h-4" aria-hidden="true" />}
-                    {card.metric.change_percent}% from last month
-                  </p>
-                </CardContent>
-              </Card>
+              <MetricCard
+                key={card.title}
+                title={card.title}
+                value={card.format(card.metric.value)}
+                change={`${card.metric.change_percent}% from last month`}
+                icon={<Icon className="w-5 h-5" />}
+                colorScheme={colorSchemes[index]}
+              />
             );
           })}
-        </div>
+        </MetricsGrid>
       )}
 
       {/* Charts Section */}

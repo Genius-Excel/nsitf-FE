@@ -1,6 +1,5 @@
 "use client";
-import { Search, Eye, Filter, Download, Upload } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   BarChart,
@@ -14,32 +13,36 @@ import {
 } from "recharts";
 import { getStatusBadgeColor, getTypeTextColor } from "@/lib/utils";
 import { ChartDataPoint, Claim, StatCard } from "@/lib/types";
+import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
+import { SearchBar } from "@/components/design-system/SearchBar";
 
 interface StatisticsCardsProps {
   stats: StatCard[];
 }
 
 export const StatisticsCards: React.FC<StatisticsCardsProps> = ({ stats }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
-    {stats.map((stat, idx) => (
-      <div key={idx} className="bg-card rounded-lg border border-border p-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <p className="text-sm text-muted-foreground font-medium">{stat.title}</p>
-            <p className="text-2xl font-semibold text-foreground mt-2">
-              {stat.value.toLocaleString()}
-            </p>
-            {stat.change && (
-              <p className="text-xs text-green-600 mt-2">{stat.change}</p>
-            )}
-          </div>
-          <div className="text-2xl text-primary">
-            {stat.icon}
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
+  <MetricsGrid columns={5}>
+    {stats.map((stat, idx) => {
+      const colorSchemes: Array<"green" | "blue" | "purple" | "orange" | "gray"> = [
+        "green",
+        "green",
+        "blue",
+        "purple",
+        "orange",
+      ];
+
+      return (
+        <MetricCard
+          key={idx}
+          title={stat.title}
+          value={stat.value}
+          change={stat.change}
+          icon={stat.icon}
+          colorScheme={colorSchemes[idx] || "green"}
+        />
+      );
+    })}
+  </MetricsGrid>
 );
 
 interface ClaimsProcessingChartProps {
@@ -119,50 +122,15 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
   onExport,
   onUpload,
 }) => (
-  <div className="bg-card rounded-lg border border-border p-6 mb-6 flex gap-4 items-center">
-    <div className="flex-1 relative">
-      <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-      <Input
-        placeholder="Search by claim ID, employer, or claimant..."
-        className="pl-10 text-sm"
-        value={searchTerm}
-        onChange={(e) => onSearchChange(e.target.value)}
-      />
-    </div>
-    {onUpload && (
-      <button
-        type="button"
-        onClick={onUpload}
-        title="Upload Claims Data"
-        className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-md transition-colors text-sm font-medium flex items-center gap-2"
-        aria-label="Upload claims data"
-      >
-        <Upload className="w-4 h-4" />
-        Upload Claims Data
-      </button>
-    )}
-    {onExport && (
-      <button
-        type="button"
-        onClick={onExport}
-        title="Export to CSV"
-        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors text-sm font-medium flex items-center gap-2"
-        aria-label="Export claims to CSV"
-      >
-        <Download className="w-4 h-4" />
-        Export
-      </button>
-    )}
-    <button
-      type="button"
-      onClick={onFilterClick}
-      title="Filter claims"
-      className="p-2 hover:bg-secondary rounded-md transition-colors text-muted-foreground hover:text-foreground"
-      aria-label="Filter claims"
-    >
-      <Filter className="w-4 h-4" />
-    </button>
-  </div>
+  <SearchBar
+    searchTerm={searchTerm}
+    onSearchChange={onSearchChange}
+    placeholder="Search by claim ID, employer, or claimant..."
+    onFilter={onFilterClick}
+    onExport={onExport}
+    onUpload={onUpload}
+    showUpload={true}
+  />
 );
 
 interface ClaimsTableProps {

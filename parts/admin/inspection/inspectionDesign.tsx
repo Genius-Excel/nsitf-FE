@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
-import { Search, Eye, Filter, Download, CircleCheck } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Eye, CircleCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +26,8 @@ import {
   UpcomingInspection,
   MonthlyChartData,
 } from "@/lib/types";
+import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
+import { SearchBar } from "@/components/design-system/SearchBar";
 
 // ============= STATISTICS CARDS =============
 interface InspectionStatisticsCardsProps {
@@ -35,33 +36,27 @@ interface InspectionStatisticsCardsProps {
 
 export const InspectionStatisticsCards: React.FC<
   InspectionStatisticsCardsProps
-> = ({ stats }) => (
-  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
-    {stats.map((stat, idx) => (
-      <Card
-        key={idx}
-        className={`border-border/50`}
-        style={{ backgroundColor: `${stat.bgColor}15` }}
-      >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-muted-foreground font-normal text-base">
-            {stat.title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-medium" style={{ color: stat.bgColor }}>
-            {typeof stat.value === "number"
-              ? stat.value.toLocaleString()
-              : stat.value}
-          </div>
-          {stat.change && (
-            <p className="text-xs text-green-600 mt-2">{stat.change}</p>
-          )}
-        </CardContent>
-      </Card>
-    ))}
-  </div>
-);
+> = ({ stats }) => {
+  const colorMap: Record<string, "green" | "blue" | "orange" | "purple" | "gray"> = {
+    "#3b82f6": "blue",
+    "#22c55e": "green",
+    "#f59e0b": "orange",
+    "#16a34a": "green",
+  };
+
+  return (
+    <MetricsGrid columns={5}>
+      {stats.map((stat, idx) => (
+        <MetricCard
+          key={idx}
+          title={stat.title}
+          value={stat.value}
+          colorScheme={colorMap[stat.bgColor] || "gray"}
+        />
+      ))}
+    </MetricsGrid>
+  );
+};
 
 // ============= BAR CHART =============
 interface InspectionBarChartProps {
@@ -181,38 +176,14 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
   onFilterClick,
   onExport,
 }) => (
-  <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 flex gap-3 items-center">
-    <div className="flex-1 relative">
-      <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-      <Input
-        placeholder="Search by branch, period..."
-        className="pl-10 border-gray-200 text-sm"
-        value={searchTerm}
-        onChange={(e) => onSearchChange(e.target.value)}
-      />
-    </div>
-    {onExport && (
-      <button
-        type="button"
-        onClick={onExport}
-        title="Export to CSV"
-        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors text-sm font-medium flex items-center gap-2"
-        aria-label="Export inspections to CSV"
-      >
-        <Download className="w-4 h-4" />
-        Export
-      </button>
-    )}
-    <button
-      type="button"
-      onClick={onFilterClick}
-      title="Filter inspections"
-      className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
-      aria-label="Filter inspections"
-    >
-      <Filter className="w-4 h-4" />
-    </button>
-  </div>
+  <SearchBar
+    searchTerm={searchTerm}
+    onSearchChange={onSearchChange}
+    placeholder="Search by branch, period..."
+    onFilter={onFilterClick}
+    onExport={onExport}
+    showUpload={false}
+  />
 );
 
 // ============= INSPECTIONS TABLE =============
