@@ -226,7 +226,7 @@ export const mockHSEActivities: HSEActivity[] = [
     type: "OSH Awareness",
     organization: "ABC Manufacturing Ltd",
     date: "2025-09-15",
-    status: "Completed",
+    status: "resolved",
     details:
       "Comprehensive occupational safety and health awareness training completed. All employees attended the session.",
     icon: "🛡️",
@@ -236,7 +236,7 @@ export const mockHSEActivities: HSEActivity[] = [
     type: "Safety Audit",
     organization: "XYZ Construction",
     date: "2025-09-20",
-    status: "Completed",
+    status: "pending",
     details:
       "Comprehensive safety audit revealed 3 minor violations. Corrective action plan submitted and approved.",
     icon: "✓",
@@ -246,7 +246,7 @@ export const mockHSEActivities: HSEActivity[] = [
     type: "Accident Investigation",
     organization: "Tech Solutions Inc",
     date: "2025-09-22",
-    status: "Under Investigation",
+    status: "closed",
     details:
       "Workplace accident reported on site. Investigation in progress. Preliminary findings suggest equipment malfunction.",
     icon: "⚠️",
@@ -256,7 +256,7 @@ export const mockHSEActivities: HSEActivity[] = [
     type: "Letter Issued",
     organization: "Green Energy Ltd",
     date: "2025-09-25",
-    status: "Follow-up Required",
+    status: "progress",
     details:
       "Safety compliance letter issued. Organization has 30 days to submit corrective measures plan.",
     icon: "📋",

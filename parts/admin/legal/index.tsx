@@ -8,16 +8,17 @@ import {
   Briefcase,
   Users,
   Scale,
+  Search,
 } from "lucide-react";
 import {
   mockLegalActivities,
   demandNotices,
   DEFAULT_REGIONS,
 } from "@/lib/Constants";
-import DemandNoticeForm from "./demandNoticeForm";
 import { LegalDetailModal } from "./legalDetailModal";
 import { LegalUploadModal } from "./legalUploadModal";
 import { LegalActivityRecord } from "@/lib/types";
+import { Input } from "@/components/ui/input";
 
 const LegalManagementDashboard = () => {
   const [showDemandNoticeForm, setShowDemandNoticeForm] = useState(false);
@@ -25,6 +26,7 @@ const LegalManagementDashboard = () => {
     useState<LegalActivityRecord | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Calculate dashboard metrics from mock data
   const dashboardMetrics = {
@@ -49,6 +51,30 @@ const LegalManagementDashboard = () => {
       mockLegalActivities.flatMap((item) => item.sectors.split(", "))
     ).size,
   };
+
+  // ============= SEARCH AND FILTERS =============
+  interface SearchAndFiltersProps {
+    searchTerm: string;
+    onSearchChange: (value: string) => void;
+    onFilterClick?: () => void;
+  }
+
+  const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
+    searchTerm,
+    onSearchChange,
+  }) => (
+    <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 flex gap-3 items-center">
+      <div className="flex-1 relative">
+        <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+        <Input
+          placeholder="Search by branch, period..."
+          className="pl-10 border-gray-200 text-sm"
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+      </div>
+    </div>
+  );
 
   // Calculate stats for the 4 cards
   const stats = {
@@ -82,13 +108,6 @@ const LegalManagementDashboard = () => {
           </h1>
         </div>
         <div className="flex gap-2">
-          {/* <button
-            onClick={handleDemandNotice}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition"
-          >
-            <Bell size={16} />
-            Issue Demand Notice
-          </button> */}
           <button
             onClick={() => setIsUploadModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
@@ -142,14 +161,14 @@ const LegalManagementDashboard = () => {
           <p className="text-3xl font-bold">{dashboardMetrics.totalSectors}</p>
         </div>
       </div>
+
+      {/* Search and Filters */}
+      <SearchAndFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+      />
       {/* Legal Activities Table */}
       <div className="bg-white rounded-lg shadow mb-6">
-        {/* <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Legal Activities View
-          </h2>
-        </div> */}
-
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -237,98 +256,6 @@ const LegalManagementDashboard = () => {
           </table>
         </div>
       </div>
-
-      {/* Recent Demand Notices */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Recent Demand Notices Issued
-          </h2>
-          <button
-            onClick={handleDemandNotice}
-            className="text-xs text-orange-600 hover:text-orange-700 font-medium"
-          >
-            + Nudging Required
-          </button>
-        </div>
-        <div className="divide-y divide-gray-200">
-          {demandNotices.map((notice) => (
-            <div
-              key={notice.id}
-              className="p-4 hover:bg-gray-50 transition cursor-pointer"
-              onClick={() => alert(`Opening demand notice ${notice.id}`)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Bell size={16} className="text-orange-500" />
-                  <div>
-                    <p className="font-medium text-gray-900 text-sm">
-                      {notice.id}
-                    </p>
-                    <p className="text-xs text-gray-600">{notice.company}</p>
-                  </div>
-                </div>
-                <div className="text-right mr-4">
-                  <p className="font-semibold text-gray-900 text-sm">
-                    {notice.amount}
-                  </p>
-                  <p className="text-xs text-gray-500">{notice.date}</p>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    alert(`Sending reminder for ${notice.id}`);
-                  }}
-                  className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium hover:bg-orange-200 transition whitespace-nowrap"
-                >
-                  Pending Response
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Bottom Stats */}
-      <div className="grid grid-cols-3 gap-4 mt-6">
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
-            <p className="text-sm font-medium text-gray-700">Success Rate</p>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">93%</p>
-          <p className="text-xs text-gray-500">Cases won or settled</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
-            <p className="text-sm font-medium text-gray-700">Total Recovered</p>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">₦12.58M</p>
-          <p className="text-xs text-gray-500">Through legal actions</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2.5 h-2.5 bg-purple-500 rounded-full"></div>
-            <p className="text-sm font-medium text-gray-700">
-              Avg. Case Duration
-            </p>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">4.8 months</p>
-          <p className="text-xs text-gray-500">From filing to resolution</p>
-        </div>
-      </div>
-
-      {/* Modals */}
-      {showDemandNoticeForm && (
-        <DemandNoticeForm
-          onClose={() => setShowDemandNoticeForm(false)}
-          onSubmit={(data: any) => {
-            console.log("Demand Notice submitted:", data);
-            setShowDemandNoticeForm(false);
-          }}
-        />
-      )}
 
       {/* Legal Detail Modal */}
       <LegalDetailModal
