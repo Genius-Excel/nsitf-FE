@@ -19,36 +19,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
 
 export const StatisticsCards: React.FC<{ stats: StatCard[] }> = ({ stats }) => {
   if (!stats || stats.length === 0) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"></div>
-    );
+    return null;
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-6">
+    <MetricsGrid columns={6}>
       {stats.map((stat, idx) => (
-        <div
+        <MetricCard
           key={idx}
-          className="bg-card rounded-lg border border-border p-6"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm text-muted-foreground font-medium">{stat.title}</p>
-              <p className="text-2xl font-semibold text-foreground mt-2">
-                {stat.value}
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">{stat.description}</p>
-            </div>
-            <div className="text-2xl text-primary">
-              {stat.icon}
-            </div>
-          </div>
-        </div>
+          title={stat.title}
+          value={stat.value}
+          description={stat.description}
+          icon={stat.icon}
+          colorScheme="green"
+        />
       ))}
-    </div>
+    </MetricsGrid>
   );
 };
 

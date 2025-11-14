@@ -1,14 +1,14 @@
 "use client";
 import React, { useState } from "react";
 import {
-  Bell,
   Upload,
   Eye,
-  FileText,
-  Briefcase,
   Users,
+  AlertTriangle,
+  FileText,
   Scale,
-  Search,
+  Gavel,
+  Building,
 } from "lucide-react";
 import {
   mockLegalActivities,
@@ -18,7 +18,9 @@ import {
 import { LegalDetailModal } from "./legalDetailModal";
 import { LegalUploadModal } from "./legalUploadModal";
 import { LegalActivityRecord } from "@/lib/types";
-import { Input } from "@/components/ui/input";
+import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
+import { PageHeader } from "@/components/design-system/PageHeader";
+import { SearchBar } from "@/components/design-system/SearchBar";
 
 const LegalManagementDashboard = () => {
   const [showDemandNoticeForm, setShowDemandNoticeForm] = useState(false);
@@ -52,30 +54,6 @@ const LegalManagementDashboard = () => {
     ).size,
   };
 
-  // ============= SEARCH AND FILTERS =============
-  interface SearchAndFiltersProps {
-    searchTerm: string;
-    onSearchChange: (value: string) => void;
-    onFilterClick?: () => void;
-  }
-
-  const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
-    searchTerm,
-    onSearchChange,
-  }) => (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 flex gap-3 items-center">
-      <div className="flex-1 relative">
-        <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-        <Input
-          placeholder="Search by branch, period..."
-          className="pl-10 border-gray-200 text-sm"
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
-      </div>
-    </div>
-  );
-
   // Calculate stats for the 4 cards
   const stats = {
     totalBranches: mockLegalActivities.length,
@@ -101,13 +79,9 @@ const LegalManagementDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Legal Activities View
-          </h1>
-        </div>
-        <div className="flex gap-2">
+      <PageHeader
+        title="Legal Activities View"
+        action={
           <button
             onClick={() => setIsUploadModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
@@ -115,57 +89,57 @@ const LegalManagementDashboard = () => {
             <Upload size={16} />
             Upload Legal Data
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Dashboard Metrics - 6 Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
-        <div className="bg-muted-foreground text-black p-4 rounded-lg">
-          <p className="text-xs uppercase mb-1 opacity-90">
-            Total Recalcitrant Employers
-          </p>
-          <p className="text-3xl font-bold">
-            {dashboardMetrics.totalRecalcitrant}
-          </p>
-        </div>
-        <div className="bg-muted-foreground text-black p-4 rounded-lg">
-          <p className="text-xs uppercase mb-1 opacity-90">
-            Total Defaulting Employers
-          </p>
-          <p className="text-3xl font-bold">
-            {dashboardMetrics.totalDefaulting}
-          </p>
-        </div>
-        <div className="bg-muted-foreground text-black p-4 rounded-lg">
-          <p className="text-xs uppercase mb-1 opacity-90">Total Plan Issued</p>
-          <p className="text-3xl font-bold">
-            {dashboardMetrics.totalPlanIssued}
-          </p>
-        </div>
-        <div className="bg-muted-foreground text-black p-4 rounded-lg">
-          <p className="text-xs uppercase mb-1 opacity-90">
-            Alternate Dispute Resolution (ADR)
-          </p>
-          <p className="text-3xl font-bold">{dashboardMetrics.totalADR}</p>
-        </div>
-        <div className="bg-muted-foreground text-black p-4 rounded-lg">
-          <p className="text-xs uppercase mb-1 opacity-90">
-            Cases Instituted in Court
-          </p>
-          <p className="text-3xl font-bold">
-            {dashboardMetrics.totalCasesInstituted}
-          </p>
-        </div>
-        <div className="bg-muted-foreground text-black p-4 rounded-lg">
-          <p className="text-xs uppercase mb-1 opacity-90">Sectors</p>
-          <p className="text-3xl font-bold">{dashboardMetrics.totalSectors}</p>
-        </div>
-      </div>
+      <MetricsGrid columns={6}>
+        <MetricCard
+          title="Recalcitrant Employers"
+          value={dashboardMetrics.totalRecalcitrant}
+          icon={<AlertTriangle className="w-5 h-5" />}
+          colorScheme="orange"
+        />
+        <MetricCard
+          title="Defaulting Employers"
+          value={dashboardMetrics.totalDefaulting}
+          icon={<Users className="w-5 h-5" />}
+          colorScheme="blue"
+        />
+        <MetricCard
+          title="Plan Issued"
+          value={dashboardMetrics.totalPlanIssued}
+          icon={<FileText className="w-5 h-5" />}
+          colorScheme="green"
+        />
+        <MetricCard
+          title="ADR Cases"
+          value={dashboardMetrics.totalADR}
+          icon={<Scale className="w-5 h-5" />}
+          colorScheme="purple"
+        />
+        <MetricCard
+          title="Cases Instituted"
+          value={dashboardMetrics.totalCasesInstituted}
+          icon={<Gavel className="w-5 h-5" />}
+          colorScheme="gray"
+        />
+        <MetricCard
+          title="Sectors Covered"
+          value={dashboardMetrics.totalSectors}
+          icon={<Building className="w-5 h-5" />}
+          colorScheme="blue"
+        />
+      </MetricsGrid>
 
       {/* Search and Filters */}
-      <SearchAndFilters
+      <SearchBar
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
+        placeholder="Search by branch, period..."
+        showUpload={false}
+        showExport={false}
+        showFilter={false}
       />
       {/* Legal Activities Table */}
       <div className="bg-white rounded-lg shadow mb-6">

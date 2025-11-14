@@ -12,6 +12,7 @@ import { ClaimDetailModal } from "./ClaimModal";
 import { ClaimsUploadModal } from "./ClaimsUploadModal";
 import { Claim, StatCard } from "../../../lib/types";
 import { chartData, mockClaims, DEFAULT_REGIONS } from "@/lib/Constants";
+import { PageHeader } from "@/components/design-system/PageHeader";
 
 export default function ClaimsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -239,14 +240,10 @@ export default function ClaimsManagement() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <header className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Claims and compensation View
-          </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Track and process employee compensation claims
-          </p>
-        </header>
+        <PageHeader
+          title="Claims and Compensation View"
+          description="Track and process employee compensation claims"
+        />
 
         {/* Statistics Cards */}
         <StatisticsCards stats={stats} />

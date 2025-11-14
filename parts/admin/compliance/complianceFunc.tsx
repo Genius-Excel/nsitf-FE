@@ -43,6 +43,8 @@ import {
   ComplianceUploadModal,
 } from "./complianceDesign";
 import { ComplianceDetailModal } from "./complianceDetailModal";
+import { PageHeader } from "@/components/design-system/PageHeader";
+import { LoadingState } from "@/components/design-system/LoadingState";
 
 const ComplianceDashboard: React.FC = () => {
   // ============= STATE MANAGEMENT =============
@@ -350,14 +352,7 @@ const ComplianceDashboard: React.FC = () => {
   // ============= LOADING STATE =============
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading compliance data...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Loading compliance data..." />;
   }
 
   // ============= RENDER =============
@@ -381,14 +376,10 @@ const ComplianceDashboard: React.FC = () => {
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Header */}
-        <header className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            Compliance View
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600">
-            Track contributions, targets, and employer registration
-          </p>
-        </header>
+        <PageHeader
+          title="Compliance View"
+          description="Track contributions, targets, and employer registration"
+        />
 
         {/* Dashboard Cards */}
         <DashboardCards metrics={metrics} />
