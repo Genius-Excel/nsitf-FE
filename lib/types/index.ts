@@ -305,6 +305,145 @@ export interface FilterConfig {
   branchSearch: string;
 }
 
+// ===== KPI Analytics Types ======
+
+import { LucideIcon } from "lucide-react";
+
+export interface KPIMetric {
+  title: string;
+  value: string;
+  change: string;
+  trend: "up" | "down";
+  status: "success" | "warning" | "critical" | "normal";
+  icon: LucideIcon;
+  target: number;
+  actual: number;
+}
+
+export interface RegionalData {
+  region: string;
+  compliance: number;
+  claims: number;
+  inspections: number;
+  paid: number;
+  pending: number;
+}
+
+export interface SectorData {
+  name: string;
+  value: number;
+  claims: number;
+}
+
+export interface MonthlyKPI {
+  month: string;
+  claims: number;
+  compliance: number;
+  inspections: number;
+  hse: number;
+}
+
+export interface KPIAnalyticsFilters {
+  selectedRegion: string;
+  selectedSector: string;
+  selectedPeriod: string;
+}
+
+// ===== Forecasting Types ======
+export interface ClaimTrendProjection {
+  period: string;
+  actual: number | null;
+  forecast: number;
+  lower: number;
+  upper: number;
+}
+
+export interface ContributionGrowth {
+  period: string;
+  actual: number | null;
+  forecast: number;
+  target: number;
+}
+
+export interface InspectionTrend {
+  period: string;
+  completed: number | null;
+  forecast: number;
+  planned: number;
+}
+
+export interface ValuationMetric {
+  title: string;
+  value: string;
+  change: string;
+  status: "success" | "warning" | "critical";
+  icon: LucideIcon;
+}
+
+export interface ShortTermForecast {
+  quarter: string;
+  claims: number;
+  contributions: number;
+  liabilities: number;
+  reserves: number;
+}
+
+export interface LongTermForecast {
+  year: string;
+  claims: number;
+  contributions: number;
+  liabilities: number;
+  reserves: number;
+  growth: number;
+}
+
+export interface ForecastingFilters {
+  forecastModel: string;
+  selectedMetric: string;
+}
+
+// ==== Risk Ananlysis =====
+
+export interface RiskMetric {
+  title: string;
+  value: string;
+  description: string;
+  category: "critical" | "high" | "medium" | "success";
+  icon: LucideIcon;
+}
+
+export interface TrendlineData {
+  month: string;
+  incidentFreq: number;
+  complianceImprovement: number;
+  recoveryRate: number;
+}
+
+export interface RegionalRiskData {
+  region: string;
+  score: number;
+  employers: number;
+  highRisk: number;
+  mediumRisk: number;
+  lowRisk: number;
+}
+
+export interface RiskEntity {
+  entity: string;
+  region: string;
+  riskScore: number;
+  category: "High" | "Medium" | "Low";
+  claims: number;
+  compliance: number;
+  incidents: number;
+}
+
+export interface RiskAnalysisFilters {
+  selectedRegion: string;
+  selectedRiskType: string;
+  timeHorizon: string;
+}
+
 // ============= STORAGE =============
 
 export interface StorageAdapter {
