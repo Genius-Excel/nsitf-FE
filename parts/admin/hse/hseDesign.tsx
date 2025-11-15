@@ -19,36 +19,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
 
 export const StatisticsCards: React.FC<{ stats: StatCard[] }> = ({ stats }) => {
   if (!stats || stats.length === 0) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></div>
-    );
+    return null;
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+    <MetricsGrid columns={6}>
       {stats.map((stat, idx) => (
-        <div
+        <MetricCard
           key={idx}
-          className="bg-white rounded-lg border border-gray-200 p-4"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm text-gray-600 font-medium">{stat.title}</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">
-                {stat.value}
-              </p>
-              <p className="text-xs text-gray-500 mt-2">{stat.description}</p>
-            </div>
-            <div style={{ color: stat.bgColor }} className="text-2xl">
-              {stat.icon}
-            </div>
-          </div>
-        </div>
+          title={stat.title}
+          value={stat.value}
+          description={stat.description}
+          icon={stat.icon}
+          colorScheme="green"
+        />
       ))}
-    </div>
+    </MetricsGrid>
   );
 };
 
@@ -61,24 +51,24 @@ export const RecentHSEActivities: React.FC<{
 
   if (!activities || activities.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <p className="text-gray-500">No activities found</p>
+      <div className="bg-card rounded-lg border border-border p-6">
+        <p className="text-muted-foreground">No activities found</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
-      <div className="p-6 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">
+    <div className="bg-card rounded-lg border border-border overflow-hidden mb-6">
+      <div className="p-6 border-b border-border">
+        <h2 className="text-lg font-semibold text-foreground">
           Recent HSE Activities
         </h2>
       </div>
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-border">
         {activities.map((activity) => (
           <div
             key={activity.id}
-            className="p-4 hover:bg-gray-50 transition-colors"
+            className="p-6 hover:bg-muted/50 transition-colors"
           >
             <div
               className="flex items-start justify-between cursor-pointer"
@@ -86,11 +76,11 @@ export const RecentHSEActivities: React.FC<{
                 setExpandedId(expandedId === activity.id ? null : activity.id)
               }
             >
-              <div className="flex items-start gap-3 flex-1">
-                <div className="mt-1 text-xl">{activity.icon}</div>
+              <div className="flex items-start gap-4 flex-1">
+                <div className="mt-1 text-xl text-primary">{activity.icon}</div>
                 <div className="flex-1">
-                  <p className="font-semibold text-gray-900">{activity.type}</p>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="font-semibold text-foreground">{activity.type}</p>
+                  <p className="text-sm text-muted-foreground mt-1">
                     {activity.organization} • {activity.date}
                   </p>
                 </div>

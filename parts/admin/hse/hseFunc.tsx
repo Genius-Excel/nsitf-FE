@@ -30,15 +30,23 @@ import {
   StatCard,
   TableDetail,
 } from "@/lib/types/hse";
+import { PageHeader } from "@/components/design-system/PageHeader";
+import { LoadingState } from "@/components/design-system/LoadingState";
+import { ErrorState } from "@/components/design-system/ErrorState";
 
 const http = new HttpService();
 
 export default function HSEManagement() {
-  const [viewMode, setViewMode] = useState<"activities" | "table">("activities");
+  const [viewMode, setViewMode] = useState<"activities" | "table">(
+    "activities"
+  );
   const [activities, setActivities] = useState<HSEActivity[]>([]);
   const [records, setRecords] = useState<HSERecord[]>([]);
-  const [selectedActivity, setSelectedActivity] = useState<HSEActivity | null>(null);
-  const [selectedRecordDetail, setSelectedRecordDetail] = useState<HSERecordDetail | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<HSEActivity | null>(
+    null
+  );
+  const [selectedRecordDetail, setSelectedRecordDetail] =
+    useState<HSERecordDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -139,15 +147,62 @@ export default function HSEManagement() {
   const stats: StatCard[] = useMemo(() => {
     if (!records || records.length === 0) return [];
     const totalActual = records.reduce((acc, r) => acc + r.totalActualOSH, 0);
-    const totalEnlightenment = records.reduce((acc, r) => acc + r.oshEnlightenment, 0);
-    const totalAudit = records.reduce((acc, r) => acc + r.oshInspectionAudit, 0);
-    const totalInvestigation = records.reduce((acc, r) => acc + r.accidentInvestigation, 0);
+    const totalEnlightenment = records.reduce(
+      (acc, r) => acc + r.oshEnlightenment,
+      0
+    );
+    const totalAudit = records.reduce(
+      (acc, r) => acc + r.oshInspectionAudit,
+      0
+    );
+    const totalInvestigation = records.reduce(
+      (acc, r) => acc + r.accidentInvestigation,
+      0
+    );
 
     return [
-      { title: "Total Activities", value: totalActual, description: "Actual OSH Activities", icon: <FileText />, bgColor: "#00a63e" },
-      { title: "OSH Awareness", value: totalEnlightenment, description: "OSH Enlightenment", icon: <Shield />, bgColor: "#22c55e" },
-      { title: "Safety Audits", value: totalAudit, description: "OSH Audits", icon: <CheckCircle />, bgColor: "#3b82f6" },
-      { title: "Incident Investigations", value: totalInvestigation, description: "Accident Investigations", icon: <AlertCircle />, bgColor: "#ef4444" },
+      {
+        title: "Total Actual OSH Activities",
+        value: totalActual,
+        description: "Target OSH Activities",
+        icon: <FileText />,
+        bgColor: "#00a63e",
+      },
+      {
+        title: "Target OSH Activities",
+        value: totalEnlightenment,
+        description: "Target OSH Activities",
+        icon: <Shield />,
+        bgColor: "#22c55e",
+      },
+      {
+        title: "Performance Rate",
+        value: totalAudit,
+        description: "Performance Rate",
+        icon: <CheckCircle />,
+        bgColor: "#3b82f6",
+      },
+      {
+        title: "OSH Enlightenment & Awareness",
+        value: totalInvestigation,
+        description: "Accident Investigations",
+        icon: <AlertCircle />,
+        bgColor: "#ef4444",
+      },
+      {
+        title: "OSH Inspection & Audit",
+        value: totalAudit,
+        description: "OSH Inspections & Audits",
+        icon: <FileText />,
+        bgColor: "#ef4444",
+      },
+      {
+        title: "Accident & Incident Investigation",
+        value: totalInvestigation,
+        description: "Accident Investigations",
+        icon: <Shield />,
+        bgColor: "#ef4444",
+      },
     ];
   }, [records]);
 
@@ -170,55 +225,74 @@ export default function HSEManagement() {
     setIsViewModalOpen(true);
   };
 
-  const handleViewRecordDetails = (record: HSERecord) => fetchRecordDetail(record.id);
+  const handleViewRecordDetails = (record: HSERecord) =>
+    fetchRecordDetail(record.id);
 
   // ================= RENDER =================
-  if (loading) return <div className="p-10 text-center text-gray-500">Loading HSE data...</div>;
-  if (error) return <div className="p-10 text-center text-red-500">{error}</div>;
+  if (loading) {
+    return <LoadingState message="Loading HSE data..." />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6 flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Health, Safety & Environment (HSE)</h1>
-            <p className="text-sm text-gray-600 mt-1">Overview of safety operations and compliance</p>
-          </div>
+        <PageHeader
+          title="Occupational Safety & Health (OSH) View"
+          action={
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode("activities")}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    viewMode === "activities"
+                      ? "bg-green-600 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  <Grid className="w-4 h-4" /> Activities
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    viewMode === "table"
+                      ? "bg-green-600 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  <List className="w-4 h-4" /> Table View
+                </button>
+              </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg p-1">
               <button
-                onClick={() => setViewMode("activities")}
-                className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${viewMode === "activities" ? "bg-green-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                type="button"
+                onClick={handleAddNew}
+                style={{ backgroundColor: "#00a63e" }}
+                className="px-4 py-2 text-sm text-white rounded-md hover:opacity-90 flex items-center gap-2"
               >
-                <Grid className="w-4 h-4" /> Activities
-              </button>
-              <button
-                onClick={() => setViewMode("table")}
-                className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${viewMode === "table" ? "bg-green-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
-              >
-                <List className="w-4 h-4" /> Table View
+                <Plus className="w-4 h-4" /> Add HSE Record
               </button>
             </div>
-
-            <button
-              type="button"
-              onClick={handleAddNew}
-              style={{ backgroundColor: "#00a63e" }}
-              className="px-4 py-2 text-sm text-white rounded-md hover:opacity-90 flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" /> Add HSE Record
-            </button>
-          </div>
-        </div>
+          }
+        />
 
         <StatisticsCards stats={stats} />
 
         {viewMode === "activities" ? (
-          <RecentHSEActivities activities={activities} onViewDetails={handleViewActivity} onEdit={() => {}} />
+          <RecentHSEActivities
+            activities={activities}
+            onViewDetails={handleViewActivity}
+            onEdit={() => {}}
+          />
         ) : (
-          <HSERecordsTable records={records} onViewDetails={handleViewRecordDetails} />
+          <HSERecordsTable
+            records={records}
+            onViewDetails={handleViewRecordDetails}
+          />
         )}
       </div>
 
@@ -232,7 +306,11 @@ export default function HSEManagement() {
         isEditing={false}
       />
 
-      <ViewDetailsModal isOpen={isViewModalOpen} onOpenChange={setIsViewModalOpen} activity={selectedActivity} />
+      <ViewDetailsModal
+        isOpen={isViewModalOpen}
+        onOpenChange={setIsViewModalOpen}
+        activity={selectedActivity}
+      />
 
       {selectedRecordDetail && (
         <HSETableDetailModal

@@ -64,7 +64,7 @@ export const useGetHSEDashboard = () => {
       const res = await httpService.getData(routes.getHSEDashboardMetrics());
       setMetrics(res.data.data);
     } catch (err) {
-      setError(ErrorHandler(err) ?? "An unexpected error occurred");
+      setError(ErrorHandler(err));
     } finally {
       setLoading(false);
     }
@@ -76,7 +76,7 @@ export const useGetHSEDashboard = () => {
       const res = await httpService.getData(routes.getHSEDashboardTable());
       setRecords(res.data.data || []);
     } catch (err) {
-      setError(ErrorHandler(err) ?? "An unexpected error occurred");
+      setError(ErrorHandler(err));
     } finally {
       setLoading(false);
     }
@@ -95,4 +95,3 @@ export const useGetHSEDashboard = () => {
     fetchTableRecords,
   };
 };
-

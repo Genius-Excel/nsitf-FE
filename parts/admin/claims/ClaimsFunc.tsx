@@ -9,13 +9,16 @@ import {
   ClaimsTable,
 } from "./ClaimsDesign";
 import { ClaimDetailModal } from "./ClaimModal";
+import { ClaimsUploadModal } from "./ClaimsUploadModal";
 import { Claim, StatCard } from "../../../lib/types";
-import { chartData, mockClaims } from "@/lib/Constants";
+import { chartData, mockClaims, DEFAULT_REGIONS } from "@/lib/Constants";
+import { PageHeader } from "@/components/design-system/PageHeader";
 
 export default function ClaimsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // Memoize filtered claims to avoid unnecessary recalculations
   const filteredClaims = useMemo(() => {
@@ -103,7 +106,7 @@ export default function ClaimsManagement() {
           statistics.changePercent
         }% from last month`,
         value: statistics.disabilityClaims,
-        icon: <DollarSign />,
+        icon: "",
         bgColor: "#3b82f6",
       },
       {
@@ -227,18 +230,20 @@ export default function ClaimsManagement() {
     URL.revokeObjectURL(url);
   }, [filteredClaims]);
 
+  // Handler for upload success
+  const handleUploadSuccess = useCallback((uploadedClaims: Claim[]) => {
+    console.log("Uploaded claims:", uploadedClaims);
+    // You can add the uploaded claims to your state here
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <header className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Claims and Compensation View
-          </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Track and process employee compensation claims
-          </p>
-        </header>
+        <PageHeader
+          title="Claims and Compensation View"
+          description="Track and process employee compensation claims"
+        />
 
         {/* Statistics Cards */}
         <StatisticsCards stats={stats} />
@@ -255,6 +260,7 @@ export default function ClaimsManagement() {
           onSearchChange={setSearchTerm}
           onFilterClick={handleFilterClick}
           onExport={handleExport}
+          onUpload={() => setIsUploadModalOpen(true)}
         />
 
         {/* Claims Table */}
@@ -265,6 +271,14 @@ export default function ClaimsManagement() {
           claim={selectedClaim}
           isOpen={isModalOpen}
           onClose={handleCloseModal}
+        />
+
+        {/* Claims Upload Modal */}
+        <ClaimsUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          onUploadSuccess={handleUploadSuccess}
+          regions={DEFAULT_REGIONS}
         />
       </div>
     </div>

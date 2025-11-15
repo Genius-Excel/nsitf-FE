@@ -363,6 +363,9 @@ import {
 import { InspectionDetailModal } from "./inspectionModal";
 import { useGetInspectionDashboard } from "@/hooks/getInspectionDashboardMetrics";
 import { InspectionRecord, InspectionStatCard } from "@/lib/types";
+import { PageHeader } from "@/components/design-system/PageHeader";
+import { LoadingState } from "@/components/design-system/LoadingState";
+import { ErrorState } from "@/components/design-system/ErrorState";
 
 const InspectionManagement = () => {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
@@ -396,7 +399,7 @@ const InspectionManagement = () => {
   // ✅ Convert object stats → array for <InspectionStatisticsCards>
   const stats: InspectionStatCard[] = [
     {
-      title: "Total Inspections",
+      title: "Total Inspection",
       value: metric.total_inspections || 0,
       bgColor: "#3b82f6",
       icon: "notice",
@@ -422,7 +425,7 @@ const InspectionManagement = () => {
       icon: "naira-sign",
     },
     {
-      title: "Avg. Performance Rate",
+      title: "Performance Rate",
       value: `${metric.performance_rate || 0}%`,
       bgColor: "#3b82f6",
       icon: "trending-up",
@@ -489,32 +492,32 @@ const InspectionManagement = () => {
   }, [filteredInspections]);
 
   // ✅ Loading & Error states
-  if (loading)
-    return <p className="text-gray-600 p-4">Loading inspection dashboard...</p>;
-  if (error)
-    return <p className="text-red-600 p-4">Error loading data: {error}</p>;
+  if (loading) {
+    return <LoadingState message="Loading inspection dashboard..." />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} />;
+  }
 
   return (
     <div className="space-y-10">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-3xl tracking-tight">Inspection Management</h1>
-          <p className="text-muted-foreground">
-            Track and manage employer inspections, compliance letters, and debt
-            recovery.
-          </p>
-        </div>
-        <PermissionGuard permission="manage_compliance" fallback={null}>
-          <button
-            onClick={() => setIsScheduleModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-          >
-            <Plus size={16} />
-            Schedule Inspection
-          </button>
-        </PermissionGuard>
-      </div>
+      <PageHeader
+        title="Inspection View"
+        description="Track and manage employer inspections, compliance letters, and debt recovery"
+        action={
+          <PermissionGuard permission="manage_compliance" fallback={null}>
+            <button
+              onClick={() => setIsScheduleModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+            >
+              <Plus size={16} />
+              Schedule Inspection
+            </button>
+          </PermissionGuard>
+        }
+      />
 
       {/* Dashboard */}
       <InspectionStatisticsCards stats={stats} />

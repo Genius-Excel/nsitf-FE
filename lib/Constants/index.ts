@@ -7,9 +7,34 @@ import {
   LegalCase,
   DemandNotice,
   ComplianceEntry,
-  HSERecord
+  HSERecord,
+  LegalActivityRecord,
+  KPIMetric,
+  RegionalData,
+  SectorData,
+  MonthlyKPI,
+  ClaimTrendProjection,
+  ContributionGrowth,
+  InspectionTrend,
+  ValuationMetric,
+  ShortTermForecast,
+  LongTermForecast,
+  RiskMetric,
+  TrendlineData,
+  RegionalRiskData,
+  RiskEntity,
 } from "@/lib/types";
-
+import {
+  FileText,
+  CheckCircle2,
+  AlertCircle,
+  Activity,
+  TrendingUp,
+  DollarSign,
+  AlertTriangle,
+  Target,
+  Shield,
+} from "lucide-react";
 
 export const ROLES: Role[] = [
   {
@@ -226,7 +251,7 @@ export const mockHSEActivities: HSEActivity[] = [
     type: "OSH Awareness",
     organization: "ABC Manufacturing Ltd",
     date: "2025-09-15",
-    status: "Completed",
+    status: "resolved",
     details:
       "Comprehensive occupational safety and health awareness training completed. All employees attended the session.",
     icon: "🛡️",
@@ -236,7 +261,7 @@ export const mockHSEActivities: HSEActivity[] = [
     type: "Safety Audit",
     organization: "XYZ Construction",
     date: "2025-09-20",
-    status: "Completed",
+    status: "pending",
     details:
       "Comprehensive safety audit revealed 3 minor violations. Corrective action plan submitted and approved.",
     icon: "✓",
@@ -246,7 +271,7 @@ export const mockHSEActivities: HSEActivity[] = [
     type: "Accident Investigation",
     organization: "Tech Solutions Inc",
     date: "2025-09-22",
-    status: "Under Investigation",
+    status: "closed",
     details:
       "Workplace accident reported on site. Investigation in progress. Preliminary findings suggest equipment malfunction.",
     icon: "⚠️",
@@ -256,7 +281,7 @@ export const mockHSEActivities: HSEActivity[] = [
     type: "Letter Issued",
     organization: "Green Energy Ltd",
     date: "2025-09-25",
-    status: "Follow-up Required",
+    status: "progress",
     details:
       "Safety compliance letter issued. Organization has 30 days to submit corrective measures plan.",
     icon: "📋",
@@ -523,3 +548,607 @@ export const mockHSERecords: HSERecord[] = [
     activitiesPeriod: "Q3 2024",
   },
 ];
+
+export const mockLegalActivities: LegalActivityRecord[] = [
+  {
+    id: "1",
+    region: "Lagos",
+    branch: "Ikeja",
+    recalcitrantEmployers: 45,
+    defaultingEmployers: 32,
+    ecsNo: "ECS-LG-001",
+    planIssued: 28,
+    adr: 15,
+    casesInstituted: 8,
+    sectors: "Manufacturing, Construction",
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "2",
+    region: "Abuja",
+    branch: "Wuse",
+    recalcitrantEmployers: 38,
+    defaultingEmployers: 25,
+    ecsNo: "ECS-AB-002",
+    planIssued: 22,
+    adr: 12,
+    casesInstituted: 6,
+    sectors: "Services, Technology",
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "3",
+    region: "Rivers",
+    branch: "Port Harcourt",
+    recalcitrantEmployers: 29,
+    defaultingEmployers: 18,
+    ecsNo: "ECS-RV-003",
+    planIssued: 16,
+    adr: 9,
+    casesInstituted: 4,
+    sectors: "Oil & Gas, Logistics",
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "4",
+    region: "Kano",
+    branch: "Industrial",
+    recalcitrantEmployers: 22,
+    defaultingEmployers: 15,
+    ecsNo: "ECS-KN-004",
+    planIssued: 12,
+    adr: 7,
+    casesInstituted: 3,
+    sectors: "Agriculture, Textile",
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "5",
+    region: "Oyo",
+    branch: "Ibadan",
+    recalcitrantEmployers: 18,
+    defaultingEmployers: 12,
+    ecsNo: "ECS-OY-005",
+    planIssued: 10,
+    adr: 5,
+    casesInstituted: 2,
+    sectors: "Retail, Food Processing",
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "6",
+    region: "Enugu",
+    branch: "Enugu",
+    recalcitrantEmployers: 16,
+    defaultingEmployers: 10,
+    ecsNo: "ECS-EN-006",
+    planIssued: 8,
+    adr: 4,
+    casesInstituted: 2,
+    sectors: "Mining, Construction",
+    activitiesPeriod: "Q3 2024",
+  },
+  {
+    id: "7",
+    region: "Kaduna",
+    branch: "Kaduna",
+    recalcitrantEmployers: 14,
+    defaultingEmployers: 9,
+    ecsNo: "ECS-KD-007",
+    planIssued: 7,
+    adr: 3,
+    casesInstituted: 1,
+    sectors: "Manufacturing, Services",
+    activitiesPeriod: "Q3 2024",
+  },
+];
+
+// Mock data for KPI metrics
+export const kpiMetrics: KPIMetric[] = [
+  {
+    title: "Total Claims",
+    value: "2,847",
+    change: "+12.5%",
+    trend: "up",
+    status: "success",
+    icon: FileText,
+    target: 3000,
+    actual: 2847,
+  },
+  {
+    title: "Paid Claims",
+    value: "2,124",
+    change: "+8.3%",
+    trend: "up",
+    status: "success",
+    icon: CheckCircle2,
+    target: 2250,
+    actual: 2124,
+  },
+  {
+    title: "Pending Inspections",
+    value: "47",
+    change: "-5.2%",
+    trend: "down",
+    status: "warning",
+    icon: AlertCircle,
+    target: 40,
+    actual: 47,
+  },
+  {
+    title: "Compliance Rate",
+    value: "94%",
+    change: "+2.1%",
+    trend: "up",
+    status: "success",
+    icon: CheckCircle2,
+    target: 95,
+    actual: 94,
+  },
+  {
+    title: "Risk Exposure (₦)",
+    value: "₦1.2B",
+    change: "+3.7%",
+    trend: "up",
+    status: "warning",
+    icon: AlertCircle,
+    target: 1.0,
+    actual: 1.2,
+  },
+  {
+    title: "Avg. Case Duration",
+    value: "18 days",
+    change: "-8.1%",
+    trend: "down",
+    status: "success",
+    icon: Activity,
+    target: 15,
+    actual: 18,
+  },
+];
+
+// Regional performance data
+export const regionalData: RegionalData[] = [
+  {
+    region: "Lagos",
+    compliance: 96,
+    claims: 850,
+    inspections: 125,
+    paid: 780,
+    pending: 70,
+  },
+  {
+    region: "Abuja",
+    compliance: 94,
+    claims: 620,
+    inspections: 98,
+    paid: 580,
+    pending: 40,
+  },
+  {
+    region: "Kano",
+    compliance: 92,
+    claims: 480,
+    inspections: 75,
+    paid: 445,
+    pending: 35,
+  },
+  {
+    region: "Port Harcourt",
+    compliance: 95,
+    claims: 550,
+    inspections: 88,
+    paid: 510,
+    pending: 40,
+  },
+  {
+    region: "Ibadan",
+    compliance: 91,
+    claims: 347,
+    inspections: 62,
+    paid: 309,
+    pending: 38,
+  },
+  {
+    region: "Enugu",
+    compliance: 93,
+    claims: 290,
+    inspections: 54,
+    paid: 265,
+    pending: 25,
+  },
+];
+
+// Sector breakdown
+export const sectorData: SectorData[] = [
+  { name: "Manufacturing", value: 35, claims: 995 },
+  { name: "Construction", value: 28, claims: 797 },
+  { name: "Healthcare", value: 18, claims: 512 },
+  { name: "Transport", value: 12, claims: 341 },
+  { name: "Other", value: 7, claims: 202 },
+];
+
+// Monthly KPI comparison
+export const monthlyKPIs: MonthlyKPI[] = [
+  { month: "Jan", claims: 2400, compliance: 91, inspections: 385, hse: 42 },
+  { month: "Feb", claims: 2550, compliance: 92, inspections: 398, hse: 45 },
+  { month: "Mar", claims: 2680, compliance: 93, inspections: 412, hse: 48 },
+  { month: "Apr", claims: 2720, compliance: 92, inspections: 425, hse: 51 },
+  { month: "May", claims: 2800, compliance: 94, inspections: 438, hse: 54 },
+  { month: "Jun", claims: 2847, compliance: 94, inspections: 447, hse: 57 },
+];
+
+// Chart colors
+export const CHART_COLORS = [
+  "#16a34a",
+  "#3b82f6",
+  "#f59e0b",
+  "#8b5cf6",
+  "#ef4444",
+];
+
+// Forecasting data
+export const claimTrendProjections: ClaimTrendProjection[] = [
+  { period: "Q1 2024", actual: 2400, forecast: 2400, lower: 2280, upper: 2520 },
+  { period: "Q2 2024", actual: 2680, forecast: 2680, lower: 2546, upper: 2814 },
+  { period: "Q3 2024", actual: 2847, forecast: 2850, lower: 2705, upper: 2995 },
+  { period: "Q4 2024", actual: null, forecast: 3050, lower: 2898, upper: 3203 },
+  { period: "Q1 2025", actual: null, forecast: 3280, lower: 3116, upper: 3444 },
+  { period: "Q2 2025", actual: null, forecast: 3520, lower: 3344, upper: 3696 },
+  { period: "Q3 2025", actual: null, forecast: 3780, lower: 3591, upper: 3969 },
+  { period: "Q4 2025", actual: null, forecast: 4050, lower: 3848, upper: 4253 },
+];
+
+export const contributionGrowth: ContributionGrowth[] = [
+  { period: "Q1 2024", actual: 580, forecast: 580, target: 600 },
+  { period: "Q2 2024", actual: 625, forecast: 620, target: 650 },
+  { period: "Q3 2024", actual: 655, forecast: 660, target: 680 },
+  { period: "Q4 2024", actual: null, forecast: 705, target: 720 },
+  { period: "Q1 2025", actual: null, forecast: 755, target: 770 },
+  { period: "Q2 2025", actual: null, forecast: 810, target: 820 },
+  { period: "Q3 2025", actual: null, forecast: 870, target: 880 },
+  { period: "Q4 2025", actual: null, forecast: 935, target: 950 },
+];
+
+export const inspectionTrends: InspectionTrend[] = [
+  { period: "Q1 2024", completed: 385, forecast: 380, planned: 400 },
+  { period: "Q2 2024", completed: 425, forecast: 420, planned: 440 },
+  { period: "Q3 2024", completed: 447, forecast: 445, planned: 460 },
+  { period: "Q4 2024", completed: null, forecast: 475, planned: 490 },
+  { period: "Q1 2025", completed: null, forecast: 510, planned: 525 },
+  { period: "Q2 2025", completed: null, forecast: 545, planned: 560 },
+];
+
+// Valuation summary data
+export const valuationMetrics: ValuationMetric[] = [
+  {
+    title: "Total Liabilities",
+    value: "₦3.8B",
+    change: "+5.2%",
+    status: "warning",
+    icon: DollarSign,
+  },
+  {
+    title: "Reserve Adequacy",
+    value: "127%",
+    change: "+2.1%",
+    status: "success",
+    icon: CheckCircle2,
+  },
+  {
+    title: "Outstanding Claims",
+    value: "₦723M",
+    change: "-3.5%",
+    status: "success",
+    icon: AlertTriangle,
+  },
+  {
+    title: "Expected Inflows",
+    value: "₦2.4B",
+    change: "+8.7%",
+    status: "success",
+    icon: TrendingUp,
+  },
+];
+
+// Short-term forecasts
+export const shortTermForecasts: ShortTermForecast[] = [
+  {
+    quarter: "Q1 2025",
+    claims: 3280,
+    contributions: 755,
+    liabilities: 985,
+    reserves: 1250,
+  },
+  {
+    quarter: "Q2 2025",
+    claims: 3520,
+    contributions: 810,
+    liabilities: 1020,
+    reserves: 1295,
+  },
+  {
+    quarter: "Q3 2025",
+    claims: 3780,
+    contributions: 870,
+    liabilities: 1055,
+    reserves: 1340,
+  },
+  {
+    quarter: "Q4 2025",
+    claims: 4050,
+    contributions: 935,
+    liabilities: 1090,
+    reserves: 1385,
+  },
+];
+
+// Long-term forecasts
+export const longTermForecasts: LongTermForecast[] = [
+  {
+    year: "2025",
+    claims: 14630,
+    contributions: 3370,
+    liabilities: 4150,
+    reserves: 5270,
+    growth: 7.5,
+  },
+  {
+    year: "2026",
+    claims: 16250,
+    contributions: 3740,
+    liabilities: 4580,
+    reserves: 5820,
+    growth: 11.1,
+  },
+  {
+    year: "2027",
+    claims: 18100,
+    contributions: 4160,
+    liabilities: 5050,
+    reserves: 6420,
+    growth: 11.4,
+  },
+  {
+    year: "2028",
+    claims: 20200,
+    contributions: 4630,
+    liabilities: 5570,
+    reserves: 7090,
+    growth: 11.6,
+  },
+  {
+    year: "2029",
+    claims: 22550,
+    contributions: 5150,
+    liabilities: 6140,
+    reserves: 7820,
+    growth: 11.6,
+  },
+];
+
+// Overall risk metrics
+export const riskMetrics: RiskMetric[] = [
+  {
+    title: "Critical Risks",
+    value: "12",
+    description: "Requires immediate attention",
+    category: "critical",
+    icon: AlertTriangle,
+  },
+  {
+    title: "High Risks",
+    value: "47",
+    description: "Active monitoring needed",
+    category: "high",
+    icon: AlertTriangle,
+  },
+  {
+    title: "Medium Risks",
+    value: "128",
+    description: "Under observation",
+    category: "medium",
+    icon: Shield,
+  },
+  {
+    title: "Risk Mitigation Rate",
+    value: "82%",
+    description: "+5.2% from last quarter",
+    category: "success",
+    icon: Target,
+  },
+];
+
+// Trendline comparison data
+export const trendlineData: TrendlineData[] = [
+  {
+    month: "Jan",
+    incidentFreq: 42,
+    complianceImprovement: 88,
+    recoveryRate: 82,
+  },
+  {
+    month: "Feb",
+    incidentFreq: 38,
+    complianceImprovement: 89,
+    recoveryRate: 84,
+  },
+  {
+    month: "Mar",
+    incidentFreq: 35,
+    complianceImprovement: 91,
+    recoveryRate: 85,
+  },
+  {
+    month: "Apr",
+    incidentFreq: 33,
+    complianceImprovement: 92,
+    recoveryRate: 87,
+  },
+  {
+    month: "May",
+    incidentFreq: 29,
+    complianceImprovement: 93,
+    recoveryRate: 88,
+  },
+  {
+    month: "Jun",
+    incidentFreq: 27,
+    complianceImprovement: 94,
+    recoveryRate: 90,
+  },
+];
+
+// Regional risk scores
+export const regionalRiskData: RegionalRiskData[] = [
+  {
+    region: "Lagos",
+    score: 72,
+    employers: 4850,
+    highRisk: 145,
+    mediumRisk: 580,
+    lowRisk: 4125,
+  },
+  {
+    region: "Abuja",
+    score: 65,
+    employers: 3420,
+    highRisk: 98,
+    mediumRisk: 410,
+    lowRisk: 2912,
+  },
+  {
+    region: "Kano",
+    score: 58,
+    employers: 2680,
+    highRisk: 72,
+    mediumRisk: 321,
+    lowRisk: 2287,
+  },
+  {
+    region: "Port Harcourt",
+    score: 62,
+    employers: 2890,
+    highRisk: 85,
+    mediumRisk: 347,
+    lowRisk: 2458,
+  },
+  {
+    region: "Ibadan",
+    score: 54,
+    employers: 2118,
+    highRisk: 58,
+    mediumRisk: 254,
+    lowRisk: 1806,
+  },
+  {
+    region: "Enugu",
+    score: 48,
+    employers: 1500,
+    highRisk: 38,
+    mediumRisk: 180,
+    lowRisk: 1282,
+  },
+];
+
+// Risk entities for drill-down table
+export const riskEntities: RiskEntity[] = [
+  {
+    entity: "ABC Manufacturing Ltd",
+    region: "Lagos",
+    riskScore: 87,
+    category: "High",
+    claims: 45,
+    compliance: 65,
+    incidents: 12,
+  },
+  {
+    entity: "Delta Construction Co.",
+    region: "Abuja",
+    riskScore: 82,
+    category: "High",
+    claims: 38,
+    compliance: 70,
+    incidents: 9,
+  },
+  {
+    entity: "Omega Transport Ltd",
+    region: "Kano",
+    riskScore: 78,
+    category: "High",
+    claims: 32,
+    compliance: 72,
+    incidents: 8,
+  },
+  {
+    entity: "Beta Healthcare Inc.",
+    region: "Port Harcourt",
+    riskScore: 71,
+    category: "Medium",
+    claims: 28,
+    compliance: 78,
+    incidents: 6,
+  },
+  {
+    entity: "Gamma Industries",
+    region: "Ibadan",
+    riskScore: 68,
+    category: "Medium",
+    claims: 24,
+    compliance: 80,
+    incidents: 5,
+  },
+  {
+    entity: "Sigma Engineering",
+    region: "Lagos",
+    riskScore: 65,
+    category: "Medium",
+    claims: 21,
+    compliance: 82,
+    incidents: 4,
+  },
+  {
+    entity: "Theta Logistics",
+    region: "Abuja",
+    riskScore: 58,
+    category: "Medium",
+    claims: 18,
+    compliance: 85,
+    incidents: 3,
+  },
+  {
+    entity: "Epsilon Steel Works",
+    region: "Lagos",
+    riskScore: 52,
+    category: "Low",
+    claims: 15,
+    compliance: 88,
+    incidents: 2,
+  },
+  {
+    entity: "Zeta Pharmaceuticals",
+    region: "Kano",
+    riskScore: 45,
+    category: "Low",
+    claims: 12,
+    compliance: 91,
+    incidents: 1,
+  },
+  {
+    entity: "Eta Food Processing",
+    region: "Ibadan",
+    riskScore: 38,
+    category: "Low",
+    claims: 8,
+    compliance: 94,
+    incidents: 1,
+  },
+];
+
+// Risk color mapping
+export const RISK_COLORS = {
+  critical: "#dc2626",
+  high: "#f59e0b",
+  medium: "#3b82f6",
+  low: "#16a34a",
+};
