@@ -42,15 +42,18 @@ export default function HSEManagement() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [selectedRecord, setSelectedRecord] = useState<HSERecordDetail | null>(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isTableDetailModalOpen, setIsTableDetailModalOpen] = useState(false);
+
+  const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState<HSEFormData>({
     type: "",
     organization: "",
     date: "",
-    status: "",
+    status: "pending",
     details: "",
     recommendations: "",
     safetyComplianceRate: "",

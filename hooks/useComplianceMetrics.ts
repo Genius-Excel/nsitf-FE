@@ -1,63 +1,48 @@
 import { useState, useEffect } from "react";
-import HttpService from "@/services/httpServices";
+import { ComplianceApiResponse, RegionalSummary } from "../lib/types/compliance";
 
-export interface ComplianceMetricCards {
-  total_contributions: number;
-  total_target: number;
-  performance_rate: number;
-  total_employers: number;
-  total_employees: number;
-}
-
-export interface RegionalSummary {
-  region: string;
-  region_id: string;
-  branch: string | null;
-  collected: number;
-  target: number;
-  performance_rate: number;
-  employers: number;
-  employees: number;
-  registration_fees: number;
-  certificate_fees: number;
-  period: string;
-}
-
-export interface ComplianceDashboardResponse {
-  message: string;
-  filters: {
-    period: string;
-    as_of: string;
-  };
-  metric_cards: ComplianceMetricCards;
-  regional_summary: RegionalSummary[];
-}
-
-const httpService = new HttpService();
-
-export const useComplianceMetrics = () => {
-  const [metrics, setMetrics] = useState<ComplianceMetricCards | null>(null);
+const useComplianceData = (apiUrl: string) => {
   const [regionalSummary, setRegionalSummary] = useState<RegionalSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [regions, setRegions] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchMetrics = async () => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
       try {
-        const res = await httpService.getData("/api/dashboard/compliance");
-        const data: ComplianceDashboardResponse = res.data;
-        setMetrics(data.metric_cards);
+        const res = await fetch(apiUrl);
+
+        if (!res.ok) {
+          throw new Error(`API responded with status ${res.status}`);
+        }
+
+        const data: ComplianceApiResponse = await res.json();
+
         setRegionalSummary(data.regional_summary);
-      } catch (err: any) {
-        console.error("Failed to fetch compliance metrics:", err);
-        setError(err.message || "Failed to fetch compliance metrics");
+
+        const regionNames = Array.from(
+          new Set(
+            data.regional_summary
+              .map((r) => r.region ?? "")
+              .filter((region) => region.trim() !== "")
+          )
+        );
+
+        setRegions(regionNames);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMetrics();
-  }, []);
+    fetchData();
+  }, [apiUrl]);
 
-  return { metrics, regionalSummary, loading, error };
+  return { regionalSummary, regions, loading, error };
 };
+
+export default useComplianceData;
