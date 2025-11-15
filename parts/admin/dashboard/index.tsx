@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Users,
-  Shield,
-  ClipboardCheck,
-  HardHat,
-  Scale,
-} from "lucide-react";
+import { Users, Shield, ClipboardCheck, HardHat, Scale } from "lucide-react";
 import { getUserFromStorage, User } from "@/lib/auth";
 import HttpService from "@/services/httpServices";
 import { DashboardLineChart } from "./line-chart";
@@ -59,7 +53,9 @@ export default function DashboardPage() {
         setDashboard(res.data);
       } catch (err: any) {
         console.error("Dashboard fetch error:", err);
-        setError(err.response?.data?.message || err.message || "Failed to fetch data");
+        setError(
+          err.response?.data?.message || err.message || "Failed to fetch data"
+        );
       } finally {
         setLoading(false);
       }
@@ -114,7 +110,9 @@ export default function DashboardPage() {
       setDashboard(res.data);
     } catch (err: any) {
       console.error("Dashboard fetch error:", err);
-      setError(err.response?.data?.message || err.message || "Failed to fetch data");
+      setError(
+        err.response?.data?.message || err.message || "Failed to fetch data"
+      );
     } finally {
       setLoading(false);
     }
@@ -135,11 +133,11 @@ export default function DashboardPage() {
       {/* Header */}
       <PageHeader
         title="APRD Dashboard View for Super User"
-        description={
-          dashboard
-            ? `${dashboard.data.filters.region_name} • ${dashboard.data.filters.period}`
-            : undefined
-        }
+        // description={
+        //   dashboard
+        //     ? `${dashboard.data.filters.region_name} • ${dashboard.data.filters.period}`
+        //     : undefined
+        // }
       />
 
       {/* Metric Cards */}
@@ -147,13 +145,9 @@ export default function DashboardPage() {
         <MetricsGrid columns={5}>
           {statCards.map((card, index) => {
             const Icon = card.icon;
-            const colorSchemes: Array<"green" | "blue" | "purple" | "orange" | "gray"> = [
-              "green",
-              "blue",
-              "purple",
-              "orange",
-              "green",
-            ];
+            const colorSchemes: Array<
+              "green" | "blue" | "purple" | "orange" | "gray"
+            > = ["green", "blue", "purple", "orange", "green"];
 
             return (
               <MetricCard

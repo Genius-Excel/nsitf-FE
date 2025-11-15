@@ -14,6 +14,10 @@ import {
   FileCheck,
   ShieldCheck,
   FileText,
+  ChartBar,
+  Activity,
+  LineChart,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,7 +71,7 @@ const navigationItems = [
     roles: ["admin", "manager"] as Role[],
   },
   {
-    title: "Claims and compensation view",
+    title: "Claims and compensation",
     href: "/dashboard/claims",
     icon: FileText,
     roles: ["admin", "manager", "user"] as Role[],
@@ -79,7 +83,7 @@ const navigationItems = [
     roles: ["admin", "manager", "user"] as Role[],
   },
   {
-    title: "HSE",
+    title: "OSH",
     href: "/dashboard/hse",
     icon: HardHat,
     roles: ["admin", "manager", "user"] as Role[],
@@ -88,6 +92,24 @@ const navigationItems = [
     title: "Legal",
     href: "/dashboard/legal",
     icon: Scale,
+    roles: ["admin", "manager"] as Role[],
+  },
+  {
+    title: "KPI Analytics",
+    href: "/dashboard/kpi",
+    icon: Activity,
+    roles: ["admin", "manager"] as Role[],
+  },
+  {
+    title: "Valuation & Forecasting",
+    href: "/dashboard/valuation",
+    icon: LineChart,
+    roles: ["admin", "manager"] as Role[],
+  },
+  {
+    title: "Risk Analysis",
+    href: "/dashboard/risk",
+    icon: AlertTriangle,
     roles: ["admin", "manager"] as Role[],
   },
 ];
