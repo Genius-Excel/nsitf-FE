@@ -1,6 +1,6 @@
 import React from "react";
 import { Eye } from "lucide-react";
-import type { ComplianceEntry, SortConfig } from "@/lib/types";
+import type { ComplianceEntry, SortConfig, SortField } from "@/lib/types";
 import { TableHeader } from "./TableHeader";
 import { formatCurrency, getAchievementTextColor } from "@/lib/utils";
 
@@ -8,7 +8,7 @@ interface ComplianceTableProps {
   entries: ComplianceEntry[];
   onViewDetails: (entry: ComplianceEntry) => void; // Accept full entry
   sortConfig: SortConfig | null;
-  onSort: (field: keyof ComplianceEntry) => void;
+ onSort: (field: SortField) => void;
 }
 
 export const ComplianceTable: React.FC<ComplianceTableProps> = ({

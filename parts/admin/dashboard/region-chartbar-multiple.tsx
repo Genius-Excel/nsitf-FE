@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart";
-import HttpService from "@/services/httpServices"; 
+import HttpService from "@/services/httpServices";
 
-// --- Types
+
 interface RegionalPerformance {
   region: string;
   target: number;
@@ -17,27 +17,28 @@ interface RegionalPerformance {
 interface DashboardResponse {
   message: string;
   data: {
-    regional_compliance_performance: RegionalPerformance[];
+    regional_compliance_performance: RegionalPerformance[] | null;
   };
 }
 
-interface RegionChartBarMultipleProps {
-  data?: { month: string; claims: number; compliance: number }[];
+interface RegionChartBarProps {
+  data?: { region: string; claims: number; compliance: number }[];
 }
 
-// Chart configuration with gray and green colors
+
 const chartConfig = {
-  claims: { label: "Claims", color: "#6b7280" }, // Gray
-  compliance: { label: "Compliance", color: "#16a34a" }, // Green
+  claims: { label: "Claims", color: "--color-claims" },    
+  compliance: { label: "Compliance", color: "--color-compliance" },
 } satisfies ChartConfig;
 
-export function RegionChartBarMultiple({ data: propData }: RegionChartBarMultipleProps) {
-  const [data, setData] = useState<{ month: string; claims: number; compliance: number }[]>(propData || []);
+
+export function RegionChartBarMultiple({ data: propData }: RegionChartBarProps) {
+  const [data, setData] = useState<{ region: string; claims: number; compliance: number }[]>(propData || []);
   const [loading, setLoading] = useState(!propData);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (propData) return; // skip fetch if data is provided
+    if (propData) return; 
 
     const fetchRegionalData = async () => {
       const http = new HttpService();
@@ -45,9 +46,16 @@ export function RegionChartBarMultiple({ data: propData }: RegionChartBarMultipl
         const res = await http.getData("/api/dashboard/summary");
         const apiData: DashboardResponse = res.data;
 
+        // Safe extraction
+        const regionalData = apiData?.data?.regional_compliance_performance ?? [];
+        if (!Array.isArray(regionalData)) {
+          setData([]);
+          return;
+        }
+
         // Map API response to chart format
-        const formattedData = apiData.data.regional_compliance_performance.map((item) => ({
-          month: item.region,
+        const formattedData = regionalData.map((item) => ({
+          region: item.region,
           claims: item.actual,
           compliance: item.performance_percent,
         }));
@@ -64,9 +72,10 @@ export function RegionChartBarMultiple({ data: propData }: RegionChartBarMultipl
     fetchRegionalData();
   }, [propData]);
 
+  // ---------- Render ----------
   if (loading) return <p>Loading regional chart...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
-  if (!data || data.length === 0) return <p className="text-gray-500">No regional data available.</p>;
+  if (!data.length) return <p className="text-gray-500">No regional data available.</p>;
 
   return (
     <Card className="w-full">
@@ -82,7 +91,7 @@ export function RegionChartBarMultiple({ data: propData }: RegionChartBarMultipl
           >
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
             <XAxis
-              dataKey="month"
+              dataKey="region"
               tickLine={false}
               tickMargin={10}
               axisLine={{ stroke: "#d1d5db" }}
@@ -97,8 +106,10 @@ export function RegionChartBarMultiple({ data: propData }: RegionChartBarMultipl
               fontSize={12}
             />
             <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dashed" />} />
-            <Bar dataKey="claims" fill="var(--color-claims)" radius={4} />
-            <Bar dataKey="compliance" fill="var(--color-compliance)" radius={4} />
+            {Object.entries(chartConfig).map(([key, config]) => (
+  <Bar key={key} dataKey={key} fill={config.color} radius={4} />
+))}
+
           </BarChart>
         </ChartContainer>
       </CardContent>
