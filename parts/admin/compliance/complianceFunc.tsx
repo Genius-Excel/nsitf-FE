@@ -1,307 +1,493 @@
 "use client";
-import React, { useEffect, useRef } from "react";
-import { X, FileText, Download } from "lucide-react";
-import { ComplianceEntry } from "@/lib/types";
-import { formatCurrencyFull } from "@/lib/utils";
+import React, { useState, useEffect, useCallback } from "react";
+import { Download, Plus, Upload, Search } from "lucide-react";
+import * as XLSX from "xlsx";
 
-interface ComplianceDetailModalProps {
-  entry: ComplianceEntry | null;
-  isOpen: boolean;
-  onClose: () => void;
-}
+// Types
+import {
+  ComplianceEntry,
+  DashboardMetrics,
+  FilterConfig,
+  SortField,
+} from "@/lib/types";
 
-export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
-  entry,
-  isOpen,
-  onClose,
-}) => {
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
+// Utils (keep your existing implementations of sortEntries & filterEntries)
+import {
+  formatCurrency,
+  sortEntries,
+  filterEntries,
+  calculateAchievement,
+  generateId,
+} from "@/lib/utils";
+
+// Storage
+import { storage } from "@/lib/storage";
+
+// Constants
+import {
+  STORAGE_KEY,
+  REGIONS_KEY,
+  DEFAULT_REGIONS,
+  DUMMY_DATA,
+} from "@/lib/Constants";
+
+// Components
+import { DashboardCards } from "@/parts/admin/compliance/components/dashboard/DashboardCards";
+import { FilterPanel } from "@/parts/admin/compliance/components/filters/FilterPanel";
+import { ComplianceTable } from "@/parts/admin/compliance/components/tables/ComplianceTable";
+import { AddRegionModal } from "@/parts/admin/compliance/components/modals/AddRegionModal";
+import { ComplianceUploadModal } from "@/parts/admin/compliance/components/modals/ComplianceUploadModal";
+import { NotificationContainer } from "@/parts/admin/compliance/components/notifications/NotificationContainer";
+
+import { ComplianceDetailModal } from "./complianceDetailModal";
+import { PageHeader } from "@/components/design-system/PageHeader";
+import { LoadingState } from "@/components/design-system/LoadingState";
+
+// Hooks
+import { useNotifications } from "@/hooks/compliance/useNotifications";
+import { useModalState } from "@/hooks/compliance/useModalState";
+import { useSort } from "@/hooks/compliance/useSort";
+
+import { useComplianceMetrics } from "@/hooks/compliance/useComplianceMetrics";
+
+const ComplianceDashboard: React.FC = () => {
+  // ============= STATE MANAGEMENT =============
+  const [entries, setEntries] = useState<ComplianceEntry[]>([]);
+  const [regions, setRegions] = useState<string[]>(DEFAULT_REGIONS);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const { sortConfig, onSort } = useSort(null);
+  const [filterConfig, setFilterConfig] = useState<FilterConfig>({
+    regions: [],
+    achievementMin: 0,
+    achievementMax: 100,
+    periodSearch: "",
+    branchSearch: "",
+  });
+
+  // Modals using shared hook
+  const addModal = useModalState(false);
+  const uploadModal = useModalState(false);
+  const detailModal = useModalState(false);
+
+  // selected entry for detail modal (still local)
+  const [selectedEntry, setSelectedEntry] = useState<ComplianceEntry | null>(
+    null
+  );
+
+  // Notifications hook
+  const { notifications, push, remove } = useNotifications();
+
+  // Loading State for local persistence/data load
+  const [isLoading, setIsLoading] = useState(true);
+
+  // ============= REMOTE METRICS (API) =============
+  // pass filterConfig.periodSearch to the hook (if you store "2025-11" or a compatible value there)
+  const { data: apiData, loading: metricsLoading, error: metricsError, refetch: refetchMetrics } =
+    useComplianceMetrics(filterConfig.periodSearch);
+
+  // mapped API pieces
+  const apiMetrics = apiData?.metric_cards;
+  const apiRegionSummary = apiData?.regional_summary ?? [];
+
+  // ============= DATA LOADING (local entries & regions) =============
+  useEffect(() => {
+    void loadData();
+  }, []);
 
   useEffect(() => {
-    if (isOpen) {
-      // Focus on close button when modal opens
-      closeButtonRef.current?.focus();
-
-      // Prevent body scroll
-      document.body.style.overflow = "hidden";
-
-      // Handle escape key
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-          onClose();
-        }
-      };
-      document.addEventListener("keydown", handleEscape);
-
-      return () => {
-        document.body.style.overflow = "unset";
-        document.removeEventListener("keydown", handleEscape);
-      };
+    if (!isLoading) {
+      void saveEntries();
     }
-  }, [isOpen, onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries, isLoading]);
 
-  if (!isOpen || !entry) return null;
+  useEffect(() => {
+    if (!isLoading) {
+      void saveRegions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [regions, isLoading]);
 
-  const shortfall = entry.target - entry.contributionCollected;
-  const isTargetMet = entry.contributionCollected >= entry.target;
+  const loadData = async () => {
+    try {
+      // Load entries
+      const entriesResult = await storage.get(STORAGE_KEY);
+      if (entriesResult?.value) {
+        const loadedEntries = JSON.parse(entriesResult.value);
 
-  const handleDownload = () => {
-    const content = `
-COMPLIANCE RECORD DETAILS
-=========================
-Region: ${entry.region}
-Branch: ${entry.branch || "N/A"}
-Period: ${entry.period}
+        // ============= DATA MIGRATION =============
+        const migratedEntries = (loadedEntries as ComplianceEntry[]).map(
+          (entry) => ({
+            ...entry,
+            registrationFees: entry.registrationFees ?? 0,
+            achievement:
+              entry.achievement ??
+              calculateAchievement(entry.contributionCollected, entry.target),
+            createdAt: entry.createdAt ?? new Date().toISOString(),
+            updatedAt: entry.updatedAt ?? new Date().toISOString(),
+          })
+        );
 
-CONTRIBUTION SUMMARY
-====================
-Target: ${formatCurrencyFull(entry.target)}
-Collected: ${formatCurrencyFull(entry.contributionCollected)}
-Achievement: ${entry.achievement.toFixed(1)}%
-${!isTargetMet ? `Shortfall: ${formatCurrencyFull(shortfall)}` : "✓ Target Met"}
-
-EMPLOYER DATA
-=============
-Employers: ${entry.employersRegistered.toLocaleString()}
-Employees: ${entry.employees.toLocaleString()}
-Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
-    `.trim();
-
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `compliance-${entry.region.replace(/\s+/g, "-")}-${entry.period.replace(
-      /\s+/g,
-      "-"
-    )}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  // Trap focus within modal
-  const handleTabKey = (e: React.KeyboardEvent) => {
-    const focusableElements = modalRef.current?.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    if (!focusableElements || focusableElements.length === 0) return;
-
-    const firstElement = focusableElements[0] as HTMLElement;
-    const lastElement = focusableElements[
-      focusableElements.length - 1
-    ] as HTMLElement;
-
-    if (e.key === "Tab") {
-      if (e.shiftKey && document.activeElement === firstElement) {
-        e.preventDefault();
-        lastElement.focus();
-      } else if (!e.shiftKey && document.activeElement === lastElement) {
-        e.preventDefault();
-        firstElement.focus();
+        setEntries(migratedEntries);
+      } else {
+        setEntries(DUMMY_DATA);
       }
+
+      // Load regions
+      const regionsResult = await storage.get(REGIONS_KEY);
+      if (regionsResult?.value) {
+        setRegions(JSON.parse(regionsResult.value));
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to load data:", error);
+      setEntries(DUMMY_DATA);
+      push("error", "Failed to load data. Using sample data.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const saveEntries = async () => {
+    try {
+      await storage.set(STORAGE_KEY, JSON.stringify(entries));
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to save entries:", error);
+      push("error", "Failed to save data");
+    }
+  };
+
+  const saveRegions = async () => {
+    try {
+      await storage.set(REGIONS_KEY, JSON.stringify(regions));
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to save regions:", error);
+    }
+  };
+
+  // ============= METRICS CALCULATION =============
+  // local fallback metrics (calculated from entries)
+  const calculateMetrics = useCallback((): DashboardMetrics => {
+    const totalActualContributions = entries.reduce(
+      (sum, e) => sum + e.contributionCollected,
+      0
+    );
+    const contributionsTarget = entries.reduce((sum, e) => sum + e.target, 0);
+    const performanceRate =
+      contributionsTarget > 0
+        ? (totalActualContributions / contributionsTarget) * 100
+        : 0;
+    const totalEmployers = entries.reduce(
+      (sum, e) => sum + e.employersRegistered,
+      0
+    );
+    const totalEmployees = entries.reduce((sum, e) => sum + e.employees, 0);
+
+    return {
+      totalActualContributions,
+      contributionsTarget,
+      performanceRate,
+      totalEmployers,
+      totalEmployees,
+    };
+  }, [entries]);
+
+  const localMetrics = calculateMetrics();
+
+  // Final metrics used for display: prefer API metrics when available
+  const displayMetrics: DashboardMetrics = {
+    totalActualContributions:
+      apiMetrics?.total_contributions ?? localMetrics.totalActualContributions,
+    contributionsTarget:
+      apiMetrics?.total_target ?? localMetrics.contributionsTarget,
+    performanceRate: apiMetrics?.performance_rate ?? localMetrics.performanceRate,
+    totalEmployers: apiMetrics?.total_employers ?? localMetrics.totalEmployers,
+    totalEmployees: apiMetrics?.total_employees ?? localMetrics.totalEmployees,
+  };
+
+  // ============= SORTING & FILTERING =============
+  const handleSort = useCallback(
+    (field: SortField) => {
+      onSort(field);
+    },
+    [onSort]
+  );
+
+  const filteredAndSortedEntries = React.useMemo(() => {
+    const filtered = filterEntries(entries, filterConfig, searchTerm);
+    return sortEntries(filtered, sortConfig);
+  }, [entries, filterConfig, searchTerm, sortConfig]);
+
+  // ============= REGION MANAGEMENT =============
+  const handleAddRegion = useCallback(
+    (name: string) => {
+      if (regions.includes(name)) {
+        push("error", "Region already exists");
+        return;
+      }
+      setRegions((prev) => [...prev, name]);
+      push("success", `${name} added to regions`);
+    },
+    [regions, push]
+  );
+
+  const handleDeleteRegion = useCallback(
+    (name: string) => {
+      if (entries.some((e) => e.region === name)) {
+        push("error", "Cannot delete - region is in use");
+        return;
+      }
+
+      if (window.confirm(`Delete region '${name}'? This cannot be undone.`)) {
+        setRegions((prev) => prev.filter((r) => r !== name));
+        push("success", `${name} removed`);
+      }
+    },
+    [entries, push]
+  );
+
+  // ============= ENTRY MANAGEMENT =============
+  const handleAddEntry = useCallback(
+    (data: { region: string; branch: string; target: number; period: string }) => {
+      const newEntry: ComplianceEntry = {
+        id: generateId(),
+        region: data.region,
+        branch: data.branch,
+        contributionCollected: 0,
+        target: data.target,
+        achievement: 0,
+        employersRegistered: 0,
+        employees: 0,
+        registrationFees: 0,
+        certificateFees: 0,
+        period: data.period,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setEntries((prev) => [...prev, newEntry]);
+      push("success", "Region created successfully");
+    },
+    [push]
+  );
+
+  const handleUploadSuccess = useCallback(
+    (uploadedEntries: ComplianceEntry[]) => {
+      setEntries((prev) => [...prev, ...uploadedEntries]);
+      push("success", `${uploadedEntries.length} entries uploaded successfully`);
+      uploadModal.close();
+    },
+    [push, uploadModal]
+  );
+
+  // ============= EXPORT =============
+  const handleExport = useCallback(() => {
+    const exportData = entries.map((e) => ({
+      Region: e.region,
+      Branch: e.branch,
+      "Contribution Collected": e.contributionCollected,
+      Target: e.target,
+      Achievement: `${e.achievement.toFixed(1)}%`,
+      "Employers Registered": e.employersRegistered,
+      Employees: e.employees,
+      "Registration Fees": e.registrationFees,
+      "Certificate Fees": e.certificateFees,
+      Period: e.period,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Compliance Data");
+    XLSX.writeFile(wb, "compliance_data.xlsx");
+    push("success", "Data exported successfully");
+  }, [entries, push]);
+
+  // ============= MODALS & DETAILS =============
+  const openDetailModal = useCallback(
+    (entry: ComplianceEntry) => {
+      setSelectedEntry(entry);
+      detailModal.open();
+    },
+    [detailModal]
+  );
+
+  // ============= KEYBOARD SHORTCUTS =============
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + N: Add Region
+      if ((e.ctrlKey || e.metaKey) && e.key === "n") {
+        e.preventDefault();
+        addModal.open();
+      }
+
+      // Ctrl/Cmd + E: Export
+      if ((e.ctrlKey || e.metaKey) && e.key === "e") {
+        e.preventDefault();
+        handleExport();
+      }
+
+      // Ctrl/Cmd + F: Focus Search
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault();
+        document.getElementById("global-search")?.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleExport, addModal]);
+
+  // ============= LOADING STATE =============
+  if (isLoading) {
+    return <LoadingState message="Loading compliance data..." />;
+  }
+
+  // ============= RENDER =============
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Modal */}
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-        aria-describedby="modal-description"
-        onKeyDown={handleTabKey}
+    <div className="min-h-screen bg-gray-50">
+      {/* Skip to main content link for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-green-600 focus:text-white focus:rounded-md"
       >
-        <div
-          ref={modalRef}
-          className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-        >
-          {/* Header */}
-          <div className="sticky top-0 bg-white border-b px-4 sm:px-6 py-4 flex items-center justify-between z-10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FileText
-                  className="w-5 h-5 text-green-600"
-                  aria-hidden="true"
-                />
-              </div>
-              <div className="min-w-0">
-                <h2
-                  id="modal-title"
-                  className="text-lg sm:text-xl font-bold text-gray-900 truncate"
-                >
-                  Compliance Record
-                </h2>
-                <p
-                  id="modal-description"
-                  className="text-xs sm:text-sm text-gray-600 truncate"
-                >
-                  {entry.region} - {entry.branch || "Main"} - {entry.period}
-                </p>
-              </div>
-            </div>
-            <button
-              ref={closeButtonRef}
-              onClick={onClose}
-              className="flex-shrink-0 p-2 hover:bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
-              aria-label="Close modal"
-            >
-              <X className="w-5 h-5" aria-hidden="true" />
-            </button>
+        Skip to main content
+      </a>
+
+      {/* Notifications */}
+      <NotificationContainer notifications={notifications} onClose={remove} />
+
+      {/* Main Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Header */}
+        <PageHeader
+          title="Compliance View"
+          description="Track contributions, targets, and employer registration"
+        />
+
+        {/* Dashboard Cards (prefer API metrics if available, else local) */}
+        <DashboardCards metrics={displayMetrics} />
+
+        {/* Action Bar */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+          {/* Search */}
+          <div className="flex-1 relative">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              size={18}
+              aria-hidden="true"
+            />
+            <input
+              id="global-search"
+              type="text"
+              placeholder="Search by region, branch, or period..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              aria-label="Search compliance entries"
+            />
           </div>
 
-          {/* Content */}
-          <div className="p-4 sm:p-6 space-y-6">
-            {/* Main Metrics */}
-            <section aria-labelledby="metrics-heading">
-              <h3 id="metrics-heading" className="sr-only">
-                Financial Metrics
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <p className="text-xs text-gray-600 uppercase mb-1">Target</p>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-700">
-                    {formatCurrencyFull(entry.target)}
-                  </p>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <p className="text-xs text-gray-600 uppercase mb-1">
-                    Collected
-                  </p>
-                  <p className="text-xl sm:text-2xl font-bold text-green-700">
-                    {formatCurrencyFull(entry.contributionCollected)}
-                  </p>
-                </div>
-                <div
-                  className={`${
-                    isTargetMet
-                      ? "bg-green-50 border-green-200"
-                      : "bg-orange-50 border-orange-200"
-                  } p-4 rounded-lg border`}
-                >
-                  <p className="text-xs text-gray-600 uppercase mb-1">
-                    Achievement
-                  </p>
-                  <p
-                    className={`text-xl sm:text-2xl font-bold ${
-                      isTargetMet ? "text-green-700" : "text-orange-700"
-                    }`}
-                  >
-                    {entry.achievement.toFixed(1)}%
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            {/* Target Status */}
-            {!isTargetMet && (
-              <div
-                className="bg-orange-50 border border-orange-200 rounded-lg p-4"
-                role="status"
-              >
-                <p className="text-sm font-medium text-orange-800">
-                  Shortfall: {formatCurrencyFull(shortfall)}
-                </p>
-                <p className="text-xs text-orange-600 mt-1">
-                  {((shortfall / entry.target) * 100).toFixed(1)}% below target
-                </p>
-              </div>
-            )}
-
-            {/* Employment Metrics */}
-            <section aria-labelledby="employment-heading">
-              <h3
-                id="employment-heading"
-                className="text-sm font-semibold text-gray-900 mb-3"
-              >
-                Employment Data
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-xs text-gray-600 uppercase mb-1">
-                    Total Employers
-                  </p>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                    {entry.employersRegistered.toLocaleString()}
-                  </p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <p className="text-xs text-gray-600 uppercase mb-1">
-                    Total Employees
-                  </p>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                    {entry.employees.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            {/* Additional Information */}
-            <section aria-labelledby="additional-heading">
-              <h3
-                id="additional-heading"
-                className="text-sm font-semibold text-gray-900 mb-3"
-              >
-                Additional Information
-              </h3>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Certificate Fees:</span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {formatCurrencyFull(entry.certificateFees)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Region:</span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {entry.region}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Branch:</span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {entry.branch || "Main Branch"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Period:</span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {entry.period}
-                  </span>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 border-t px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-end gap-3">
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
-              onClick={onClose}
-              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+              onClick={() => uploadModal.open()}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors text-sm font-medium"
+              aria-label="Upload regional data"
             >
-              Close
+              <Upload size={18} aria-hidden="true" />
+              <span>Upload Regional Data</span>
             </button>
             <button
-              onClick={handleDownload}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+              onClick={handleExport}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors text-sm font-medium"
+              aria-label="Export data to Excel"
+              title="Keyboard shortcut: Ctrl+E"
             >
-              <Download className="w-4 h-4" aria-hidden="true" />
-              Download Report
+              <Download size={18} aria-hidden="true" />
+              <span>Export</span>
+            </button>
+            <button
+              onClick={() => addModal.open()}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors text-sm font-medium"
+              aria-label="Create new region"
+              title="Keyboard shortcut: Ctrl+N"
+            >
+              <Plus size={18} aria-hidden="true" />
+              <span>Create Region</span>
             </button>
           </div>
         </div>
+
+        {/* Filter Panel */}
+        <FilterPanel
+          filterConfig={filterConfig}
+          onFilterChange={setFilterConfig}
+          availableRegions={regions}
+          totalEntries={entries.length}
+          filteredCount={filteredAndSortedEntries.length}
+        />
+
+        {/* Main Content */}
+        <main id="main-content">
+         <ComplianceTable
+  entries={entries}
+  onViewDetails={(entry: ComplianceEntry) => {
+    setSelectedEntry(entry);
+    detailModal.open();
+  }}
+  sortConfig={sortConfig}
+  onSort={onSort}
+/>
+
+        </main>
+
+        {/* Bulk Upload Instructions */}
+        <div className="mt-6 p-4 sm:p-6 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-medium text-gray-900 mb-2">Bulk Upload Instructions</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Upload compliance data in bulk using Excel or CSV format. Click the
+            Upload button above to get started and download a template for your
+            selected region.
+          </p>
+          <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+            <li>Select a region before uploading</li>
+            <li>Download the region-specific template</li>
+            <li>Fill in all required fields</li>
+            <li>Upload the completed file for validation</li>
+          </ul>
+        </div>
       </div>
-    </>
+
+      {/* Modals */}
+      <AddRegionModal
+        isOpen={addModal.isOpen}
+        onClose={addModal.close}
+        onAddEntry={handleAddEntry}
+        regions={regions}
+        onAddRegion={handleAddRegion}
+        onDeleteRegion={handleDeleteRegion}
+      />
+
+      <ComplianceUploadModal
+        isOpen={uploadModal.isOpen}
+        onClose={uploadModal.close}
+        onUploadSuccess={handleUploadSuccess}
+        regions={regions}
+      />
+
+      <ComplianceDetailModal
+        entry={selectedEntry}
+        isOpen={detailModal.isOpen}
+        onClose={() => {
+          detailModal.close();
+          setSelectedEntry(null);
+        }}
+      />
+    </div>
   );
 };
+
+export default ComplianceDashboard;
