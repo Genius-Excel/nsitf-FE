@@ -1,32 +1,76 @@
-export interface Stat {
-  title: string;
-  value: string;
-  change: string;
-  changeColor: string;
-  icon: string;
-  gradient: string;
+// ============= CORRECT TYPE DEFINITIONS =============
+// These match the ACTUAL API response structure
+
+export interface Metric {
+  value: number;
+  change_percent: number;
+  trend: "up" | "down" | "neutral";
 }
 
-export interface Activity {
-  user: string;
-  avatar: string;
-  action: string;
-  time: string;
-  type: string;
-  typeColor: string;
-  gradient: string;
-  borderColor: string;
+export interface MonthlyPerformanceData {
+  month: string;
+  claims: number;
+  inspections: number;
+  hse: number;
 }
 
-export interface Event {
-  category: string;
-  categoryColor: string;
-  date: string;
-  title: string;
-  description: string;
-  attendees: string[];
-  additionalAttendees: number;
-  buttonColor: string;
-  gradient: string;
-  borderColor: string;
+export interface RegionalPerformanceData {
+  region: string;
+  target: number;
+  actual: number;
+  performance_percent: number;
+}
+
+export interface ClaimsDistribution {
+  medical_refunds: number;
+  disability: number;
+  death: number;
+  loss_of_productivity: number;
+}
+
+// The API wraps arrays in objects with "data" and "scale" properties
+export interface MonthlyPerformanceTrend {
+  data: MonthlyPerformanceData[];
+  scale: {
+    max: number;
+    ticks: number[];
+  };
+}
+
+export interface RegionalCompliancePerformance {
+  data: RegionalPerformanceData[];
+  scale: {
+    max: number;
+    ticks: number[];
+  };
+}
+
+export interface DashboardSummaryResponse {
+  message: string;
+  data: {
+    filters: {
+      region_id: number | null;
+      region_name: string;
+      period: string;
+      previous_period: string;
+    };
+    metric_cards: {
+      total_actual_contributions: Metric;
+      total_employers_registered: Metric;
+      total_claims_paid: Metric;
+      total_claims_beneficiaries: Metric;
+      total_osh_activities: Metric;
+    };
+    claims_distribution: ClaimsDistribution;
+    monthly_performance_trend: MonthlyPerformanceTrend;
+    regional_compliance_performance: RegionalCompliancePerformance;
+  };
+}
+
+// ============= QUERY PARAMETERS =============
+
+export interface DashboardQueryParams {
+  month?: number; // 1-12
+  year?: number; // 4-digit year
+  region_id?: number;
 }

@@ -1,18 +1,15 @@
 export interface User {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
+  phone_number: string;
   role: string;
-  status: "Active" | "Inactive";
-  date_added?: string;
-  first_name?: string | undefined;
-  last_name?: string | undefined;
-  phone_number?: string;
-  department?: string;
-  region?: string;
-  created_at?: string;
-  updated_at?: string;
-  account_status?: string;
+  account_status: "active" | "inactive";
+  department: string | null;
+  region: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Claim {
@@ -27,13 +24,12 @@ export interface Claim {
     | "Loss of Productivity";
   amountRequested: number;
   amountPaid: number;
-
   status: "Paid" | "Pending" | "Under Review" | "Rejected";
   dateProcessed: string;
-  datePaid: string;
-  sector: string;
-  class: string;
-  date: string;
+  datePaid: string | null;
+  sector: string | null;
+  class: string | null;
+  date: string | null;
 }
 
 export interface InspectionRecord {
@@ -75,10 +71,10 @@ export interface NewUserForm {
   first_name: string;
   last_name: string;
   email: string;
-  phone: string;
+  phone_number: string;
   role: string;
   department: string;
-  branch: string;
+  region: string;
 }
 
 export interface Role {

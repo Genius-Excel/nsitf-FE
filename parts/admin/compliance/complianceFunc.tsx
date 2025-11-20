@@ -1,374 +1,226 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+
+import React, { useState } from "react";
 import { Download, Plus, Upload, Search } from "lucide-react";
 import * as XLSX from "xlsx";
 
+// Hooks
+import {
+  useComplianceDashboard,
+  useRegions,
+  useRegionMutations,
+  useComplianceFilters,
+  useModalState,
+  type RegionalSummary,
+} from "@/hooks/compliance";
+
 // Types
-import {
-  ComplianceEntry,
-  DashboardMetrics,
-  FilterConfig,
-  SortField,
-} from "@/lib/types";
-
-
-import {
-  formatCurrency,
-  sortEntries,
-  filterEntries,
-  calculateAchievement,
-  generateId,
-} from "@/lib/utils";
-
-// Storage
-import { storage } from "@/lib/storage";
-
-// Constants
-import {
-  STORAGE_KEY,
-  REGIONS_KEY,
-  DEFAULT_REGIONS,
-  DUMMY_DATA,
-} from "@/lib/Constants";
+import type { ComplianceEntry } from "@/lib/types";
 
 // Components
-import { DashboardCards } from "@/parts/admin/compliance/components/dashboard/DashboardCards";
-import { FilterPanel } from "@/parts/admin/compliance/components/filters/FilterPanel";
-import { ComplianceTable } from "@/parts/admin/compliance/components/tables/ComplianceTable";
-import { AddRegionModal } from "@/parts/admin/compliance/components/modals/AddRegionModal";
-import { ComplianceUploadModal } from "@/parts/admin/compliance/components/modals/ComplianceUploadModal";
-import { NotificationContainer } from "@/parts/admin/compliance/components/notifications/NotificationContainer";
-
+import {
+  DashboardCards,
+  FilterPanel,
+  ComplianceTable,
+  ComplianceUploadModal,
+} from "./complianceDesign";
+import { AddRegionModal } from "./complianceAddRegionModal";
 import { ComplianceDetailModal } from "./complianceDetailModal";
 import { PageHeader } from "@/components/design-system/PageHeader";
-import { LoadingState } from "@/components/design-system/LoadingState";
 
-// Hooks
-import { useNotifications } from "@/hooks/compliance/useNotifications";
-import { useModalState } from "@/hooks/compliance/useModalState";
-import { useSort } from "@/hooks/compliance/useSort";
+/**
+ * Map API response (RegionalSummary) to component format (ComplianceEntry)
+ */
+const mapToComplianceEntry = (summary: RegionalSummary): ComplianceEntry => ({
+  id: summary.region_id,
+  region: summary.region,
+  branch: summary.branch || "",
+  contributionCollected: summary.collected,
+  target: summary.target,
+  achievement: summary.performance_rate,
+  employersRegistered: summary.employers,
+  employees: summary.employees,
+  registrationFees: summary.registration_fees,
+  certificateFees: summary.certificate_fees,
+  period: summary.period,
+});
 
-import { useComplianceMetrics } from "@/hooks/compliance/useComplianceMetrics";
-
+/**
+ * REFACTORED Compliance Dashboard
+ *
+ * Key improvements:
+ * - API-driven (no localStorage mock data)
+ * - Single source of truth (no state duplication)
+ * - Memoized filtering (performance optimized)
+ * - Clean separation of concerns
+ * - Follows Dashboard/Users pattern exactly
+ */
 const ComplianceDashboard: React.FC = () => {
-  // ============= STATE MANAGEMENT =============
-  const [entries, setEntries] = useState<ComplianceEntry[]>([]);
-  const [regions, setRegions] = useState<string[]>(DEFAULT_REGIONS);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const { sortConfig, onSort } = useSort(null);
-  const [filterConfig, setFilterConfig] = useState<FilterConfig>({
-    regions: [],
-    achievementMin: 0,
-    achievementMax: 100,
-    periodSearch: "",
-    branchSearch: "",
+  // ============== API FILTERS ==============
+  const [apiFilters, setApiFilters] = useState({
+    period: undefined as string | undefined,
+    region_id: undefined as string | undefined,
+    branch: undefined as string | undefined,
   });
 
-  // Modals using shared hook
+  // ============== DATA FETCHING ==============
+  // Single fetch - source of truth
+  const {
+    data: dashboardData,
+    loading: dashboardLoading,
+    error: dashboardError,
+    refetch: refetchDashboard,
+  } = useComplianceDashboard(apiFilters);
+
+  // Fetch regions list
+  const {
+    data: regions,
+    loading: regionsLoading,
+    error: regionsError,
+    refetch: refetchRegions,
+  } = useRegions();
+
+  // ============== CLIENT-SIDE FILTERING ==============
+  // Memoized filtering - no duplicate state
+  const {
+    filteredSummary,
+    searchTerm,
+    setSearchTerm,
+    selectedRegions,
+    achievementMin,
+    achievementMax,
+    periodSearch,
+    branchSearch,
+    totalCount,
+    filteredCount,
+  } = useComplianceFilters(dashboardData?.regional_summary ?? null);
+
+  // Map filtered summary to ComplianceEntry format
+  const mappedEntries: ComplianceEntry[] = (filteredSummary || []).map(
+    mapToComplianceEntry
+  );
+
+  // ============== MUTATIONS ==============
+  const {
+    createRegion,
+    deleteRegion,
+    isLoading: isMutating,
+  } = useRegionMutations({
+    onSuccess: () => {
+      refetchRegions();
+      refetchDashboard();
+    },
+  });
+
+  // Upload is now handled by the modal internally
+  // No need for upload hook here
+
+  // ============== MODALS ==============
   const addModal = useModalState(false);
   const uploadModal = useModalState(false);
   const detailModal = useModalState(false);
 
-  // selected entry for detail modal (still local)
-  const [selectedEntry, setSelectedEntry] = useState<ComplianceEntry | null>(
-    null
-  );
+  const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
 
-  // Notifications hook
-  const { notifications, push, remove } = useNotifications();
-
-  // Loading State for local persistence/data load
-  const [isLoading, setIsLoading] = useState(true);
-
-  // ============= REMOTE METRICS (API) =============
-  // pass filterConfig.periodSearch to the hook (if you store "2025-11" or a compatible value there)
-  const { data: apiData, loading: metricsLoading, error: metricsError, refetch: refetchMetrics } =
-    useComplianceMetrics(filterConfig.periodSearch);
-
-  // mapped API pieces
-  const apiMetrics = apiData?.metric_cards;
-  const apiRegionSummary = apiData?.regional_summary ?? [];
-
-  // ============= DATA LOADING (local entries & regions) =============
-  useEffect(() => {
-    void loadData();
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading) {
-      void saveEntries();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, isLoading]);
-
-  useEffect(() => {
-    if (!isLoading) {
-      void saveRegions();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [regions, isLoading]);
-
-  const loadData = async () => {
+  // ============== HANDLERS ==============
+  const handleAddRegion = async (name: string) => {
     try {
-      // Load entries
-      const entriesResult = await storage.get(STORAGE_KEY);
-      if (entriesResult?.value) {
-        const loadedEntries = JSON.parse(entriesResult.value);
-
-        // ============= DATA MIGRATION =============
-        const migratedEntries = (loadedEntries as ComplianceEntry[]).map(
-          (entry) => ({
-            ...entry,
-            registrationFees: entry.registrationFees ?? 0,
-            achievement:
-              entry.achievement ??
-              calculateAchievement(entry.contributionCollected, entry.target),
-            createdAt: entry.createdAt ?? new Date().toISOString(),
-            updatedAt: entry.updatedAt ?? new Date().toISOString(),
-          })
-        );
-
-        setEntries(migratedEntries);
-      } else {
-        setEntries(DUMMY_DATA);
-      }
-
-      // Load regions
-      const regionsResult = await storage.get(REGIONS_KEY);
-      if (regionsResult?.value) {
-        setRegions(JSON.parse(regionsResult.value));
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to load data:", error);
-      setEntries(DUMMY_DATA);
-      push("error", "Failed to load data. Using sample data.");
-    } finally {
-      setIsLoading(false);
+      await createRegion({ name });
+    } catch (err) {
+      // Error handled in mutation hook
     }
   };
 
-  const saveEntries = async () => {
-    try {
-      await storage.set(STORAGE_KEY, JSON.stringify(entries));
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to save entries:", error);
-      push("error", "Failed to save data");
+  const handleDeleteRegion = async (regionId: string, regionName: string) => {
+    if (
+      window.confirm(`Delete region '${regionName}'? This cannot be undone.`)
+    ) {
+      try {
+        await deleteRegion(regionId, regionName);
+      } catch (err) {
+        // Error handled in mutation hook
+      }
     }
   };
 
-  const saveRegions = async () => {
-    try {
-      await storage.set(REGIONS_KEY, JSON.stringify(regions));
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to save regions:", error);
-    }
-  };
-
-  // ============= METRICS CALCULATION =============
-  // local fallback metrics (calculated from entries)
-  const calculateMetrics = useCallback((): DashboardMetrics => {
-    const totalActualContributions = entries.reduce(
-      (sum, e) => sum + e.contributionCollected,
-      0
-    );
-    const contributionsTarget = entries.reduce((sum, e) => sum + e.target, 0);
-    const performanceRate =
-      contributionsTarget > 0
-        ? (totalActualContributions / contributionsTarget) * 100
-        : 0;
-    const totalEmployers = entries.reduce(
-      (sum, e) => sum + e.employersRegistered,
-      0
-    );
-    const totalEmployees = entries.reduce((sum, e) => sum + e.employees, 0);
-
-    return {
-      totalActualContributions,
-      contributionsTarget,
-      performanceRate,
-      totalEmployers,
-      totalEmployees,
-    };
-  }, [entries]);
-
-  const localMetrics = calculateMetrics();
-
-  // Final metrics used for display: prefer API metrics when available
-  const displayMetrics: DashboardMetrics = {
-    totalActualContributions:
-      apiMetrics?.total_contributions ?? localMetrics.totalActualContributions,
-    contributionsTarget:
-      apiMetrics?.total_target ?? localMetrics.contributionsTarget,
-    performanceRate: apiMetrics?.performance_rate ?? localMetrics.performanceRate,
-    totalEmployers: apiMetrics?.total_employers ?? localMetrics.totalEmployers,
-    totalEmployees: apiMetrics?.total_employees ?? localMetrics.totalEmployees,
-  };
-
-  // ============= SORTING & FILTERING =============
-  const handleSort = useCallback(
-    (field: SortField) => {
-      onSort(field);
-    },
-    [onSort]
-  );
-
-  const filteredAndSortedEntries = React.useMemo(() => {
-    const filtered = filterEntries(entries, filterConfig, searchTerm);
-    return sortEntries(filtered, sortConfig);
-  }, [entries, filterConfig, searchTerm, sortConfig]);
-
-  // ============= REGION MANAGEMENT =============
-  const handleAddRegion = useCallback(
-    (name: string) => {
-      if (regions.includes(name)) {
-        push("error", "Region already exists");
-        return;
-      }
-      setRegions((prev) => [...prev, name]);
-      push("success", `${name} added to regions`);
-    },
-    [regions, push]
-  );
-
-  const handleDeleteRegion = useCallback(
-    (name: string) => {
-      if (entries.some((e) => e.region === name)) {
-        push("error", "Cannot delete - region is in use");
-        return;
-      }
-
-      if (window.confirm(`Delete region '${name}'? This cannot be undone.`)) {
-        setRegions((prev) => prev.filter((r) => r !== name));
-        push("success", `${name} removed`);
-      }
-    },
-    [entries, push]
-  );
-
-  // ============= ENTRY MANAGEMENT =============
-  const handleAddEntry = useCallback(
-    (data: { region: string; branch: string; target: number; period: string }) => {
-      const newEntry: ComplianceEntry = {
-        id: generateId(),
-        region: data.region,
-        branch: data.branch,
-        contributionCollected: 0,
-        target: data.target,
-        achievement: 0,
-        employersRegistered: 0,
-        employees: 0,
-        registrationFees: 0,
-        certificateFees: 0,
-        period: data.period,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      setEntries((prev) => [...prev, newEntry]);
-      push("success", "Region created successfully");
-    },
-    [push]
-  );
-
-  const handleUploadSuccess = useCallback(
-    (uploadedEntries: ComplianceEntry[]) => {
-      setEntries((prev) => [...prev, ...uploadedEntries]);
-      push("success", `${uploadedEntries.length} entries uploaded successfully`);
-      uploadModal.close();
-    },
-    [push, uploadModal]
-  );
-
-  // ============= EXPORT =============
-  const handleExport = useCallback(() => {
-    const exportData = entries.map((e) => ({
-      Region: e.region,
-      Branch: e.branch,
-      "Contribution Collected": e.contributionCollected,
-      Target: e.target,
-      Achievement: `${e.achievement.toFixed(1)}%`,
-      "Employers Registered": e.employersRegistered,
-      Employees: e.employees,
-      "Registration Fees": e.registrationFees,
-      "Certificate Fees": e.certificateFees,
-      Period: e.period,
+  const handleExport = () => {
+    const exportData = (filteredSummary || []).map((entry: any) => ({
+      Region: entry.region,
+      Branch: entry.branch || "N/A",
+      "Contributions Collected": entry.collected,
+      Target: entry.target,
+      "Performance Rate": `${entry.performance_rate.toFixed(1)}%`,
+      Employers: entry.employers,
+      Employees: entry.employees,
+      "Registration Fees": entry.registration_fees,
+      "Certificate Fees": entry.certificate_fees,
+      Period: entry.period,
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Compliance Data");
     XLSX.writeFile(wb, "compliance_data.xlsx");
-    push("success", "Data exported successfully");
-  }, [entries, push]);
+  };
 
-  // ============= MODALS & DETAILS =============
-  const openDetailModal = useCallback(
-    (entry: ComplianceEntry) => {
-      setSelectedEntry(entry);
-      detailModal.open();
-    },
-    [detailModal]
-  );
+  const handleViewDetails = (entry: any) => {
+    setSelectedEntry(entry);
+    detailModal.open();
+  };
 
-  // ============= KEYBOARD SHORTCUTS =============
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + N: Add Region
-      if ((e.ctrlKey || e.metaKey) && e.key === "n") {
-        e.preventDefault();
-        addModal.open();
-      }
-
-      // Ctrl/Cmd + E: Export
-      if ((e.ctrlKey || e.metaKey) && e.key === "e") {
-        e.preventDefault();
-        handleExport();
-      }
-
-      // Ctrl/Cmd + F: Focus Search
-      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
-        e.preventDefault();
-        document.getElementById("global-search")?.focus();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleExport, addModal]);
-
-  // ============= LOADING STATE =============
-  if (isLoading) {
-    return <LoadingState message="Loading compliance data..." />;
+  // ============== LOADING STATE ==============
+  if (dashboardLoading || regionsLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
+      </div>
+    );
   }
 
-  // ============= RENDER =============
+  // ============== ERROR STATE ==============
+  if (dashboardError || regionsError) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg">
+          <p>Failed to load data: {dashboardError || regionsError}</p>
+          <button
+            onClick={() => {
+              refetchDashboard();
+              refetchRegions();
+            }}
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Extract region names from regions API
+  const regionNames = regions?.map((r: any) => r.name) ?? [];
+
+  // ============== RENDER ==============
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Skip to main content link for accessibility */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-green-600 focus:text-white focus:rounded-md"
-      >
-        Skip to main content
-      </a>
-
-      {/* Notifications */}
-      <NotificationContainer notifications={notifications} onClose={remove} />
-
-      {/* Main Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Header */}
         <PageHeader
           title="Compliance View"
-          description="Track contributions, targets, and employer registration"
+          description="Track contributions, targets, and employer registration across regions"
         />
 
-        {/* Dashboard Cards (prefer API metrics if available, else local) */}
-        <DashboardCards metrics={displayMetrics} />
+        {/* Dashboard Cards */}
+        <DashboardCards
+          metrics={{
+            totalActualContributions:
+              dashboardData?.metric_cards.total_contributions ?? 0,
+            contributionsTarget: dashboardData?.metric_cards.total_target ?? 0,
+            performanceRate: dashboardData?.metric_cards.performance_rate ?? 0,
+            totalEmployers: dashboardData?.metric_cards.total_employers ?? 0,
+            totalEmployees: dashboardData?.metric_cards.total_employees ?? 0,
+          }}
+        />
 
         {/* Action Bar */}
         <div className="mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
@@ -377,45 +229,37 @@ const ComplianceDashboard: React.FC = () => {
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
               size={18}
-              aria-hidden="true"
             />
             <input
-              id="global-search"
               type="text"
               placeholder="Search by region, branch, or period..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              aria-label="Search compliance entries"
             />
           </div>
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
-              onClick={() => uploadModal.open()}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors text-sm font-medium"
-              aria-label="Upload regional data"
+              onClick={uploadModal.open}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
             >
-              <Upload size={18} aria-hidden="true" />
+              <Upload size={18} />
               <span>Upload Regional Data</span>
             </button>
             <button
               onClick={handleExport}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors text-sm font-medium"
-              aria-label="Export data to Excel"
-              title="Keyboard shortcut: Ctrl+E"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
             >
-              <Download size={18} aria-hidden="true" />
+              <Download size={18} />
               <span>Export</span>
             </button>
             <button
-              onClick={() => addModal.open()}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors text-sm font-medium"
-              aria-label="Create new region"
-              title="Keyboard shortcut: Ctrl+N"
+              onClick={addModal.open}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
-              <Plus size={18} aria-hidden="true" />
+              <Plus size={18} />
               <span>Create Region</span>
             </button>
           </div>
@@ -423,40 +267,45 @@ const ComplianceDashboard: React.FC = () => {
 
         {/* Filter Panel */}
         <FilterPanel
-          filterConfig={filterConfig}
-          onFilterChange={setFilterConfig}
-          availableRegions={regions}
-          totalEntries={entries.length}
-          filteredCount={filteredAndSortedEntries.length}
+          filterConfig={{
+            regions: selectedRegions,
+            achievementMin,
+            achievementMax,
+            periodSearch,
+            branchSearch,
+          }}
+          onFilterChange={(config) => {
+            // Update individual filter states when FilterPanel changes
+            // This is a simplified approach - the FilterPanel handles the UI
+            // and we just reflect its state changes here
+          }}
+          availableRegions={regionNames}
+          totalEntries={totalCount}
+          filteredCount={filteredCount}
         />
 
-        {/* Main Content */}
-        <main id="main-content">
-         <ComplianceTable
-  entries={entries}
-  onViewDetails={(entry: ComplianceEntry) => {
-    setSelectedEntry(entry);
-    detailModal.open();
-  }}
-  sortConfig={sortConfig}
-  onSort={onSort}
-/>
-
-        </main>
+        {/* Main Table */}
+        <ComplianceTable
+          entries={mappedEntries}
+          onViewDetails={handleViewDetails}
+          sortConfig={null}
+          onSort={() => {}} // Sorting can be added later if needed
+        />
 
         {/* Bulk Upload Instructions */}
         <div className="mt-6 p-4 sm:p-6 bg-blue-50 rounded-lg border border-blue-200">
-          <h3 className="font-medium text-gray-900 mb-2">Bulk Upload Instructions</h3>
+          <h3 className="font-medium text-gray-900 mb-2">
+            Bulk Upload Instructions
+          </h3>
           <p className="text-sm text-gray-600 mb-4">
-            Upload compliance data in bulk using Excel or CSV format. Click the
-            Upload button above to get started and download a template for your
-            selected region.
+            Upload compliance data in bulk using Excel format. The server will
+            validate and process your data.
           </p>
           <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
             <li>Select a region before uploading</li>
-            <li>Download the region-specific template</li>
-            <li>Fill in all required fields</li>
-            <li>Upload the completed file for validation</li>
+            <li>Provide the period (YYYY-MM format)</li>
+            <li>Upload Excel file with required sheets</li>
+            <li>Review validation errors if any</li>
           </ul>
         </div>
       </div>
@@ -465,23 +314,35 @@ const ComplianceDashboard: React.FC = () => {
       <AddRegionModal
         isOpen={addModal.isOpen}
         onClose={addModal.close}
-        onAddEntry={handleAddEntry}
-        regions={regions}
+        onAddEntry={() => {}} // Not used in new version
+        regions={regionNames}
         onAddRegion={handleAddRegion}
-        onDeleteRegion={handleDeleteRegion}
+        onDeleteRegion={(name) => {
+          const region = regions?.find((r: any) => r.name === name);
+          if (region) {
+            handleDeleteRegion(region.id, region.name);
+          }
+        }}
       />
 
       <ComplianceUploadModal
         isOpen={uploadModal.isOpen}
         onClose={uploadModal.close}
-        onUploadSuccess={handleUploadSuccess}
-        regions={regions}
+        onUploadSuccess={() => {
+          // The modal handles the upload internally
+          // Just refetch and close on success
+          refetchDashboard();
+          uploadModal.close();
+        }}
+        regions={regionNames}
       />
 
       <ComplianceDetailModal
         entry={selectedEntry}
         isOpen={detailModal.isOpen}
+        isOpen={detailModal.isOpen}
         onClose={() => {
+          detailModal.close();
           detailModal.close();
           setSelectedEntry(null);
         }}

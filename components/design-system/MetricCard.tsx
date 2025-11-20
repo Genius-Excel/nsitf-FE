@@ -7,6 +7,8 @@ interface MetricCardProps {
   icon?: React.ReactNode;
   colorScheme?: "green" | "blue" | "purple" | "orange" | "gray";
   description?: string;
+  subtitle?: string;
+  trend?: string | number;
 }
 
 const colorSchemes = {
@@ -32,6 +34,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   icon,
   colorScheme = "green",
   description,
+  subtitle,
+  trend,
 }) => {
   return (
     <div
@@ -44,7 +48,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           {title}
         </p>
         {icon && (
-          <div className={`opacity-60 ${iconColors[colorScheme]}`} aria-hidden="true">
+          <div
+            className={`opacity-60 ${iconColors[colorScheme]}`}
+            aria-hidden="true"
+          >
             {icon}
           </div>
         )}
@@ -55,6 +62,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       {change && (
         <p className="text-xs text-green-600 mt-2 font-medium">{change}</p>
       )}
+      {trend && (
+        <p className="text-xs text-blue-600 mt-2 font-medium">
+          {typeof trend === "string" && (trend === "up" || trend === "down")
+            ? `Trend: ${trend}`
+            : `Trend: ${trend}`}
+        </p>
+      )}
+      {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
       {description && (
         <p className="text-xs text-gray-500 mt-1">{description}</p>
       )}
@@ -64,7 +79,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
 export const MetricsGrid: React.FC<{
   children: React.ReactNode;
-  columns?: 4 | 5 | 6
+  columns?: 4 | 5 | 6;
 }> = ({ children, columns = 5 }) => {
   const gridCols = {
     4: "lg:grid-cols-4",
@@ -73,7 +88,9 @@ export const MetricsGrid: React.FC<{
   };
 
   return (
-    <div className={`grid grid-cols-1 sm:grid-cols-2 ${gridCols[columns]} gap-3 sm:gap-4 mb-6`}>
+    <div
+      className={`grid grid-cols-1 sm:grid-cols-2 ${gridCols[columns]} gap-3 sm:gap-4 mb-6`}
+    >
       {children}
     </div>
   );

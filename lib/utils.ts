@@ -516,7 +516,8 @@ export const generateId = (): string => {
 
 // ============= DATE FORMATTING =============
 
-export const formatDate = (date: string | Date): string => {
+export const formatDate = (date?: string | Date | null): string => {
+  if (!date) return "N/A";
   const d = typeof date === "string" ? new Date(date) : date;
   return d.toLocaleDateString("en-US", {
     year: "numeric",

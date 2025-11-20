@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -10,68 +9,63 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import HttpService from "@/services/httpServices";
+import { DashboardSummaryResponse } from "@/lib/types/dashboard";
+import { useMonthlyPerformanceChart } from "@/hooks/Usedashboardcharts";
 
-// ---------------------- Types ----------------------
-interface MonthlyPerformance {
-  month: string;
-  claims: number;
-  inspections: number;
-  hse: number;
+interface DashboardLineChartProps {
+  dashboardData: DashboardSummaryResponse | null;
+  loading?: boolean;
 }
 
-interface DashboardLineChartResponse {
-  message: string;
-  data: {
-    monthly_performance_trend: MonthlyPerformance[] | null;
-  };
-}
-
-// ---------------------- Chart Config ----------------------
+// Chart configuration - using CSS variables for proper theming
 const chartConfig = {
-  claims: { label: "Claims", colorVar: "--color-claims" },
-  inspections: { label: "Inspections", colorVar: "--color-inspections" },
-  hse: { label: "HSE Activities", colorVar: "--color-hse" },
+  claims: {
+    label: "Claims",
+    color: "hsl(var(--chart-1))",
+  },
+  inspections: {
+    label: "Inspections",
+    color: "hsl(var(--chart-2))",
+  },
+  hse: {
+    label: "HSE Activities",
+    color: "hsl(var(--chart-3))",
+  },
 } as const;
 
-// ---------------------- Component ----------------------
-export const description = "An area chart showing claims, compliance, and inspection trends";
+export function DashboardLineChart({
+  dashboardData,
+  loading,
+}: DashboardLineChartProps) {
+  const { data, scale } = useMonthlyPerformanceChart(dashboardData);
 
-export function DashboardLineChart() {
-  const [data, setData] = useState<MonthlyPerformance[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly Performance Trends</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[400px]">
+          <p className="text-muted-foreground">Loading chart...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  useEffect(() => {
-  const fetchChartData = async () => {
-    const http = new HttpService();
-    try {
-      const res = await http.getData("/api/dashboard/summary");
-
-      // Safely extract the array
-      let monthlyTrend: MonthlyPerformance[] = [];
-
-      if (res?.data?.data?.monthly_performance_trend && Array.isArray(res.data.data.monthly_performance_trend)) {
-        monthlyTrend = res.data.data.monthly_performance_trend;
-      } else if (res?.data?.monthly_performance_trend && Array.isArray(res.data.monthly_performance_trend)) {
-        monthlyTrend = res.data.monthly_performance_trend;
-      }
-
-      setData(monthlyTrend);
-    } catch (err: any) {
-      console.error("Failed to fetch line chart data:", err);
-      setError(err.response?.data?.message || err.message || "Failed to fetch chart data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchChartData();
-}, []);
-
-
-  // if (loading) return <p>Loading chart...</p>;
-  // if (error) return <p className="text-red-500">{error}</p>;
+  if (!data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly Performance Trends</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[400px]">
+          <p className="text-muted-foreground">
+            No performance data available.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -80,7 +74,10 @@ export function DashboardLineChart() {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <AreaChart data={data} margin={{ left: 12, right: 12, top: 10, bottom: 10 }}>
+          <AreaChart
+            data={data}
+            margin={{ left: 12, right: 12, top: 10, bottom: 10 }}
+          >
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
             <XAxis
               dataKey="month"
@@ -97,8 +94,13 @@ export function DashboardLineChart() {
               tickMargin={8}
               stroke="#6b7280"
               fontSize={12}
+              domain={scale ? [0, scale.max] : undefined}
+              ticks={scale?.ticks}
             />
-            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent indicator="line" />}
+            />
             {Object.entries(chartConfig).map(([key, { colorVar }]) => (
               <Area
                 key={key}

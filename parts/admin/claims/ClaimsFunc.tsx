@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useMemo, useCallback } from "react";
-import { FileText, Activity, DollarSign, BarChart3 } from "lucide-react";
+import { FileText, Activity, BarChart3, DollarSign } from "lucide-react";
+import { toast } from "sonner";
 import {
   StatisticsCards,
   ClaimsProcessingChart,
@@ -10,176 +11,181 @@ import {
 } from "./ClaimsDesign";
 import { ClaimDetailModal } from "./ClaimModal";
 import { ClaimsUploadModal } from "./ClaimsUploadModal";
-import { Claim, StatCard } from "../../../lib/types";
-import { chartData, mockClaims, DEFAULT_REGIONS } from "@/lib/Constants";
+import { StatCard } from "@/lib/types";
 import { PageHeader } from "@/components/design-system/PageHeader";
+import {
+  useClaimsDashboard,
+  useClaimsFilters,
+  useClaimDetail,
+  useClaimsUpload,
+  useClaimsCharts,
+  Claim,
+} from "@/hooks/claims";
 
 export default function ClaimsManagement() {
+  // ==========================================
+  // STATE
+  // ==========================================
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  // Memoize filtered claims to avoid unnecessary recalculations
-  const filteredClaims = useMemo(() => {
-    if (!searchTerm) return mockClaims;
+  // ==========================================
+  // API HOOKS
+  // ==========================================
 
-    const lowerSearch = searchTerm.toLowerCase();
-    return mockClaims.filter(
-      (claim) =>
-        claim.claimId.toLowerCase().includes(lowerSearch) ||
-        claim.employer.toLowerCase().includes(lowerSearch) ||
-        claim.claimant.toLowerCase().includes(lowerSearch)
-    );
-  }, [searchTerm]);
+  // 1. Fetch dashboard data (with pagination support)
+  const {
+    claims,
+    metrics,
+    categories,
+    monthlyChart,
+    pagination,
+    loading,
+    error,
+    refetch,
+    setPage,
+  } = useClaimsDashboard({ page: 1 });
 
-  // Memoize statistics to avoid recalculation on every render
-  const statistics = useMemo(() => {
-    const totalClaims = mockClaims.length;
-    const medicalRefunds = mockClaims.filter(
-      (c) => c.type === "Medical Refund"
-    ).length;
-    const disabilityClaims = mockClaims.filter(
-      (c) => c.type === "Disability"
-    ).length;
-    const deathClaims = mockClaims.filter(
-      (c) => c.type === "Death Claim"
-    ).length;
-    const retireeBenefit = mockClaims.filter(
-      (c) => c.type === "Loss of Productivity"
-    ).length;
+  // 2. Client-side filtering
+  const { filteredClaims } = useClaimsFilters({
+    claims,
+    searchTerm,
+  });
 
-    // Mock calculation - replace with actual logic
-    const lastMonthClaims = totalClaims > 0 ? totalClaims - 1 : 0;
-    const changePercent =
-      lastMonthClaims > 0
-        ? (((totalClaims - lastMonthClaims) / lastMonthClaims) * 100).toFixed(1)
-        : "0.0";
+  // 3. Fetch claim detail (for modal)
+  const {
+    data: claimDetail,
+    loading: detailLoading,
+    fetchDetail,
+    clearDetail,
+  } = useClaimDetail();
 
-    const paidAmount = mockClaims
-      .filter((c) => c.status === "Paid")
-      .reduce((sum, c) => sum + c.amountPaid, 0);
+  // 4. Upload handler
+  const { uploadClaims, progress: uploadProgress } = useClaimsUpload({
+    onSuccess: (count, region) => {
+      toast.success(`Successfully uploaded ${count} claims to ${region}`);
+      refetch(); // Refresh dashboard data
+      setIsUploadModalOpen(false);
+    },
+    onError: (error) => {
+      toast.error(`Upload failed: ${error}`);
+    },
+  });
 
-    const pendingAmount = mockClaims
-      .filter((c) => c.status === "Pending" || c.status === "Under Review")
-      .reduce((sum, c) => sum + c.amountPaid, 0);
+  // 5. Transform chart data
+  const { chartData } = useClaimsCharts({ monthlyChart });
 
-    return {
-      totalClaims,
-      medicalRefunds,
-      disabilityClaims,
-      deathClaims,
-      retireeBenefit,
-      changePercent,
-      paidAmount,
-      pendingAmount,
-    };
-  }, []);
+  // ==========================================
+  // COMPUTED VALUES
+  // ==========================================
 
-  // Memoize stats cards configuration
-  const stats: StatCard[] = useMemo(
-    () => [
+  // Stats cards configuration
+  const stats: StatCard[] = useMemo(() => {
+    if (!metrics) return [];
+
+    // Mock change calculation - replace with real logic if available
+    const mockChangePercent = "+8.2";
+
+    return [
       {
         title: "Total Claims Paid",
-        value: statistics.totalClaims,
+        value: metrics.totalClaimsPaid,
         description: "",
-        change: `${Number(statistics.changePercent) > 0 ? "+" : ""}${
-          statistics.changePercent
-        }% from last month`,
+        change: `${mockChangePercent}% from last month`,
         icon: <FileText />,
         bgColor: "#00a63e",
       },
       {
         title: "Beneficiaries Rehabilitated",
         description: "",
-        value: statistics.medicalRefunds,
-        change: `${Number(statistics.changePercent) > 0 ? "+" : ""}${
-          statistics.changePercent
-        }% from last month`,
+        value: metrics.beneficiariesRehabilitated,
+        change: `${mockChangePercent}% from last month`,
         icon: <Activity />,
         bgColor: "#00a63e",
       },
       {
         title: "NOK Beneficiaries",
         description: "",
-        change: `${Number(statistics.changePercent) > 0 ? "+" : ""}${
-          statistics.changePercent
-        }% from last month`,
-        value: statistics.disabilityClaims,
-        icon: "",
+        change: `${mockChangePercent}% from last month`,
+        value: metrics.nokBeneficiaries,
+        icon: <DollarSign />,
         bgColor: "#3b82f6",
       },
       {
-        title: "Disabilities Beneficiaries",
+        title: "Disability Beneficiaries",
         description: "",
-        value: statistics.deathClaims,
-        change: `${Number(statistics.changePercent) > 0 ? "+" : ""}${
-          statistics.changePercent
-        }% from last month`,
+        value: metrics.disabilityBeneficiaries,
+        change: `${mockChangePercent}% from last month`,
         icon: <BarChart3 />,
         bgColor: "#a855f7",
       },
       {
         title: "Retiree Benefit Beneficiaries",
         description: "",
-        value: statistics.retireeBenefit,
-        change: `${Number(statistics.changePercent) > 0 ? "+" : ""}${
-          statistics.changePercent
-        }% from last month`,
+        value: metrics.retireeBenefitBeneficiaries,
+        change: `${mockChangePercent}% from last month`,
         icon: <BarChart3 />,
         bgColor: "#f59e0b",
       },
-    ],
-    [statistics]
-  );
+    ];
+  }, [metrics]);
 
-  // Memoize claim type cards configuration
-  const claimTypes = useMemo(
-    () => [
+  // Claim type cards configuration
+  const claimTypes = useMemo(() => {
+    if (!categories) return [];
+
+    return [
       {
         type: "Medical Refunds",
-        count: statistics.medicalRefunds,
+        count: categories.medicalRefunds,
         color: "bg-green-50 border-l-4 border-green-500",
       },
       {
         type: "Disability Claims",
-        count: statistics.disabilityClaims,
+        count: categories.disabilityClaims,
         color: "bg-blue-50 border-l-4 border-blue-500",
       },
       {
         type: "Death Claims",
-        count: statistics.deathClaims,
+        count: categories.deathClaims,
         color: "bg-purple-50 border-l-4 border-purple-500",
       },
       {
         type: "Retiree Benefit Beneficiaries",
-        count: statistics.retireeBenefit,
+        count: categories.retireeBenefits,
         color: "bg-yellow-50 border-l-4 border-yellow-500",
       },
-    ],
-    [statistics]
+    ];
+  }, [categories]);
+
+  // ==========================================
+  // EVENT HANDLERS
+  // ==========================================
+
+  const handleViewClaim = useCallback(
+    (claim: Claim) => {
+      fetchDetail(claim.claimId);
+      setIsDetailModalOpen(true);
+    },
+    [fetchDetail]
   );
 
-  // Handler for viewing claim details
-  const handleViewClaim = useCallback((claim: Claim) => {
-    setSelectedClaim(claim);
-    setIsModalOpen(true);
-  }, []);
+  const handleCloseDetailModal = useCallback(() => {
+    setIsDetailModalOpen(false);
+    clearDetail();
+  }, [clearDetail]);
 
-  // Handler for closing modal
-  const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false);
-    setSelectedClaim(null);
-  }, []);
-
-  // Handler for filter click
   const handleFilterClick = useCallback(() => {
-    console.log("Filter clicked");
-    // TODO: Implement filter functionality
+    toast.info("Filter functionality coming soon");
   }, []);
 
-  // Handler for export
   const handleExport = useCallback(() => {
+    if (filteredClaims.length === 0) {
+      toast.error("No claims to export");
+      return;
+    }
+
     // Create CSV content
     const headers = [
       "Claim ID",
@@ -228,13 +234,42 @@ export default function ClaimsManagement() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+
+    toast.success(`Exported ${filteredClaims.length} claims`);
   }, [filteredClaims]);
 
-  // Handler for upload success
-  const handleUploadSuccess = useCallback((uploadedClaims: Claim[]) => {
-    console.log("Uploaded claims:", uploadedClaims);
-    // You can add the uploaded claims to your state here
-  }, []);
+  // ==========================================
+  // ERROR HANDLING
+  // ==========================================
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <PageHeader
+            title="Claims and Compensation View"
+            description="Track and process employee compensation claims"
+          />
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <p className="text-red-800 font-semibold mb-2">
+              Failed to load claims data
+            </p>
+            <p className="text-red-600 text-sm mb-4">{error}</p>
+            <button
+              onClick={refetch}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // RENDER
+  // ==========================================
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -245,40 +280,61 @@ export default function ClaimsManagement() {
           description="Track and process employee compensation claims"
         />
 
-        {/* Statistics Cards */}
-        <StatisticsCards stats={stats} />
+        {/* Loading State */}
+        {loading && !claims.length ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+            <p className="mt-4 text-gray-600">Loading claims data...</p>
+          </div>
+        ) : (
+          <>
+            {/* Statistics Cards */}
+            {stats.length > 0 && <StatisticsCards stats={stats} />}
 
-        {/* Claims Processing Chart */}
-        <ClaimsProcessingChart data={chartData} />
+            {/* Claims Processing Chart */}
+            {chartData.length > 0 && <ClaimsProcessingChart data={chartData} />}
 
-        {/* Claim Type Cards */}
-        <ClaimTypeCards claimTypes={claimTypes} />
+            {/* Claim Type Cards */}
+            {claimTypes.length > 0 && (
+              <ClaimTypeCards claimTypes={claimTypes} />
+            )}
 
-        {/* Search and Filters */}
-        <SearchAndFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          onFilterClick={handleFilterClick}
-          onExport={handleExport}
-          onUpload={() => setIsUploadModalOpen(true)}
-        />
+            {/* Search and Filters */}
+            <SearchAndFilters
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              onFilterClick={handleFilterClick}
+              onExport={handleExport}
+              onUpload={() => setIsUploadModalOpen(true)}
+            />
 
-        {/* Claims Table */}
-        <ClaimsTable claims={filteredClaims} onView={handleViewClaim} />
+            {/* Claims Table */}
+            <ClaimsTable claims={filteredClaims} onView={handleViewClaim} />
+
+            {/* Pagination Info (Optional) */}
+            {pagination && pagination.totalPages > 1 && (
+              <div className="mt-4 text-center text-sm text-gray-600">
+                Page {pagination.page} of {pagination.totalPages}(
+                {pagination.totalCount} total claims)
+              </div>
+            )}
+          </>
+        )}
 
         {/* Claim Detail Modal */}
         <ClaimDetailModal
-          claim={selectedClaim}
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
+          claimDetail={claimDetail}
+          isOpen={isDetailModalOpen}
+          onClose={handleCloseDetailModal}
+          loading={detailLoading}
         />
 
         {/* Claims Upload Modal */}
         <ClaimsUploadModal
           isOpen={isUploadModalOpen}
           onClose={() => setIsUploadModalOpen(false)}
-          onUploadSuccess={handleUploadSuccess}
-          regions={DEFAULT_REGIONS}
+          onUpload={uploadClaims}
+          progress={uploadProgress}
         />
       </div>
     </div>

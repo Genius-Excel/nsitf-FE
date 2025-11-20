@@ -3,12 +3,14 @@ import React from "react";
 interface PageHeaderProps {
   title: string;
   description?: string;
+  subtitle?: string;
   action?: React.ReactNode;
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   description,
+  subtitle,
   action,
 }) => {
   return (
@@ -18,6 +20,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         {description && (
           <p className="text-sm text-gray-600 mt-1">{description}</p>
         )}
+        {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
       </div>
       {action && <div>{action}</div>}
     </div>

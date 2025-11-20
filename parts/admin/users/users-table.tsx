@@ -1,4 +1,4 @@
-import { Search, Edit2, Trash2, Plus } from "lucide-react";
+import { Search, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -77,24 +77,23 @@ export const UsersTable: React.FC<{
             <td className="px-6 py-4 text-sm">
               <Badge
                 className={
-                  user.status === "Active"
+                  user.account_status === "active"
                     ? "bg-green-100 text-green-700 font-medium text-xs"
-                    : "bg-blue-100 text-blue-700 font-medium text-xs"
+                    : "bg-gray-100 text-gray-700 font-medium text-xs"
                 }
               >
                 {user.account_status}
               </Badge>
             </td>
-            <td className="px-6 py-4 text-sm text-gray-600"> 
-              
-              {//@ts-ignore
-              formatDate(user.created_at)}
+            <td className="px-6 py-4 text-sm text-gray-600">
+              {formatDate(user.created_at)}
             </td>
             <td className="px-6 py-4 text-sm flex gap-2">
               <Button
                 onClick={() => onEdit(user)}
                 variant={"outline"}
                 className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
+                aria-label="Edit user"
               >
                 <Edit2 className="w-4 h-4" />
               </Button>
@@ -102,6 +101,7 @@ export const UsersTable: React.FC<{
                 onClick={() => onDeleteClick(user.id)}
                 variant={"outline"}
                 className="p-2 hover:bg-red-50 rounded-md transition-colors text-red-600 hover:text-red-900"
+                aria-label="Delete user"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -175,7 +175,16 @@ export const UserFormModal: React.FC<{
   formData: NewUserForm;
   onFormChange: (data: NewUserForm) => void;
   isEditing: boolean;
-}> = ({ isOpen, onOpenChange, onSave, formData, onFormChange, isEditing }) => (
+  isSaving?: boolean;
+}> = ({
+  isOpen,
+  onOpenChange,
+  onSave,
+  formData,
+  onFormChange,
+  isEditing,
+  isSaving = false,
+}) => (
   <Dialog open={isOpen} onOpenChange={onOpenChange}>
     <DialogContent className="max-w-md">
       <DialogHeader>
@@ -197,6 +206,7 @@ export const UserFormModal: React.FC<{
                 onFormChange({ ...formData, first_name: e.target.value })
               }
               className="mt-1 border-gray-200 text-sm"
+              disabled={isSaving}
             />
           </div>
           <div>
@@ -210,6 +220,7 @@ export const UserFormModal: React.FC<{
                 onFormChange({ ...formData, last_name: e.target.value })
               }
               className="mt-1 border-gray-200 text-sm"
+              disabled={isSaving}
             />
           </div>
         </div>
@@ -226,6 +237,7 @@ export const UserFormModal: React.FC<{
               onFormChange({ ...formData, email: e.target.value })
             }
             className="mt-1 border-gray-200 text-sm"
+            disabled={isSaving}
           />
         </div>
 
@@ -235,11 +247,12 @@ export const UserFormModal: React.FC<{
           </label>
           <Input
             placeholder="+234 XXX XXX XXXX"
-            value={formData.phone}
+            value={formData.phone_number}
             onChange={(e) =>
-              onFormChange({ ...formData, phone: e.target.value })
+              onFormChange({ ...formData, phone_number: e.target.value })
             }
             className="mt-1 border-gray-200 text-sm"
+            disabled={isSaving}
           />
         </div>
 
@@ -252,6 +265,7 @@ export const UserFormModal: React.FC<{
             onValueChange={(value) =>
               onFormChange({ ...formData, role: value })
             }
+            disabled={isSaving}
           >
             <SelectTrigger className="mt-1 border-gray-200 text-sm">
               <SelectValue placeholder="Select a role" />
@@ -277,6 +291,7 @@ export const UserFormModal: React.FC<{
               onFormChange({ ...formData, department: e.target.value })
             }
             className="mt-1 border-gray-200 text-sm"
+            disabled={isSaving}
           />
         </div>
 
@@ -285,18 +300,23 @@ export const UserFormModal: React.FC<{
             Branch/Region
           </label>
           <Select
-            value={formData.branch}
+            value={formData.region}
             onValueChange={(value) =>
-              onFormChange({ ...formData, branch: value })
+              onFormChange({ ...formData, region: value })
             }
+            disabled={isSaving}
           >
             <SelectTrigger className="mt-1 border-gray-200 text-sm">
-              <SelectValue placeholder="Select branch" />
+              <SelectValue placeholder="Select region" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Abuja">Abuja</SelectItem>
-              <SelectItem value="lagos">Lagos</SelectItem>
-              <SelectItem value="kano">Kano</SelectItem>
+              <SelectItem value="Lagos">Lagos</SelectItem>
+              <SelectItem value="Kano">Kano</SelectItem>
+              <SelectItem value="Port Harcourt">Port Harcourt</SelectItem>
+              <SelectItem value="Ibadan">Ibadan</SelectItem>
+              <SelectItem value="Enugu">Enugu</SelectItem>
+              <SelectItem value="Kaduna">Kaduna</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -307,15 +327,17 @@ export const UserFormModal: React.FC<{
           variant="outline"
           onClick={() => onOpenChange(false)}
           className="text-sm"
+          disabled={isSaving}
         >
           Cancel
         </Button>
         <Button
           onClick={onSave}
           style={{ backgroundColor: "#00a63e" }}
-          className="text-white text-sm hover:opacity-90"
+          className="text-white text-sm hover:opacity-90 disabled:opacity-50"
+          disabled={isSaving}
         >
-          {isEditing ? "Save Changes" : "Create User"}
+          {isSaving ? "Saving..." : isEditing ? "Save Changes" : "Create User"}
         </Button>
       </DialogFooter>
     </DialogContent>
@@ -327,7 +349,8 @@ export const DeleteConfirmationDialog: React.FC<{
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   userName: string;
-}> = ({ isOpen, onOpenChange, onConfirm, userName }) => (
+  isDeleting?: boolean;
+}> = ({ isOpen, onOpenChange, onConfirm, userName, isDeleting = false }) => (
   <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
     <AlertDialogContent>
       <AlertDialogHeader>
@@ -339,12 +362,15 @@ export const DeleteConfirmationDialog: React.FC<{
         </AlertDialogDescription>
       </AlertDialogHeader>
       <div className="flex gap-3 justify-end">
-        <AlertDialogCancel className="text-sm">Cancel</AlertDialogCancel>
+        <AlertDialogCancel className="text-sm" disabled={isDeleting}>
+          Cancel
+        </AlertDialogCancel>
         <AlertDialogAction
           onClick={onConfirm}
-          className="bg-red-600 hover:bg-red-700 text-white text-sm"
+          className="bg-red-600 hover:bg-red-700 text-white text-sm disabled:opacity-50"
+          disabled={isDeleting}
         >
-          Delete
+          {isDeleting ? "Deleting..." : "Delete"}
         </AlertDialogAction>
       </div>
     </AlertDialogContent>

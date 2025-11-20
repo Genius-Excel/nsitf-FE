@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+"use client";
+
+import React from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import toast from "react-hot-toast";
 import {
   DeleteConfirmationDialog,
   RolePermissionsOverview,
@@ -9,230 +10,124 @@ import {
   UserFormModal,
   UsersTable,
 } from "./users-table";
-import { NewUserForm, User } from "@/lib/types";
 import {
-  useAddUser,
-  useDeleteUser,
-  useEditUser,
-  useGetUsers,
-} from "@/services/admin/index";
+  useUsers,
+  useUserFilters,
+  useUserForm,
+  useUserMutations,
+  useDeleteDialog,
+} from "@/hooks/users";
 
+/**
+ * REFACTORED Users & Roles Management
+ *
+ * Key improvements:
+ * - Single source of truth (no state duplication)
+ * - Pessimistic updates (refetch on success)
+ * - Memoized filtering (no duplicate filteredUsers state)
+ * - Encapsulated form logic (useUserForm hook)
+ * - Consistent error handling (toast notifications)
+ * - Clean separation of concerns
+ */
 export default function UsersRolesManagement() {
-  // ============== STATE ==============
-  const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterRole, setFilterRole] = useState("All Roles");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [userToDelete, setUserToDelete] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
-  const [formData, setFormData] = useState<NewUserForm>({
-    first_name: "",
-    last_name: "",
-    email: "",
-    phone: "",
-    role: "",
-    department: "",
-    branch: "",
-  });
-  const { gettingUserData, refetchUserData, userData, userDataError } =
-    useGetUsers({ enabled: true });
+  // ============== DATA FETCHING ==============
+  // Single fetch - source of truth
+  const { data: users, loading, error, refetch } = useUsers();
 
-  const { addUserData, addUserError, addUserIsLoading, addUserPayload } =
-    useAddUser();
-  const { editUserData, editUserError, editUserIsLoading, editUserPayload } =
-    useEditUser();
+  // ============== FILTERING ==============
+  // Memoized filtering - no duplicate state
   const {
-    deleteUSerData,
-    deleteUserError,
-    deleteUserIsLoading,
-    deleteUserPath,
-  } = useDeleteUser(() => {
-    toast.success("User deleted");
-    setIsDeleteDialogOpen(false);
-    setUserToDelete(null);
+    filteredUsers,
+    searchTerm,
+    setSearchTerm,
+    filterRole,
+    setFilterRole,
+    resetFilters,
+    hasActiveFilters,
+  } = useUserFilters(users);
+
+  // ============== FORM MANAGEMENT ==============
+  // Encapsulated form state
+  const {
+    isOpen: isModalOpen,
+    setIsOpen: setIsModalOpen,
+    formData,
+    updateForm,
+    openForCreate,
+    openForEdit,
+    closeForm,
+    validate,
+    isEditing,
+    editingUserId,
+  } = useUserForm();
+
+  // ============== MUTATIONS ==============
+  // Pessimistic updates - refetch on success
+  const {
+    addUser,
+    editUser,
+    isLoading: isSaving,
+  } = useUserMutations({
+    onSuccess: () => {
+      refetch(); // Refetch to get fresh data
+      closeForm(); // Close modal
+    },
   });
 
-  // ============== EFFECTS ==============
-  useEffect(() => {
-    if (userData) {
-      setFilteredUsers(userData);
-      setUsers(userData);
-    }
-  }, [userData]);
+  // ============== DELETE DIALOG ==============
+  const {
+    isOpen: isDeleteDialogOpen,
+    userId: deleteUserId,
+    userName: deleteUserName,
+    openDialog: openDeleteDialog,
+    closeDialog: closeDeleteDialog,
+  } = useDeleteDialog();
 
-  useEffect(() => {
-    filterUsers();
-  }, [searchTerm, filterRole, users]);
+  const { deleteUser, isLoading: isDeleting } = useUserMutations({
+    onSuccess: () => {
+      refetch(); // Refetch to get fresh data
+      closeDeleteDialog(); // Close dialog
+    },
+  });
 
   // ============== HANDLERS ==============
-  const filterUsers = () => {
-    let filtered = users;
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (user) =>
-          user?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user?.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (filterRole !== "All Roles") {
-      filtered = filtered.filter((user) => user.role === filterRole);
-    }
-
-    setFilteredUsers(filtered);
-  };
-
-  const handleAddNewUser = () => {
-    setEditingUserId(null);
-    setFormData({
-      first_name: "",
-      last_name: "",
-      email: "",
-      phone: "",
-      role: "",
-      department: "",
-      branch: "",
-    });
-    setIsModalOpen(true);
-  };
-
-  const handleEditUser = (user: User) => {
-    setEditingUserId(user.id);
-    setFormData({
-      first_name: user?.first_name || "",
-      last_name: user?.last_name || "",
-      email: user.email,
-      phone: user.phone_number || "",
-      role: user.role,
-      department: user.department || "",
-      branch: user.region || "",
-    });
-    setIsModalOpen(true);
-  };
 
   const handleSaveUser = async () => {
-    if (!formData.first_name || !formData.email || !formData.role) {
-      toast.error("Please fill in all required fields");
+    // Validate form
+    const { isValid, errors } = validate();
+    if (!isValid) {
+      // Show first error (toast already shown by mutation hook)
+      console.error("Validation errors:", errors);
       return;
     }
 
     try {
-      if (editingUserId) {
-        // Editing an existing user
-        const payload = {
-          id: editingUserId,
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          email: formData.email,
-          phone_number: formData.phone,
-          role: formData.role,
-          department: formData.department,
-          region: formData.branch,
-        };
-
-        await editUserPayload(payload); // Await the API call
-
-        if (editUserError) {
-          throw new Error(editUserError || "Failed to update user");
-        }
-
-        // Update local state with the edited user data
-        setUsers(
-          users.map((user) =>
-            user.id === editingUserId
-              ? {
-                  ...user,
-                  name: `${formData.first_name} ${formData.last_name}`.trim(),
-                  email: formData.email,
-                  role: formData.role,
-                  phone_number: formData.phone,
-                  department: formData.department,
-                  region: formData.branch,
-                }
-              : user
-          )
-        );
-        toast.success("User updated successfully");
+      if (isEditing && editingUserId) {
+        await editUser(editingUserId, formData);
       } else {
-        // Adding a new user
-        const payload = {
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          email: formData.email,
-          phone_number: formData.phone,
-          role: formData.role,
-          department: formData.department,
-          region: formData.branch,
-          password: "Nstif@12345",
-        };
-
-        const newUser = await addUserPayload(payload);
-
-        if (addUserError) {
-          throw new Error(addUserError || "Failed to create user");
-        }
-
-        const createdUser: User = {
-          //@ts-ignore
-          id: newUser.id || `temp-${Date.now()}`,
-          name: `${formData.first_name} ${formData.last_name}`.trim(),
-          email: formData.email,
-          role: formData.role,
-          status: "Active",
-          date_added: new Date().toISOString().split("T")[0],
-          phone_number: formData.phone,
-          department: formData.department,
-          region: formData.branch,
-        };
-        setUsers([...users, createdUser]);
-        toast.success("User created successfully");
+        await addUser(formData);
       }
-
-      setIsModalOpen(false); // Close modal only on success
-      refetchUserData(); // Refresh user data
-    } catch (error) {
-      console.error("Error saving user:", error);
-      toast.error("Failed to save user. Please try again.");
-      // Modal stays open on error
-    }
-  };
-
-  const handleDeleteClick = (userId: string) => {
-    const user = users.find((u) => u.id === userId);
-    if (user) {
-      setUserToDelete({ id: userId, name: user.name });
-      setIsDeleteDialogOpen(true);
+      // Success handling done in mutation hook (toast + onSuccess callback)
+    } catch (err) {
+      // Error handling done in mutation hook (toast)
+      // Modal stays open for retry
     }
   };
 
   const handleConfirmDelete = async () => {
-    if (!userToDelete) return;
+    if (!deleteUserId) return;
 
     try {
-      await deleteUserPath(userToDelete.id); // Await the API call
-      toast.success("User deleted successfully");
-      setIsDeleteDialogOpen(false); // Close dialog only on success
-      setUserToDelete(null);
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      toast.error("Failed to delete user. Please try again.");
-      // Dialog stays open on error
+      await deleteUser(deleteUserId, deleteUserName);
+      // Success handling done in mutation hook (toast + onSuccess callback)
+    } catch (err) {
+      // Error handling done in mutation hook (toast)
+      // Dialog stays open for retry
     }
   };
 
-  const handleResetFilters = () => {
-    setSearchTerm("");
-    setFilterRole("All Roles");
-  };
-
   // ============== RENDER ==============
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
@@ -247,7 +142,7 @@ export default function UsersRolesManagement() {
             </p>
           </div>
           <Button
-            onClick={handleAddNewUser}
+            onClick={openForCreate}
             className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors duration-200"
             aria-label="Add new user"
           >
@@ -257,11 +152,11 @@ export default function UsersRolesManagement() {
         </div>
 
         {/* Error State */}
-        {userDataError && (
+        {error && (
           <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg flex justify-between items-center">
-            <span>Failed to load users. Please try again.</span>
-            <Button //@ts-ignore
-              onClick={refetchUserData}
+            <span>Failed to load users: {error}</span>
+            <Button
+              onClick={() => refetch()}
               className="bg-red-600 hover:bg-red-700 text-white"
               aria-label="Retry loading users"
             >
@@ -279,28 +174,51 @@ export default function UsersRolesManagement() {
         />
 
         {/* Loading State */}
-        {gettingUserData && (
+        {loading && (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
           </div>
         )}
 
         {/* No Data State */}
-        {!gettingUserData && filteredUsers.length === 0 && (
+        {!loading && filteredUsers.length === 0 && (
           <div className="text-center py-12 bg-white shadow-md rounded-lg">
-            <p className="text-gray-500">
-              No users found. Try adjusting your search or filters.
-            </p>
+            {hasActiveFilters ? (
+              <>
+                <p className="text-gray-500 mb-4">
+                  No users found matching your filters.
+                </p>
+                <Button
+                  onClick={resetFilters}
+                  variant="outline"
+                  className="text-sm"
+                >
+                  Clear Filters
+                </Button>
+              </>
+            ) : (
+              <p className="text-gray-500">
+                No users found. Click "Add New User" to create one.
+              </p>
+            )}
           </div>
         )}
 
         {/* Users Table */}
-        {!gettingUserData && filteredUsers.length > 0 && (
+        {!loading && filteredUsers.length > 0 && (
           <div className="bg-white shadow-md rounded-lg overflow-hidden">
             <UsersTable
               users={filteredUsers}
-              onEdit={handleEditUser}
-              onDeleteClick={handleDeleteClick}
+              onEdit={openForEdit}
+              onDeleteClick={(userId) => {
+                const user = users?.find((u: any) => u.id === userId);
+                if (user) {
+                  openDeleteDialog(
+                    userId,
+                    `${user.first_name} ${user.last_name}`.trim() || user.email
+                  );
+                }
+              }}
             />
           </div>
         )}
@@ -310,34 +228,44 @@ export default function UsersRolesManagement() {
           <RolePermissionsOverview />
         </div>
 
-        {/* Modals */}
+        {/* User Form Modal */}
         <UserFormModal
           isOpen={isModalOpen}
           onOpenChange={(open) => {
-            // Prevent closing if API call is in progress
-            if (!open && (addUserIsLoading || editUserIsLoading)) {
-              return;
+            // Allow closing unless save is in progress
+            if (!open && isSaving) {
+              return; // Block close during save
             }
-            setIsModalOpen(open);
+            if (open) {
+              setIsModalOpen(true);
+            } else {
+              closeForm();
+            }
           }}
           onSave={handleSaveUser}
           formData={formData}
-          onFormChange={setFormData}
-          isEditing={editingUserId !== null}
+          onFormChange={updateForm}
+          isEditing={isEditing}
+          isSaving={isSaving}
         />
 
+        {/* Delete Confirmation Dialog */}
         <DeleteConfirmationDialog
           isOpen={isDeleteDialogOpen}
           onOpenChange={(open) => {
-            // Prevent closing if delete operation is in progress
-            if (!open && deleteUserIsLoading) {
-              return;
+            // Allow closing unless delete is in progress
+            if (!open && isDeleting) {
+              return; // Block close during delete
             }
-            setIsDeleteDialogOpen(open);
-            if (!open) setUserToDelete(null);
+            if (open) {
+              // Opening is controlled by openDeleteDialog
+            } else {
+              closeDeleteDialog();
+            }
           }}
           onConfirm={handleConfirmDelete}
-          userName={userToDelete?.name || ""}
+          userName={deleteUserName}
+          isDeleting={isDeleting}
         />
       </div>
     </div>

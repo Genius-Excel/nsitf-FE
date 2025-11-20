@@ -125,7 +125,10 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
           {/* Header */}
           <div className="sticky top-0 bg-white border-b px-4 sm:px-6 py-4 flex items-center justify-between z-10">
             <div>
-              <h2 id="add-region-modal-title" className="text-lg sm:text-xl font-bold text-gray-900">
+              <h2
+                id="add-region-modal-title"
+                className="text-lg sm:text-xl font-bold text-gray-900"
+              >
                 Create Region
               </h2>
               <p className="text-sm text-gray-600">Add a new region target</p>
@@ -149,9 +152,14 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
                 aria-live="assertive"
               >
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                  <AlertCircle
+                    className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5"
+                    aria-hidden="true"
+                  />
                   <div>
-                    <p className="font-semibold text-red-800 mb-1">Please fix the following errors:</p>
+                    <p className="font-semibold text-red-800 mb-1">
+                      Please fix the following errors:
+                    </p>
                     <ul className="list-disc list-inside space-y-1 text-sm text-red-700">
                       {formErrors.map((error, index) => (
                         <li key={index}>{error}</li>
@@ -164,14 +172,19 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
 
             {/* Region Details */}
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-3">Region Details</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">
+                Region Details
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label
                     htmlFor="region-select"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    Region <span className="text-red-500" aria-label="required">*</span>
+                    Region{" "}
+                    <span className="text-red-500" aria-label="required">
+                      *
+                    </span>
                   </label>
                   <select
                     id="region-select"
@@ -202,7 +215,10 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
                     htmlFor="target-input"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    Target (₦) <span className="text-red-500" aria-label="required">*</span>
+                    Target (₦){" "}
+                    <span className="text-red-500" aria-label="required">
+                      *
+                    </span>
                   </label>
                   <input
                     id="target-input"
@@ -271,15 +287,18 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
                   <p id="period-help" className="text-xs text-gray-500 mt-1">
                     Reporting period (e.g., June 2025)
                   </p>*/}
-                </div> 
+                </div>
               </div>
             </div>
 
             {/* Manage Regions */}
             <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-2">Manage Regions</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">
+                Manage Regions
+              </h3>
               <p className="text-sm text-gray-600 mb-3">
-                Add new regions or remove unused ones. Regions in use cannot be deleted.
+                Add new regions or remove unused ones. Regions in use cannot be
+                deleted.
               </p>
 
               <div className="flex gap-2 mb-3">
@@ -326,7 +345,10 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
                       aria-label={`Delete ${region} region`}
                       title={`Delete ${region}`}
                     >
-                      <Trash2 className="w-4 h-4 text-gray-600" aria-hidden="true" />
+                      <Trash2
+                        className="w-4 h-4 text-gray-600"
+                        aria-hidden="true"
+                      />
                     </button>
                   </div>
                 ))}
