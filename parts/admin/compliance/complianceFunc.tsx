@@ -340,7 +340,9 @@ const ComplianceDashboard: React.FC = () => {
       <ComplianceDetailModal
         entry={selectedEntry}
         isOpen={detailModal.isOpen}
+        isOpen={detailModal.isOpen}
         onClose={() => {
+          detailModal.close();
           detailModal.close();
           setSelectedEntry(null);
         }}

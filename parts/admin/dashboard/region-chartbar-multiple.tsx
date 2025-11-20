@@ -88,6 +88,7 @@ export function RegionChartBarMultiple({
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
             <XAxis
               dataKey="region"
+              dataKey="region"
               tickLine={false}
               tickMargin={10}
               axisLine={{ stroke: "#d1d5db" }}

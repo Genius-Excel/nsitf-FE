@@ -21,6 +21,9 @@ export const routes = {
   editUser: (userId) => `/api/admin/users/${userId}`,
   deleteUser: (userId) => `/api/admin/users/${userId}`,
 
+getComplianceDashboard: () => "/api/dashboard/compliance",
+
+
   createHSE: () => "/api/hse-ops/hse-records",
   getHseRecords: () => "/api/hse-ops/hse-records",
   getSingleHseRecord: (recordId) => `/api/hse-ops/hse-records/${recordId}`,

@@ -101,33 +101,18 @@ export function DashboardLineChart({
               cursor={false}
               content={<ChartTooltipContent indicator="line" />}
             />
-            <Area
-              dataKey="claims"
-              type="natural"
-              fill="var(--color-claims)"
-              fillOpacity={0.3}
-              stroke="var(--color-claims)"
-              strokeWidth={2}
-              stackId="a"
-            />
-            <Area
-              dataKey="inspections"
-              type="natural"
-              fill="var(--color-inspections)"
-              fillOpacity={0.3}
-              stroke="var(--color-inspections)"
-              strokeWidth={2}
-              stackId="a"
-            />
-            <Area
-              dataKey="hse"
-              type="natural"
-              fill="var(--color-hse)"
-              fillOpacity={0.3}
-              stroke="var(--color-hse)"
-              strokeWidth={2}
-              stackId="a"
-            />
+            {Object.entries(chartConfig).map(([key, { colorVar }]) => (
+              <Area
+                key={key}
+                dataKey={key}
+                type="natural"
+                fill={`var(${colorVar})`}
+                fillOpacity={0.3}
+                stroke={`var(${colorVar})`}
+                strokeWidth={2}
+                stackId="a"
+              />
+            ))}
             <ChartLegend content={<ChartLegendContent />} />
           </AreaChart>
         </ChartContainer>
