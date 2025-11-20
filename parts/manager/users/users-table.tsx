@@ -62,7 +62,7 @@ export const UsersTable: React.FC<{
         {users.map((user) => (
           <tr key={user.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-6 py-4 text-sm font-medium text-gray-900">
-              {user.name}
+              {user.first_name} {user.last_name}
             </td>
             <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
             <td className="px-6 py-4 text-sm">
@@ -77,16 +77,16 @@ export const UsersTable: React.FC<{
             <td className="px-6 py-4 text-sm">
               <Badge
                 className={
-                  user.status === "Active"
+                  user.account_status === "active"
                     ? "bg-green-100 text-green-700 font-medium text-xs"
-                    : "bg-blue-100 text-blue-700 font-medium text-xs"
+                    : "bg-gray-100 text-gray-700 font-medium text-xs"
                 }
               >
-                {user.status}
+                {user.account_status}
               </Badge>
             </td>
             <td className="px-6 py-4 text-sm text-gray-600">
-              {user.date_added}
+              {user.created_at}
             </td>
             <td className="px-6 py-4 text-sm flex gap-2">
               <Button
@@ -233,9 +233,9 @@ export const UserFormModal: React.FC<{
           </label>
           <Input
             placeholder="+234 XXX XXX XXXX"
-            value={formData.phone}
+            value={formData.phone_number}
             onChange={(e) =>
-              onFormChange({ ...formData, phone: e.target.value })
+              onFormChange({ ...formData, phone_number: e.target.value })
             }
             className="mt-1 border-gray-200 text-sm"
           />
@@ -283,18 +283,22 @@ export const UserFormModal: React.FC<{
             Branch/Region
           </label>
           <Select
-            value={formData.branch}
+            value={formData.region}
             onValueChange={(value) =>
-              onFormChange({ ...formData, branch: value })
+              onFormChange({ ...formData, region: value })
             }
           >
             <SelectTrigger className="mt-1 border-gray-200 text-sm">
-              <SelectValue placeholder="Select branch" />
+              <SelectValue placeholder="Select region" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="headquarters">Headquarters</SelectItem>
-              <SelectItem value="regional">Regional</SelectItem>
-              <SelectItem value="local">Local</SelectItem>
+              <SelectItem value="Abuja">Abuja</SelectItem>
+              <SelectItem value="Lagos">Lagos</SelectItem>
+              <SelectItem value="Kano">Kano</SelectItem>
+              <SelectItem value="Port Harcourt">Port Harcourt</SelectItem>
+              <SelectItem value="Ibadan">Ibadan</SelectItem>
+              <SelectItem value="Enugu">Enugu</SelectItem>
+              <SelectItem value="Kaduna">Kaduna</SelectItem>
             </SelectContent>
           </Select>
         </div>

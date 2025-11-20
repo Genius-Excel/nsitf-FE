@@ -1,73 +1,71 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import HttpService from "@/services/httpServices";
+import { DashboardSummaryResponse } from "@/lib/types/dashboard";
+import { useMonthlyPerformanceChart } from "@/hooks/Usedashboardcharts";
 
-// --- Type for API response
-interface MonthlyPerformance {
-  month: string;
-  claims: number;
-  inspections: number;
-  hse: number;
+interface DashboardLineChartProps {
+  dashboardData: DashboardSummaryResponse | null;
+  loading?: boolean;
 }
 
-interface DashboardLineChartResponse {
-  message: string;
-  data: {
-    monthly_performance_trend: MonthlyPerformance[];
-  };
-}
+// Chart configuration - using CSS variables for proper theming
+const chartConfig = {
+  claims: {
+    label: "Claims",
+    color: "hsl(var(--chart-1))",
+  },
+  inspections: {
+    label: "Inspections",
+    color: "hsl(var(--chart-2))",
+  },
+  hse: {
+    label: "HSE Activities",
+    color: "hsl(var(--chart-3))",
+  },
+} as const;
 
-export const description = "An area chart showing claims, compliance, and inspection trends";
+export function DashboardLineChart({
+  dashboardData,
+  loading,
+}: DashboardLineChartProps) {
+  const { data, scale } = useMonthlyPerformanceChart(dashboardData);
 
-const chartConfig: ChartConfig = {
-  claims: { label: "Claims", color: "#2563eb" },
-  inspections: { label: "Inspections", color: "#eab308" },
-  hse: { label: "HSE Activities", color: "#16a34a" },
-};
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly Performance Trends</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[400px]">
+          <p className="text-muted-foreground">Loading chart...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
-export function DashboardLineChart() {
-  const [data, setData] = useState<MonthlyPerformance[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchChartData = async () => {
-      const http = new HttpService();
-      try {
-        const res = await http.getData("/api/dashboard/summary");
-        const chartData: DashboardLineChartResponse = res.data;
-        // Map API fields to match recharts keys
-        const formattedData = chartData.data.monthly_performance_trend.map((item) => ({
-          month: item.month,
-          claims: item.claims,
-          inspections: item.inspections,
-          hse: item.hse,
-        }));
-        setData(formattedData);
-      } catch (err: any) {
-        console.error("Failed to fetch line chart data:", err);
-        setError(err.response?.data?.message || err.message || "Failed to fetch chart data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchChartData();
-  }, []);
-
-  if (loading) return <p>Loading chart...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+  if (!data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly Performance Trends</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[400px]">
+          <p className="text-muted-foreground">
+            No performance data available.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -94,9 +92,10 @@ export function DashboardLineChart() {
               tickLine={false}
               axisLine={{ stroke: "#d1d5db" }}
               tickMargin={8}
-              tickFormatter={(value) => `${value}`}
               stroke="#6b7280"
               fontSize={12}
+              domain={scale ? [0, scale.max] : undefined}
+              ticks={scale?.ticks}
             />
             <ChartTooltip
               cursor={false}

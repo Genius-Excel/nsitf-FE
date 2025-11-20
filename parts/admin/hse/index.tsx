@@ -1,10 +1,11 @@
 "use client";
-import HSEManagement from "./hseFunc";
+
+import { HSEDashboardContent } from "./hseFunc";
 
 export default function HSEPage() {
   return (
     <div className="container mx-auto p-4">
-      <HSEManagement />
+      <HSEDashboardContent />
     </div>
   );
 }
