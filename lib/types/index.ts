@@ -24,13 +24,12 @@ export interface Claim {
     | "Loss of Productivity";
   amountRequested: number;
   amountPaid: number;
-
   status: "Paid" | "Pending" | "Under Review" | "Rejected";
   dateProcessed: string;
-  datePaid: string;
-  sector: string;
-  class: string;
-  date: string;
+  datePaid: string | null;
+  sector: string | null;
+  class: string | null;
+  date: string | null;
 }
 
 export interface InspectionRecord {
