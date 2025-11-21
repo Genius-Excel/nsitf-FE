@@ -1,5 +1,13 @@
+// ============================================================================
+// Legal Management Dashboard - Refactored
+// ============================================================================
+// Clean component that uses hooks for all business logic
+// No mock data, no inline logic, just composition
+// ============================================================================
+
 "use client";
-import React, { useState } from "react";
+
+import { useState } from "react";
 import {
   Upload,
   Eye,
@@ -10,77 +18,62 @@ import {
   Gavel,
   Building,
 } from "lucide-react";
-import {
-  mockLegalActivities,
-  demandNotices,
-  DEFAULT_REGIONS,
-} from "@/lib/Constants";
+import { PageHeader } from "@/components/design-system/PageHeader";
+import { LoadingState } from "@/components/design-system/LoadingState";
+import { ErrorState } from "@/components/design-system/ErrorState";
+import { SearchBar } from "@/components/design-system/SearchBar";
+import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
 import { LegalDetailModal } from "./legalDetailModal";
 import { LegalUploadModal } from "./legalUploadModal";
-import { LegalActivityRecord } from "@/lib/types";
-import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
-import { PageHeader } from "@/components/design-system/PageHeader";
-import { SearchBar } from "@/components/design-system/SearchBar";
+import { useLegalDashboard } from "@/hooks/legal/useLegalDashboard";
+import { useLegalFilters } from "@/hooks/legal/useLegalFilters";
+import type { LegalActivityRecord } from "@/lib/types/legal";
 
-const LegalManagementDashboard = () => {
-  const [showDemandNoticeForm, setShowDemandNoticeForm] = useState(false);
+export default function LegalManagementDashboard() {
+  // ============= STATE =============
   const [selectedActivity, setSelectedActivity] =
     useState<LegalActivityRecord | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Calculate dashboard metrics from mock data
-  const dashboardMetrics = {
-    totalRecalcitrant: mockLegalActivities.reduce(
-      (sum, item) => sum + item.recalcitrantEmployers,
-      0
-    ),
-    totalDefaulting: mockLegalActivities.reduce(
-      (sum, item) => sum + item.defaultingEmployers,
-      0
-    ),
-    totalPlanIssued: mockLegalActivities.reduce(
-      (sum, item) => sum + item.planIssued,
-      0
-    ),
-    totalADR: mockLegalActivities.reduce((sum, item) => sum + item.adr, 0),
-    totalCasesInstituted: mockLegalActivities.reduce(
-      (sum, item) => sum + item.casesInstituted,
-      0
-    ),
-    totalSectors: new Set(
-      mockLegalActivities.flatMap((item) => item.sectors.split(", "))
-    ).size,
-  };
+  // ============= HOOKS =============
+  const { data, loading, error, refetch } = useLegalDashboard();
+  const { filteredRecords } = useLegalFilters(data?.summaryTable || [], {
+    searchTerm,
+  });
 
-  // Calculate stats for the 4 cards
-  const stats = {
-    totalBranches: mockLegalActivities.length,
-    totalRecalcitrant: dashboardMetrics.totalRecalcitrant,
-    totalDefaulting: dashboardMetrics.totalDefaulting,
-    totalCasesInstituted: dashboardMetrics.totalCasesInstituted,
-  };
-
+  // ============= HANDLERS =============
   const handleViewDetails = (activity: LegalActivityRecord) => {
     setSelectedActivity(activity);
     setIsDetailModalOpen(true);
   };
 
-  const handleDemandNotice = () => {
-    setShowDemandNoticeForm(true);
+  const handleUploadSuccess = () => {
+    refetch(); // Refresh dashboard after successful upload
+    setIsUploadModalOpen(false);
   };
 
-  const handleUploadSuccess = (uploadedActivities: LegalActivityRecord[]) => {
-    console.log("Uploaded activities:", uploadedActivities);
-    // You can add the uploaded activities to your state here
-  };
+  // ============= LOADING & ERROR STATES =============
+  if (loading) {
+    return <LoadingState message="Loading legal dashboard..." />;
+  }
 
+  if (error) {
+    return <ErrorState error={new Error(error)} />;
+  }
+
+  if (!data) {
+    return <ErrorState error={new Error("No dashboard data available")} />;
+  }
+
+  // ============= RENDER =============
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       {/* Header */}
       <PageHeader
         title="Legal Activities View"
+        description={`Period: ${data.filters.asOf}`}
         action={
           <button
             onClick={() => setIsUploadModalOpen(true)}
@@ -92,47 +85,47 @@ const LegalManagementDashboard = () => {
         }
       />
 
-      {/* Dashboard Metrics - 6 Cards */}
+      {/* Dashboard Metrics */}
       <MetricsGrid columns={6}>
         <MetricCard
           title="Recalcitrant Employers"
-          value={dashboardMetrics.totalRecalcitrant}
+          value={data.metricCards.recalcitrantEmployers}
           icon={<AlertTriangle className="w-5 h-5" />}
           colorScheme="orange"
         />
         <MetricCard
           title="Defaulting Employers"
-          value={dashboardMetrics.totalDefaulting}
+          value={data.metricCards.defaultingEmployers}
           icon={<Users className="w-5 h-5" />}
           colorScheme="blue"
         />
         <MetricCard
           title="Plan Issued"
-          value={dashboardMetrics.totalPlanIssued}
+          value={data.metricCards.planIssued}
           icon={<FileText className="w-5 h-5" />}
           colorScheme="green"
         />
         <MetricCard
           title="ADR Cases"
-          value={dashboardMetrics.totalADR}
+          value={data.metricCards.adrCases}
           icon={<Scale className="w-5 h-5" />}
           colorScheme="purple"
         />
         <MetricCard
           title="Cases Instituted"
-          value={dashboardMetrics.totalCasesInstituted}
+          value={data.metricCards.casesInstituted}
           icon={<Gavel className="w-5 h-5" />}
           colorScheme="gray"
         />
         <MetricCard
           title="Sectors Covered"
-          value={dashboardMetrics.totalSectors}
+          value={data.metricCards.sectorsCovered}
           icon={<Building className="w-5 h-5" />}
           colorScheme="blue"
         />
       </MetricsGrid>
 
-      {/* Search and Filters */}
+      {/* Search Bar */}
       <SearchBar
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -141,6 +134,7 @@ const LegalManagementDashboard = () => {
         showExport={false}
         showFilter={false}
       />
+
       {/* Legal Activities Table */}
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="overflow-x-auto">
@@ -166,10 +160,10 @@ const LegalManagementDashboard = () => {
                   Plan Issued
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Alternate Dispute Resolution (ADR)
+                  ADR
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Cases Instituted in Court
+                  Cases Instituted
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Sectors
@@ -183,55 +177,66 @@ const LegalManagementDashboard = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {mockLegalActivities.map((activity) => (
-                <tr key={activity.id} className="hover:bg-gray-50 transition">
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                    {activity.region}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {activity.branch}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {activity.recalcitrantEmployers}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {activity.defaultingEmployers}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {activity.ecsNo}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {activity.planIssued}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {activity.adr}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {activity.casesInstituted}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {activity.sectors}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {activity.activitiesPeriod}
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => handleViewDetails(activity)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition"
-                    >
-                      <Eye size={16} />
-                      View
-                    </button>
+              {filteredRecords.length > 0 ? (
+                filteredRecords.map((activity) => (
+                  <tr key={activity.id} className="hover:bg-gray-50 transition">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                      {activity.region}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {activity.branch}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {activity.recalcitrantEmployers}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {activity.defaultingEmployers}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {activity.ecsNumber}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {activity.planIssued}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {activity.adr}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {activity.casesInstituted}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {activity.sectors.join(", ") || "None"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {activity.activitiesPeriod}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => handleViewDetails(activity)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition"
+                      >
+                        <Eye size={16} />
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={11}
+                    className="px-4 py-8 text-center text-gray-500"
+                  >
+                    No legal activities found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Legal Detail Modal */}
+      {/* Modals */}
       <LegalDetailModal
         activity={selectedActivity}
         isOpen={isDetailModalOpen}
@@ -241,16 +246,11 @@ const LegalManagementDashboard = () => {
         }}
       />
 
-      {/* Legal Upload Modal */}
       <LegalUploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         onUploadSuccess={handleUploadSuccess}
-        regions={DEFAULT_REGIONS}
-        // regions={DEFAULT_REGIONS}
       />
     </div>
   );
-};
-
-export default LegalManagementDashboard;
+}

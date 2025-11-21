@@ -2,8 +2,14 @@
 import React from "react";
 import { Eye, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { HSEActivity, HSEFormData, StatCard } from "@/lib/types/hse";
+import type {
+  HSERecord,
+  HSEActivity,
+  HSEFormData,
+  HSEStatCard,
+} from "@/lib/types/hse";
 import { getActivityStatusColor } from "@/lib/utils";
+import { getHSEStatusColor } from "@/lib/types/hse";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +27,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
 
-export const StatisticsCards: React.FC<{ stats: StatCard[] }> = ({ stats }) => {
+export const StatisticsCards: React.FC<{ stats: HSEStatCard[] }> = ({
+  stats,
+}) => {
   if (!stats || stats.length === 0) {
     return null;
   }
@@ -79,7 +87,9 @@ export const RecentHSEActivities: React.FC<{
               <div className="flex items-start gap-4 flex-1">
                 <div className="mt-1 text-xl text-primary">{activity.icon}</div>
                 <div className="flex-1">
-                  <p className="font-semibold text-foreground">{activity.type}</p>
+                  <p className="font-semibold text-foreground">
+                    {activity.type}
+                  </p>
                   <p className="text-sm text-muted-foreground mt-1">
                     {activity.organization} • {activity.date}
                   </p>
@@ -215,9 +225,9 @@ export const HSEFormModal: React.FC<{
             Record Type <span className="text-red-500">*</span>
           </label>
           <Select
-            value={formData.type}
+            value={formData.recordType}
             onValueChange={(value) =>
-              onFormChange({ ...formData, type: value })
+              onFormChange({ ...formData, recordType: value })
             }
           >
             <SelectTrigger className="mt-1 border-gray-200 text-sm">
@@ -241,9 +251,9 @@ export const HSEFormModal: React.FC<{
           </label>
           <Input
             placeholder="Enter employer name"
-            value={formData.organization}
+            value={formData.employer}
             onChange={(e) =>
-              onFormChange({ ...formData, organization: e.target.value })
+              onFormChange({ ...formData, employer: e.target.value })
             }
             className="mt-1 border-gray-200 text-sm"
           />
@@ -256,9 +266,9 @@ export const HSEFormModal: React.FC<{
           </label>
           <Input
             type="date"
-            value={formData.date}
+            value={formData.dateLogged}
             onChange={(e) =>
-              onFormChange({ ...formData, date: e.target.value })
+              onFormChange({ ...formData, dateLogged: e.target.value })
             }
             className="mt-1 border-gray-200 text-sm"
           />
@@ -465,8 +475,8 @@ export const ViewDetailsModal: React.FC<{
 
 // ============== HSE RECORDS TABLE ==============
 export const HSERecordsTable: React.FC<{
-  records: import("@/lib/types").HSERecord[];
-  onViewDetails: (record: import("@/lib/types").HSERecord) => void;
+  records: HSERecord[];
+  onViewDetails: (record: HSERecord) => void;
 }> = ({ records, onViewDetails }) => {
   if (!records || records.length === 0) {
     return (
@@ -476,15 +486,8 @@ export const HSERecordsTable: React.FC<{
     );
   }
 
-  // Helper to get performance rate color
-  const getPerformanceColor = (rate: number): string => {
-    if (rate >= 80) return "text-green-700 font-semibold";
-    if (rate >= 60) return "text-yellow-700 font-semibold";
-    return "text-red-700 font-semibold";
-  };
-
-  // Helper to get performance badge
-  const getPerformanceBadge = (rate: number): string => {
+  // Helper to get compliance rate badge color
+  const getComplianceBadge = (rate: number): string => {
     if (rate >= 80) return "bg-green-100 text-green-700";
     if (rate >= 60) return "bg-yellow-100 text-yellow-700";
     return "bg-red-100 text-red-700";
@@ -497,31 +500,19 @@ export const HSERecordsTable: React.FC<{
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Region
+                Record Type
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Branch
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Total Actual OSH Activities
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Target OSH Activities
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Performance Rate (%)
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                OSH Enlightenment
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                OSH Inspection & Audit
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Accident Investigation
+                Employer
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Activities Period
+                Date Logged
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                Safety Compliance (%)
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                Status
               </th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
                 Actions
@@ -535,45 +526,43 @@ export const HSERecordsTable: React.FC<{
                 className="hover:bg-gray-50 transition-colors"
               >
                 <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
-                  {record.region}
+                  {record.recordType}
                 </td>
                 <td className="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">
-                  {record.branch}
+                  {record.employer}
                 </td>
-                <td className="px-4 py-4 text-sm text-center font-semibold text-gray-900">
-                  {record.totalActualOSH.toLocaleString()}
-                </td>
-                <td className="px-4 py-4 text-sm text-center text-gray-700">
-                  {record.targetOSH.toLocaleString()}
+                <td className="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">
+                  {new Date(record.dateLogged).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
                 </td>
                 <td className="px-4 py-4 text-sm whitespace-nowrap text-center">
                   <Badge
-                    className={`${getPerformanceBadge(
-                      record.performanceRate
+                    className={`${getComplianceBadge(
+                      record.safetyComplianceRate
                     )} font-semibold`}
                   >
-                    {record.performanceRate}%
+                    {record.safetyComplianceRate}%
                   </Badge>
                 </td>
-                <td className="px-4 py-4 text-sm text-center text-gray-700">
-                  {record.oshEnlightenment.toLocaleString()}
-                </td>
-                <td className="px-4 py-4 text-sm text-center text-gray-700">
-                  {record.oshInspectionAudit.toLocaleString()}
-                </td>
-                <td className="px-4 py-4 text-sm text-center text-gray-700">
-                  {record.accidentInvestigation.toLocaleString()}
-                </td>
-                <td className="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">
-                  {record.activitiesPeriod}
+                <td className="px-4 py-4 text-sm whitespace-nowrap text-center">
+                  <Badge
+                    className={`${getHSEStatusColor(
+                      record.status
+                    )} font-medium`}
+                  >
+                    {record.status}
+                  </Badge>
                 </td>
                 <td className="px-4 py-4 text-sm whitespace-nowrap text-center">
                   <button
                     type="button"
                     onClick={() => onViewDetails(record)}
-                    title={`View details for ${record.branch}`}
+                    title={`View details for ${record.employer}`}
                     className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900 inline-flex items-center justify-center"
-                    aria-label={`View details for ${record.branch}`}
+                    aria-label={`View details for ${record.employer}`}
                   >
                     <Eye className="w-4 h-4" />
                   </button>
