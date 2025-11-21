@@ -1,7 +1,31 @@
+// ============================================================================
+// InspectionDetailModal - Refactored
+// ============================================================================
+// NOW ACTUALLY USES THE DETAIL API ENDPOINT
+// Fetches detailed inspection data when modal opens
+// Shows: branch info, performance metrics, inspection activity, financial summary
+// ============================================================================
+
 "use client";
-import { X, Download, Printer, FileText, TrendingUp, Building2, MapPin } from "lucide-react";
+
+import {
+  X,
+  Download,
+  Printer,
+  FileText,
+  TrendingUp,
+  Building2,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { InspectionRecord } from "@/lib/types";
+import { LoadingState } from "@/components/design-system/LoadingState";
+import { ErrorState } from "@/components/design-system/ErrorState";
+import { useInspectionDetail } from "@/hooks/inspection/useInspectionDetail";
+import type { InspectionRecord } from "@/lib/types/inspection";
+import {
+  formatInspectionCurrency,
+  getInspectionPerformanceBadge,
+  calculateRecoveryRate,
+} from "@/lib/types/inspection";
 
 interface InspectionDetailModalProps {
   inspection: InspectionRecord | null;
@@ -14,75 +38,122 @@ export const InspectionDetailModal: React.FC<InspectionDetailModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  if (!isOpen || !inspection) return null;
+  // ============= FETCH DETAIL DATA =============
+  // This is the critical fix - actually fetch detail from API
+  const {
+    data: detailData,
+    loading,
+    error,
+  } = useInspectionDetail(inspection?.id);
 
-  // Helper function to format currency
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  if (!isOpen) return null;
 
-  // Calculate recovery metrics
-  const recoveryRate = inspection.debtEstablished > 0
-    ? ((inspection.debtRecovered / inspection.debtEstablished) * 100).toFixed(1)
-    : "0";
-  
-  const outstandingDebt = inspection.debtEstablished - inspection.debtRecovered;
-  const averageDebtPerInspection = inspection.inspectionsConducted > 0
-    ? inspection.debtEstablished / inspection.inspectionsConducted
-    : 0;
-
-  // Helper to get performance badge color
-  const getPerformanceBadge = (rate: number): string => {
-    if (rate >= 80) return "bg-green-100 text-green-700 border-green-300";
-    if (rate >= 60) return "bg-yellow-100 text-yellow-700 border-yellow-300";
-    return "bg-red-100 text-red-700 border-red-300";
-  };
-
+  // ============= HANDLERS =============
   const handlePrint = () => {
     window.print();
   };
 
   const handleDownload = () => {
+    if (!inspection || !detailData) return;
+
     const content = `
 INSPECTION RECORD DETAILS
 ========================
 
-Branch: ${inspection.branch}
-Period: ${inspection.period}
+Branch: ${detailData.branchInformation.branchName}
+Region: ${detailData.branchInformation.region}
+Period: ${detailData.branchInformation.period}
 
-INSPECTION SUMMARY
+PERFORMANCE METRICS
 ==================
-Inspections Conducted: ${inspection.inspectionsConducted.toLocaleString()}
-Demand Notices Issued: ${inspection.demandNotice}
-Performance Rate: ${inspection.performanceRate}%
+Performance Rate: ${detailData.performanceMetrics.performanceRate}%
+Recovery Rate: ${detailData.performanceMetrics.recoveryRate}%
+
+INSPECTION ACTIVITY
+==================
+Inspections Conducted: ${detailData.inspectionActivity.inspectionsConducted.toLocaleString()}
+Demand Notices Issued: ${detailData.inspectionActivity.demandNoticesIssued.toLocaleString()}
+Demand Notices Percentage: ${
+      detailData.inspectionActivity.demandNoticesPercent
+    }%
 
 FINANCIAL SUMMARY
 =================
-Debt Established: ${formatCurrency(inspection.debtEstablished)}
-Debt Recovered: ${formatCurrency(inspection.debtRecovered)}
-Outstanding Debt: ${formatCurrency(outstandingDebt)}
-Recovery Rate: ${recoveryRate}%
-Average Debt per Inspection: ${formatCurrency(averageDebtPerInspection)}
+Debt Established: ${formatInspectionCurrency(
+      detailData.financialSummary.debtEstablished
+    )}
+Debt Recovered: ${formatInspectionCurrency(
+      detailData.financialSummary.debtRecovered
+    )}
+Outstanding Debt: ${formatInspectionCurrency(
+      detailData.financialSummary.outstandingDebt
+    )}
+Average Debt per Inspection: ${formatInspectionCurrency(
+      detailData.financialSummary.averageDebtPerInspection
+    )}
 
 Generated on: ${new Date().toLocaleString()}
     `.trim();
 
-    const blob = new Blob([content], { type: 'text/plain' });
+    const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `inspection-${inspection.branch.replace(/\s+/g, '-')}-${inspection.period}.txt`;
+    a.download = `inspection-${inspection.branch.replace(/\s+/g, "-")}-${
+      inspection.period
+    }.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
+  // ============= LOADING STATE =============
+  if (loading) {
+    return (
+      <>
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={onClose}
+        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full p-8">
+            <LoadingState message="Loading inspection details..." />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ============= ERROR STATE =============
+  if (error) {
+    return (
+      <>
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={onClose}
+        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full p-8">
+            <ErrorState error={new Error(error)} />
+            <button
+              onClick={onClose}
+              className="mt-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ============= NO DATA =============
+  if (!inspection || !detailData) {
+    return null;
+  }
+
+  // ============= RENDER FULL DETAIL =============
   return (
     <>
       {/* Backdrop */}
@@ -101,11 +172,16 @@ Generated on: ${new Date().toLocaleString()}
                 <FileText className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Inspection Record</h2>
-                <p className="text-sm text-gray-600">{inspection.branch} - {inspection.period}</p>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Inspection Details
+                </h2>
+                <p className="text-sm text-gray-600">
+                  {detailData.branchInformation.branchName} -{" "}
+                  {detailData.branchInformation.period}
+                </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <button
                 onClick={handleDownload}
@@ -138,16 +214,28 @@ Generated on: ${new Date().toLocaleString()}
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Building2 className="w-5 h-5 text-gray-600" />
-                  <h3 className="font-semibold text-gray-900">Branch Information</h3>
+                  <h3 className="font-semibold text-gray-900">
+                    Branch Information
+                  </h3>
                 </div>
                 <div className="space-y-2">
                   <div>
-                    <p className="text-xs text-gray-600 uppercase">Branch Name</p>
-                    <p className="text-sm font-medium text-gray-900">{inspection.branch}</p>
+                    <p className="text-xs text-gray-600 uppercase">Region</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {detailData.branchInformation.region}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase">Branch</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {detailData.branchInformation.branchName}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-600 uppercase">Period</p>
-                    <p className="text-sm font-medium text-gray-900">{inspection.period}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {detailData.branchInformation.period}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -155,18 +243,30 @@ Generated on: ${new Date().toLocaleString()}
               <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-lg p-4 border border-blue-200">
                 <div className="flex items-center gap-2 mb-3">
                   <TrendingUp className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900">Performance Metrics</h3>
+                  <h3 className="font-semibold text-gray-900">
+                    Performance Metrics
+                  </h3>
                 </div>
                 <div className="space-y-2">
                   <div>
-                    <p className="text-xs text-gray-600 uppercase">Performance Rate</p>
-                    <Badge className={`${getPerformanceBadge(inspection.performanceRate)} font-semibold text-lg px-3 py-1 border`}>
-                      {inspection.performanceRate}%
+                    <p className="text-xs text-gray-600 uppercase">
+                      Performance Rate
+                    </p>
+                    <Badge
+                      className={`${getInspectionPerformanceBadge(
+                        detailData.performanceMetrics.performanceRate
+                      )} font-semibold text-lg px-3 py-1 border`}
+                    >
+                      {detailData.performanceMetrics.performanceRate}%
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 uppercase">Recovery Rate</p>
-                    <p className="text-xl font-bold text-green-700">{recoveryRate}%</p>
+                    <p className="text-xs text-gray-600 uppercase">
+                      Recovery Rate
+                    </p>
+                    <p className="text-xl font-bold text-green-700">
+                      {detailData.performanceMetrics.recoveryRate}%
+                    </p>
                   </div>
                 </div>
               </div>
@@ -174,23 +274,35 @@ Generated on: ${new Date().toLocaleString()}
 
             {/* Inspection Activity */}
             <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-              <h3 className="font-semibold text-gray-900 mb-4">Inspection Activity</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="font-semibold text-gray-900 mb-4">
+                Inspection Activity
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <p className="text-xs text-gray-600 uppercase mb-1">Inspections Conducted</p>
+                  <p className="text-xs text-gray-600 uppercase mb-1">
+                    Inspections Conducted
+                  </p>
                   <p className="text-3xl font-bold text-blue-700">
-                    {inspection.inspectionsConducted.toLocaleString()}
+                    {detailData.inspectionActivity.inspectionsConducted.toLocaleString()}
                   </p>
                 </div>
 
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <p className="text-xs text-gray-600 uppercase mb-1">Demand Notices Issued</p>
-                  <p className="text-3xl font-bold text-blue-700">
-                    {inspection.demandNotice.toLocaleString()}
+                  <p className="text-xs text-gray-600 uppercase mb-1">
+                    Demand Notices Issued
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {((inspection.demandNotice / inspection.inspectionsConducted) * 100).toFixed(1)}% of inspections
+                  <p className="text-3xl font-bold text-blue-700">
+                    {detailData.inspectionActivity.demandNoticesIssued.toLocaleString()}
+                  </p>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <p className="text-xs text-gray-600 uppercase mb-1">
+                    Notice Percentage
+                  </p>
+                  <p className="text-3xl font-bold text-blue-700">
+                    {detailData.inspectionActivity.demandNoticesPercent}%
                   </p>
                 </div>
               </div>
@@ -198,72 +310,67 @@ Generated on: ${new Date().toLocaleString()}
 
             {/* Financial Summary */}
             <div className="bg-gradient-to-br from-green-50 to-yellow-50 rounded-lg p-6 border border-green-200">
-              <h3 className="font-semibold text-gray-900 mb-4">Financial Summary</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <h3 className="font-semibold text-gray-900 mb-4">
+                Financial Summary
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <p className="text-xs text-gray-600 uppercase mb-1">Debt Established</p>
+                  <p className="text-xs text-gray-600 uppercase mb-1">
+                    Debt Established
+                  </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(inspection.debtEstablished)}
+                    {formatInspectionCurrency(
+                      detailData.financialSummary.debtEstablished
+                    )}
                   </p>
                 </div>
 
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <p className="text-xs text-gray-600 uppercase mb-1">Debt Recovered</p>
+                  <p className="text-xs text-gray-600 uppercase mb-1">
+                    Debt Recovered
+                  </p>
                   <p className="text-2xl font-bold text-green-700">
-                    {formatCurrency(inspection.debtRecovered)}
+                    {formatInspectionCurrency(
+                      detailData.financialSummary.debtRecovered
+                    )}
                   </p>
                   <p className="text-xs text-green-600 mt-1">
-                    {recoveryRate}% of established debt
+                    {detailData.performanceMetrics.recoveryRate}% recovered
                   </p>
                 </div>
 
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <p className="text-xs text-gray-600 uppercase mb-1">Outstanding Debt</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {formatCurrency(outstandingDebt)}
+                  <p className="text-xs text-gray-600 uppercase mb-1">
+                    Outstanding Debt
                   </p>
-                  <p className="text-xs text-red-600 mt-1">
-                    {(100 - Number(recoveryRate)).toFixed(1)}% remaining
+                  <p
+                    className={`text-2xl font-bold ${
+                      detailData.financialSummary.outstandingDebt < 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {formatInspectionCurrency(
+                      detailData.financialSummary.outstandingDebt
+                    )}
                   </p>
+                  {detailData.financialSummary.outstandingDebt < 0 && (
+                    <p className="text-xs text-green-600 mt-1">
+                      Over-recovered
+                    </p>
+                  )}
                 </div>
-              </div>
 
-              <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <p className="text-xs text-gray-600 uppercase mb-1">Average Debt per Inspection</p>
-                <p className="text-xl font-bold text-gray-900">
-                  {formatCurrency(averageDebtPerInspection)}
-                </p>
-              </div>
-            </div>
-
-            {/* Key Metrics Grid */}
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Key Metrics</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-xs text-gray-600 uppercase">Branch</p>
-                  <p className="text-sm font-medium text-gray-900">{inspection.branch}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 uppercase">Period</p>
-                  <p className="text-sm font-medium text-gray-900">{inspection.period}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 uppercase">Performance</p>
-                  <p className="text-sm font-medium text-gray-900">{inspection.performanceRate}%</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 uppercase">Inspections</p>
-                  <p className="text-sm font-medium text-gray-900">{inspection.inspectionsConducted}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 uppercase">Demand Notices</p>
-                  <p className="text-sm font-medium text-gray-900">{inspection.demandNotice}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 uppercase">Recovery Rate</p>
-                  <p className="text-sm font-medium text-gray-900">{recoveryRate}%</p>
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <p className="text-xs text-gray-600 uppercase mb-1">
+                    Average per Inspection
+                  </p>
+                  <p className="text-xl font-bold text-gray-900">
+                    {formatInspectionCurrency(
+                      detailData.financialSummary.averageDebtPerInspection
+                    )}
+                  </p>
                 </div>
               </div>
             </div>

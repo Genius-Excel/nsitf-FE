@@ -1,6 +1,6 @@
 "use client";
 
-import { HSEDashboardContent } from "./hseFunc";
+import HSEDashboardContent from "./hseFunc";
 
 export default function HSEPage() {
   return (

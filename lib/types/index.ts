@@ -43,24 +43,6 @@ export interface InspectionRecord {
   period: string; // e.g., "Q1 2024", "Jan 2024"
 }
 
-export interface InspectionStatCard {
-  title: string;
-  value: string | number;
-  description?: string;
-  change?: string;
-  icon: React.ReactNode;
-  bgColor: string;
-}
-
-export interface UpcomingInspection {
-  id: number;
-  employer: string;
-  location: string;
-  date: string;
-  inspector: string;
-  status: "Scheduled" | "Pending";
-}
-
 export interface MonthlyChartData {
   month: string;
   debtsEstablished: number;
@@ -88,7 +70,7 @@ export interface ChartDataPoint {
   target: number;
 }
 
-export interface HSERecord {
+export interface RegionalHSERecord {
   id: string;
   region: string;
   branch: string;
@@ -99,40 +81,6 @@ export interface HSERecord {
   oshInspectionAudit: number;
   accidentInvestigation: number;
   activitiesPeriod: string; // e.g., "Q3 2024", "Jan 2024"
-}
-
-export interface HSEStatCard {
-  title: string;
-  value: string | number;
-  description?: string;
-  change?: string;
-  icon: React.ReactNode;
-  bgColor: string;
-}
-
-export interface HSEActivity {
-  id: string;
-  type:
-    | "Letter Issued"
-    | "OSH Awareness"
-    | "Safety Audit"
-    | "Accident Investigation";
-  organization: string;
-  date: string;
-  status: "pending" | "progress" | "resolved" | "closed";
-  details?: string;
-  recommendations?: string;
-  icon: string;
-}
-
-export interface HSEFormData {
-  type: string;
-  organization: string;
-  date: string;
-  status: string;
-  details: string;
-  recommendations: string;
-  safetyComplianceRate?: number | string;
 }
 
 export interface StatCard {

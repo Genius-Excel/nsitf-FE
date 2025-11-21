@@ -2,15 +2,7 @@ import React from "react";
 import { X, MapPin, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CircleCheck } from "lucide-react";
-
-interface UpcomingInspection {
-  id: number;
-  employer: string;
-  location: string;
-  date: string;
-  inspector: string;
-  status: string;
-}
+import type { UpcomingInspection } from "@/lib/types/inspection";
 
 interface ViewAllInspectionsModalProps {
   isOpen: boolean;

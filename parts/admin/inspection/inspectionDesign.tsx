@@ -2,7 +2,6 @@
 import React from "react";
 import { Eye, CircleCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -20,12 +19,12 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import {
+import type {
   InspectionRecord,
   InspectionStatCard,
   UpcomingInspection,
   MonthlyChartData,
-} from "@/lib/types";
+} from "@/lib/types/inspection";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
 import { SearchBar } from "@/components/design-system/SearchBar";
 
@@ -37,7 +36,10 @@ interface InspectionStatisticsCardsProps {
 export const InspectionStatisticsCards: React.FC<
   InspectionStatisticsCardsProps
 > = ({ stats }) => {
-  const colorMap: Record<string, "green" | "blue" | "orange" | "purple" | "gray"> = {
+  const colorMap: Record<
+    string,
+    "green" | "blue" | "orange" | "purple" | "gray"
+  > = {
     "#3b82f6": "blue",
     "#22c55e": "green",
     "#f59e0b": "orange",

@@ -1,166 +1,304 @@
+// ============================================================================
+// HSE Management Dashboard - Refactored
+// ============================================================================
+// Clean component that uses hooks for all business logic
+// No mock data, no inline logic, just composition
+// ============================================================================
+
 "use client";
 
 import { useState } from "react";
-import {
-  useGetHSEDashboard,
-  useGetHSERecordDetail,
-} from "@/hooks/useGetHSEDashboard";
-import { MetricCard } from "@/components/design-system/MetricCard";
+import { Plus } from "lucide-react";
+import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
-import { PageHeader } from "@/components/design-system/PageHeader";
-import type { HSEDashboardResponse } from "@/lib/types/hse";
+import { SearchBar } from "@/components/design-system/SearchBar";
+import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
+import {
+  StatisticsCards,
+  RecentHSEActivities,
+  MonthlySummary,
+  ComplianceRate,
+  HSERecordsTable,
+} from "./hseDesign";
+import { HSEFormModal, ViewDetailsModal } from "./hseModal";
+import { useHSEDashboard } from "@/hooks/hse/useGetHSEDashboard";
+import { useHSERecords } from "@/hooks/hse/useHSERecords";
+import { useHSEFilters } from "@/hooks/hse/useHSEFilters";
+import { useCreateHSERecord } from "@/hooks/hse/useCreateHSERecord";
+import { useUpdateHSERecord } from "@/hooks/hse/useUpdateHSERecord";
+import { useDeleteHSERecord } from "@/hooks/hse/useDeleteHSERecord";
+import type { HSERecord, HSEFormData, HSEStatCard } from "@/lib/types/hse";
 
-export function HSEDashboardContent() {
-  const [selectedView, setSelectedView] = useState<"table" | "activities">(
-    "table"
-  );
-  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
+export default function HSEDashboardContent() {
+  // ============= STATE =============
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<HSERecord | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<HSEFormData>({
+    recordType: "",
+    employer: "",
+    safetyComplianceRate: "",
+    dateLogged: "",
+    status: "",
+    details: "",
+    recommendations: "",
+  });
 
-  // Fetch dashboard data
-  const { data, isLoading, error } = useGetHSEDashboard(selectedView);
+  // ============= HOOKS =============
+  const {
+    data: dashboardData,
+    loading: dashboardLoading,
+    error: dashboardError,
+    refetch: refetchDashboard,
+  } = useHSEDashboard();
+  const {
+    data: records,
+    loading: recordsLoading,
+    error: recordsError,
+    refetch: refetchRecords,
+  } = useHSERecords();
+  const { filteredRecords } = useHSEFilters(records, { searchTerm });
+  const { createRecord, loading: creating } = useCreateHSERecord();
+  const { updateRecord, loading: updating } = useUpdateHSERecord();
+  const { deleteRecord, loading: deleting } = useDeleteHSERecord();
 
-  // Fetch detail for modal (only when record selected)
-  const { data: detailData } = useGetHSERecordDetail(
-    selectedRecordId || undefined
-  );
-
-  if (isLoading) {
-    return <LoadingState message="Loading HSE Dashboard..." />;
-  }
-
-  if (error) {
-    return <ErrorState error={error as Error} />;
-  }
-
-  if (!data) {
-    return <ErrorState error={new Error("No data available")} />;
-  }
-
-  // Type guard for table view
-  const isTableView = (data: any): data is HSEDashboardResponse => {
-    return "data" in data && "metric_cards" in data.data;
+  // ============= HANDLERS =============
+  const handleAddNew = () => {
+    setIsEditing(false);
+    setFormData({
+      recordType: "",
+      employer: "",
+      safetyComplianceRate: "",
+      dateLogged: "",
+      status: "",
+      details: "",
+      recommendations: "",
+    });
+    setIsFormModalOpen(true);
   };
 
-  if (!isTableView(data)) {
-    // Handle activities view
-    return <HSEActivitiesView data={data} />;
+  const handleEdit = (record: HSERecord) => {
+    setIsEditing(true);
+    setSelectedRecord(record);
+    setFormData({
+      recordType: record.recordType,
+      employer: record.employer,
+      safetyComplianceRate: record.safetyComplianceRate.toString(),
+      dateLogged: record.dateLogged,
+      status: record.status,
+      details: record.details,
+      recommendations: record.recommendations,
+    });
+    setIsFormModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (isEditing && selectedRecord) {
+      const success = await updateRecord(selectedRecord.id, {
+        details: formData.details,
+        status: formData.status,
+        recommendations: formData.recommendations,
+      });
+      if (success) {
+        setIsFormModalOpen(false);
+        refetchRecords();
+        refetchDashboard();
+      }
+    } else {
+      const created = await createRecord(formData);
+      if (created) {
+        setIsFormModalOpen(false);
+        refetchRecords();
+        refetchDashboard();
+      }
+    }
+  };
+
+  const handleViewDetails = (record: HSERecord) => {
+    setSelectedRecord(record);
+    setIsDetailModalOpen(true);
+  };
+
+  // ============= LOADING & ERROR STATES =============
+  if (dashboardLoading || recordsLoading) {
+    return <LoadingState message="Loading HSE dashboard..." />;
   }
 
-  const { metric_cards, regional_summary, filters } = data.data;
+  if (dashboardError || recordsError) {
+    return (
+      <ErrorState
+        error={new Error(dashboardError || recordsError || "Unknown error")}
+      />
+    );
+  }
 
+  if (!dashboardData) {
+    return <ErrorState error={new Error("No dashboard data available")} />;
+  }
+
+  // ============= PREPARE STATS =============
+  const stats: HSEStatCard[] = [
+    {
+      title: "Total OSH Activities",
+      value: dashboardData.metricCards.totalActualOSHActivities,
+      colorScheme: "blue",
+      description: `Target: ${dashboardData.metricCards.targetOSHActivities}`,
+    },
+    {
+      title: "Performance Rate",
+      value: `${dashboardData.metricCards.performanceRate.toFixed(1)}%`,
+      colorScheme:
+        dashboardData.metricCards.performanceRate >= 80
+          ? "green"
+          : dashboardData.metricCards.performanceRate >= 60
+          ? "orange"
+          : "gray",
+    },
+    {
+      title: "OSH Enlightenment",
+      value: dashboardData.metricCards.oshEnlightenment,
+      colorScheme: "green",
+    },
+    {
+      title: "OSH Audit",
+      value: dashboardData.metricCards.oshAudit,
+      colorScheme: "orange",
+    },
+    {
+      title: "Accident Investigation",
+      value: dashboardData.metricCards.accidentInvestigation,
+      colorScheme: "purple",
+    },
+  ];
+
+  const summaryData = [
+    {
+      label: "Total Actual Activities",
+      value: dashboardData.metricCards.totalActualOSHActivities,
+    },
+    {
+      label: "Target Activities",
+      value: dashboardData.metricCards.targetOSHActivities,
+    },
+    {
+      label: "OSH Enlightenment",
+      value: dashboardData.metricCards.oshEnlightenment,
+    },
+    {
+      label: "OSH Audit",
+      value: dashboardData.metricCards.oshAudit,
+    },
+  ];
+
+  // ============= RENDER =============
   return (
     <div className="space-y-6">
       {/* Header */}
       <PageHeader
         title="HSE Management Dashboard"
-        subtitle={`Period: ${filters.as_of}`}
+        description="Health, Safety, and Environment monitoring and compliance tracking"
+        action={
+          <button
+            onClick={handleAddNew}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          >
+            <Plus size={20} />
+            Add HSE Record
+          </button>
+        }
       />
 
-      {/* View Toggle */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setSelectedView("table")}
-          className={`px-4 py-2 rounded ${
-            selectedView === "table" ? "bg-blue-600 text-white" : "bg-gray-200"
-          }`}
-        >
-          Table View
-        </button>
-        <button
-          onClick={() => setSelectedView("activities")}
-          className={`px-4 py-2 rounded ${
-            selectedView === "activities"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200"
-          }`}
-        >
-          Activities View
-        </button>
-      </div>
+      {/* Statistics Cards */}
+      <StatisticsCards stats={stats} />
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Total OSH Activities"
-          value={metric_cards.total_actual_osh_activities}
-          subtitle={`Target: ${metric_cards.target_osh_activities}`}
-          trend={metric_cards.performance_rate}
+      {/* Dashboard Metrics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <MonthlySummary data={summaryData} />
+        <ComplianceRate
+          percentage={dashboardData.metricCards.performanceRate}
+          change={`Period: ${dashboardData.filters.asOf}`}
         />
-        <MetricCard
-          title="Performance Rate"
-          value={`${metric_cards.performance_rate}%`}
-          trend={metric_cards.performance_rate >= 50 ? "up" : "down"}
-        />
-        <MetricCard
-          title="OSH Enlightenment"
-          value={metric_cards.osh_enlightenment}
-        />
-        <MetricCard title="OSH Audits" value={metric_cards.osh_audit} />
       </div>
 
       {/* Regional Summary Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b">
-          <h2 className="text-xl font-semibold">Regional Performance</h2>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-lg font-semibold">
+            Regional OSH Activities Summary
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Performance by region and branch for {dashboardData.filters.period}
+          </p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                   Region
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                   Branch
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Activities
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
+                  Total Activities
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
                   Target
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
                   Performance
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
+                  Enlightenment
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
+                  Audit
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
+                  Investigation
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {regional_summary.map((record) => (
-                <tr key={record.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {record.region}
+            <tbody className="divide-y divide-gray-200">
+              {dashboardData.regionalSummary.map((region) => (
+                <tr key={region.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                    {region.region}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {record.branch}
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {region.branch}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {record.total_actual_osh_activities}
+                  <td className="px-4 py-3 text-sm text-center">
+                    {region.totalActualOSHActivities}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {record.target_osh_activities}
+                  <td className="px-4 py-3 text-sm text-center">
+                    {region.targetOSHActivities}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-3 text-sm text-center">
                     <span
-                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        record.performance_rate >= 50
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        region.performanceRate >= 80
+                          ? "bg-green-100 text-green-700"
+                          : region.performanceRate >= 60
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {record.performance_rate}%
+                      {region.performanceRate.toFixed(1)}%
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
-                    <button
-                      onClick={() => setSelectedRecordId(record.id)}
-                      className="hover:underline"
-                    >
-                      View Details
-                    </button>
+                  <td className="px-4 py-3 text-sm text-center">
+                    {region.oshEnlightenment}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-center">
+                    {region.oshInspectionAudit}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-center">
+                    {region.accidentInvestigation}
                   </td>
                 </tr>
               ))}
@@ -169,175 +307,47 @@ export function HSEDashboardContent() {
         </div>
       </div>
 
-      {/* Detail Modal */}
-      {selectedRecordId && detailData && (
-        <HSEDetailModal
-          data={detailData}
-          onClose={() => setSelectedRecordId(null)}
-        />
-      )}
-    </div>
-  );
-}
+      {/* Search Bar */}
+      <SearchBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        placeholder="Search HSE records..."
+      />
 
-// Activities View Component
-function HSEActivitiesView({ data }: { data: any }) {
-  return (
-    <div className="space-y-4">
-      <PageHeader title="Recent HSE Activities" />
-      <div className="grid gap-4">
-        {data.data.map((activity: any) => (
-          <div key={activity.id} className="bg-white p-6 rounded-lg shadow">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-semibold text-lg">{activity.employer}</h3>
-                <p className="text-sm text-gray-500">{activity.record_type}</p>
-              </div>
-              <span
-                className={`px-3 py-1 rounded-full text-sm ${
-                  activity.status === "completed"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-yellow-100 text-yellow-800"
-                }`}
-              >
-                {activity.status}
-              </span>
-            </div>
-            <p className="mt-2 text-sm text-gray-600">
-              {activity.details || "No details available"}
-            </p>
-            <div className="mt-4 flex gap-4 text-sm text-gray-500">
-              <span>Compliance: {activity.safety_compliance_rate}%</span>
-              <span>
-                Date: {new Date(activity.date_logged).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+      {/* Records Table */}
+      <HSERecordsTable
+        records={filteredRecords}
+        onViewDetails={handleViewDetails}
+      />
 
-// Detail Modal Component
-function HSEDetailModal({ data, onClose }: { data: any; onClose: () => void }) {
-  const {
-    location_information,
-    performance_metrics,
-    target_vs_actual,
-    activity_breakdown,
-  } = data.data;
+      {/* Modals */}
+      <HSEFormModal
+        isOpen={isFormModalOpen}
+        onOpenChange={setIsFormModalOpen}
+        onSave={handleSave}
+        formData={formData}
+        onFormChange={setFormData}
+        isEditing={isEditing}
+      />
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h2 className="text-2xl font-bold">
-              {location_information.region} - {location_information.branch}
-            </h2>
-            <p className="text-gray-500">{location_information.period}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="space-y-6">
-          {/* Performance Metrics */}
-          <div>
-            <h3 className="font-semibold mb-2">Performance Metrics</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-4 rounded">
-                <p className="text-sm text-gray-500">Performance Rate</p>
-                <p className="text-2xl font-bold">
-                  {performance_metrics.performance_rate}%
-                </p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded">
-                <p className="text-sm text-gray-500">Achievement Rate</p>
-                <p className="text-2xl font-bold">
-                  {performance_metrics.achievement_rate}%
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Target vs Actual */}
-          <div>
-            <h3 className="font-semibold mb-2">Target vs Actual</h3>
-            <div className="bg-gray-50 p-4 rounded space-y-2">
-              <div className="flex justify-between">
-                <span>Target Activities:</span>
-                <span className="font-semibold">
-                  {target_vs_actual.target_activities}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Actual Activities:</span>
-                <span className="font-semibold">
-                  {target_vs_actual.actual_activities}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Variance:</span>
-                <span
-                  className={`font-semibold ${
-                    target_vs_actual.variance >= 0
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }`}
-                >
-                  {target_vs_actual.variance}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Activity Breakdown */}
-          <div>
-            <h3 className="font-semibold mb-2">Activity Breakdown</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span>OSH Enlightenment</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">
-                    {activity_breakdown.osh_enlightenment}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    ({activity_breakdown.osh_enlightenment_pct}%)
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>OSH Audit</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">
-                    {activity_breakdown.osh_audit}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    ({activity_breakdown.osh_audit_pct}%)
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Accident Investigation</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">
-                    {activity_breakdown.accident_investigation}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    ({activity_breakdown.accident_investigation_pct}%)
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ViewDetailsModal
+        isOpen={isDetailModalOpen}
+        onOpenChange={setIsDetailModalOpen}
+        activity={
+          selectedRecord
+            ? {
+                id: selectedRecord.id,
+                type: selectedRecord.recordType,
+                organization: selectedRecord.employer,
+                date: selectedRecord.dateLogged,
+                status: selectedRecord.status,
+                details: selectedRecord.details,
+                recommendations: selectedRecord.recommendations,
+                icon: "📋",
+              }
+            : null
+        }
+      />
     </div>
   );
 }
