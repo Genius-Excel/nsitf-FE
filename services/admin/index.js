@@ -252,12 +252,12 @@ export const useGetVerificationStatus = ({ enabled = false, businessId }) => {
       const response = await httpService.getData(
         routes.getVerificationStatus(businessId)
       );
-      return response; 
+      return response;
     },
     enabled: enabled && !!businessId,
     retry: 2,
-    staleTime: 5 * 60 * 1000, 
-    cacheTime: 10 * 60 * 1000, 
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
   });
    console.log("Verification Status Data:", rawData?.data);
   return {
@@ -266,6 +266,24 @@ export const useGetVerificationStatus = ({ enabled = false, businessId }) => {
     verificationError: error ? ErrorHandler(error) : null,
     refetchVerification: refetch,
     filterVerification: setFilter,
+  };
+};
+
+export const useGetKPIAnalysis = ({ enabled = true }) => {
+  const { data, error, isLoading, refetch } = useFetchItem({
+    queryKey: ["GetKPIAnalysis"],
+    queryFn: () => {
+      return httpService.getData(routes.getKPIAnalysis());
+    },
+    enabled,
+    retry: 2,
+  });
+
+  return {
+    kpiAnalysisIsLoading: isLoading,
+    kpiAnalysisData: data?.data?.data || null,
+    kpiAnalysisError: ErrorHandler(error),
+    refetchKPIAnalysis: refetch,
   };
 };
 

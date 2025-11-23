@@ -45,4 +45,6 @@ getComplianceDashboard: () => "/api/dashboard/compliance",
     `/api/inspection-ops/inspections/${inspectionId}`,
   getInspectionDashboardMetrics: () =>
     "/api/inspection-ops/inspections/dashboard",
+
+  getKPIAnalysis: () => "/api/kpi/analysis",
 };

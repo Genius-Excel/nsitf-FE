@@ -293,6 +293,71 @@ export interface KPIAnalyticsFilters {
   selectedPeriod: string;
 }
 
+// ===== KPI API Response Types ======
+
+export interface KPICardData {
+  value: number;
+  target: number | null;
+  trend?: number;
+  status: string;
+}
+
+export interface KPICardsResponse {
+  total_claims: KPICardData;
+  paid_claims: KPICardData;
+  pending_inspections: KPICardData;
+  compliance_rate: KPICardData;
+  risk_exposure: KPICardData;
+  avg_case_duration: KPICardData;
+}
+
+export interface MonthlyKPIData {
+  month: string;
+  claims: number;
+  compliance: number;
+  inspections: number;
+  hse: number;
+}
+
+export interface MonthlyKPIComparison {
+  data: MonthlyKPIData[];
+  scale: {
+    max: number;
+    ticks: number[];
+  };
+  percentage_scale: number[];
+}
+
+export interface SectorDistribution {
+  sector: string;
+  count: number;
+}
+
+export interface RegionalPerformanceData {
+  region: string;
+  claims: number;
+  paid: number;
+  pending: number;
+}
+
+export interface RegionalPerformance {
+  data: RegionalPerformanceData[];
+  scale: {
+    max: number;
+    ticks: number[];
+  };
+}
+
+export interface KPIAnalysisResponse {
+  message: string;
+  data: {
+    kpi_cards: KPICardsResponse;
+    monthly_kpi_comparison: MonthlyKPIComparison;
+    sector_distribution: SectorDistribution[];
+    regional_performance: RegionalPerformance;
+  };
+}
+
 // ===== Forecasting Types ======
 export interface ClaimTrendProjection {
   period: string;
