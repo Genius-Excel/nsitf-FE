@@ -23,7 +23,7 @@ import type {
   InspectionRecord,
   InspectionStatCard,
   UpcomingInspection,
-  MonthlyChartData,
+  MonthlyDebtsComparisonData,
 } from "@/lib/types/inspection";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
 import { SearchBar } from "@/components/design-system/SearchBar";
@@ -62,7 +62,7 @@ export const InspectionStatisticsCards: React.FC<
 
 // ============= BAR CHART =============
 interface InspectionBarChartProps {
-  data: MonthlyChartData[];
+  data: MonthlyDebtsComparisonData;
 }
 
 export const InspectionBarChart: React.FC<InspectionBarChartProps> = ({
@@ -78,16 +78,20 @@ export const InspectionBarChart: React.FC<InspectionBarChartProps> = ({
       </CardDescription>
     </CardHeader>
     <CardContent>
-      <div className="w-full h-[400px]">
+      <div className="w-full h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={data}
+            data={data.data}
             margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
             barGap={4}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#6b7280" }} />
-            <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} />
+            <YAxis
+              tick={{ fontSize: 12, fill: "#6b7280" }}
+              domain={[0, data.scale?.max || 'auto']}
+              ticks={data.scale?.ticks}
+            />
             <Tooltip
               cursor={{ fill: "#f9fafb" }}
               contentStyle={{

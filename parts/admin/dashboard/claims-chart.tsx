@@ -31,7 +31,7 @@ export function ClaimsPieChart({
             Claims Distribution
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-center h-[400px]">
+        <CardContent className="flex items-center justify-center h-[300px]">
           <p className="text-muted-foreground">Loading claims chart...</p>
         </CardContent>
       </Card>
@@ -46,7 +46,7 @@ export function ClaimsPieChart({
             Claims Distribution
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-center h-[400px]">
+        <CardContent className="flex items-center justify-center h-[300px]">
           <p className="text-muted-foreground">No claims data available.</p>
         </CardContent>
       </Card>
@@ -64,7 +64,7 @@ export function ClaimsPieChart({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="w-full h-[400px]">
+        <div className="w-full h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie

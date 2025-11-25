@@ -95,7 +95,7 @@ export function KPIAnalyticsDesign({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       {/* Header with Breadcrumb */}
       <div className="flex items-center justify-between">
         <div>
@@ -225,7 +225,7 @@ export function KPIAnalyticsDesign({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="w-full h-[400px]">
+          <div className="w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={monthlyKPIs}
@@ -317,7 +317,7 @@ export function KPIAnalyticsDesign({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="w-full h-[400px]">
+            <div className="w-full h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={regionalData}
@@ -381,7 +381,7 @@ export function KPIAnalyticsDesign({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="w-full h-[400px]">
+            <div className="w-full h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie

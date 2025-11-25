@@ -41,17 +41,6 @@ export function useUploadLegalActivities(): UseUploadLegalActivitiesReturn {
         throw new Error("File is required");
       }
 
-      // Validate file type
-      const validExtensions = [".xlsx", ".xls", ".csv"];
-      const fileExtension = file.name
-        .substring(file.name.lastIndexOf("."))
-        .toLowerCase();
-      if (!validExtensions.includes(fileExtension)) {
-        throw new Error(
-          "Invalid file type. Please upload an Excel or CSV file."
-        );
-      }
-
       // Create FormData
       const formData = new FormData();
       formData.append("region_id", regionId);

@@ -67,7 +67,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-10">
       {/* Header */}
       <PageHeader
         title="APRD Dashboard View for Super User"

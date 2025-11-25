@@ -4,7 +4,7 @@ import HSEDashboardContent from "./hseFunc";
 
 export default function HSEPage() {
   return (
-    <div className="container mx-auto p-4">
+    <div className="space-y-10">
       <HSEDashboardContent />
     </div>
   );

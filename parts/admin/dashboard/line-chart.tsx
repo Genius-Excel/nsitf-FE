@@ -22,7 +22,7 @@ export function DashboardLineChart({
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-gray-900">Monthly Performance Trends</CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-center h-[400px]">
+        <CardContent className="flex items-center justify-center h-[300px]">
           <p className="text-muted-foreground">Loading chart...</p>
         </CardContent>
       </Card>
@@ -35,7 +35,7 @@ export function DashboardLineChart({
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-gray-900">Monthly Performance Trends</CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-center h-[400px]">
+        <CardContent className="flex items-center justify-center h-[300px]">
           <p className="text-muted-foreground">
             No performance data available.
           </p>
@@ -55,7 +55,7 @@ export function DashboardLineChart({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="w-full h-[400px]">
+        <div className="w-full h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={data}

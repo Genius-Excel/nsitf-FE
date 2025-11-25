@@ -208,16 +208,15 @@ const ComplianceDashboard: React.FC = () => {
 
   // ============== RENDER ==============
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Header */}
-        <PageHeader
-          title="Compliance View"
-          description="Track contributions, targets, and employer registration across regions"
-        />
+    <div className="space-y-10">
+      {/* Header */}
+      <PageHeader
+        title="Compliance View"
+        description="Track contributions, targets, and employer registration across regions"
+      />
 
-        {/* Dashboard Cards */}
-        <DashboardCards
+      {/* Dashboard Cards */}
+      <DashboardCards
           metrics={{
             totalActualContributions:
               dashboardData?.metric_cards.total_contributions ?? 0,
@@ -226,10 +225,10 @@ const ComplianceDashboard: React.FC = () => {
             totalEmployers: dashboardData?.metric_cards.total_employers ?? 0,
             totalEmployees: dashboardData?.metric_cards.total_employees ?? 0,
           }}
-        />
+      />
 
-        {/* Action Bar */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      {/* Action Bar */}
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           {/* Search */}
           <div className="flex-1 relative">
             <Search
@@ -269,10 +268,10 @@ const ComplianceDashboard: React.FC = () => {
               <span>Create Region</span>
             </button>
           </div>
-        </div>
+      </div>
 
-        {/* Filter Panel */}
-        <FilterPanel
+      {/* Filter Panel */}
+      <FilterPanel
           filterConfig={{
             regions: selectedRegions,
             achievementMin,
@@ -288,18 +287,18 @@ const ComplianceDashboard: React.FC = () => {
           availableRegions={regionNames}
           totalEntries={totalCount}
           filteredCount={filteredCount}
-        />
+      />
 
-        {/* Main Table */}
-        <ComplianceTable
+      {/* Main Table */}
+      <ComplianceTable
           entries={mappedEntries}
           onViewDetails={handleViewDetails}
           sortConfig={null}
           onSort={() => {}} // Sorting can be added later if needed
-        />
+      />
 
-        {/* Bulk Upload Instructions */}
-        <div className="mt-6 p-4 sm:p-6 bg-blue-50 rounded-lg border border-blue-200">
+      {/* Bulk Upload Instructions */}
+      <div className="p-4 sm:p-6 bg-blue-50 rounded-lg border border-blue-200">
           <h3 className="font-medium text-gray-900 mb-2">
             Bulk Upload Instructions
           </h3>
@@ -312,8 +311,7 @@ const ComplianceDashboard: React.FC = () => {
             <li>Provide the period (YYYY-MM format)</li>
             <li>Upload Excel file with required sheets</li>
             <li>Review validation errors if any</li>
-          </ul>
-        </div>
+        </ul>
       </div>
 
       {/* Modals */}
@@ -345,9 +343,7 @@ const ComplianceDashboard: React.FC = () => {
       <ComplianceDetailModal
         entry={selectedEntry}
         isOpen={detailModal.isOpen}
-        isOpen={detailModal.isOpen}
         onClose={() => {
-          detailModal.close();
           detailModal.close();
           setSelectedEntry(null);
         }}

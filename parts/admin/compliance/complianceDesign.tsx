@@ -984,17 +984,6 @@ export const ComplianceUploadModal: React.FC<{
       return;
     }
 
-    // Validate period format
-    const periodRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
-    if (!periodRegex.test(period)) {
-      setErrors([
-        {
-          message: "Period must be in YYYY-MM format (e.g., 2025-11)",
-        },
-      ]);
-      return;
-    }
-
     setErrors([]);
 
     try {
@@ -1169,7 +1158,6 @@ export const ComplianceUploadModal: React.FC<{
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".xlsx,.xls"
                   onChange={(e) =>
                     e.target.files?.[0] && setFile(e.target.files[0])
                   }
@@ -1180,7 +1168,7 @@ export const ComplianceUploadModal: React.FC<{
                 <p className="text-sm font-medium text-gray-700 mb-1">
                   {file ? file.name : "Click to upload or drag and drop"}
                 </p>
-                <p className="text-xs text-gray-500">Excel or CSV files only</p>
+                <p className="text-xs text-gray-500">Upload your file</p>
               </div>
             </div>
 

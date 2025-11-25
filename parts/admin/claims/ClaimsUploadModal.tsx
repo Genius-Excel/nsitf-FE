@@ -250,7 +250,6 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".xlsx,.xls,.csv"
                   onChange={(e) =>
                     e.target.files?.[0] && handleFileSelect(e.target.files[0])
                   }
@@ -261,7 +260,7 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
                 <p className="text-sm font-medium text-gray-700 mb-1">
                   {file ? file.name : "Click to upload or drag and drop"}
                 </p>
-                <p className="text-xs text-gray-500">Excel or CSV files only</p>
+                <p className="text-xs text-gray-500">Upload your file</p>
                 {file && (
                   <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-md text-xs">
                     <FileSpreadsheet className="w-4 h-4" />

@@ -16,7 +16,7 @@ import UsersRolesManagement from "./users-role-management";
 
 export default function UsersPage() {
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-10">
       <UsersRolesManagement />
     </div>
   );
