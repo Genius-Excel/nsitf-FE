@@ -91,6 +91,7 @@ export const InspectionBarChart: React.FC<InspectionBarChartProps> = ({
               tick={{ fontSize: 12, fill: "#6b7280" }}
               domain={[0, data.scale?.max || 'auto']}
               ticks={data.scale?.ticks}
+              tickFormatter={(value) => `₦${(value / 1000000).toFixed(0)}M`}
             />
             <Tooltip
               cursor={{ fill: "#f9fafb" }}

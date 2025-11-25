@@ -273,76 +273,74 @@ export default function ClaimsManagement() {
 
   return (
     <div className="space-y-10">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <PageHeader
-          title="Claims and Compensation View"
-          description="Track and process employee compensation claims"
-        />
+      {/* Header */}
+      <PageHeader
+        title="Claims and Compensation View"
+        description="Track and process employee compensation claims"
+      />
 
-        {/* Loading State */}
-        {loading && !claims.length ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-            <p className="mt-4 text-gray-600">Loading claims data...</p>
-          </div>
-        ) : (
-          <>
-            {/* Statistics Cards */}
-            {stats.length > 0 && <StatisticsCards stats={stats} />}
+      {/* Loading State */}
+      {loading && !claims.length ? (
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          <p className="mt-4 text-gray-600">Loading claims data...</p>
+        </div>
+      ) : (
+        <>
+          {/* Statistics Cards */}
+          {stats.length > 0 && <StatisticsCards stats={stats} />}
 
-            {/* Claims Processing Chart */}
-            {chartData.length > 0 && (
-              <ClaimsProcessingChart
-                data={chartData}
-                maxValue={maxValue}
-                ticks={ticks}
-              />
-            )}
-
-            {/* Claim Type Cards */}
-            {claimTypes.length > 0 && (
-              <ClaimTypeCards claimTypes={claimTypes} />
-            )}
-
-            {/* Search and Filters */}
-            <SearchAndFilters
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              onFilterClick={handleFilterClick}
-              onExport={handleExport}
-              onUpload={() => setIsUploadModalOpen(true)}
+          {/* Claims Processing Chart */}
+          {chartData.length > 0 && (
+            <ClaimsProcessingChart
+              data={chartData}
+              maxValue={maxValue}
+              ticks={ticks}
             />
+          )}
 
-            {/* Claims Table */}
-            <ClaimsTable claims={filteredClaims} onView={handleViewClaim} />
+          {/* Claim Type Cards */}
+          {claimTypes.length > 0 && (
+            <ClaimTypeCards claimTypes={claimTypes} />
+          )}
 
-            {/* Pagination Info (Optional) */}
-            {pagination && pagination.totalPages > 1 && (
-              <div className="mt-4 text-center text-sm text-gray-600">
-                Page {pagination.page} of {pagination.totalPages}(
-                {pagination.totalCount} total claims)
-              </div>
-            )}
-          </>
-        )}
+          {/* Search and Filters */}
+          <SearchAndFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            onFilterClick={handleFilterClick}
+            onExport={handleExport}
+            onUpload={() => setIsUploadModalOpen(true)}
+          />
 
-        {/* Claim Detail Modal */}
-        <ClaimDetailModal
-          claimDetail={claimDetail}
-          isOpen={isDetailModalOpen}
-          onClose={handleCloseDetailModal}
-          loading={detailLoading}
-        />
+          {/* Claims Table */}
+          <ClaimsTable claims={filteredClaims} onView={handleViewClaim} />
 
-        {/* Claims Upload Modal */}
-        <ClaimsUploadModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
-          onUpload={uploadClaims}
-          progress={uploadProgress}
-        />
-      </div>
+          {/* Pagination Info (Optional) */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="mt-4 text-center text-sm text-gray-600">
+              Page {pagination.page} of {pagination.totalPages}(
+              {pagination.totalCount} total claims)
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Claim Detail Modal */}
+      <ClaimDetailModal
+        claimDetail={claimDetail}
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseDetailModal}
+        loading={detailLoading}
+      />
+
+      {/* Claims Upload Modal */}
+      <ClaimsUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUpload={uploadClaims}
+        progress={uploadProgress}
+      />
     </div>
   );
 }
