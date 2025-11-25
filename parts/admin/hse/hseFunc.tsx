@@ -214,15 +214,6 @@ export default function HSEDashboardContent() {
       {/* Statistics Cards */}
       <StatisticsCards stats={stats} />
 
-      {/* Dashboard Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <MonthlySummary data={summaryData} />
-        <ComplianceRate
-          percentage={dashboardData.metricCards.performanceRate}
-          change={`Period: ${dashboardData.filters.asOf}`}
-        />
-      </div>
-
       {/* Regional Summary Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="p-6 border-b border-gray-200">
@@ -314,11 +305,30 @@ export default function HSEDashboardContent() {
         placeholder="Search HSE records..."
       />
 
-      {/* Records Table */}
-      <HSERecordsTable
-        records={filteredRecords}
-        onViewDetails={handleViewDetails}
-      />
+      {/* HSE Records Table */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-lg font-semibold">
+            HSE Records
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Detailed HSE activities and compliance records
+          </p>
+        </div>
+        <HSERecordsTable
+          records={filteredRecords}
+          onViewDetails={handleViewDetails}
+        />
+      </div>
+
+      {/* Dashboard Metrics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <MonthlySummary data={summaryData} />
+        <ComplianceRate
+          percentage={dashboardData.metricCards.performanceRate}
+          change={`Period: ${dashboardData.filters.asOf}`}
+        />
+      </div>
 
       {/* Modals */}
       <HSEFormModal
