@@ -28,9 +28,11 @@ export const useUserFilters = (users: User[] | null) => {
       );
     }
 
-    // Role filter
+    // Role filter - case-insensitive comparison
     if (filterRole !== "All Roles") {
-      filtered = filtered.filter((user) => user.role === filterRole);
+      filtered = filtered.filter(
+        (user) => user.role?.toLowerCase() === filterRole.toLowerCase()
+      );
     }
 
     return filtered;

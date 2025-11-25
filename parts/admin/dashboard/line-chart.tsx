@@ -1,14 +1,7 @@
 "use client";
 
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DashboardSummaryResponse } from "@/lib/types/dashboard";
 import { useMonthlyPerformanceChart } from "@/hooks/Usedashboardcharts";
 
@@ -16,22 +9,6 @@ interface DashboardLineChartProps {
   dashboardData: DashboardSummaryResponse | null;
   loading?: boolean;
 }
-
-// Chart configuration - using CSS variables for proper theming
-const chartConfig = {
-  claims: {
-    label: "Claims",
-    color: "hsl(var(--chart-1))",
-  },
-  inspections: {
-    label: "Inspections",
-    color: "hsl(var(--chart-2))",
-  },
-  hse: {
-    label: "HSE Activities",
-    color: "hsl(var(--chart-3))",
-  },
-} as const;
 
 export function DashboardLineChart({
   dashboardData,
@@ -41,9 +18,9 @@ export function DashboardLineChart({
 
   if (loading) {
     return (
-      <Card>
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
         <CardHeader>
-          <CardTitle>Monthly Performance Trends</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-900">Monthly Performance Trends</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-[400px]">
           <p className="text-muted-foreground">Loading chart...</p>
@@ -54,9 +31,9 @@ export function DashboardLineChart({
 
   if (!data || data.length === 0) {
     return (
-      <Card>
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
         <CardHeader>
-          <CardTitle>Monthly Performance Trends</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-900">Monthly Performance Trends</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-[400px]">
           <p className="text-muted-foreground">
@@ -68,54 +45,75 @@ export function DashboardLineChart({
   }
 
   return (
-    <Card>
+    <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
       <CardHeader>
-        <CardTitle>Monthly Performance Trends</CardTitle>
+        <CardTitle className="text-2xl font-bold text-gray-900">
+          Monthly Performance Trends
+        </CardTitle>
+        <CardDescription className="text-sm text-gray-600 mt-1">
+          Performance trends across key metrics
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <AreaChart
-            data={data}
-            margin={{ left: 12, right: 12, top: 10, bottom: 10 }}
-          >
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              axisLine={{ stroke: "#d1d5db" }}
-              tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 3)}
-              stroke="#6b7280"
-              fontSize={12}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={{ stroke: "#d1d5db" }}
-              tickMargin={8}
-              stroke="#6b7280"
-              fontSize={12}
-              domain={scale ? [0, scale.max] : undefined}
-              ticks={scale?.ticks}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
-            />
-            {Object.entries(chartConfig).map(([key, { colorVar }]) => (
-              <Area
-                key={key}
-                dataKey={key}
-                type="natural"
-                fill={`var(${colorVar})`}
-                fillOpacity={0.3}
-                stroke={`var(${colorVar})`}
-                strokeWidth={2}
-                stackId="a"
+        <div className="w-full h-[400px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={data}
+              margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis
+                dataKey="month"
+                tick={{ fontSize: 12, fill: "#6b7280" }}
               />
-            ))}
-            <ChartLegend content={<ChartLegendContent />} />
-          </AreaChart>
-        </ChartContainer>
+              <YAxis
+                tick={{ fontSize: 12, fill: "#6b7280" }}
+                domain={scale ? [0, scale.max] : undefined}
+                ticks={scale?.ticks}
+              />
+              <Tooltip
+                cursor={{ fill: "#f9fafb" }}
+                contentStyle={{
+                  borderRadius: "0.5rem",
+                  borderColor: "#e5e7eb",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                }}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 12, color: "#374151" }}
+                verticalAlign="top"
+                height={36}
+              />
+              <Line
+                type="monotone"
+                dataKey="claims"
+                name="Claims"
+                stroke="#16a34a"
+                strokeWidth={2}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="inspections"
+                name="Inspections"
+                stroke="#f59e0b"
+                strokeWidth={2}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="hse"
+                name="HSE Activities"
+                stroke="#8b5cf6"
+                strokeWidth={2}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );

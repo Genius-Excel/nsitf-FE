@@ -27,7 +27,6 @@ export const getRoleBadgeColor = (role: string): string => {
     Legal: "bg-orange-100 text-orange-700",
     "HSE Officer": "bg-amber-100 text-amber-700",
     "Compliance Officer": "bg-pink-100 text-pink-700",
-    "Economy Officer": "bg-indigo-100 text-indigo-700",
   };
   return colors[role] || "bg-gray-100 text-gray-700";
 };
@@ -528,4 +527,28 @@ export const formatDate = (date?: string | Date | null): string => {
 
 export const formatNumber = (num: number): string => {
   return num.toLocaleString();
+};
+
+// ============= ROLE CAPITALIZATION =============
+
+/**
+ * Capitalizes each word in a role string
+ * Example: "admin" -> "Admin", "hse officer" -> "HSE Officer"
+ */
+export const capitalizeRole = (role: string | undefined | null): string => {
+  if (!role) return "";
+
+  // Handle special case for HSE
+  if (role.toLowerCase().includes("hse")) {
+    return role
+      .split(" ")
+      .map((word) => (word.toLowerCase() === "hse" ? "HSE" : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()))
+      .join(" ");
+  }
+
+  // Capitalize first letter of each word
+  return role
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 };

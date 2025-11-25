@@ -67,11 +67,6 @@ export const ROLES: Role[] = [
     label: "Compliance Officer",
     description: "Contribution tracking and compliance",
   },
-  {
-    id: "Economy Officer",
-    label: "Economy Officer",
-    description: "Informal sector data management",
-  },
 ];
 
 export const mockUsers: User[] = [

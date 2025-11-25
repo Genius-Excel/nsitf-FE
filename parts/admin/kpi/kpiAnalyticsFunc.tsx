@@ -18,7 +18,12 @@ export function KPIAnalyticsFunc() {
   const [selectedSector, setSelectedSector] = useState("all");
   const [selectedPeriod, setSelectedPeriod] = useState("6m");
 
-  const { kpiAnalysisData, kpiAnalysisIsLoading, kpiAnalysisError, refetchKPIAnalysis } = useGetKPIAnalysis({ enabled: true });
+  const {
+    kpiAnalysisData,
+    kpiAnalysisIsLoading,
+    kpiAnalysisError,
+    refetchKPIAnalysis,
+  } = useGetKPIAnalysis({ enabled: true });
 
   const transformedData = useMemo(() => {
     if (!kpiAnalysisData) {
@@ -30,16 +35,32 @@ export function KPIAnalyticsFunc() {
       };
     }
 
-    const { kpi_cards, regional_performance, sector_distribution, monthly_kpi_comparison } = kpiAnalysisData;
+    const {
+      kpi_cards,
+      regional_performance,
+      sector_distribution,
+      monthly_kpi_comparison,
+    } = kpiAnalysisData;
 
     // Transform KPI Cards
     const kpiMetrics: KPIMetric[] = [
       {
         title: "Total Claims",
         value: kpi_cards.total_claims.value.toLocaleString(),
-        change: kpi_cards.total_claims.trend ? `${kpi_cards.total_claims.trend > 0 ? '+' : ''}${kpi_cards.total_claims.trend.toFixed(1)}%` : "0%",
+        change: kpi_cards.total_claims.trend
+          ? `${
+              kpi_cards.total_claims.trend > 0 ? "+" : ""
+            }${kpi_cards.total_claims.trend.toFixed(1)}%`
+          : "0%",
         trend: (kpi_cards.total_claims.trend ?? 0) >= 0 ? "up" : "down",
-        status: kpi_cards.total_claims.status === "Unknown" ? "normal" : kpi_cards.total_claims.status.toLowerCase() as "success" | "warning" | "critical" | "normal",
+        status:
+          kpi_cards.total_claims.status === "Unknown"
+            ? "normal"
+            : (kpi_cards.total_claims.status.toLowerCase() as
+                | "success"
+                | "warning"
+                | "critical"
+                | "normal"),
         icon: FileText,
         target: kpi_cards.total_claims.target ?? kpi_cards.total_claims.value,
         actual: kpi_cards.total_claims.value,
@@ -47,9 +68,20 @@ export function KPIAnalyticsFunc() {
       {
         title: "Paid Claims",
         value: kpi_cards.paid_claims.value.toLocaleString(),
-        change: kpi_cards.paid_claims.trend ? `${kpi_cards.paid_claims.trend > 0 ? '+' : ''}${kpi_cards.paid_claims.trend.toFixed(1)}%` : "0%",
+        change: kpi_cards.paid_claims.trend
+          ? `${
+              kpi_cards.paid_claims.trend > 0 ? "+" : ""
+            }${kpi_cards.paid_claims.trend.toFixed(1)}%`
+          : "0%",
         trend: (kpi_cards.paid_claims.trend ?? 0) >= 0 ? "up" : "down",
-        status: kpi_cards.paid_claims.status === "Unknown" ? "normal" : kpi_cards.paid_claims.status.toLowerCase() as "success" | "warning" | "critical" | "normal",
+        status:
+          kpi_cards.paid_claims.status === "Unknown"
+            ? "normal"
+            : (kpi_cards.paid_claims.status.toLowerCase() as
+                | "success"
+                | "warning"
+                | "critical"
+                | "normal"),
         icon: CheckCircle2,
         target: kpi_cards.paid_claims.target ?? kpi_cards.paid_claims.value,
         actual: kpi_cards.paid_claims.value,
@@ -57,19 +89,43 @@ export function KPIAnalyticsFunc() {
       {
         title: "Pending Inspections",
         value: kpi_cards.pending_inspections.value.toLocaleString(),
-        change: kpi_cards.pending_inspections.trend ? `${kpi_cards.pending_inspections.trend > 0 ? '+' : ''}${kpi_cards.pending_inspections.trend.toFixed(1)}%` : "0%",
+        change: kpi_cards.pending_inspections.trend
+          ? `${
+              kpi_cards.pending_inspections.trend > 0 ? "+" : ""
+            }${kpi_cards.pending_inspections.trend.toFixed(1)}%`
+          : "0%",
         trend: (kpi_cards.pending_inspections.trend ?? 0) >= 0 ? "up" : "down",
-        status: kpi_cards.pending_inspections.status === "Unknown" ? "normal" : kpi_cards.pending_inspections.status.toLowerCase() as "success" | "warning" | "critical" | "normal",
+        status:
+          kpi_cards.pending_inspections.status === "Unknown"
+            ? "normal"
+            : (kpi_cards.pending_inspections.status.toLowerCase() as
+                | "success"
+                | "warning"
+                | "critical"
+                | "normal"),
         icon: AlertCircle,
-        target: kpi_cards.pending_inspections.target ?? kpi_cards.pending_inspections.value,
+        target:
+          kpi_cards.pending_inspections.target ??
+          kpi_cards.pending_inspections.value,
         actual: kpi_cards.pending_inspections.value,
       },
       {
         title: "Compliance Rate",
         value: `${kpi_cards.compliance_rate.value.toFixed(2)}%`,
-        change: kpi_cards.compliance_rate.trend ? `${kpi_cards.compliance_rate.trend > 0 ? '+' : ''}${kpi_cards.compliance_rate.trend.toFixed(2)}%` : "0%",
+        change: kpi_cards.compliance_rate.trend
+          ? `${
+              kpi_cards.compliance_rate.trend > 0 ? "+" : ""
+            }${kpi_cards.compliance_rate.trend.toFixed(2)}%`
+          : "0%",
         trend: (kpi_cards.compliance_rate.trend ?? 0) >= 0 ? "up" : "down",
-        status: kpi_cards.compliance_rate.status === "Unknown" ? "normal" : kpi_cards.compliance_rate.status.toLowerCase() as "success" | "warning" | "critical" | "normal",
+        status:
+          kpi_cards.compliance_rate.status === "Unknown"
+            ? "normal"
+            : (kpi_cards.compliance_rate.status.toLowerCase() as
+                | "success"
+                | "warning"
+                | "critical"
+                | "normal"),
         icon: CheckCircle2,
         target: kpi_cards.compliance_rate.target ?? 100,
         actual: kpi_cards.compliance_rate.value,
@@ -77,9 +133,16 @@ export function KPIAnalyticsFunc() {
       {
         title: "Risk Exposure (₦)",
         value: `₦${(kpi_cards.risk_exposure.value / 1000000000).toFixed(2)}B`,
-        change: "0%",
+        change: "0",
         trend: "up",
-        status: kpi_cards.risk_exposure.status === "Unknown" ? "normal" : kpi_cards.risk_exposure.status.toLowerCase() as "success" | "warning" | "critical" | "normal",
+        status:
+          kpi_cards.risk_exposure.status === "Unknown"
+            ? "normal"
+            : (kpi_cards.risk_exposure.status.toLowerCase() as
+                | "success"
+                | "warning"
+                | "critical"
+                | "normal"),
         icon: DollarSign,
         target: kpi_cards.risk_exposure.target ?? kpi_cards.risk_exposure.value,
         actual: kpi_cards.risk_exposure.value / 1000000000,
@@ -89,22 +152,33 @@ export function KPIAnalyticsFunc() {
         value: kpi_cards.avg_case_duration.value.toString(),
         change: "0%",
         trend: "down",
-        status: kpi_cards.avg_case_duration.status === "Unknown" ? "normal" : kpi_cards.avg_case_duration.status.toLowerCase() as "success" | "warning" | "critical" | "normal",
+        status:
+          kpi_cards.avg_case_duration.status === "Unknown"
+            ? "normal"
+            : (kpi_cards.avg_case_duration.status.toLowerCase() as
+                | "success"
+                | "warning"
+                | "critical"
+                | "normal"),
         icon: Clock,
-        target: kpi_cards.avg_case_duration.target ?? kpi_cards.avg_case_duration.value,
+        target:
+          kpi_cards.avg_case_duration.target ??
+          kpi_cards.avg_case_duration.value,
         actual: kpi_cards.avg_case_duration.value,
       },
     ];
 
     // Transform Regional Data
-    const regionalData: RegionalData[] = regional_performance.data.map((region: any) => ({
-      region: region.region,
-      claims: region.claims,
-      paid: region.paid,
-      pending: region.pending,
-      compliance: 0,
-      inspections: 0,
-    }));
+    const regionalData: RegionalData[] = regional_performance.data.map(
+      (region: any) => ({
+        region: region.region,
+        claims: region.claims,
+        paid: region.paid,
+        pending: region.pending,
+        compliance: 0,
+        inspections: 0,
+      })
+    );
 
     // Transform Sector Data
     const sectorData: SectorData[] = sector_distribution.map((sector: any) => ({

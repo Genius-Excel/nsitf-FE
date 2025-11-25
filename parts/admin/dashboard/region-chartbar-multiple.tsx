@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import {
   Card,
   CardContent,
@@ -8,12 +8,6 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartConfig,
-} from "@/components/ui/chart";
 import { DashboardSummaryResponse } from "@/lib/types/dashboard";
 import { useRegionalComplianceChart } from "@/hooks/Usedashboardcharts";
 
@@ -22,33 +16,28 @@ interface RegionChartBarMultipleProps {
   loading?: boolean;
 }
 
-/**
- * CORRECTED CHART CONFIGURATION:
- * Shows Target vs Actual contributions (both in ₦)
- * This makes semantic sense unlike the previous version that mixed ₦ and percentages
- */
-const chartConfig = {
-  target: {
-    label: "Target",
-    color: "hsl(var(--chart-1))",
-  },
-  actual: {
-    label: "Actual",
-    color: "hsl(var(--chart-2))",
-  },
-} satisfies ChartConfig;
-
 export function RegionChartBarMultiple({
   dashboardData,
   loading,
 }: RegionChartBarMultipleProps) {
-  const { data, scale } = useRegionalComplianceChart(dashboardData);
+  const { data: rawData, scale } = useRegionalComplianceChart(dashboardData);
+
+  // All regions that should be displayed
+  const allRegions = ["Abuja", "Enugu", "Kano", "Lagos", "Port Harcourt"];
+
+  // Ensure all regions are included, even those with no data
+  const data = allRegions.map((region) => {
+    const existingData = rawData?.find((d) => d.region === region);
+    return existingData || { region, target: 0, actual: 0, performance_percent: 0 };
+  });
 
   if (loading) {
     return (
-      <Card className="w-full">
+      <Card className="w-full border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
         <CardHeader>
-          <CardTitle>Regional Compliance Performance</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            Regional Compliance Performance
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-[400px]">
           <p className="text-muted-foreground">Loading regional chart...</p>
@@ -57,67 +46,66 @@ export function RegionChartBarMultiple({
     );
   }
 
-  if (!data || data.length === 0) {
-    return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Regional Compliance Performance</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center h-[400px]">
-          <p className="text-muted-foreground">No regional data available.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="w-full">
+    <Card className="w-full border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
       <CardHeader>
-        <CardTitle>Regional Compliance Performance</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-2xl font-bold text-gray-900">
+          Regional Compliance Performance
+        </CardTitle>
+        <CardDescription className="text-sm text-gray-600 mt-1">
           Target vs Actual Contributions by Region (₦)
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-4 max-h-[450px]">
-        <ChartContainer config={chartConfig} className="w-full max-h-[400px]">
-          <BarChart
-            data={data}
-            height={400}
-            margin={{ top: 20, right: 20, left: 10, bottom: 20 }}
-          >
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis
-              dataKey="region"
-              dataKey="region"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={{ stroke: "#d1d5db" }}
-              stroke="#6b7280"
-              fontSize={12}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={{ stroke: "#d1d5db" }}
-              tickMargin={10}
-              stroke="#6b7280"
-              fontSize={12}
-              domain={scale ? [0, scale.max] : undefined}
-              ticks={scale?.ticks}
-              tickFormatter={(value) => `₦${(value / 1000000).toFixed(0)}M`}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={
-                <ChartTooltipContent
-                  indicator="dashed"
-                  formatter={(value) => `₦${Number(value).toLocaleString()}`}
-                />
-              }
-            />
-            <Bar dataKey="target" fill="var(--color-target)" radius={4} />
-            <Bar dataKey="actual" fill="var(--color-actual)" radius={4} />
-          </BarChart>
-        </ChartContainer>
+      <CardContent>
+        <div className="w-full h-[400px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
+              barGap={4}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis
+                dataKey="region"
+                tick={{ fontSize: 12, fill: "#6b7280" }}
+              />
+              <YAxis
+                tick={{ fontSize: 12, fill: "#6b7280" }}
+                domain={scale ? [0, scale.max] : undefined}
+                ticks={scale?.ticks}
+                tickFormatter={(value) => `₦${(value / 1000000).toFixed(0)}M`}
+              />
+              <Tooltip
+                cursor={{ fill: "#f9fafb" }}
+                contentStyle={{
+                  borderRadius: "0.5rem",
+                  borderColor: "#e5e7eb",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                }}
+                formatter={(value) => `₦${Number(value).toLocaleString()}`}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 12, color: "#374151" }}
+                verticalAlign="top"
+                height={36}
+              />
+              <Bar
+                dataKey="target"
+                name="Target"
+                fill="#16a34a"
+                radius={[6, 6, 0, 0]}
+                barSize={24}
+              />
+              <Bar
+                dataKey="actual"
+                name="Actual"
+                fill="#3b82f6"
+                radius={[6, 6, 0, 0]}
+                barSize={24}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );

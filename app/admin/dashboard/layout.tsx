@@ -14,79 +14,52 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(
-    typeof window !== "undefined" && window.innerWidth >= 640
-  );
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
-    typeof window !== "undefined" && window.innerWidth < 640
-  );
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // Toggle sidebar visibility for mobile
-  const toggleSidebar = () => {
-    setIsSidebarOpen((prev) => !prev);
-  };
-
-  // Toggle sidebar collapse for desktop
+  // Toggle sidebar collapse
   const toggleSidebarCollapse = () => {
     setIsSidebarCollapsed((prev) => !prev);
   };
 
   return (
-    <SidebarProvider defaultOpen={isSidebarOpen}>
-      {isSidebarOpen && (
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
         <AppSidebar
           isCollapsed={isSidebarCollapsed}
           setIsCollapsed={setIsSidebarCollapsed}
         />
-      )}
-      <SidebarInset>
-        <header
-          className={cn(
-            "flex h-14 items-center justify-between gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 py-2 z-20 relative",
-            isSidebarOpen ? "ml-16 sm:ml-64" : "ml-0"
-          )}
-        >
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="sm:hidden"
-              onClick={toggleSidebar}
-              aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-            >
-              <Menu className="h-6 w-6 text-gray-600" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hidden sm:block"
-              onClick={toggleSidebarCollapse}
-              aria-label={
-                isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
-              }
-            >
-              <PanelLeft className="h-6 w-6 text-gray-600" />
-            </Button>
-            <div className="space-y-1">
-              <h2 className="text-xl text-green-700 font-semibold">
-                Nigeria Social Insurance Trust Fund
-              </h2>
-              <p className="text-gray-400 text-sm">
-                Automated and Digitalized Actuarial Data Structure
-              </p>
+        <div className={cn(
+          "flex flex-col flex-1 transition-all duration-300",
+          isSidebarCollapsed ? "ml-16" : "ml-64"
+        )}>
+          <header className="flex h-14 items-center justify-between gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 py-2 z-20">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebarCollapse}
+                aria-label={
+                  isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+                }
+              >
+                <PanelLeft className="h-6 w-6 text-gray-600" />
+              </Button>
+              <div className="space-y-1">
+                <h2 className="text-xl text-green-700 font-semibold">
+                  Nigeria Social Insurance Trust Fund
+                </h2>
+                <p className="text-gray-400 text-sm">
+                  Automated and Digitalized Actuarial Data Structure
+                </p>
+              </div>
             </div>
-          </div>
-          <DashboardNavbarUser />
-        </header>
-        <main
-          className={cn(
-            "flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-gray-50 transition-all duration-300",
-            isSidebarOpen ? "ml-16 sm:ml-64" : "ml-0"
-          )}
-        >
-          {children}
-        </main>
-      </SidebarInset>
+            <DashboardNavbarUser />
+          </header>
+          <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-gray-50">
+            {children}
+          </main>
+        </div>
+      </div>
     </SidebarProvider>
   );
 }
