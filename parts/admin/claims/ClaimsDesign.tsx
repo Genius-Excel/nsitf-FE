@@ -55,59 +55,97 @@ export const ClaimsProcessingChart: React.FC<ClaimsProcessingChartProps> = ({
   data,
   maxValue,
   ticks,
-}) => (
-  <div className="bg-card rounded-lg border border-border p-6">
-    <h2 className="text-lg font-semibold text-foreground mb-4">
-      Claims Processing: YTD vs Target
-    </h2>
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-        <XAxis dataKey="month" className="text-muted-foreground" />
-        <YAxis
-          className="text-muted-foreground"
-          domain={[0, maxValue || 'auto']}
-          ticks={ticks}
-        />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: "hsl(var(--card))",
-            border: "1px solid hsl(var(--border))",
-            borderRadius: "8px",
-          }}
-          formatter={(value) => [value, ""]}
-        />
-        <Legend />
-        <Bar
-          dataKey="processed"
-          name="Claims Processed"
-          fill="#22c55e"
-          radius={[8, 8, 0, 0]}
-        />
-        <Bar
-          dataKey="target"
-          name="Target"
-          fill="#3b82f6"
-          radius={[8, 8, 0, 0]}
-        />
-      </BarChart>
-    </ResponsiveContainer>
-  </div>
-);
+}) => {
+  // Determine the maximum value across all data points
+  const maxDataValue = Math.max(
+    ...data.map((d) => Math.max(d.processed || 0, d.target || 0))
+  );
+
+  // Format function for Y-axis based on value range
+  const formatYAxis = (value: number): string => {
+    if (maxDataValue >= 1000000) {
+      return `${(value / 1000000).toFixed(0)}M`;
+    } else if (maxDataValue >= 1000) {
+      return `${(value / 1000).toFixed(0)}K`;
+    }
+    return value.toString();
+  };
+
+  return (
+    <div className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 rounded-lg">
+      <div className="p-4 sm:p-5 border-b border-gray-200">
+        <h2 className="text-xl font-bold text-gray-900">
+          Claims Processing: YTD vs Target
+        </h2>
+        <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
+          Monthly claims processed compared to target
+        </p>
+      </div>
+      <div className="p-4 sm:p-5">
+        <div className="w-full h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
+              barGap={4}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#6b7280" }} />
+              <YAxis
+                tick={{ fontSize: 12, fill: "#6b7280" }}
+                domain={[0, maxValue || 'auto']}
+                ticks={ticks}
+                tickFormatter={formatYAxis}
+              />
+              <Tooltip
+                cursor={{ fill: "#f9fafb" }}
+                contentStyle={{
+                  borderRadius: "0.5rem",
+                  borderColor: "#e5e7eb",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                }}
+                formatter={(value) => [Number(value).toLocaleString(), ""]}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 12, color: "#374151" }}
+                verticalAlign="top"
+                height={36}
+              />
+              <Bar
+                dataKey="processed"
+                name="Claims Processed"
+                fill="#22c55e"
+                radius={[6, 6, 0, 0]}
+                barSize={24}
+              />
+              <Bar
+                dataKey="target"
+                name="Target"
+                fill="#3b82f6"
+                radius={[6, 6, 0, 0]}
+                barSize={24}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface ClaimTypeCardsProps {
   claimTypes: Array<{ type: string; count: number; color: string }>;
 }
 
 export const ClaimTypeCards: React.FC<ClaimTypeCardsProps> = ({ claimTypes }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
     {claimTypes.map((item) => (
       <div
         key={item.type}
-        className={`rounded-lg border border-border p-6 ${item.color}`}
+        className={`rounded-lg border border-border p-3 sm:p-4 ${item.color}`}
       >
-        <p className="text-sm font-medium text-muted-foreground">{item.type}</p>
-        <p className="text-xl font-semibold mt-2 text-foreground">
+        <p className="text-xs font-medium text-muted-foreground truncate">{item.type}</p>
+        <p className="text-base sm:text-lg font-semibold mt-1 text-foreground">
           {item.count.toLocaleString()} claims
         </p>
       </div>
@@ -197,43 +235,43 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
         <table className="w-full">
           <thead className="bg-muted border-b border-border">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Claim ID
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Employer
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Claimant
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Type
               </th>
-              <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Amount Requested (₦)
               </th>
-              <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Amount Paid (₦)
               </th>
-              <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Status
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Date Processed
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Date Paid
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Sector
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Class
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Payment Period
               </th>
-              <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 Actions
               </th>
             </tr>
@@ -247,36 +285,36 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
 
               return (
                 <tr key={claim.id} className="hover:bg-muted/50 transition-colors">
-                  <td className="px-6 py-4 text-sm font-medium text-foreground whitespace-nowrap">
+                  <td className="px-4 py-3 text-sm font-medium text-foreground whitespace-nowrap">
                     {claim.claimId}
                   </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground max-w-[200px] truncate">
+                  <td className="px-4 py-3 text-sm text-muted-foreground max-w-[180px] truncate">
                     {claim.employer}
                   </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground max-w-[150px] truncate">
+                  <td className="px-4 py-3 text-sm text-muted-foreground max-w-[130px] truncate">
                     {claim.claimant}
                   </td>
-                  <td className="px-6 py-4 text-sm whitespace-nowrap">
+                  <td className="px-4 py-3 text-sm whitespace-nowrap">
                     <span className={getTypeTextColor(claim.type)}>
                       {claim.type}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm font-semibold text-foreground whitespace-nowrap text-right">
+                  <td className="px-4 py-3 text-sm font-semibold text-foreground whitespace-nowrap text-right">
                     {formatCurrency(claim.amountRequested)}
                   </td>
-                  <td className="px-6 py-4 text-sm whitespace-nowrap text-right">
+                  <td className="px-4 py-3 text-sm whitespace-nowrap text-right">
                     <div className="flex flex-col items-end">
                       <span className="font-semibold text-green-600">
                         {formatCurrency(claim.amountPaid)}
                       </span>
                       {difference && (
-                        <span className="text-xs text-destructive mt-1">
+                        <span className="text-xs text-destructive mt-0.5">
                           {difference}
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm whitespace-nowrap text-center">
+                  <td className="px-4 py-3 text-sm whitespace-nowrap text-center">
                     <Badge
                       className={`${getStatusBadgeColor(
                         claim.status
@@ -285,10 +323,10 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
                       {claim.status}
                     </Badge>
                   </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
+                  <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
                     {formatDate(claim.dateProcessed)}
                   </td>
-                  <td className="px-6 py-4 text-sm whitespace-nowrap">
+                  <td className="px-4 py-3 text-sm whitespace-nowrap">
                     <span
                       className={
                         claim.datePaid
@@ -299,18 +337,18 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
                       {formatDate(claim.datePaid)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
+                  <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
                     {claim.sector || "—"}
                   </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
-                    <span className="px-2 py-1 bg-muted rounded text-xs font-medium">
+                  <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
+                    <span className="px-2 py-0.5 bg-muted rounded text-xs font-medium">
                       {claim.class || "—"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
+                  <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
                     {claim.date || "—"}
                   </td>
-                  <td className="px-6 py-4 text-sm whitespace-nowrap text-center">
+                  <td className="px-4 py-3 text-sm whitespace-nowrap text-center">
                     <button
                       type="button"
                       onClick={() => onView?.(claim)}
