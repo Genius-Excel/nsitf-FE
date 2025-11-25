@@ -272,7 +272,7 @@ export default function ClaimsManagement() {
   // ==========================================
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="space-y-10">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <PageHeader
