@@ -3,7 +3,7 @@ import ClaimsFunc from "./ClaimsFunc";
 
 export default function ClaimsPage() {
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-10">
       <ClaimsFunc />
     </div>
   );

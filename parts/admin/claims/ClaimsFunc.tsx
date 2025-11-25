@@ -74,7 +74,7 @@ export default function ClaimsManagement() {
   });
 
   // 5. Transform chart data
-  const { chartData } = useClaimsCharts({ monthlyChart });
+  const { chartData, maxValue, ticks } = useClaimsCharts({ monthlyChart });
 
   // ==========================================
   // COMPUTED VALUES
@@ -165,7 +165,7 @@ export default function ClaimsManagement() {
 
   const handleViewClaim = useCallback(
     (claim: Claim) => {
-      fetchDetail(claim.claimId);
+      fetchDetail(claim.id);
       setIsDetailModalOpen(true);
     },
     [fetchDetail]
@@ -292,7 +292,13 @@ export default function ClaimsManagement() {
             {stats.length > 0 && <StatisticsCards stats={stats} />}
 
             {/* Claims Processing Chart */}
-            {chartData.length > 0 && <ClaimsProcessingChart data={chartData} />}
+            {chartData.length > 0 && (
+              <ClaimsProcessingChart
+                data={chartData}
+                maxValue={maxValue}
+                ticks={ticks}
+              />
+            )}
 
             {/* Claim Type Cards */}
             {claimTypes.length > 0 && (

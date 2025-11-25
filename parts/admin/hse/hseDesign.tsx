@@ -66,7 +66,7 @@ export const RecentHSEActivities: React.FC<{
   }
 
   return (
-    <div className="bg-card rounded-lg border border-border overflow-hidden mb-6">
+    <div className="bg-card rounded-lg border border-border overflow-hidden">
       <div className="p-6 border-b border-border">
         <h2 className="text-lg font-semibold text-foreground">
           Recent HSE Activities
@@ -145,7 +145,7 @@ export const RecentHSEActivities: React.FC<{
 export const MonthlySummary: React.FC<{
   data: { label: string; value: number }[];
 }> = ({ data }) => (
-  <div className="bg-green-50 rounded-lg border border-green-200 p-6 mb-6">
+  <div className="bg-green-50 rounded-lg border border-green-200 p-6">
     <h2 className="text-lg font-semibold text-gray-900 mb-4">
       Monthly HSE Summary
     </h2>

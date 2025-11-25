@@ -112,7 +112,10 @@ export const useClaimsDashboard = (
         totalCount: apiData.data.claims_table.count,
       });
     } catch (err: any) {
-      const errorMessage = err.message || "Failed to fetch claims dashboard";
+      const errorMessage =
+        err?.response?.data?.message ||
+        err.message ||
+        "Failed to fetch claims dashboard";
       setError(errorMessage);
       console.error("Error fetching claims dashboard:", err);
     } finally {

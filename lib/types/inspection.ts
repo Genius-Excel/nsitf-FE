@@ -96,6 +96,16 @@ export interface MonthlyChartData {
   debtsRecovered: number;
 }
 
+export interface ChartScale {
+  max: number;
+  ticks: number[];
+}
+
+export interface MonthlyDebtsComparisonData {
+  data: MonthlyChartData[];
+  scale?: ChartScale;
+}
+
 export interface UpcomingInspection {
   id: string;
   employer: string;
@@ -131,7 +141,7 @@ export interface InspectionDetail {
 export interface InspectionDashboard {
   metricCards: InspectionMetricCards;
   inspectionSummary: InspectionRecord[];
-  monthlyDebtsComparison: MonthlyChartData[];
+  monthlyDebtsComparison: MonthlyDebtsComparisonData;
   upcomingInspections: UpcomingInspection[];
 }
 
@@ -165,6 +175,14 @@ export function transformInspectionDashboardFromAPI(
   const monthlyDebtsData = getArrayData(apiData.monthly_debts_comparison);
   const upcomingInspectionsData = getArrayData(apiData.upcoming_inspections);
 
+  // Extract scale from monthly_debts_comparison if it exists
+  const monthlyDebtsScale =
+    apiData.monthly_debts_comparison &&
+    typeof apiData.monthly_debts_comparison === 'object' &&
+    'scale' in apiData.monthly_debts_comparison
+      ? apiData.monthly_debts_comparison.scale
+      : undefined;
+
   return {
     metricCards: {
       totalInspections: apiData.metric_cards?.total_inspections || 0,
@@ -183,11 +201,14 @@ export function transformInspectionDashboardFromAPI(
       demandNotice: record.demand_notice,
       period: record.period,
     })),
-    monthlyDebtsComparison: monthlyDebtsData.map((month) => ({
-      month: month.month,
-      debtsEstablished: month.debt_established,
-      debtsRecovered: month.debt_recovered,
-    })),
+    monthlyDebtsComparison: {
+      data: monthlyDebtsData.map((month) => ({
+        month: month.month,
+        debtsEstablished: month.debt_established,
+        debtsRecovered: month.debt_recovered,
+      })),
+      scale: monthlyDebtsScale,
+    },
     upcomingInspections: upcomingInspectionsData.map((insp) => ({
       id: insp.id,
       employer: insp.employer,

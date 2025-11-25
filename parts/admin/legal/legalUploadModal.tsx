@@ -193,7 +193,6 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".xlsx,.xls,.csv"
                   onChange={(e) =>
                     e.target.files?.[0] && setFile(e.target.files[0])
                   }
@@ -204,7 +203,7 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
                 <p className="text-sm font-medium text-gray-700 mb-1">
                   {file ? file.name : "Click to upload or drag and drop"}
                 </p>
-                <p className="text-xs text-gray-500">Excel or CSV files only</p>
+                <p className="text-xs text-gray-500">Upload your file</p>
               </div>
             </div>
 

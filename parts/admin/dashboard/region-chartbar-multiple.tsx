@@ -39,7 +39,7 @@ export function RegionChartBarMultiple({
             Regional Compliance Performance
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-center h-[400px]">
+        <CardContent className="flex items-center justify-center h-[300px]">
           <p className="text-muted-foreground">Loading regional chart...</p>
         </CardContent>
       </Card>
@@ -57,7 +57,7 @@ export function RegionChartBarMultiple({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="w-full h-[400px]">
+        <div className="w-full h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}

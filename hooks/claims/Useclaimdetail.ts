@@ -59,7 +59,10 @@ export const useClaimDetail = (): UseClaimDetailReturn => {
       const transformedDetail = transformClaimDetail(response.data as ClaimDetailResponse);
       setData(transformedDetail);
     } catch (err: any) {
-      const errorMessage = err.message || "Failed to fetch claim details";
+      const errorMessage =
+        err?.response?.data?.message ||
+        err.message ||
+        "Failed to fetch claim details";
       setError(errorMessage);
       console.error("Error fetching claim detail:", err);
 

@@ -1,11 +1,3 @@
-// ============================================================================
-// Inspection Management Dashboard - Refactored
-// ============================================================================
-// Clean component that uses hooks for all business logic
-// No mock data, no inline logic, just composition
-// Dead code (lines 1-226) DELETED
-// ============================================================================
-
 "use client";
 
 import { useState } from "react";

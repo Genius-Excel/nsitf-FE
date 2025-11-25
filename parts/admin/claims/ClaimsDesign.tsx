@@ -47,12 +47,16 @@ export const StatisticsCards: React.FC<StatisticsCardsProps> = ({ stats }) => (
 
 interface ClaimsProcessingChartProps {
   data: ChartDataPoint[];
+  maxValue?: number;
+  ticks?: number[];
 }
 
 export const ClaimsProcessingChart: React.FC<ClaimsProcessingChartProps> = ({
   data,
+  maxValue,
+  ticks,
 }) => (
-  <div className="bg-card rounded-lg border border-border p-6 mb-6">
+  <div className="bg-card rounded-lg border border-border p-6">
     <h2 className="text-lg font-semibold text-foreground mb-4">
       Claims Processing: YTD vs Target
     </h2>
@@ -60,7 +64,11 @@ export const ClaimsProcessingChart: React.FC<ClaimsProcessingChartProps> = ({
       <BarChart data={data}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis dataKey="month" className="text-muted-foreground" />
-        <YAxis className="text-muted-foreground" />
+        <YAxis
+          className="text-muted-foreground"
+          domain={[0, maxValue || 'auto']}
+          ticks={ticks}
+        />
         <Tooltip
           contentStyle={{
             backgroundColor: "hsl(var(--card))",
@@ -92,7 +100,7 @@ interface ClaimTypeCardsProps {
 }
 
 export const ClaimTypeCards: React.FC<ClaimTypeCardsProps> = ({ claimTypes }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
     {claimTypes.map((item) => (
       <div
         key={item.type}
