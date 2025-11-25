@@ -197,8 +197,14 @@ const ComplianceDashboard: React.FC = () => {
     );
   }
 
-  // Extract region names from regions API
+  // Extract region names for filters and AddRegionModal
   const regionNames = regions?.map((r: any) => r.name) ?? [];
+
+  // Map regions with IDs for ComplianceUploadModal
+  const mappedRegions = regions?.map((r: any) => ({
+    id: r.id,
+    name: r.name,
+  })) ?? [];
 
   // ============== RENDER ==============
   return (
@@ -332,9 +338,8 @@ const ComplianceDashboard: React.FC = () => {
           // The modal handles the upload internally
           // Just refetch and close on success
           refetchDashboard();
-          uploadModal.close();
         }}
-        regions={regionNames}
+        regions={mappedRegions}
       />
 
       <ComplianceDetailModal

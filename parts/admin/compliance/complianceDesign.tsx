@@ -45,6 +45,7 @@ import {
   generateId,
 } from "@/lib/utils";
 import { REQUIRED_COLUMNS, COLUMN_TYPES } from "@/lib/Constants";
+import { useReportUpload } from "@/hooks/compliance";
 
 // ============= NOTIFICATION COMPONENT =============
 
@@ -930,24 +931,38 @@ export const AddRegionModal: React.FC<{
 
 // ============= UPLOAD MODAL =============
 
+interface Region {
+  id: string;
+  name: string;
+}
+
 export const ComplianceUploadModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  onUploadSuccess: (data: ComplianceEntry[]) => void;
-  regions: string[];
+  onUploadSuccess: () => void;
+  regions: Region[];
 }> = ({ isOpen, onClose, onUploadSuccess, regions }) => {
-  const [selectedRegion, setSelectedRegion] = useState<string>("");
+  const [selectedRegionId, setSelectedRegionId] = useState<string>("");
+  const [period, setPeriod] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [progress, setProgress] = useState<ParseProgress>({
-    stage: "idle",
-    percentage: 0,
-    message: "",
-  });
-  const [errors, setErrors] = useState<UploadError[]>([]);
-  const [successCount, setSuccessCount] = useState(0);
+  const [errors, setErrors] = useState<any[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Use the upload hook
+  const { uploadReport, progress, uploadResponse, isUploading, reset } =
+    useReportUpload({
+      onSuccess: () => {
+        onUploadSuccess();
+        setTimeout(() => {
+          handleClose();
+        }, 2000);
+      },
+      onError: (error) => {
+        setErrors([{ message: error }]);
+      },
+    });
 
   useEffect(() => {
     if (isOpen) {
@@ -958,207 +973,94 @@ export const ComplianceUploadModal: React.FC<{
     }
   }, [isOpen]);
 
-  const validateRow = (row: any, rowIndex: number): UploadError[] => {
-    const rowErrors: UploadError[] = [];
-    REQUIRED_COLUMNS.forEach((column) => {
-      const value = row[column];
-      if (value === undefined || value === null || value === "") {
-        rowErrors.push({
-          row: rowIndex + 2,
-          column,
-          message: `Missing required field`,
-          value: String(value || ""),
-        });
-        return;
-      }
-      const expectedType = COLUMN_TYPES[column];
-      if (expectedType === "number") {
-        const numValue = Number(value);
-        if (isNaN(numValue)) {
-          rowErrors.push({
-            row: rowIndex + 2,
-            column,
-            message: `Expected number, got "${value}"`,
-            value: String(value),
-          });
-        } else if (numValue < 0) {
-          rowErrors.push({
-            row: rowIndex + 2,
-            column,
-            message: `Value must be positive`,
-            value: String(value),
-          });
-        }
-      }
-    });
-    return rowErrors;
-  };
-
-  const processFile = async () => {
-    if (!file || !selectedRegion) {
+  const handleUploadFile = async () => {
+    if (!file || !selectedRegionId || !period) {
       setErrors([
         {
-          row: 0,
-          column: "System",
-          message: "Please select a region and upload a file",
+          message:
+            "Please select a region, enter period (YYYY-MM), and upload a file",
+        },
+      ]);
+      return;
+    }
+
+    // Validate period format
+    const periodRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
+    if (!periodRegex.test(period)) {
+      setErrors([
+        {
+          message: "Period must be in YYYY-MM format (e.g., 2025-11)",
         },
       ]);
       return;
     }
 
     setErrors([]);
-    setSuccessCount(0);
 
     try {
-      setProgress({
-        stage: "reading",
-        percentage: 10,
-        message: "Reading file...",
-      });
+      await uploadReport(file, selectedRegionId, period);
 
-      const data = await file.arrayBuffer();
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      setProgress({
-        stage: "parsing",
-        percentage: 30,
-        message: "Parsing spreadsheet data...",
-      });
-
-      const workbook = XLSX.read(data);
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      if (jsonData.length === 0) {
-        throw new Error("The file contains no data rows.");
+      // If upload completed with errors, show them
+      if (uploadResponse?.status === "completed_with_errors") {
+        setErrors(uploadResponse.errors_sample || []);
       }
-
-      setProgress({
-        stage: "validating",
-        percentage: 50,
-        message: "Validating data...",
-      });
-
-      const allErrors: UploadError[] = [];
-      const validRows: ComplianceEntry[] = [];
-
-      jsonData.forEach((row: any, index: number) => {
-        const rowErrors = validateRow(row, index);
-        if (rowErrors.length > 0) {
-          allErrors.push(...rowErrors);
-        } else {
-          const contributionCollected = Number(row["Contribution Collected"]);
-          const target = Number(row["Target"]);
-          const achievement = calculateAchievement(
-            contributionCollected,
-            target
-          );
-
-          validRows.push({
-            id: generateId(),
-            region: selectedRegion,
-            branch: row["Branch"],
-            contributionCollected,
-            target,
-            achievement: Number(achievement.toFixed(2)),
-            employersRegistered: Number(row["Employers Registered"]),
-            employees: Number(row["Employees"]),
-            registrationFees: Number(row["Registration Fees"]),
-            certificateFees: Number(row["Certificate Fees"]),
-            period: row["Period"],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          });
-        }
-
-        const validationProgress = 50 + ((index + 1) / jsonData.length) * 40;
-        setProgress({
-          stage: "validating",
-          percentage: validationProgress,
-          message: `Validating row ${index + 1} of ${jsonData.length}...`,
-        });
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      if (allErrors.length > 0) {
-        setErrors(allErrors);
-        setProgress({
-          stage: "error",
-          percentage: 100,
-          message: `Validation failed with ${allErrors.length} error(s)`,
-        });
-        return;
-      }
-
-      setProgress({
-        stage: "complete",
-        percentage: 100,
-        message: `Successfully validated ${validRows.length} row(s)`,
-      });
-      setSuccessCount(validRows.length);
-
-      onUploadSuccess(validRows);
-
-      setTimeout(() => {
-        handleClose();
-      }, 2000);
-    } catch (error: any) {
-      setErrors([
-        {
-          row: 0,
-          column: "System",
-          message: error.message || "Failed to process file.",
-        },
-      ]);
-      setProgress({
-        stage: "error",
-        percentage: 100,
-        message: "Processing failed",
-      });
+    } catch (error) {
+      // Error handling is done by the hook
+      console.error("Upload error:", error);
     }
   };
 
   const handleDownloadTemplate = () => {
-    const templateData = [
+    // Create multi-sheet template matching API requirements
+    const wb = XLSX.utils.book_new();
+
+    // COLLECTION sheet
+    const collectionData = [
       {
-        Branch: "",
-        "Contribution Collected": "",
-        Target: "",
-        "Employers Registered": "",
-        Employees: "",
-        "Registration Fees": "",
-        "Certificate Fees": "",
-        Period: "",
+        BRANCH: "",
+        "CONTRIBUTION COLLECTED": "",
+        TARGET: "",
+        "EMPLOYERS REGISTERED": "",
+        EMPLOYEES: "",
+        "PERFORMANCE RATE": "",
+        "REGISTRATION FEES": "",
+        "CERTIFICATE FEES": "",
+        PERIOD: period || "",
       },
     ];
+    const wsCollection = XLSX.utils.json_to_sheet(collectionData);
+    XLSX.utils.book_append_sheet(wb, wsCollection, "COLLECTION");
 
-    const ws = XLSX.utils.json_to_sheet(templateData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    // CLAIMS sheet
+    const claimsData = [{ BRANCH: "", "CLAIMS DATA": "" }];
+    const wsClaims = XLSX.utils.json_to_sheet(claimsData);
+    XLSX.utils.book_append_sheet(wb, wsClaims, "CLAIMS");
 
-    const regionName = selectedRegion || "All_Regions";
-    XLSX.writeFile(wb, `${regionName}_Compliance_Template.xlsx`);
+    // INSPECTION sheet
+    const inspectionData = [{ BRANCH: "", "INSPECTION DATA": "" }];
+    const wsInspection = XLSX.utils.json_to_sheet(inspectionData);
+    XLSX.utils.book_append_sheet(wb, wsInspection, "INSPECTION");
+
+    // HSE sheet
+    const hseData = [{ BRANCH: "", "HSE DATA": "" }];
+    const wsHSE = XLSX.utils.json_to_sheet(hseData);
+    XLSX.utils.book_append_sheet(wb, wsHSE, "HSE");
+
+    const selectedRegion = regions.find((r) => r.id === selectedRegionId);
+    const regionName = selectedRegion?.name || "Region";
+    XLSX.writeFile(wb, `${regionName}_Regional_Report_Template.xlsx`);
   };
 
   const handleClose = () => {
-    setSelectedRegion("");
+    setSelectedRegionId("");
+    setPeriod("");
     setFile(null);
     setErrors([]);
-    setProgress({ stage: "idle", percentage: 0, message: "" });
-    setSuccessCount(0);
+    reset();
     onClose();
   };
 
   if (!isOpen) return null;
-
-  const isProcessing =
-    progress.stage === "reading" ||
-    progress.stage === "parsing" ||
-    progress.stage === "validating";
 
   return (
     <>
@@ -1178,7 +1080,7 @@ export const ComplianceUploadModal: React.FC<{
             <button
               aria-label="cancel"
               onClick={handleClose}
-              disabled={isProcessing}
+              disabled={isUploading}
               className="p-2 hover:bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <X className="w-5 h-5" />
@@ -1189,27 +1091,44 @@ export const ComplianceUploadModal: React.FC<{
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">
                 Select Region <span className="text-red-500">*</span>
-                <select
-                  value={selectedRegion}
-                  onChange={(e) => setSelectedRegion(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  disabled={isProcessing}
-                >
-                  <option value="">Choose a region</option>
-                  {regions.map((region) => (
-                    <option key={region} value={region}>
-                      {region}
-                    </option>
-                  ))}
-                </select>
               </label>
+              <select
+                value={selectedRegionId}
+                onChange={(e) => setSelectedRegionId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                disabled={isUploading}
+              >
+                <option value="">Choose a region</option>
+                {regions.map((region) => (
+                  <option key={region.id} value={region.id}>
+                    {region.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {selectedRegion && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Period <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={period}
+                onChange={(e) => setPeriod(e.target.value)}
+                placeholder="YYYY-MM (e.g., 2025-11)"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                disabled={isUploading}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Enter the reporting period in YYYY-MM format
+              </p>
+            </div>
+
+            {selectedRegionId && period && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <span className="text-sm text-blue-800">
-                    Download the template for {selectedRegion}
+                    Download the template for {regions.find((r) => r.id === selectedRegionId)?.name}
                   </span>
                   <button
                     onClick={handleDownloadTemplate}
@@ -1229,7 +1148,7 @@ export const ComplianceUploadModal: React.FC<{
 
               <div
                 onClick={() => {
-                  if (selectedRegion && !isProcessing) {
+                  if (selectedRegionId && !isUploading) {
                     fileInputRef.current?.click();
                   }
                 }}
@@ -1241,7 +1160,7 @@ export const ComplianceUploadModal: React.FC<{
                       : "border-gray-300 hover:border-gray-400"
                   }
                   ${
-                    !selectedRegion || isProcessing
+                    !selectedRegionId || isUploading
                       ? "opacity-50 cursor-not-allowed"
                       : ""
                   }
@@ -1250,12 +1169,12 @@ export const ComplianceUploadModal: React.FC<{
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".xlsx,.xls,.csv"
+                  accept=".xlsx,.xls"
                   onChange={(e) =>
                     e.target.files?.[0] && setFile(e.target.files[0])
                   }
                   className="hidden"
-                  disabled={!selectedRegion || isProcessing}
+                  disabled={!selectedRegionId || isUploading}
                 />
                 <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                 <p className="text-sm font-medium text-gray-700 mb-1">
@@ -1284,7 +1203,7 @@ export const ComplianceUploadModal: React.FC<{
                   <div className="flex items-center gap-2 text-green-600 text-sm">
                     <CheckCircle className="w-4 h-4" />
                     <span>
-                      Processing complete! Uploaded {successCount} records.
+                      Processing complete! Uploaded {uploadResponse?.valid_rows || 0} records.
                     </span>
                   </div>
                 )}
@@ -1302,9 +1221,9 @@ export const ComplianceUploadModal: React.FC<{
                     <ul className="space-y-1 text-sm text-red-700">
                       {errors.slice(0, 10).map((error, index) => (
                         <li key={index} className="font-mono">
-                          {error.row > 0
-                            ? `Row ${error.row}, Column "${error.column}": ${error.message}`
-                            : `${error.column}: ${error.message}`}
+                          {error.sheet && error.row
+                            ? `${error.sheet} - Row ${error.row}, Column "${error.column}": ${error.message}`
+                            : error.message || JSON.stringify(error)}
                         </li>
                       ))}
                       {errors.length > 10 && (
@@ -1317,22 +1236,38 @@ export const ComplianceUploadModal: React.FC<{
                 </div>
               </div>
             )}
+
+            {uploadResponse && uploadResponse.processing_summary && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-2">Processing Summary</h4>
+                <div className="space-y-2 text-sm">
+                  {Object.entries(uploadResponse.processing_summary).map(([sheet, summary]: [string, any]) => (
+                    <div key={sheet} className="flex justify-between items-center">
+                      <span className="font-medium">{sheet}:</span>
+                      <span className={summary.rows_with_errors > 0 ? "text-red-600" : "text-green-600"}>
+                        {summary.valid_records_created} valid / {summary.rows_with_errors} errors
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="sticky bottom-0 bg-gray-50 border-t px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-end gap-3">
             <button
               onClick={handleClose}
-              disabled={isProcessing}
+              disabled={isUploading}
               className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
-              onClick={processFile}
-              disabled={!file || !selectedRegion || isProcessing}
+              onClick={handleUploadFile}
+              disabled={!file || !selectedRegionId || !period || isUploading}
               className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
             >
-              {isProcessing ? "Processing..." : "Upload & Validate"}
+              {isUploading ? "Uploading..." : "Upload to Server"}
             </button>
           </div>
         </div>
