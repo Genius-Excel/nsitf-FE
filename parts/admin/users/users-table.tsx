@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { formatDate, getRoleBadgeColor } from "@/lib/utils";
+import { formatDate, getRoleBadgeColor, capitalizeRole } from "@/lib/utils";
 import { NewUserForm, User } from "@/lib/types";
 import { ROLES } from "@/lib/Constants";
 
@@ -68,10 +68,10 @@ export const UsersTable: React.FC<{
             <td className="px-6 py-4 text-sm">
               <Badge
                 className={`${getRoleBadgeColor(
-                  user.role
+                  capitalizeRole(user.role)
                 )} font-medium text-xs`}
               >
-                {user.role}
+                {capitalizeRole(user.role)}
               </Badge>
             </td>
             <td className="px-6 py-4 text-sm">

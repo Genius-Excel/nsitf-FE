@@ -529,3 +529,27 @@ export const formatDate = (date?: string | Date | null): string => {
 export const formatNumber = (num: number): string => {
   return num.toLocaleString();
 };
+
+// ============= ROLE CAPITALIZATION =============
+
+/**
+ * Capitalizes each word in a role string
+ * Example: "admin" -> "Admin", "hse officer" -> "HSE Officer"
+ */
+export const capitalizeRole = (role: string | undefined | null): string => {
+  if (!role) return "";
+
+  // Handle special case for HSE
+  if (role.toLowerCase().includes("hse")) {
+    return role
+      .split(" ")
+      .map((word) => (word.toLowerCase() === "hse" ? "HSE" : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()))
+      .join(" ");
+  }
+
+  // Capitalize first letter of each word
+  return role
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
