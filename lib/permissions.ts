@@ -24,21 +24,16 @@ export const rolePermissions: Record<UserRole, string[]> = {
     "manage_risk",
   ],
 
-  // Manager has view access to all, manage access to most
+  // Manager has view access to all, manage access to most (but not specialized modules)
   manager: [
     "view_dashboard",
     "view_users",
     "manage_users",
     "view_compliance",
-    "manage_compliance",
     "view_claims",
-    "manage_claims",
     "view_hse",
-    "manage_hse",
     "view_legal",
-    "manage_legal",
     "view_inspection",
-    "manage_inspection",
     "view_kpi",
     "view_valuation",
     "view_risk",
@@ -63,7 +58,7 @@ export const rolePermissions: Record<UserRole, string[]> = {
     "view_inspection",
   ],
 
-  // Claims Officer - full access to claims, view access to others
+  // Claims Officer - full access to claims, view-only access to others
   claims_officer: [
     "view_dashboard",
     "view_claims",
@@ -74,7 +69,7 @@ export const rolePermissions: Record<UserRole, string[]> = {
     "view_inspection",
   ],
 
-  // Compliance Officer - full access to compliance, view access to others
+  // Compliance Officer - full access to compliance, view-only access to others
   compliance_officer: [
     "view_dashboard",
     "view_compliance",
@@ -85,7 +80,7 @@ export const rolePermissions: Record<UserRole, string[]> = {
     "view_inspection",
   ],
 
-  // HSE Officer - full access to HSE, view access to others
+  // HSE Officer - full access to HSE, view-only access to others
   hse_officer: [
     "view_dashboard",
     "view_hse",
@@ -96,7 +91,7 @@ export const rolePermissions: Record<UserRole, string[]> = {
     "view_inspection",
   ],
 
-  // Legal Officer - full access to legal, view access to others
+  // Legal Officer - full access to legal, view-only access to others
   legal_officer: [
     "view_dashboard",
     "view_legal",
@@ -107,7 +102,7 @@ export const rolePermissions: Record<UserRole, string[]> = {
     "view_inspection",
   ],
 
-  // Inspection Officer - full access to inspection, view access to others
+  // Inspection Officer - full access to inspection, view-only access to others
   inspection_officer: [
     "view_dashboard",
     "view_inspection",

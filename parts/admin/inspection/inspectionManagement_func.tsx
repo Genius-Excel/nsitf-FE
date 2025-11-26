@@ -34,6 +34,11 @@ export default function InspectionManagement() {
 
   useEffect(() => {
     const user = getUserFromStorage();
+    console.log("🔍 [InspectionManagement] Checking permissions:", {
+      user,
+      userRole: user?.role,
+      canManage: user ? canManageInspection(user.role) : false,
+    });
     if (user) {
       setCanManage(canManageInspection(user.role));
     }
@@ -53,6 +58,15 @@ export default function InspectionManagement() {
     data?.inspectionSummary || [],
     { searchTerm }
   );
+
+  // Debug logging
+  console.log("🔍 [InspectionManagement] Component state:", {
+    loading,
+    hasError: !!error,
+    error,
+    hasData: !!data,
+    canManage,
+  });
 
   // ============= HANDLERS =============
   const handleViewInspection = (inspection: InspectionRecord) => {
@@ -123,6 +137,8 @@ export default function InspectionManagement() {
   }
 
   // ============= PREPARE STATS =============
+  console.log("📊 [InspectionManagement] Preparing stats from data:", data.metricCards);
+
   const stats: InspectionStatCard[] = [
     {
       title: "Total Inspection",
@@ -159,6 +175,8 @@ export default function InspectionManagement() {
       icon: "trending-up",
     },
   ];
+
+  console.log("📊 [InspectionManagement] Stats array to render:", stats);
 
   // ============= RENDER =============
   return (
