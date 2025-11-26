@@ -31,23 +31,27 @@ export function PermissionGuard({ permission, children, fallback }: PermissionGu
   }
 
   if (!hasAccess) {
+    // If fallback is explicitly provided (even if null), use it
+    // Otherwise show the default "Access Denied" message
+    if (fallback !== undefined) {
+      return <>{fallback}</>
+    }
+
     return (
-      fallback || (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-destructive" />
-              <CardTitle className="text-destructive">Access Denied</CardTitle>
-            </div>
-            <CardDescription>You don't have permission to access this feature.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Please contact your administrator if you believe you should have access.
-            </p>
-          </CardContent>
-        </Card>
-      )
+      <Card className="border-destructive/50 bg-destructive/5">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            <CardTitle className="text-destructive">Access Denied</CardTitle>
+          </div>
+          <CardDescription>You don't have permission to access this feature.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Please contact your administrator if you believe you should have access.
+          </p>
+        </CardContent>
+      </Card>
     )
   }
 

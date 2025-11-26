@@ -214,16 +214,28 @@ export function AppSidebar({
         return;
       }
       if (userData) {
+        // Normalize role: trim, lowercase, replace spaces with underscores
+        const normalizedRole = userData[0].role
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, "_");
+
         const fetchedUser: User = {
           email: userData[0].email,
           id: userData[0].user_id,
           name: `${userData[0].first_name} ${userData[0].last_name}`,
-          role: userData[0].role.toLowerCase(),
+          role: normalizedRole,
         };
         console.log("user data", userData[0]);
+        console.log("normalized role", normalizedRole);
         // Validate role
         if (!validRoles.includes(fetchedUser.role as Role)) {
-          setError("Invalid user role detected.");
+          setError(`Invalid user role detected: ${normalizedRole}. Expected one of: ${validRoles.join(", ")}`);
+          console.error("Role validation failed:", {
+            originalRole: userData[0].role,
+            normalizedRole,
+            validRoles,
+          });
           setIsLoading(false);
           return;
         }

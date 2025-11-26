@@ -35,10 +35,14 @@ export function useInspectionDashboard(): UseInspectionDashboardReturn {
       setLoading(true);
       setError(null);
 
+      console.log("🔍 [Inspection Dashboard] Starting fetch...");
+
       const httpService = new HttpService();
       const response = await httpService.getData(
         "/api/inspection-ops/inspections/dashboard"
       );
+
+      console.log("✅ [Inspection Dashboard] API Response received:", response);
 
       const apiData: { data: InspectionDashboardAPI } = response.data;
 
@@ -49,6 +53,8 @@ export function useInspectionDashboard(): UseInspectionDashboardReturn {
         type: typeof apiData.data.monthly_debts_comparison,
       });
 
+      console.log("📊 Metric Cards from API:", apiData.data.metric_cards);
+
       const transformedData = transformInspectionDashboardFromAPI(apiData.data);
 
       console.log(
@@ -56,14 +62,21 @@ export function useInspectionDashboard(): UseInspectionDashboardReturn {
         transformedData.monthlyDebtsComparison
       );
 
+      console.log("📊 Transformed metric cards:", transformedData.metricCards);
+
       setData(transformedData);
+      console.log("✅ [Inspection Dashboard] Data loaded successfully");
     } catch (err: any) {
-      console.error("Error fetching inspection dashboard:", err);
-      setError(
-        err.response?.data?.message ||
+      console.error("❌ [Inspection Dashboard] Error fetching:", err);
+      console.error("❌ [Inspection Dashboard] Error response:", err.response);
+      console.error("❌ [Inspection Dashboard] Error message:", err.message);
+
+      const errorMessage = err.response?.data?.message ||
           err.message ||
-          "Failed to load inspection dashboard"
-      );
+          "Failed to load inspection dashboard";
+
+      console.error("❌ [Inspection Dashboard] Setting error state:", errorMessage);
+      setError(errorMessage);
       setData(null);
     } finally {
       setLoading(false);
