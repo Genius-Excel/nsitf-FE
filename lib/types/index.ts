@@ -438,6 +438,7 @@ export interface RegionalRiskData {
   region: string;
   score: number;
   employers: number;
+  critical: number;
   highRisk: number;
   mediumRisk: number;
   lowRisk: number;
@@ -451,6 +452,7 @@ export interface RiskEntity {
   claims: number;
   compliance: number;
   incidents: number;
+  inspections: number;
 }
 
 export interface RiskAnalysisFilters {

@@ -205,7 +205,7 @@ export function RiskAnalysisDesign({
       </Card>
 
       {/* Overall Risk Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {riskMetrics.map((metric, index) => {
           const Icon = metric.icon;
           return (
