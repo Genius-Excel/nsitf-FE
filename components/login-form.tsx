@@ -54,8 +54,9 @@ export function LoginForm() {
       setUserRole(loginData.role);
     }
     if (userRole) {
-      router.push(`${userRole.toLowerCase()}/dashboard`);
-    setIsLoading(false);
+      // All users route to /admin/dashboard, with permissions controlling access
+      router.push("/admin/dashboard");
+      setIsLoading(false);
     }
   }, [loginData, userRole]);
 

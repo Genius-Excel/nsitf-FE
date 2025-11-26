@@ -1,5 +1,14 @@
 
-export type UserRole = "admin" | "regional_manager"
+export type UserRole =
+  | "admin"
+  | "manager"
+  | "user"
+  | "regional_manager"
+  | "claims_officer"
+  | "compliance_officer"
+  | "hse_officer"
+  | "legal_officer"
+  | "inspection_officer"
 
 export interface User {
   id: string

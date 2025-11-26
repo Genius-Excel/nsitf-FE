@@ -47,7 +47,17 @@ interface User {
 }
 
 // Define valid roles
-const validRoles = ["admin", "manager", "user"] as const;
+const validRoles = [
+  "admin",
+  "manager",
+  "user",
+  "regional_manager",
+  "claims_officer",
+  "compliance_officer",
+  "hse_officer",
+  "legal_officer",
+  "inspection_officer",
+] as const;
 type Role = (typeof validRoles)[number];
 
 // Define navigation items with role-based access
@@ -56,7 +66,7 @@ const navigationItems = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    roles: ["admin", "manager", "user"] as Role[],
+    roles: ["admin", "manager", "user", "regional_manager", "claims_officer", "compliance_officer", "hse_officer", "legal_officer", "inspection_officer"] as Role[],
   },
   {
     title: "User and Role",
@@ -68,31 +78,31 @@ const navigationItems = [
     title: "Compliance",
     href: "/dashboard/compliance",
     icon: Shield,
-    roles: ["admin", "manager"] as Role[],
+    roles: ["admin", "manager", "compliance_officer", "regional_manager", "claims_officer", "hse_officer", "legal_officer", "inspection_officer"] as Role[],
   },
   {
     title: "Claims and compensation",
     href: "/dashboard/claims",
     icon: FileText,
-    roles: ["admin", "manager", "user"] as Role[],
+    roles: ["admin", "manager", "user", "regional_manager", "claims_officer", "compliance_officer", "hse_officer", "legal_officer", "inspection_officer"] as Role[],
   },
   {
     title: "Inspection",
     href: "/dashboard/inspections",
     icon: ShieldCheck,
-    roles: ["admin", "manager", "user"] as Role[],
+    roles: ["admin", "manager", "user", "regional_manager", "claims_officer", "compliance_officer", "hse_officer", "legal_officer", "inspection_officer"] as Role[],
   },
   {
     title: "OSH",
     href: "/dashboard/hse",
     icon: HardHat,
-    roles: ["admin", "manager", "user"] as Role[],
+    roles: ["admin", "manager", "user", "regional_manager", "claims_officer", "compliance_officer", "hse_officer", "legal_officer", "inspection_officer"] as Role[],
   },
   {
     title: "Legal",
     href: "/dashboard/legal",
     icon: Scale,
-    roles: ["admin", "manager"] as Role[],
+    roles: ["admin", "manager", "regional_manager", "claims_officer", "compliance_officer", "hse_officer", "legal_officer", "inspection_officer"] as Role[],
   },
   {
     title: "KPI Analytics",
@@ -115,8 +125,10 @@ const navigationItems = [
 ];
 
 // Utility to construct role-based routes
+// All users now use the shared /admin routes, with permissions controlling access
 const getRoleBasedRoute = (role: Role | undefined, href: string) => {
-  return role && validRoles.includes(role) ? `/${role}${href}` : href;
+  // Route all authenticated users to /admin routes
+  return role && validRoles.includes(role) ? `/admin${href}` : href;
 };
 
 // Utility to get user initials
@@ -356,12 +368,20 @@ export function AppSidebar({
         <div className="mt-auto border-t border-sidebar-border p-2 bg-white">
           {isCollapsed ? (
             <div className="space-y-2">
-              <div
-                className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs mx-auto"
-                aria-label={`Avatar for ${user.name}`}
-              >
-                {getInitials(user.name)}
-              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => router.push("/admin/dashboard/user-profile")}
+                      className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs mx-auto hover:bg-green-600 transition-colors cursor-pointer"
+                      aria-label={`View profile for ${user.name}`}
+                    >
+                      {getInitials(user.name)}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">View Profile</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -381,14 +401,18 @@ export function AppSidebar({
             </div>
           ) : (
             <div className="space-y-2">
-              <div className="px-2 py-1 rounded-md bg-sidebar-accent/50 dark:bg-gray-800">
+              <button
+                onClick={() => router.push("/admin/dashboard/user-profile")}
+                className="w-full px-2 py-1 rounded-md bg-sidebar-accent/50 dark:bg-gray-800 hover:bg-sidebar-accent dark:hover:bg-gray-700 transition-colors cursor-pointer text-left"
+                aria-label="View profile"
+              >
                 <p className="text-xs font-medium text-sidebar-foreground dark:text-gray-200">
                   {user.name}
                 </p>
                 <p className="text-xs text-muted-foreground dark:text-gray-400">
                   {user.email}
                 </p>
-              </div>
+              </button>
               <Button
                 variant="ghost"
                 className="w-full justify-start gap-3 text-white bg-red-500 hover:bg-red-400 dark:hover:bg-gray-700 dark:text-gray-200"
