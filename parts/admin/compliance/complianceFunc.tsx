@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Download, Plus, Upload, Search } from "lucide-react";
 import * as XLSX from "xlsx";
+import { toast } from "sonner";
 
 // Hooks
 import {
@@ -13,6 +14,10 @@ import {
   useModalState,
   type RegionalSummary,
 } from "@/hooks/compliance";
+
+// Auth & Permissions
+import { getUserFromStorage } from "@/lib/auth";
+import { canManageCompliance } from "@/lib/permissions";
 
 // Types
 import type { ComplianceEntry } from "@/lib/types";
@@ -56,6 +61,16 @@ const mapToComplianceEntry = (summary: RegionalSummary): ComplianceEntry => ({
  * - Follows Dashboard/Users pattern exactly
  */
 const ComplianceDashboard: React.FC = () => {
+  // ============== PERMISSIONS ==============
+  const [canManage, setCanManage] = useState(false);
+
+  useEffect(() => {
+    const user = getUserFromStorage();
+    if (user) {
+      setCanManage(canManageCompliance(user.role));
+    }
+  }, []);
+
   // ============== API FILTERS ==============
   const [apiFilters, setApiFilters] = useState({
     period: undefined as string | undefined,
@@ -124,6 +139,10 @@ const ComplianceDashboard: React.FC = () => {
 
   // ============== HANDLERS ==============
   const handleAddRegion = async (name: string) => {
+    if (!canManage) {
+      toast.error("You don't have permission to create regions");
+      return;
+    }
     try {
       await createRegion({ name });
     } catch (err) {
@@ -132,6 +151,10 @@ const ComplianceDashboard: React.FC = () => {
   };
 
   const handleDeleteRegion = async (regionId: string, regionName: string) => {
+    if (!canManage) {
+      toast.error("You don't have permission to delete regions");
+      return;
+    }
     if (
       window.confirm(`Delete region '${regionName}'? This cannot be undone.`)
     ) {
@@ -144,6 +167,11 @@ const ComplianceDashboard: React.FC = () => {
   };
 
   const handleExport = () => {
+    if (!canManage) {
+      toast.error("You don't have permission to export data");
+      return;
+    }
+
     const exportData = (filteredSummary || []).map((entry: any) => ({
       Region: entry.region,
       Branch: entry.branch || "N/A",
@@ -161,6 +189,22 @@ const ComplianceDashboard: React.FC = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Compliance Data");
     XLSX.writeFile(wb, "compliance_data.xlsx");
+  };
+
+  const handleUploadClick = () => {
+    if (!canManage) {
+      toast.error("You don't have permission to upload data");
+      return;
+    }
+    uploadModal.open();
+  };
+
+  const handleCreateRegionClick = () => {
+    if (!canManage) {
+      toast.error("You don't have permission to create regions");
+      return;
+    }
+    addModal.open();
   };
 
   const handleViewDetails = (entry: any) => {
@@ -247,7 +291,7 @@ const ComplianceDashboard: React.FC = () => {
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
-              onClick={uploadModal.open}
+              onClick={handleUploadClick}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <Upload size={18} />
@@ -261,7 +305,7 @@ const ComplianceDashboard: React.FC = () => {
               <span>Export</span>
             </button>
             <button
-              onClick={addModal.open}
+              onClick={handleCreateRegionClick}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
               <Plus size={18} />

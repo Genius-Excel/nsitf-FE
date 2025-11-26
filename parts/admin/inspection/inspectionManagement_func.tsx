@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PermissionGuard } from "@/components/permission-guard";
@@ -10,6 +11,8 @@ import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 import ScheduleInspectionModal from "@/components/shedule-inspection";
 import ViewAllInspectionsModal from "@/components/view-all-inspection";
+import { getUserFromStorage } from "@/lib/auth";
+import { canManageInspection } from "@/lib/permissions";
 import {
   InspectionStatisticsCards,
   InspectionBarChart,
@@ -26,6 +29,16 @@ import type {
 } from "@/lib/types/inspection";
 
 export default function InspectionManagement() {
+  // ============= PERMISSIONS =============
+  const [canManage, setCanManage] = useState(false);
+
+  useEffect(() => {
+    const user = getUserFromStorage();
+    if (user) {
+      setCanManage(canManageInspection(user.role));
+    }
+  }, []);
+
   // ============= STATE =============
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isViewAllModalOpen, setIsViewAllModalOpen] = useState(false);
@@ -53,6 +66,11 @@ export default function InspectionManagement() {
   };
 
   const handleExport = () => {
+    if (!canManage) {
+      toast.error("You don't have permission to export inspection data");
+      return;
+    }
+
     const headers = [
       "Branch",
       "Inspections Conducted",
@@ -150,7 +168,7 @@ export default function InspectionManagement() {
         title="Inspection Management"
         description="Track and manage employer inspections, compliance letters, and debt recovery"
         action={
-          <PermissionGuard permission="manage_compliance" fallback={null}>
+          <PermissionGuard permission="manage_inspection" fallback={null}>
             <button
               onClick={() => setIsScheduleModalOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"

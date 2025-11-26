@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Upload,
   Eye,
@@ -18,6 +18,7 @@ import {
   Gavel,
   Building,
 } from "lucide-react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
@@ -28,8 +29,20 @@ import { LegalUploadModal } from "./legalUploadModal";
 import { useLegalDashboard } from "@/hooks/legal/useLegalDashboard";
 import { useLegalFilters } from "@/hooks/legal/useLegalFilters";
 import type { LegalActivityRecord } from "@/lib/types/legal";
+import { getUserFromStorage } from "@/lib/auth";
+import { canManageLegal } from "@/lib/permissions";
 
 export default function LegalManagementDashboard() {
+  // ============= PERMISSIONS =============
+  const [canManage, setCanManage] = useState(false);
+
+  useEffect(() => {
+    const user = getUserFromStorage();
+    if (user) {
+      setCanManage(canManageLegal(user.role));
+    }
+  }, []);
+
   // ============= STATE =============
   const [selectedActivity, setSelectedActivity] =
     useState<LegalActivityRecord | null>(null);
@@ -54,6 +67,14 @@ export default function LegalManagementDashboard() {
     setIsUploadModalOpen(false);
   };
 
+  const handleUploadClick = () => {
+    if (!canManage) {
+      toast.error("You don't have permission to upload legal data");
+      return;
+    }
+    setIsUploadModalOpen(true);
+  };
+
   // ============= LOADING & ERROR STATES =============
   if (loading) {
     return <LoadingState message="Loading legal dashboard..." />;
@@ -76,7 +97,7 @@ export default function LegalManagementDashboard() {
         description={`Period: ${data.filters.asOf}`}
         action={
           <button
-            onClick={() => setIsUploadModalOpen(true)}
+            onClick={handleUploadClick}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
           >
             <Upload size={16} />

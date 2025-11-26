@@ -39,39 +39,39 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 }) => {
   return (
     <div
-      className={`${colorSchemes[colorScheme]} p-3 rounded-lg border transition-all hover:shadow-md`}
+      className={`${colorSchemes[colorScheme]} p-2.5 rounded-lg border transition-all hover:shadow-md`}
       role="article"
       aria-label={`${title}: ${value}`}
     >
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-0.5">
         <p className="text-xs font-medium text-gray-600 uppercase tracking-wide truncate">
           {title}
         </p>
         {icon && (
           <div
-            className={`opacity-60 ${iconColors[colorScheme]} text-sm`}
+            className={`opacity-60 ${iconColors[colorScheme]} text-xs`}
             aria-hidden="true"
           >
             {icon}
           </div>
         )}
       </div>
-      <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 truncate">
+      <p className="text-base sm:text-lg font-bold text-gray-900 truncate">
         {typeof value === "number" ? value.toLocaleString() : value}
       </p>
       {change && (
-        <p className="text-xs text-green-600 mt-1 font-medium">{change}</p>
+        <p className="text-xs text-green-600 mt-0.5 font-medium">{change}</p>
       )}
       {trend && (
-        <p className="text-xs text-blue-600 mt-1 font-medium">
+        <p className="text-xs text-blue-600 mt-0.5 font-medium">
           {typeof trend === "string" && (trend === "up" || trend === "down")
             ? `Trend: ${trend}`
             : `Trend: ${trend}`}
         </p>
       )}
-      {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+      {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
       {description && (
-        <p className="text-xs text-gray-500 mt-1">{description}</p>
+        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
       )}
     </div>
   );

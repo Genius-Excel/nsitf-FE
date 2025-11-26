@@ -7,13 +7,16 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 import { SearchBar } from "@/components/design-system/SearchBar";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
+import { getUserFromStorage } from "@/lib/auth";
+import { canManageHSE } from "@/lib/permissions";
 import {
   StatisticsCards,
   RecentHSEActivities,
@@ -31,6 +34,16 @@ import { useDeleteHSERecord } from "@/hooks/hse/useDeleteHSERecord";
 import type { HSERecord, HSEFormData, HSEStatCard } from "@/lib/types/hse";
 
 export default function HSEDashboardContent() {
+  // ============= PERMISSIONS =============
+  const [canManage, setCanManage] = useState(false);
+
+  useEffect(() => {
+    const user = getUserFromStorage();
+    if (user) {
+      setCanManage(canManageHSE(user.role));
+    }
+  }, []);
+
   // ============= STATE =============
   const [searchTerm, setSearchTerm] = useState("");
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -67,6 +80,10 @@ export default function HSEDashboardContent() {
 
   // ============= HANDLERS =============
   const handleAddNew = () => {
+    if (!canManage) {
+      toast.error("You don't have permission to add HSE records");
+      return;
+    }
     setIsEditing(false);
     setFormData({
       recordType: "",
@@ -81,6 +98,10 @@ export default function HSEDashboardContent() {
   };
 
   const handleEdit = (record: HSERecord) => {
+    if (!canManage) {
+      toast.error("You don't have permission to edit HSE records");
+      return;
+    }
     setIsEditing(true);
     setSelectedRecord(record);
     setFormData({
@@ -96,6 +117,10 @@ export default function HSEDashboardContent() {
   };
 
   const handleSave = async () => {
+    if (!canManage) {
+      toast.error("You don't have permission to save HSE records");
+      return;
+    }
     if (isEditing && selectedRecord) {
       const success = await updateRecord(selectedRecord.id, {
         details: formData.details,

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { FileText, Activity, BarChart3, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -21,6 +21,8 @@ import {
   useClaimsCharts,
   Claim,
 } from "@/hooks/claims";
+import { getUserFromStorage } from "@/lib/auth";
+import { canManageClaims } from "@/lib/permissions";
 
 export default function ClaimsManagement() {
   // ==========================================
@@ -29,6 +31,17 @@ export default function ClaimsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [canManage, setCanManage] = useState(false);
+
+  // ==========================================
+  // PERMISSIONS
+  // ==========================================
+  useEffect(() => {
+    const user = getUserFromStorage();
+    if (user) {
+      setCanManage(canManageClaims(user.role));
+    }
+  }, []);
 
   // ==========================================
   // API HOOKS
@@ -180,7 +193,20 @@ export default function ClaimsManagement() {
     toast.info("Filter functionality coming soon");
   }, []);
 
+  const handleUploadClick = useCallback(() => {
+    if (!canManage) {
+      toast.error("You don't have permission to upload claims");
+      return;
+    }
+    setIsUploadModalOpen(true);
+  }, [canManage]);
+
   const handleExport = useCallback(() => {
+    if (!canManage) {
+      toast.error("You don't have permission to export claims");
+      return;
+    }
+
     if (filteredClaims.length === 0) {
       toast.error("No claims to export");
       return;
@@ -236,7 +262,7 @@ export default function ClaimsManagement() {
     URL.revokeObjectURL(url);
 
     toast.success(`Exported ${filteredClaims.length} claims`);
-  }, [filteredClaims]);
+  }, [filteredClaims, canManage]);
 
   // ==========================================
   // ERROR HANDLING
@@ -310,7 +336,7 @@ export default function ClaimsManagement() {
             onSearchChange={setSearchTerm}
             onFilterClick={handleFilterClick}
             onExport={handleExport}
-            onUpload={() => setIsUploadModalOpen(true)}
+            onUpload={handleUploadClick}
           />
 
           {/* Claims Table */}
