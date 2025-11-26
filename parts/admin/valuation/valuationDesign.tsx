@@ -35,6 +35,7 @@ import {
   ClaimTrendProjection,
   ContributionGrowth,
   InspectionTrend,
+  HSETrend,
   ValuationMetric,
   ShortTermForecast,
   LongTermForecast,
@@ -45,6 +46,7 @@ interface ValuationForecastingDesignProps {
   claimTrendProjections: ClaimTrendProjection[];
   contributionGrowth: ContributionGrowth[];
   inspectionTrends: InspectionTrend[];
+  hseTrends: HSETrend[];
   shortTermForecasts: ShortTermForecast[];
   longTermForecasts: LongTermForecast[];
   forecastModel: string;
@@ -59,6 +61,7 @@ export function ValuationForecastingDesign({
   claimTrendProjections,
   contributionGrowth,
   inspectionTrends,
+  hseTrends,
   shortTermForecasts,
   longTermForecasts,
   forecastModel,
@@ -67,6 +70,18 @@ export function ValuationForecastingDesign({
   onSelectedMetricChange,
   onExportReport,
 }: ValuationForecastingDesignProps) {
+  // Format Y-axis values
+  const formatYAxis = (value: number) => {
+    if (value >= 1_000_000_000) {
+      return `${(value / 1_000_000_000).toFixed(1)}B`;
+    } else if (value >= 1_000_000) {
+      return `${(value / 1_000_000).toFixed(0)}M`;
+    } else if (value >= 1_000) {
+      return `${(value / 1_000).toFixed(0)}K`;
+    }
+    return value.toString();
+  };
+
   return (
     <div className="space-y-10">
       {/* Header with Breadcrumb */}
@@ -127,12 +142,13 @@ export function ValuationForecastingDesign({
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="claims" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="claims">Claim Trends</TabsTrigger>
               <TabsTrigger value="contributions">
                 Contribution Growth
               </TabsTrigger>
               <TabsTrigger value="inspections">Inspection Trends</TabsTrigger>
+              <TabsTrigger value="hse">HSE Trends</TabsTrigger>
             </TabsList>
 
             <TabsContent value="claims" className="mt-4">
@@ -167,7 +183,10 @@ export function ValuationForecastingDesign({
                       dataKey="period"
                       tick={{ fontSize: 12, fill: "#6b7280" }}
                     />
-                    <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: "#6b7280" }}
+                      tickFormatter={formatYAxis}
+                    />
                     <Tooltip
                       cursor={{ fill: "#f9fafb" }}
                       contentStyle={{
@@ -242,7 +261,10 @@ export function ValuationForecastingDesign({
                       dataKey="period"
                       tick={{ fontSize: 12, fill: "#6b7280" }}
                     />
-                    <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: "#6b7280" }}
+                      tickFormatter={formatYAxis}
+                    />
                     <Tooltip
                       cursor={{ fill: "#f9fafb" }}
                       contentStyle={{
@@ -296,7 +318,10 @@ export function ValuationForecastingDesign({
                       dataKey="period"
                       tick={{ fontSize: 12, fill: "#6b7280" }}
                     />
-                    <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: "#6b7280" }}
+                      tickFormatter={formatYAxis}
+                    />
                     <Tooltip
                       cursor={{ fill: "#f9fafb" }}
                       contentStyle={{
@@ -335,6 +360,56 @@ export function ValuationForecastingDesign({
                 </ResponsiveContainer>
               </div>
             </TabsContent>
+
+            <TabsContent value="hse" className="mt-4">
+              <div className="w-full h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={hseTrends}
+                    margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="period"
+                      tick={{ fontSize: 12, fill: "#6b7280" }}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: "#6b7280" }}
+                      tickFormatter={formatYAxis}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "#f9fafb" }}
+                      contentStyle={{
+                        borderRadius: "0.5rem",
+                        borderColor: "#e5e7eb",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                      }}
+                    />
+                    <Legend
+                      wrapperStyle={{ fontSize: 12, color: "#374151" }}
+                      verticalAlign="top"
+                      height={36}
+                    />
+                    <Bar
+                      dataKey="total"
+                      fill="#16a34a"
+                      radius={[6, 6, 0, 0]}
+                      barSize={32}
+                      name="Total Activities"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="forecast"
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                      name="Forecast"
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
@@ -363,7 +438,10 @@ export function ValuationForecastingDesign({
                     dataKey="quarter"
                     tick={{ fontSize: 12, fill: "#6b7280" }}
                   />
-                  <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: "#6b7280" }}
+                    tickFormatter={formatYAxis}
+                  />
                   <Tooltip
                     cursor={{ fill: "#f9fafb" }}
                     contentStyle={{
@@ -450,10 +528,9 @@ export function ValuationForecastingDesign({
           <CardContent>
             <div className="w-full h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
+                <ComposedChart
                   data={longTermForecasts}
                   margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
-                  barGap={4}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis
@@ -461,13 +538,8 @@ export function ValuationForecastingDesign({
                     tick={{ fontSize: 12, fill: "#6b7280" }}
                   />
                   <YAxis
-                    yAxisId="left"
                     tick={{ fontSize: 12, fill: "#6b7280" }}
-                  />
-                  <YAxis
-                    yAxisId="right"
-                    orientation="right"
-                    tick={{ fontSize: 12, fill: "#6b7280" }}
+                    tickFormatter={formatYAxis}
                   />
                   <Tooltip
                     cursor={{ fill: "#f9fafb" }}
@@ -483,7 +555,6 @@ export function ValuationForecastingDesign({
                     height={36}
                   />
                   <Bar
-                    yAxisId="left"
                     dataKey="claims"
                     fill="#16a34a"
                     radius={[6, 6, 0, 0]}
@@ -491,7 +562,6 @@ export function ValuationForecastingDesign({
                     name="Claims"
                   />
                   <Bar
-                    yAxisId="left"
                     dataKey="reserves"
                     fill="#3b82f6"
                     radius={[6, 6, 0, 0]}
@@ -499,16 +569,15 @@ export function ValuationForecastingDesign({
                     name="Reserves"
                   />
                   <Line
-                    yAxisId="right"
                     type="monotone"
-                    dataKey="growth"
+                    dataKey="contributions"
                     stroke="#f59e0b"
-                    strokeWidth={3}
+                    strokeWidth={2}
                     dot={{ r: 4 }}
                     activeDot={{ r: 6 }}
-                    name="Growth %"
+                    name="Contributions"
                   />
-                </BarChart>
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-4">

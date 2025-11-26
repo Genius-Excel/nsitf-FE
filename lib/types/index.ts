@@ -381,6 +381,12 @@ export interface InspectionTrend {
   planned: number;
 }
 
+export interface HSETrend {
+  period: string;
+  total: number | null;
+  forecast: number;
+}
+
 export interface ValuationMetric {
   title: string;
   value: string;
