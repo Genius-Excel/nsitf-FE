@@ -168,12 +168,12 @@ export function ValuationForecastingDesign({
                       >
                         <stop
                           offset="5%"
-                          stopColor="#3b82f6"
-                          stopOpacity={0.3}
+                          stopColor="#ff5722"
+                          stopOpacity={0.4}
                         />
                         <stop
                           offset="95%"
-                          stopColor="#3b82f6"
+                          stopColor="#ff5722"
                           stopOpacity={0}
                         />
                       </linearGradient>
@@ -204,7 +204,7 @@ export function ValuationForecastingDesign({
                       type="monotone"
                       dataKey="upper"
                       stroke="none"
-                      fill="#e0e7ff"
+                      fill="#ffccbc"
                       name="Upper Bound"
                     />
                     <Area
@@ -225,8 +225,8 @@ export function ValuationForecastingDesign({
                     <Line
                       type="monotone"
                       dataKey="forecast"
-                      stroke="#3b82f6"
-                      strokeWidth={2}
+                      stroke="#ff5722"
+                      strokeWidth={4}
                       strokeDasharray="5 5"
                       name="Forecast"
                     />
@@ -351,7 +351,7 @@ export function ValuationForecastingDesign({
                     />
                     <Bar
                       dataKey="planned"
-                      fill="#e5e7eb"
+                      fill="#fb923c"
                       radius={[6, 6, 0, 0]}
                       barSize={24}
                       name="Planned"
@@ -528,9 +528,10 @@ export function ValuationForecastingDesign({
           <CardContent>
             <div className="w-full h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart
+                <BarChart
                   data={longTermForecasts}
                   margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
+                  barGap={4}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis
@@ -568,16 +569,14 @@ export function ValuationForecastingDesign({
                     barSize={24}
                     name="Reserves"
                   />
-                  <Line
-                    type="monotone"
+                  <Bar
                     dataKey="contributions"
-                    stroke="#f59e0b"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
+                    fill="#f59e0b"
+                    radius={[6, 6, 0, 0]}
+                    barSize={24}
                     name="Contributions"
                   />
-                </ComposedChart>
+                </BarChart>
               </ResponsiveContainer>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-4">
