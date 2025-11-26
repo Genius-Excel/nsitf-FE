@@ -2,24 +2,57 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Menu, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { DashboardNavbarUser } from "@/components/dashboard-navbar-user";
 import { cn } from "@/lib/utils";
+import { getUserFromStorage } from "@/lib/auth";
+import { LoadingState } from "@/components/design-system/LoadingState";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = () => {
+      const user = getUserFromStorage();
+
+      if (!user) {
+        // No user found, redirect to login
+        console.log("No authenticated user found, redirecting to login...");
+        router.push("/");
+      } else {
+        // User is authenticated
+        setIsAuthenticated(true);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   // Toggle sidebar collapse
   const toggleSidebarCollapse = () => {
     setIsSidebarCollapsed((prev) => !prev);
   };
+
+  // Show loading while checking authentication
+  if (isAuthenticated === null) {
+    return <LoadingState message="Verifying authentication..." />;
+  }
+
+  // Don't render dashboard if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <SidebarProvider>
