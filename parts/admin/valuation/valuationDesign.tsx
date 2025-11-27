@@ -475,21 +475,21 @@ export function ValuationForecastingDesign({
                   />
                   <Line
                     type="monotone"
-                    dataKey="liabilities"
+                    dataKey="inspections"
                     stroke="#f59e0b"
                     strokeWidth={2}
                     dot={{ r: 4 }}
                     activeDot={{ r: 6 }}
-                    name="Liabilities"
+                    name="Inspections"
                   />
                   <Line
                     type="monotone"
-                    dataKey="reserves"
+                    dataKey="hse"
                     stroke="#8b5cf6"
                     strokeWidth={2}
                     dot={{ r: 4 }}
                     activeDot={{ r: 6 }}
-                    name="Reserves"
+                    name="HSE"
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -561,13 +561,6 @@ export function ValuationForecastingDesign({
                     radius={[6, 6, 0, 0]}
                     barSize={24}
                     name="Claims"
-                  />
-                  <Bar
-                    dataKey="reserves"
-                    fill="#3b82f6"
-                    radius={[6, 6, 0, 0]}
-                    barSize={24}
-                    name="Reserves"
                   />
                   <Bar
                     dataKey="contributions"

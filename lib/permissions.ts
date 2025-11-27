@@ -69,15 +69,19 @@ export const rolePermissions: Record<UserRole, string[]> = {
     "view_inspection",
   ],
 
-  // Compliance Officer - full access to compliance, view-only access to others
+  // Compliance Officer - full access to compliance, manage access to all modules for uploads
   compliance_officer: [
     "view_dashboard",
     "view_compliance",
     "manage_compliance",
     "view_claims",
+    "manage_claims",
     "view_hse",
+    "manage_hse",
     "view_legal",
+    "manage_legal",
     "view_inspection",
+    "manage_inspection",
   ],
 
   // HSE Officer - full access to HSE, view-only access to others
