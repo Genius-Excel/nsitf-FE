@@ -39,7 +39,18 @@ export default function ClaimsManagement() {
   useEffect(() => {
     const user = getUserFromStorage();
     if (user) {
-      setCanManage(canManageClaims(user.role));
+      // Check backend permissions first
+      if (user.permissions && Array.isArray(user.permissions)) {
+        const hasBackendPermission = user.permissions.some(p =>
+          p === "can_upload_claims" ||
+          p === "can_create_claims_record" ||
+          p === "can_edit_claims_record"
+        );
+        setCanManage(hasBackendPermission);
+      } else {
+        // Fallback to role-based permissions
+        setCanManage(canManageClaims(user.role));
+      }
     }
   }, []);
 

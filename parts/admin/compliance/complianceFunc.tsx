@@ -67,7 +67,18 @@ const ComplianceDashboard: React.FC = () => {
   useEffect(() => {
     const user = getUserFromStorage();
     if (user) {
-      setCanManage(canManageCompliance(user.role));
+      // Check backend permissions first
+      if (user.permissions && Array.isArray(user.permissions)) {
+        const hasBackendPermission = user.permissions.some(p =>
+          p === "can_upload_compliance" ||
+          p === "can_create_compliance_record" ||
+          p === "can_edit_compliance_record"
+        );
+        setCanManage(hasBackendPermission);
+      } else {
+        // Fallback to role-based permissions
+        setCanManage(canManageCompliance(user.role));
+      }
     }
   }, []);
 
