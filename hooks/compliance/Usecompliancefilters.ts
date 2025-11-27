@@ -11,8 +11,6 @@ export const useComplianceFilters = (
 ) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
-  const [achievementMin, setAchievementMin] = useState(0);
-  const [achievementMax, setAchievementMax] = useState(100);
   const [periodSearch, setPeriodSearch] = useState("");
   const [branchSearch, setBranchSearch] = useState("");
 
@@ -40,13 +38,6 @@ export const useComplianceFilters = (
       );
     }
 
-    // Achievement range filter
-    filtered = filtered.filter(
-      (entry) =>
-        entry.performance_rate >= achievementMin &&
-        entry.performance_rate <= achievementMax
-    );
-
     // Period filter
     if (periodSearch.trim()) {
       const period = periodSearch.toLowerCase();
@@ -68,8 +59,6 @@ export const useComplianceFilters = (
     regionalSummary,
     searchTerm,
     selectedRegions,
-    achievementMin,
-    achievementMax,
     periodSearch,
     branchSearch,
   ]);
@@ -85,8 +74,6 @@ export const useComplianceFilters = (
   const resetFilters = () => {
     setSearchTerm("");
     setSelectedRegions([]);
-    setAchievementMin(0);
-    setAchievementMax(100);
     setPeriodSearch("");
     setBranchSearch("");
   };
@@ -94,8 +81,6 @@ export const useComplianceFilters = (
   const hasActiveFilters =
     searchTerm !== "" ||
     selectedRegions.length > 0 ||
-    achievementMin > 0 ||
-    achievementMax < 100 ||
     periodSearch !== "" ||
     branchSearch !== "";
 
@@ -106,16 +91,12 @@ export const useComplianceFilters = (
     // Filter state
     searchTerm,
     selectedRegions,
-    achievementMin,
-    achievementMax,
     periodSearch,
     branchSearch,
 
     // Filter controls
     setSearchTerm,
     toggleRegion,
-    setAchievementMin,
-    setAchievementMax,
     setPeriodSearch,
     setBranchSearch,
     resetFilters,

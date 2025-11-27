@@ -64,8 +64,6 @@ export interface DashboardMetrics {
 
 export interface FilterConfig {
   regions: string[];
-  achievementMin: number;
-  achievementMax: number;
   periodSearch: string;
   branchSearch: string;
 }

@@ -1,39 +1,35 @@
 import React, { useState } from "react";
 import { Filter, X, ChevronUp, ChevronDown } from "lucide-react";
-import type { FilterConfig } from "@/lib/types";
 
 export const FilterPanel: React.FC<{
-  filterConfig: FilterConfig;
-  onFilterChange: (config: FilterConfig) => void;
+  selectedRegions: string[];
+  periodSearch: string;
+  branchSearch: string;
   availableRegions: string[];
   totalEntries: number;
   filteredCount: number;
-}> = ({ filterConfig, onFilterChange, availableRegions, totalEntries, filteredCount }) => {
+  onRegionToggle: (region: string) => void;
+  onPeriodChange: (value: string) => void;
+  onBranchChange: (value: string) => void;
+  onReset: () => void;
+}> = ({
+  selectedRegions,
+  periodSearch,
+  branchSearch,
+  availableRegions,
+  totalEntries,
+  filteredCount,
+  onRegionToggle,
+  onPeriodChange,
+  onBranchChange,
+  onReset,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const handleRegionToggle = (region: string) => {
-    const newRegions = filterConfig.regions.includes(region)
-      ? filterConfig.regions.filter((r) => r !== region)
-      : [...filterConfig.regions, region];
-    onFilterChange({ ...filterConfig, regions: newRegions });
-  };
-
-  const handleReset = () => {
-    onFilterChange({
-      regions: [],
-      achievementMin: 0,
-      achievementMax: 100,
-      periodSearch: "",
-      branchSearch: "",
-    });
-  };
-
   const hasActiveFilters =
-    filterConfig.regions.length > 0 ||
-    filterConfig.achievementMin > 0 ||
-    filterConfig.achievementMax < 100 ||
-    filterConfig.periodSearch ||
-    filterConfig.branchSearch;
+    selectedRegions.length > 0 ||
+    periodSearch ||
+    branchSearch;
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4" role="search" aria-label="Filter compliance entries">
@@ -61,12 +57,12 @@ export const FilterPanel: React.FC<{
             <label id="region-filter-label" className="block text-sm font-medium text-gray-700 mb-2">Regions</label>
             <div role="group" aria-labelledby="region-filter-label" className="flex flex-wrap gap-2">
               {availableRegions.map((region) => {
-                const isSelected = filterConfig.regions.includes(region);
+                const isSelected = selectedRegions.includes(region);
                 return (
                   <button
                     arial-label="region"
                     key={region}
-                    onClick={() => handleRegionToggle(region)}
+                    onClick={() => onRegionToggle(region)}
                     className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
                       isSelected ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                     }`}
@@ -80,38 +76,23 @@ export const FilterPanel: React.FC<{
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="achievement-min" className="block text-sm font-medium text-gray-700 mb-2">Min Achievement (%)</label>
-              <input id="achievement-min" type="number" min="0" max="100" value={filterConfig.achievementMin}
-                onChange={(e) => onFilterChange({ ...filterConfig, achievementMin: Number(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
-            </div>
-            <div>
-              <label htmlFor="achievement-max" className="block text-sm font-medium text-gray-700 mb-2">Max Achievement (%)</label>
-              <input id="achievement-max" type="number" min="0" max="100" value={filterConfig.achievementMax}
-                onChange={(e) => onFilterChange({ ...filterConfig, achievementMax: Number(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
-            </div>
-          </div>
-
           <div>
             <label htmlFor="period-search" className="block text-sm font-medium text-gray-700 mb-2">Period</label>
-            <input id="period-search" type="text" placeholder="e.g., June 2025" value={filterConfig.periodSearch}
-              onChange={(e) => onFilterChange({ ...filterConfig, periodSearch: e.target.value })}
+            <input id="period-search" type="text" placeholder="e.g., June 2025" value={periodSearch}
+              onChange={(e) => onPeriodChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
           </div>
 
           <div>
             <label htmlFor="branch-search" className="block text-sm font-medium text-gray-700 mb-2">Branch</label>
-            <input id="branch-search" type="text" placeholder="e.g., Ikeja" value={filterConfig.branchSearch}
-              onChange={(e) => onFilterChange({ ...filterConfig, branchSearch: e.target.value })}
+            <input id="branch-search" type="text" placeholder="e.g., Ikeja" value={branchSearch}
+              onChange={(e) => onBranchChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
           </div>
 
           {hasActiveFilters && (
             <div className="pt-2 flex justify-end">
-              <button onClick={handleReset} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors" aria-label="Clear all filters">
+              <button onClick={onReset} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors" aria-label="Clear all filters">
                 <X className="w-4 h-4" />
                 Clear Filters
               </button>
