@@ -18,6 +18,7 @@ import {
   Activity,
   LineChart,
   AlertTriangle,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -120,6 +121,12 @@ const navigationItems = [
     title: "Risk Analysis",
     href: "/dashboard/risk",
     icon: AlertTriangle,
+    roles: ["admin", "manager"] as Role[],
+  },
+  {
+    title: "Investment & Treasury",
+    href: "/dashboard/investment",
+    icon: Wallet,
     roles: ["admin", "manager"] as Role[],
   },
 ];
