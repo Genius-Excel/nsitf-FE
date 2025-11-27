@@ -39,8 +39,29 @@ export default function HSEDashboardContent() {
 
   useEffect(() => {
     const user = getUserFromStorage();
+    console.log("🔐 [HSE] User from storage:", user);
     if (user) {
-      setCanManage(canManageHSE(user.role));
+      // Check backend permissions first
+      if (user.permissions && Array.isArray(user.permissions)) {
+        const hasBackendPermission = user.permissions.some(p =>
+          p === "can_upload_hse" ||
+          p === "can_create_hse_record" ||
+          p === "can_edit_hse_record"
+        );
+        console.log("🔐 [HSE] Backend permissions check:", {
+          permissions: user.permissions,
+          hasBackendPermission,
+          lookingFor: ["can_upload_hse", "can_create_hse_record", "can_edit_hse_record"]
+        });
+        setCanManage(hasBackendPermission);
+      } else {
+        // Fallback to role-based permissions
+        console.log("🔐 [HSE] Using role-based permissions:", {
+          role: user.role,
+          canManage: canManageHSE(user.role)
+        });
+        setCanManage(canManageHSE(user.role));
+      }
     }
   }, []);
 

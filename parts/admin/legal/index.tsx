@@ -39,7 +39,18 @@ export default function LegalManagementDashboard() {
   useEffect(() => {
     const user = getUserFromStorage();
     if (user) {
-      setCanManage(canManageLegal(user.role));
+      // Check backend permissions first
+      if (user.permissions && Array.isArray(user.permissions)) {
+        const hasBackendPermission = user.permissions.some(p =>
+          p === "can_upload_legal" ||
+          p === "can_create_legal_record" ||
+          p === "can_edit_legal_record"
+        );
+        setCanManage(hasBackendPermission);
+      } else {
+        // Fallback to role-based permissions
+        setCanManage(canManageLegal(user.role));
+      }
     }
   }, []);
 

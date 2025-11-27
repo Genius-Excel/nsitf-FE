@@ -34,13 +34,30 @@ export default function InspectionManagement() {
 
   useEffect(() => {
     const user = getUserFromStorage();
-    console.log("🔍 [InspectionManagement] Checking permissions:", {
-      user,
-      userRole: user?.role,
-      canManage: user ? canManageInspection(user.role) : false,
-    });
     if (user) {
-      setCanManage(canManageInspection(user.role));
+      // Check backend permissions first
+      if (user.permissions && Array.isArray(user.permissions)) {
+        const hasBackendPermission = user.permissions.some(p =>
+          p === "can_upload_inspection" ||
+          p === "can_create_inspection_record" ||
+          p === "can_edit_inspection_record"
+        );
+        console.log("🔍 [InspectionManagement] Checking permissions:", {
+          user,
+          userRole: user.role,
+          backendPermissions: user.permissions,
+          hasBackendPermission,
+        });
+        setCanManage(hasBackendPermission);
+      } else {
+        // Fallback to role-based permissions
+        console.log("🔍 [InspectionManagement] Using role-based permissions:", {
+          user,
+          userRole: user.role,
+          canManage: canManageInspection(user.role),
+        });
+        setCanManage(canManageInspection(user.role));
+      }
     }
   }, []);
 

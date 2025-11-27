@@ -21,7 +21,28 @@ export function PermissionGuard({ permission, children, fallback }: PermissionGu
   useEffect(() => {
     const user = getUserFromStorage()
     if (user) {
-      setHasAccess(hasPermission(user.role, permission))
+      // First check if user has backend permissions (direct from API)
+      if (user.permissions && Array.isArray(user.permissions)) {
+        // Check for exact backend permission match (e.g., "can_upload_hse")
+        const hasBackendPermission = user.permissions.includes(permission)
+
+        // Also map frontend permission names to backend permission names
+        const permissionMapping: Record<string, string[]> = {
+          "manage_hse": ["can_upload_hse", "can_create_hse_record", "can_edit_hse_record"],
+          "manage_claims": ["can_upload_claims", "can_create_claims_record", "can_edit_claims_record"],
+          "manage_legal": ["can_upload_legal", "can_create_legal_record", "can_edit_legal_record"],
+          "manage_inspection": ["can_upload_inspection", "can_create_inspection_record", "can_edit_inspection_record"],
+          "manage_compliance": ["can_upload_compliance", "can_create_compliance_record", "can_edit_compliance_record"],
+        }
+
+        const backendPermissions = permissionMapping[permission] || []
+        const hasMappedPermission = backendPermissions.some(p => user.permissions?.includes(p))
+
+        setHasAccess(hasBackendPermission || hasMappedPermission)
+      } else {
+        // Fallback to role-based permissions if no backend permissions
+        setHasAccess(hasPermission(user.role, permission))
+      }
     }
     setIsLoading(false)
   }, [permission])

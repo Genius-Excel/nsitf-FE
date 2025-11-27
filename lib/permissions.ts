@@ -118,7 +118,25 @@ export const rolePermissions: Record<UserRole, string[]> = {
   ],
 }
 
-export function hasPermission(role: UserRole, permission: string): boolean {
+export function hasPermission(role: UserRole, permission: string, backendPermissions?: string[]): boolean {
+  // Check backend permissions first if available
+  if (backendPermissions && Array.isArray(backendPermissions)) {
+    // Map frontend permission names to backend permission names
+    const permissionMapping: Record<string, string[]> = {
+      "manage_hse": ["can_upload_hse", "can_create_hse_record", "can_edit_hse_record"],
+      "manage_claims": ["can_upload_claims", "can_create_claims_record", "can_edit_claims_record"],
+      "manage_legal": ["can_upload_legal", "can_create_legal_record", "can_edit_legal_record"],
+      "manage_inspection": ["can_upload_inspection", "can_create_inspection_record", "can_edit_inspection_record"],
+      "manage_compliance": ["can_upload_compliance", "can_create_compliance_record", "can_edit_compliance_record"],
+    }
+
+    const backendPerms = permissionMapping[permission] || []
+    const hasMappedPermission = backendPerms.some(p => backendPermissions.includes(p))
+
+    if (hasMappedPermission) return true
+  }
+
+  // Fallback to role-based permissions
   return rolePermissions[role]?.includes(permission) ?? false
 }
 

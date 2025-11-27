@@ -15,6 +15,7 @@ export interface User {
   email: string
   name: string
   role: UserRole
+  permissions?: string[] // Backend permissions like "can_upload_claims", "can_upload_hse", etc.
 }
 
 // Mock user database
