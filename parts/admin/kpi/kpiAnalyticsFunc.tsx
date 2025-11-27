@@ -35,160 +35,163 @@ export function KPIAnalyticsFunc() {
       };
     }
 
-    const {
-      kpi_cards,
-      regional_performance,
-      sector_distribution,
-      monthly_kpi_comparison,
-    } = kpiAnalysisData;
+    // Safe defaults for all data
+    const kpi_cards = kpiAnalysisData?.kpi_cards || {
+      total_claims: { value: 0, trend: 0, status: "Unknown", target: 0 },
+      paid_claims: { value: 0, trend: 0, status: "Unknown", target: 0 },
+      pending_inspections: { value: 0, trend: 0, status: "Unknown", target: 0 },
+      compliance_rate: { value: 0, trend: 0, status: "Unknown", target: 100 },
+      risk_exposure: { value: 0, trend: 0, status: "Unknown", target: 0 },
+      avg_case_duration: { value: 0, trend: 0, status: "Unknown", target: 0 },
+    };
 
-    // Transform KPI Cards
+    const regional_performance = kpiAnalysisData?.regional_performance || { data: [] };
+    const sector_distribution = kpiAnalysisData?.sector_distribution || [];
+    const monthly_kpi_comparison = kpiAnalysisData?.monthly_kpi_comparison || { data: [] };
+
+    // Transform KPI Cards with safe defaults
     const kpiMetrics: KPIMetric[] = [
       {
         title: "Total Claims",
-        value: kpi_cards.total_claims.value.toLocaleString(),
-        change: kpi_cards.total_claims.trend
+        value: (kpi_cards.total_claims?.value ?? 0).toLocaleString(),
+        change: kpi_cards.total_claims?.trend
           ? `${
               kpi_cards.total_claims.trend > 0 ? "+" : ""
             }${kpi_cards.total_claims.trend.toFixed(1)}%`
           : "0%",
-        trend: (kpi_cards.total_claims.trend ?? 0) >= 0 ? "up" : "down",
+        trend: (kpi_cards.total_claims?.trend ?? 0) >= 0 ? "up" : "down",
         status:
-          kpi_cards.total_claims.status === "Unknown"
+          kpi_cards.total_claims?.status === "Unknown"
             ? "normal"
-            : (kpi_cards.total_claims.status.toLowerCase() as
+            : (kpi_cards.total_claims?.status?.toLowerCase() as
                 | "success"
                 | "warning"
                 | "critical"
-                | "normal"),
+                | "normal") || "normal",
         icon: FileText,
-        target: kpi_cards.total_claims.target ?? kpi_cards.total_claims.value,
-        actual: kpi_cards.total_claims.value,
+        target: kpi_cards.total_claims?.target ?? kpi_cards.total_claims?.value ?? 0,
+        actual: kpi_cards.total_claims?.value ?? 0,
       },
       {
         title: "Paid Claims",
-        value: kpi_cards.paid_claims.value.toLocaleString(),
-        change: kpi_cards.paid_claims.trend
+        value: (kpi_cards.paid_claims?.value ?? 0).toLocaleString(),
+        change: kpi_cards.paid_claims?.trend
           ? `${
               kpi_cards.paid_claims.trend > 0 ? "+" : ""
             }${kpi_cards.paid_claims.trend.toFixed(1)}%`
           : "0%",
-        trend: (kpi_cards.paid_claims.trend ?? 0) >= 0 ? "up" : "down",
+        trend: (kpi_cards.paid_claims?.trend ?? 0) >= 0 ? "up" : "down",
         status:
-          kpi_cards.paid_claims.status === "Unknown"
+          kpi_cards.paid_claims?.status === "Unknown"
             ? "normal"
-            : (kpi_cards.paid_claims.status.toLowerCase() as
+            : (kpi_cards.paid_claims?.status?.toLowerCase() as
                 | "success"
                 | "warning"
                 | "critical"
-                | "normal"),
+                | "normal") || "normal",
         icon: CheckCircle2,
-        target: kpi_cards.paid_claims.target ?? kpi_cards.paid_claims.value,
-        actual: kpi_cards.paid_claims.value,
+        target: kpi_cards.paid_claims?.target ?? kpi_cards.paid_claims?.value ?? 0,
+        actual: kpi_cards.paid_claims?.value ?? 0,
       },
       {
         title: "Pending Inspections",
-        value: kpi_cards.pending_inspections.value.toLocaleString(),
-        change: kpi_cards.pending_inspections.trend
+        value: (kpi_cards.pending_inspections?.value ?? 0).toLocaleString(),
+        change: kpi_cards.pending_inspections?.trend
           ? `${
               kpi_cards.pending_inspections.trend > 0 ? "+" : ""
             }${kpi_cards.pending_inspections.trend.toFixed(1)}%`
           : "0%",
-        trend: (kpi_cards.pending_inspections.trend ?? 0) >= 0 ? "up" : "down",
+        trend: (kpi_cards.pending_inspections?.trend ?? 0) >= 0 ? "up" : "down",
         status:
-          kpi_cards.pending_inspections.status === "Unknown"
+          kpi_cards.pending_inspections?.status === "Unknown"
             ? "normal"
-            : (kpi_cards.pending_inspections.status.toLowerCase() as
+            : (kpi_cards.pending_inspections?.status?.toLowerCase() as
                 | "success"
                 | "warning"
                 | "critical"
-                | "normal"),
+                | "normal") || "normal",
         icon: AlertCircle,
-        target:
-          kpi_cards.pending_inspections.target ??
-          kpi_cards.pending_inspections.value,
-        actual: kpi_cards.pending_inspections.value,
+        target: kpi_cards.pending_inspections?.target ?? kpi_cards.pending_inspections?.value ?? 0,
+        actual: kpi_cards.pending_inspections?.value ?? 0,
       },
       {
         title: "Compliance Rate",
-        value: `${kpi_cards.compliance_rate.value.toFixed(2)}%`,
-        change: kpi_cards.compliance_rate.trend
+        value: `${(kpi_cards.compliance_rate?.value ?? 0).toFixed(2)}%`,
+        change: kpi_cards.compliance_rate?.trend
           ? `${
               kpi_cards.compliance_rate.trend > 0 ? "+" : ""
             }${kpi_cards.compliance_rate.trend.toFixed(2)}%`
           : "0%",
-        trend: (kpi_cards.compliance_rate.trend ?? 0) >= 0 ? "up" : "down",
+        trend: (kpi_cards.compliance_rate?.trend ?? 0) >= 0 ? "up" : "down",
         status:
-          kpi_cards.compliance_rate.status === "Unknown"
+          kpi_cards.compliance_rate?.status === "Unknown"
             ? "normal"
-            : (kpi_cards.compliance_rate.status.toLowerCase() as
+            : (kpi_cards.compliance_rate?.status?.toLowerCase() as
                 | "success"
                 | "warning"
                 | "critical"
-                | "normal"),
+                | "normal") || "normal",
         icon: CheckCircle2,
-        target: kpi_cards.compliance_rate.target ?? 100,
-        actual: kpi_cards.compliance_rate.value,
+        target: kpi_cards.compliance_rate?.target ?? 100,
+        actual: kpi_cards.compliance_rate?.value ?? 0,
       },
       {
         title: "Risk Exposure (₦)",
-        value: `₦${(kpi_cards.risk_exposure.value / 1000000000).toFixed(2)}B`,
+        value: `₦${((kpi_cards.risk_exposure?.value ?? 0) / 1000000000).toFixed(2)}B`,
         change: "0",
         trend: "up",
         status:
-          kpi_cards.risk_exposure.status === "Unknown"
+          kpi_cards.risk_exposure?.status === "Unknown"
             ? "normal"
-            : (kpi_cards.risk_exposure.status.toLowerCase() as
+            : (kpi_cards.risk_exposure?.status?.toLowerCase() as
                 | "success"
                 | "warning"
                 | "critical"
-                | "normal"),
+                | "normal") || "normal",
         icon: DollarSign,
-        target: kpi_cards.risk_exposure.target ?? kpi_cards.risk_exposure.value,
-        actual: kpi_cards.risk_exposure.value / 1000000000,
+        target: (kpi_cards.risk_exposure?.target ?? kpi_cards.risk_exposure?.value ?? 0) / 1000000000,
+        actual: (kpi_cards.risk_exposure?.value ?? 0) / 1000000000,
       },
       {
         title: "Avg Case Duration (days)",
-        value: kpi_cards.avg_case_duration.value.toString(),
+        value: (kpi_cards.avg_case_duration?.value ?? 0).toString(),
         change: "0%",
         trend: "down",
         status:
-          kpi_cards.avg_case_duration.status === "Unknown"
+          kpi_cards.avg_case_duration?.status === "Unknown"
             ? "normal"
-            : (kpi_cards.avg_case_duration.status.toLowerCase() as
+            : (kpi_cards.avg_case_duration?.status?.toLowerCase() as
                 | "success"
                 | "warning"
                 | "critical"
-                | "normal"),
+                | "normal") || "normal",
         icon: Clock,
-        target:
-          kpi_cards.avg_case_duration.target ??
-          kpi_cards.avg_case_duration.value,
-        actual: kpi_cards.avg_case_duration.value,
+        target: kpi_cards.avg_case_duration?.target ?? kpi_cards.avg_case_duration?.value ?? 0,
+        actual: kpi_cards.avg_case_duration?.value ?? 0,
       },
     ];
 
-    // Transform Regional Data
-    const regionalData: RegionalData[] = regional_performance.data.map(
+    // Transform Regional Data with safe defaults
+    const regionalData: RegionalData[] = (regional_performance?.data || []).map(
       (region: any) => ({
-        region: region.region,
-        claims: region.claims,
-        paid: region.paid,
-        pending: region.pending,
+        region: region?.region || '',
+        claims: region?.claims ?? 0,
+        paid: region?.paid ?? 0,
+        pending: region?.pending ?? 0,
         compliance: 0,
         inspections: 0,
       })
     );
 
-    // Transform Sector Data
-    const sectorData: SectorData[] = sector_distribution.map((sector: any) => ({
-      name: sector.sector,
-      value: sector.count,
-      claims: sector.count,
+    // Transform Sector Data with safe defaults
+    const sectorData: SectorData[] = (sector_distribution || []).map((sector: any) => ({
+      name: sector?.sector || '',
+      value: sector?.count ?? 0,
+      claims: sector?.count ?? 0,
     }));
 
-    // Transform Monthly KPI Data
-    const monthlyKPIs: MonthlyKPI[] = monthly_kpi_comparison.data;
+    // Transform Monthly KPI Data with safe defaults
+    const monthlyKPIs: MonthlyKPI[] = monthly_kpi_comparison?.data || [];
 
     return {
       kpiMetrics,

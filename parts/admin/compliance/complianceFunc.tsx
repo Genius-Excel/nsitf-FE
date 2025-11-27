@@ -25,10 +25,10 @@ import type { ComplianceEntry } from "@/lib/types";
 // Components
 import {
   DashboardCards,
-  FilterPanel,
   ComplianceTable,
   ComplianceUploadModal,
 } from "./complianceDesign";
+import { FilterPanel } from "./components/filters/FilterPanel";
 import { AddRegionModal } from "./complianceAddRegionModal";
 import { ComplianceDetailModal } from "./complianceDetailModal";
 import { PageHeader } from "@/components/design-system/PageHeader";
@@ -102,10 +102,12 @@ const ComplianceDashboard: React.FC = () => {
     searchTerm,
     setSearchTerm,
     selectedRegions,
-    achievementMin,
-    achievementMax,
+    toggleRegion,
     periodSearch,
+    setPeriodSearch,
     branchSearch,
+    setBranchSearch,
+    resetFilters,
     totalCount,
     filteredCount,
   } = useComplianceFilters(dashboardData?.regional_summary ?? null);
@@ -316,21 +318,16 @@ const ComplianceDashboard: React.FC = () => {
 
       {/* Filter Panel */}
       <FilterPanel
-          filterConfig={{
-            regions: selectedRegions,
-            achievementMin,
-            achievementMax,
-            periodSearch,
-            branchSearch,
-          }}
-          onFilterChange={(config) => {
-            // Update individual filter states when FilterPanel changes
-            // This is a simplified approach - the FilterPanel handles the UI
-            // and we just reflect its state changes here
-          }}
+          selectedRegions={selectedRegions}
+          periodSearch={periodSearch}
+          branchSearch={branchSearch}
           availableRegions={regionNames}
           totalEntries={totalCount}
           filteredCount={filteredCount}
+          onRegionToggle={toggleRegion}
+          onPeriodChange={setPeriodSearch}
+          onBranchChange={setBranchSearch}
+          onReset={resetFilters}
       />
 
       {/* Main Table */}

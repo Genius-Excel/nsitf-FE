@@ -178,110 +178,149 @@ export function formatValuationMetrics(metrics: {
   status: "success" | "warning" | "critical";
   icon: LucideIcon;
 }> {
+  // Provide safe defaults
+  const safeMetrics = {
+    total_liabilities: metrics.total_liabilities ?? 0,
+    total_liabilities_trend: metrics.total_liabilities_trend ?? 0,
+    reserve_adequacy_pct: metrics.reserve_adequacy_pct ?? 0,
+    reserve_adequacy_trend: metrics.reserve_adequacy_trend ?? 0,
+    outstanding_claims: metrics.outstanding_claims ?? 0,
+    outstanding_claims_trend: metrics.outstanding_claims_trend ?? 0,
+    expected_inflows: metrics.expected_inflows ?? 0,
+    expected_inflows_trend: metrics.expected_inflows_trend ?? 0,
+  };
+
   return [
     {
       title: "Total Liabilities",
-      value: formatCurrency(metrics.total_liabilities),
-      change: formatTrend(metrics.total_liabilities_trend),
+      value: formatCurrency(safeMetrics.total_liabilities),
+      change: formatTrend(safeMetrics.total_liabilities_trend),
       status: "warning" as const,
       icon: DollarSign,
     },
     {
       title: "Reserve Adequacy",
-      value: formatPercentage(metrics.reserve_adequacy_pct),
-      change: formatTrend(metrics.reserve_adequacy_trend),
+      value: formatPercentage(safeMetrics.reserve_adequacy_pct),
+      change: formatTrend(safeMetrics.reserve_adequacy_trend),
       status: "success" as const,
       icon: CheckCircle2,
     },
     {
       title: "Outstanding Claims",
-      value: formatCurrency(metrics.outstanding_claims),
-      change: formatTrend(metrics.outstanding_claims_trend),
-      status: metrics.outstanding_claims === 0 ? ("success" as const) : ("warning" as const),
+      value: formatCurrency(safeMetrics.outstanding_claims),
+      change: formatTrend(safeMetrics.outstanding_claims_trend),
+      status: safeMetrics.outstanding_claims === 0 ? ("success" as const) : ("warning" as const),
       icon: AlertTriangle,
     },
     {
       title: "Expected Inflows",
-      value: formatCurrency(metrics.expected_inflows),
-      change: formatTrend(metrics.expected_inflows_trend),
+      value: formatCurrency(safeMetrics.expected_inflows),
+      change: formatTrend(safeMetrics.expected_inflows_trend),
       status: "success" as const,
       icon: TrendingUp,
     },
   ];
 }
 
-// Transformer function
+// Transformer function with safe defaults for empty data
 export function transformValuationFromAPI(
   apiData: ValuationDataAPI
 ): ValuationDashboardData {
+  // Safe defaults for metric cards
+  const metricCards = apiData?.metric_cards || {
+    total_liabilities: 0,
+    total_liabilities_trend: 0,
+    reserve_adequacy_pct: 0,
+    reserve_adequacy_trend: 0,
+    outstanding_claims: 0,
+    outstanding_claims_trend: 0,
+    expected_inflows: 0,
+    expected_inflows_trend: 0,
+  };
+
+  // Safe defaults for forecasting models
+  const claimsData = apiData?.forecasting_models?.claims?.chart_data || [];
+  const contributionsData = apiData?.forecasting_models?.contributions?.chart_data || [];
+  const inspectionsData = apiData?.forecasting_models?.inspections?.chart_data || [];
+  const hseData = apiData?.forecasting_models?.hse?.chart_data || [];
+
+  // Safe defaults for short-term forecast
+  const shortTermData = apiData?.short_term_forecast?.chart_data || [];
+
+  // Safe defaults for long-term forecast
+  const longTermClaims = apiData?.long_term_forecast?.claims_yearly || [];
+  const longTermContributions = apiData?.long_term_forecast?.contributions_yearly || [];
+  const annualGrowth = apiData?.long_term_forecast?.average_annual_growth_pct || {
+    claims: 0,
+    contributions: 0,
+  };
+
   return {
     valuationMetrics: {
-      totalLiabilities: apiData.metric_cards.total_liabilities,
-      totalLiabilitiesTrend: apiData.metric_cards.total_liabilities_trend,
-      reserveAdequacy: apiData.metric_cards.reserve_adequacy_pct,
-      reserveAdequacyTrend: apiData.metric_cards.reserve_adequacy_trend,
-      outstandingClaims: apiData.metric_cards.outstanding_claims,
-      outstandingClaimsTrend: apiData.metric_cards.outstanding_claims_trend,
-      expectedInflows: apiData.metric_cards.expected_inflows,
-      expectedInflowsTrend: apiData.metric_cards.expected_inflows_trend,
+      totalLiabilities: metricCards.total_liabilities ?? 0,
+      totalLiabilitiesTrend: metricCards.total_liabilities_trend ?? 0,
+      reserveAdequacy: metricCards.reserve_adequacy_pct ?? 0,
+      reserveAdequacyTrend: metricCards.reserve_adequacy_trend ?? 0,
+      outstandingClaims: metricCards.outstanding_claims ?? 0,
+      outstandingClaimsTrend: metricCards.outstanding_claims_trend ?? 0,
+      expectedInflows: metricCards.expected_inflows ?? 0,
+      expectedInflowsTrend: metricCards.expected_inflows_trend ?? 0,
     },
-    claimTrendProjections: apiData.forecasting_models.claims.chart_data.map(
+    claimTrendProjections: claimsData.map(
       (item: any) => ({
-        period: item.quarter,
-        actual: item.actual,
-        forecast: item.forecast ?? 0,
-        lower: item.forecast ? item.forecast * 0.85 : 0, // 15% lower bound
-        upper: item.forecast ? item.forecast * 1.15 : 0, // 15% upper bound
+        period: item?.quarter || '',
+        actual: item?.actual ?? 0,
+        forecast: item?.forecast ?? 0,
+        lower: item?.forecast ? item.forecast * 0.85 : 0, // 15% lower bound
+        upper: item?.forecast ? item.forecast * 1.15 : 0, // 15% upper bound
       })
     ),
-    contributionGrowth: apiData.forecasting_models.contributions.chart_data.map(
+    contributionGrowth: contributionsData.map(
       (item: any) => ({
-        period: item.quarter,
-        actual: item.actual,
-        forecast: item.forecast ?? 0,
-        target: item.target ?? 0,
+        period: item?.quarter || '',
+        actual: item?.actual ?? 0,
+        forecast: item?.forecast ?? 0,
+        target: item?.target ?? 0,
       })
     ),
-    inspectionTrends: apiData.forecasting_models.inspections.chart_data.map(
+    inspectionTrends: inspectionsData.map(
       (item: any) => ({
-        period: item.quarter,
-        completed: item.completed,
-        forecast: item.forecast ?? 0,
-        planned: item.planned ?? 0,
+        period: item?.quarter || '',
+        completed: item?.completed ?? 0,
+        forecast: item?.forecast ?? 0,
+        planned: item?.planned ?? 0,
       })
     ),
-    hseTrends: apiData.forecasting_models.hse.chart_data.map(
+    hseTrends: hseData.map(
       (item: any) => ({
-        period: item.quarter,
-        total: item.total,
-        forecast: item.forecast ?? 0,
+        period: item?.quarter || '',
+        total: item?.total ?? 0,
+        forecast: item?.forecast ?? 0,
       })
     ),
-    shortTermForecasts: apiData.short_term_forecast.chart_data.map(
+    shortTermForecasts: shortTermData.map(
       (item: any) => ({
-        quarter: item.quarter,
-        claims: item.claims,
-        contributions: item.contributions,
-        liabilities: apiData.metric_cards.total_liabilities / 4, // Estimate quarterly from total
-        reserves: apiData.metric_cards.expected_inflows / 4, // Estimate quarterly from expected inflows
+        quarter: item?.quarter || '',
+        claims: item?.claims ?? 0,
+        contributions: item?.contributions ?? 0,
+        liabilities: (metricCards.total_liabilities ?? 0) / 4, // Estimate quarterly from total
+        reserves: (metricCards.expected_inflows ?? 0) / 4, // Estimate quarterly from expected inflows
       })
     ),
-    longTermForecasts: apiData.long_term_forecast.claims_yearly.map(
+    longTermForecasts: longTermClaims.map(
       (claimsItem, index) => ({
-        year: claimsItem.year.toString(),
-        claims: claimsItem.value,
-        contributions:
-          apiData.long_term_forecast.contributions_yearly[index]?.value || 0,
-        liabilities: apiData.metric_cards.total_liabilities * (1 + index * 0.05), // 5% growth estimate
-        reserves: apiData.metric_cards.expected_inflows * (1 + index * 0.05), // 5% growth estimate
-        growth: apiData.long_term_forecast.average_annual_growth_pct.claims,
+        year: claimsItem?.year?.toString() || '',
+        claims: claimsItem?.value ?? 0,
+        contributions: longTermContributions[index]?.value ?? 0,
+        liabilities: (metricCards.total_liabilities ?? 0) * (1 + index * 0.05), // 5% growth estimate
+        reserves: (metricCards.expected_inflows ?? 0) * (1 + index * 0.05), // 5% growth estimate
+        growth: annualGrowth.claims ?? 0,
       })
     ),
-    averageAnnualGrowth:
-      apiData.long_term_forecast.average_annual_growth_pct,
+    averageAnnualGrowth: annualGrowth,
     meta: {
-      modelUsed: apiData.meta.model_used,
-      generatedAt: apiData.meta.generated_at,
+      modelUsed: apiData?.meta?.model_used || 'unknown',
+      generatedAt: apiData?.meta?.generated_at || new Date().toISOString(),
     },
   };
 }
