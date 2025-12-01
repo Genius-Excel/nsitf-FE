@@ -19,6 +19,7 @@ import {
   LineChart,
   AlertTriangle,
   Wallet,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -74,6 +75,12 @@ const navigationItems = [
     href: "/dashboard/users",
     icon: Users,
     roles: ["admin", "manager"] as Role[],
+  },
+  {
+    title: "Permission Management",
+    href: "/dashboard/permissions",
+    icon: Settings,
+    roles: ["admin"] as Role[],
   },
   {
     title: "Compliance",
