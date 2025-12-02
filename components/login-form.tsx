@@ -146,6 +146,7 @@ export function LoginForm() {
             <div className="space-y-1 text-xs text-muted-foreground">
               <p>Admin: admin@company.com / admin123</p>
               <p>Manager: manager@company.com / manager123</p>
+              <p>Branch Officer: branch@company.com / branch123</p>
             </div>
           </div>
           <Button
