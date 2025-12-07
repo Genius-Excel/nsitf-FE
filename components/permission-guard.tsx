@@ -7,21 +7,36 @@ import { AlertCircle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getUserFromStorage } from "@/lib/auth"
 import { hasPermission } from "@/lib/permissions"
+import { type Permission } from "@/lib/types/permissions"
 
 interface PermissionGuardProps {
-  permission: string
+  permission?: string
+  requiredPermissions?: Permission[] | string[]
   children: React.ReactNode
   fallback?: React.ReactNode
+  requireAll?: boolean // If true, user must have ALL permissions. If false, user needs ANY permission.
 }
 
-export function PermissionGuard({ permission, children, fallback }: PermissionGuardProps) {
+export function PermissionGuard({ 
+  permission, 
+  requiredPermissions,
+  children, 
+  fallback,
+  requireAll = false 
+}: PermissionGuardProps) {
   const [hasAccess, setHasAccess] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const user = getUserFromStorage()
-    if (user) {
-      // First check if user has backend permissions (direct from API)
+    if (!user) {
+      setHasAccess(false)
+      setIsLoading(false)
+      return
+    }
+
+    // Handle single permission (backward compatibility)
+    if (permission) {
       if (user.permissions && Array.isArray(user.permissions)) {
         // Check for exact backend permission match (e.g., "can_upload_hse")
         const hasBackendPermission = user.permissions.includes(permission)
@@ -43,9 +58,36 @@ export function PermissionGuard({ permission, children, fallback }: PermissionGu
         // Fallback to role-based permissions if no backend permissions
         setHasAccess(hasPermission(user.role, permission))
       }
+      setIsLoading(false)
+      return
     }
+
+    // Handle multiple permissions
+    if (requiredPermissions && requiredPermissions.length > 0) {
+      const permissionChecks = requiredPermissions.map((perm) => {
+        // For permission management, admin role automatically has access
+        if (user.role === "admin" && (perm === "ASSIGN_PERMISSIONS" || perm === "MANAGE_USERS")) {
+          return true
+        }
+        
+        if (user.permissions && Array.isArray(user.permissions)) {
+          return user.permissions.includes(perm as string)
+        }
+        
+        return hasPermission(user.role, perm as string)
+      })
+
+      if (requireAll) {
+        setHasAccess(permissionChecks.every(check => check))
+      } else {
+        setHasAccess(permissionChecks.some(check => check))
+      }
+    } else {
+      setHasAccess(true) // No specific permissions required
+    }
+
     setIsLoading(false)
-  }, [permission])
+  }, [permission, requiredPermissions, requireAll])
 
   if (isLoading) {
     return <div className="text-muted-foreground">Loading...</div>
