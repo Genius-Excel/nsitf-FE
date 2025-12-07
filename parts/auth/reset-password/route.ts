@@ -1,7 +1,7 @@
 // app/api/auth/password-reset-email/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = "https://nsitf-be.geniusexcel.tech";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://nsitf-be.geniusexcel.tech";
 
 export async function POST(request: NextRequest) {
   try {

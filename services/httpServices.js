@@ -4,8 +4,7 @@ import axios from "axios";
 class HttpService {
   constructor() {
     // this.token = getAccessToken();
-    // this.baseUrl = process.env.NEXT_PUBLIC_API_URL;
-    this.baseUrl ="https://nsitf-be.geniusexcel.tech"
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://nsitf-be.geniusexcel.tech";
   }
 
   postData = async (payload, url) => {

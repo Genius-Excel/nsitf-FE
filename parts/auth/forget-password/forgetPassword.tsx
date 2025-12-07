@@ -33,8 +33,9 @@ export default function ForgetPasswordPage() {
       const formDataToSend = new FormData();
       formDataToSend.append("email", email);
 
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nsitf-be.geniusexcel.tech";
       const response = await fetch(
-        "https://nsitf-be.geniusexcel.tech/api/auth/password-reset-email",
+        `${API_URL}/api/auth/password-reset-email`,
         {
           method: "POST",
           body: formDataToSend,
