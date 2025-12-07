@@ -41,6 +41,22 @@ import {
 import { getUserFromStorage } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
+// ============== HELPER FUNCTIONS ==============
+
+/**
+ * Formats permission name by removing underscores and capitalizing properly
+ * Example: "can_upload_branch_data" -> "Can upload branch data"
+ */
+function formatPermissionName(name: string): string {
+  if (!name) return '';
+
+  // Remove underscores and replace with spaces
+  const withSpaces = name.replace(/_/g, ' ');
+
+  // Capitalize first letter only
+  return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+}
+
 // ============== PERMISSION CATEGORY SECTION ==============
 
 interface PermissionCategorySectionProps {
@@ -100,7 +116,7 @@ function PermissionCategorySection({
             const isSelected = editedPermissions.some(ep => ep.id === permission.id);
             const isAdded = permissionDiff.added.includes(permission.id);
             const isRemoved = permissionDiff.removed.includes(permission.id);
-            const canRemove = canRemovePermission(userRole, permission, currentUser || { role: 'user' });
+            const canRemove = canRemovePermission(userRole, permission, currentUser || { role: 'user', permissions: [] });
             const canAssign = canAssignPermission(userRole, permission, currentUser?.role || 'user');
 
             const isDisabled = isSelected ? !canRemove : !canAssign;
@@ -147,7 +163,7 @@ function PermissionCategorySection({
                       )}
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{permission.name}</p>
+                  <p className="text-xs text-gray-500 mt-1">{formatPermissionName(permission.name)}</p>
                 </div>
               </div>
             );

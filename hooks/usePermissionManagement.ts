@@ -127,17 +127,43 @@ export function useUsersWithPermissions() {
 
       const result = await response.json();
 
+      // Log the API response to see what we're getting
+      console.log('API Response:', result);
+      console.log('First user data:', result.data?.[0]);
+
       // Transform API response to match our UserWithPermissions interface
-      const transformedUsers: UserWithPermissions[] = (result.data || []).map((user: any) => ({
-        id: user.id,
-        name: `${user.first_name} ${user.last_name}`.trim(),
-        email: user.email,
-        role: user.role || 'user',
-        permissions: [], // Will be populated when editing specific user
-        createdAt: user.created_at,
-        lastLogin: user.updated_at, // Using updated_at as last login for now
-        isActive: user.account_status === 'active',
-      }));
+      const transformedUsers: UserWithPermissions[] = (result.data || []).map((user: any) => {
+        // Check if permissions are included in the response
+        let permissions: PermissionItem[] = [];
+
+        if (user.permissions && Array.isArray(user.permissions)) {
+          // If permissions array is provided
+          permissions = user.permissions.map((perm: any) => ({
+            id: perm.id,
+            name: perm.name,
+            description: perm.description,
+          }));
+        } else if (user.permissions_count !== undefined) {
+          // If only count is provided, create placeholder array for display
+          // Actual permissions will be loaded when editing
+          permissions = Array(user.permissions_count).fill(null).map((_, i) => ({
+            id: `placeholder-${i}`,
+            name: '',
+            description: '',
+          }));
+        }
+
+        return {
+          id: user.id,
+          name: `${user.first_name} ${user.last_name}`.trim(),
+          email: user.email,
+          role: user.role || 'user',
+          permissions,
+          createdAt: user.created_at,
+          lastLogin: user.updated_at, // Using updated_at as last login for now
+          isActive: user.account_status === 'active',
+        };
+      });
 
       setUsers(transformedUsers);
     } catch (err) {
@@ -234,19 +260,24 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
 
       if (response.ok) {
         const result = await response.json();
-        // Assuming the user data includes permissions array
-        const userPermissions = result.data?.permissions || [];
+        // Transform the user permissions from API response
+        const userPermissions = (result.data?.permissions || []).map((perm: any) => ({
+          id: perm.id,
+          name: perm.name,
+          description: perm.description,
+        }));
         setOriginalPermissions(userPermissions);
         setEditedPermissions(userPermissions);
       } else {
-        // Fallback to empty permissions if fetch fails
-        setOriginalPermissions([]);
-        setEditedPermissions([]);
+        // Fallback to user's existing permissions if fetch fails
+        setOriginalPermissions(userToEdit.permissions);
+        setEditedPermissions(userToEdit.permissions);
       }
     } catch (error) {
       console.error('Failed to fetch user permissions:', error);
-      setOriginalPermissions([]);
-      setEditedPermissions([]);
+      // Fallback to user's existing permissions if fetch fails
+      setOriginalPermissions(userToEdit.permissions);
+      setEditedPermissions(userToEdit.permissions);
     }
   }, []);
 
