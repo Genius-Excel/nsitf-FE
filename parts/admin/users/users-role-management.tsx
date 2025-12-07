@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Plus } from "lucide-react";
+import { Plus, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   DeleteConfirmationDialog,
   RolePermissionsOverview,
@@ -126,6 +127,13 @@ export default function UsersRolesManagement() {
     }
   };
 
+  // ============== NAVIGATION ==============
+  const router = useRouter();
+
+  const handleManagePermissions = () => {
+    router.push('/admin/dashboard/permissions');
+  };
+
   // ============== RENDER ==============
 
   return (
@@ -141,14 +149,25 @@ export default function UsersRolesManagement() {
               Manage staff accounts and role assignments
             </p>
           </div>
-          <Button
-            onClick={openForCreate}
-            className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors duration-200"
-            aria-label="Add new user"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add New User
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              onClick={handleManagePermissions}
+              variant="outline"
+              className="border-green-600 text-green-600 hover:bg-green-50 text-sm font-medium transition-colors duration-200"
+              aria-label="Manage permissions"
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              Manage Permissions
+            </Button>
+            <Button
+              onClick={openForCreate}
+              className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors duration-200"
+              aria-label="Add new user"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add New User
+            </Button>
+          </div>
         </div>
 
         {/* Error State */}

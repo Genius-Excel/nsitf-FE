@@ -1,6 +1,6 @@
 /**
  * Permission Manager Component
- * 
+ *
  * Main interface for managing user permissions within the admin dashboard.
  * Provides comprehensive user management with search, filtering, and bulk operations.
  */
@@ -8,7 +8,7 @@
 "use client";
 
 import React from 'react';
-import { Search, Users, Filter, X, Plus, Settings } from 'lucide-react';
+import { Search, Users, X, Plus, Settings, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,18 +23,17 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { LoadingState } from '@/components/design-system/LoadingState';
 import { ErrorState } from '@/components/design-system/ErrorState';
+import { BulkPermissionUpload } from '@/components/bulk-permission-upload';
 import {
   useUsersWithPermissions,
   useUserPermissionFilters,
   useBulkPermissionOperations,
+  usePermissions,
 } from '@/hooks/usePermissionManagement';
 import {
   type UserWithPermissions,
-  type Permission,
-  ALL_PERMISSIONS,
-  PERMISSION_CATEGORIES,
+  type PermissionItem,
 } from '@/lib/types/permissions';
-import { cn } from '@/lib/utils';
 
 // ============== USER TABLE ROW COMPONENT ==============
 
@@ -108,9 +107,10 @@ interface FilterBarProps {
   onSearchChange: (term: string) => void;
   roleFilter: string;
   onRoleFilterChange: (role: string) => void;
-  permissionFilter: Permission | 'all';
-  onPermissionFilterChange: (permission: Permission | 'all') => void;
+  permissionFilter: string;
+  onPermissionFilterChange: (permission: string) => void;
   availableRoles: string[];
+  allPermissions: PermissionItem[];
   hasActiveFilters: boolean;
   onResetFilters: () => void;
 }
@@ -123,6 +123,7 @@ function FilterBar({
   permissionFilter,
   onPermissionFilterChange,
   availableRoles,
+  allPermissions,
   hasActiveFilters,
   onResetFilters,
 }: FilterBarProps) {
@@ -162,26 +163,19 @@ function FilterBar({
 
           {/* Permission Filter */}
           <div className="w-full lg:w-64">
-            <Select 
-              value={permissionFilter} 
-              onValueChange={(value) => onPermissionFilterChange(value as Permission | 'all')}
+            <Select
+              value={permissionFilter}
+              onValueChange={onPermissionFilterChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Filter by permission" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Permissions</SelectItem>
-                {PERMISSION_CATEGORIES.map((category) => (
-                  <div key={category.id}>
-                    <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase">
-                      {category.name}
-                    </div>
-                    {category.permissions.map((permission) => (
-                      <SelectItem key={permission} value={permission}>
-                        {permission.replace('_', ' ')}
-                      </SelectItem>
-                    ))}
-                  </div>
+                {allPermissions.map((permission: PermissionItem) => (
+                  <SelectItem key={permission.id} value={permission.id}>
+                    {permission.description}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -209,9 +203,10 @@ function FilterBar({
 interface BulkActionsBarProps {
   selectedCount: number;
   onClearSelection: () => void;
-  onBulkAddPermission: (permission: Permission) => void;
-  onBulkRemovePermission: (permission: Permission) => void;
+  onBulkAddPermission: (permissionId: string) => void;
+  onBulkRemovePermission: (permissionId: string) => void;
   isProcessing: boolean;
+  allPermissions: PermissionItem[];
 }
 
 function BulkActionsBar({
@@ -220,8 +215,9 @@ function BulkActionsBar({
   onBulkAddPermission,
   onBulkRemovePermission,
   isProcessing,
+  allPermissions,
 }: BulkActionsBarProps) {
-  const [selectedPermission, setSelectedPermission] = React.useState<Permission | 'none'>('none');
+  const [selectedPermission, setSelectedPermission] = React.useState<string>('none');
 
   if (selectedCount === 0) return null;
 
@@ -244,26 +240,19 @@ function BulkActionsBar({
           </div>
 
           <div className="flex items-center space-x-3">
-            <Select 
-              value={selectedPermission} 
-              onValueChange={(value) => setSelectedPermission(value as Permission | 'none')}
+            <Select
+              value={selectedPermission}
+              onValueChange={setSelectedPermission}
             >
               <SelectTrigger className="w-64">
                 <SelectValue placeholder="Select permission to manage" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Select a permission</SelectItem>
-                {PERMISSION_CATEGORIES.map((category) => (
-                  <div key={category.id}>
-                    <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase">
-                      {category.name}
-                    </div>
-                    {category.permissions.map((permission) => (
-                      <SelectItem key={permission} value={permission}>
-                        {permission.replace('_', ' ')}
-                      </SelectItem>
-                    ))}
-                  </div>
+                {allPermissions.map((permission: PermissionItem) => (
+                  <SelectItem key={permission.id} value={permission.id}>
+                    {permission.description}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -303,6 +292,15 @@ interface PermissionManagerProps {
 export function PermissionManager({ onManagePermissions }: PermissionManagerProps) {
   // Data fetching
   const { users, loading, error, refetch } = useUsersWithPermissions();
+  const { categories, loading: loadingPermissions } = usePermissions();
+
+  // Bulk upload state
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = React.useState(false);
+
+  // Get all permissions from categories
+  const allPermissions = React.useMemo(() => {
+    return categories.flatMap(cat => cat.permissions);
+  }, [categories]);
 
   // Filtering
   const {
@@ -330,15 +328,15 @@ export function PermissionManager({ onManagePermissions }: PermissionManagerProp
   } = useBulkPermissionOperations();
 
   // Handle bulk operations with refetch
-  const handleBulkAddPermission = async (permission: Permission) => {
-    const success = await bulkAddPermission(users, permission);
+  const handleBulkAddPermission = async (permissionId: string) => {
+    const success = await bulkAddPermission(permissionId);
     if (success) {
       refetch();
     }
   };
 
-  const handleBulkRemovePermission = async (permission: Permission) => {
-    const success = await bulkRemovePermission(users, permission);
+  const handleBulkRemovePermission = async (permissionId: string) => {
+    const success = await bulkRemovePermission(permissionId);
     if (success) {
       refetch();
     }
@@ -353,12 +351,12 @@ export function PermissionManager({ onManagePermissions }: PermissionManagerProp
     }
   };
 
-  const isAllSelected = filteredUsers.length > 0 && 
+  const isAllSelected = filteredUsers.length > 0 &&
     filteredUsers.every(user => selectedUsers.includes(user.id));
   const isPartiallySelected = selectedUsers.length > 0 && !isAllSelected;
 
   // Loading state
-  if (loading) {
+  if (loading || loadingPermissions) {
     return <LoadingState message="Loading users and permissions..." />;
   }
 
@@ -383,9 +381,19 @@ export function PermissionManager({ onManagePermissions }: PermissionManagerProp
             Assign and manage permissions for {users.length} user{users.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex items-center space-x-2 text-sm text-gray-500">
-          <Users className="w-4 h-4" />
-          <span>{filteredUsers.length} displayed</span>
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={() => setIsBulkUploadOpen(true)}
+            variant="outline"
+            className="border-green-600 text-green-600 hover:bg-green-50"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Bulk Upload
+          </Button>
+          <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <Users className="w-4 h-4" />
+            <span>{filteredUsers.length} displayed</span>
+          </div>
         </div>
       </div>
 
@@ -398,6 +406,7 @@ export function PermissionManager({ onManagePermissions }: PermissionManagerProp
         permissionFilter={permissionFilter}
         onPermissionFilterChange={setPermissionFilter}
         availableRoles={availableRoles}
+        allPermissions={allPermissions}
         hasActiveFilters={hasActiveFilters}
         onResetFilters={resetFilters}
       />
@@ -409,6 +418,7 @@ export function PermissionManager({ onManagePermissions }: PermissionManagerProp
         onBulkAddPermission={handleBulkAddPermission}
         onBulkRemovePermission={handleBulkRemovePermission}
         isProcessing={isProcessing}
+        allPermissions={allPermissions}
       />
 
       {/* Users Table */}
@@ -474,13 +484,7 @@ export function PermissionManager({ onManagePermissions }: PermissionManagerProp
                       key={user.id}
                       user={user}
                       isSelected={selectedUsers.includes(user.id)}
-                      onSelectChange={(selected) => {
-                        if (selected) {
-                          toggleUserSelection(user.id);
-                        } else {
-                          toggleUserSelection(user.id);
-                        }
-                      }}
+                      onSelectChange={() => toggleUserSelection(user.id)}
                       onManagePermissions={onManagePermissions}
                     />
                   ))}
@@ -490,6 +494,16 @@ export function PermissionManager({ onManagePermissions }: PermissionManagerProp
           )}
         </CardContent>
       </Card>
+
+      {/* Bulk Upload Modal */}
+      <BulkPermissionUpload
+        isOpen={isBulkUploadOpen}
+        onClose={() => setIsBulkUploadOpen(false)}
+        onSuccess={() => {
+          refetch();
+          setIsBulkUploadOpen(false);
+        }}
+      />
     </div>
   );
 }

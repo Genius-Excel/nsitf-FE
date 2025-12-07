@@ -2,68 +2,105 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import {
   type UserWithPermissions,
-  type Permission,
+  type PermissionItem,
   type PermissionDiff,
   type UpdateUserPermissionsRequest,
-  ALL_PERMISSIONS,
-  canRemovePermission,
-  canAssignPermission,
+  type GetPermissionsResponse,
 } from '@/lib/types/permissions';
 import { getUserFromStorage } from '@/lib/auth';
+import { getAccessToken } from '@/lib/utils';
 
-// ============== MOCK DATA (Replace with actual API) ==============
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
-// Mock users data - replace with actual API call
-const MOCK_USERS: UserWithPermissions[] = [
-  {
-    id: "1",
-    name: "John Admin",
-    email: "admin@nsitf.com",
-    role: "admin",
-    permissions: [
-      "VIEW_DASHBOARD",
-      "MANAGE_USERS",
-      "ASSIGN_PERMISSIONS",
-      "SYSTEM_CONFIGURATION",
-      "UPLOAD_BRANCH_DATA",
-      "REVIEW_BRANCH_REPORT",
-      "APPROVE_REGIONAL_REPORT",
-    ],
-    createdAt: "2024-01-15T10:00:00Z",
-    lastLogin: "2024-12-01T08:30:00Z",
-    isActive: true,
-  },
-  {
-    id: "2", 
-    name: "Sarah Manager",
-    email: "sarah.manager@nsitf.com",
-    role: "manager",
-    permissions: [
-      "VIEW_DASHBOARD",
-      "UPLOAD_HSE_DATA",
-      "REVIEW_HSE_REPORT",
-      "VIEW_KPI_ANALYTICS",
-    ],
-    createdAt: "2024-02-10T14:20:00Z",
-    lastLogin: "2024-11-30T16:45:00Z",
-    isActive: true,
-  },
-  {
-    id: "3",
-    name: "Mike Claims Officer", 
-    email: "mike.claims@nsitf.com",
-    role: "claims_officer",
-    permissions: [
-      "VIEW_DASHBOARD",
-      "UPLOAD_CLAIMS_DATA",
-      "REVIEW_CLAIMS_REPORT",
-      "EDIT_RECORD",
-    ],
-    createdAt: "2024-03-05T09:15:00Z",
-    lastLogin: "2024-11-29T11:20:00Z",
-    isActive: true,
-  },
-];
+// ============== FETCH PERMISSIONS FROM API ==============
+
+export function usePermissions() {
+  const [categories, setCategories] = useState<Array<{
+    id: string;
+    name: string;
+    description: string;
+    permissions: PermissionItem[];
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchPermissions = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = getAccessToken();
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/permissions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch permissions');
+      }
+
+      const result: GetPermissionsResponse = await response.json();
+
+      // Transform API response to category structure
+      const categoryData = [
+        {
+          id: 'upload_and_data_management',
+          name: 'Upload & Data Management',
+          description: 'Permissions for uploading and managing various types of data',
+          permissions: result.data.upload_and_data_management || [],
+        },
+        {
+          id: 'review_and_approval',
+          name: 'Review & Approval',
+          description: 'Permissions for reviewing and approving reports and submissions',
+          permissions: result.data.regional_management || [],
+        },
+        {
+          id: 'dashboard_and_analytics',
+          name: 'Dashboard & Analytics',
+          description: 'Permissions for viewing dashboards and analytical tools',
+          permissions: result.data.claims_management || [],
+        },
+        {
+          id: 'record_management',
+          name: 'Record Management',
+          description: 'Permissions for managing individual records and data entries',
+          permissions: result.data.admin_role || [],
+        },
+        {
+          id: 'user_and_role_management',
+          name: 'User & Role Management',
+          description: 'Permissions for managing users, roles, and permissions',
+          permissions: result.data.hod_role || [],
+        },
+        {
+          id: 'system_administration',
+          name: 'System Administration',
+          description: 'High-level system administration permissions',
+          permissions: result.data.other || [],
+        },
+      ];
+
+      setCategories(categoryData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch permissions');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPermissions();
+  }, [fetchPermissions]);
+
+  return {
+    categories,
+    loading,
+    error,
+    refetch: fetchPermissions,
+  };
+}
 
 // ============== USERS HOOK ==============
 
@@ -73,18 +110,113 @@ export function useUsersWithPermissions() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUsers = useCallback(async () => {
+    console.log('===== fetchUsers CALLED - NEW VERSION =====');
     try {
       setLoading(true);
       setError(null);
-      
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      
-      // Mock implementation - replace with actual API call
-      // const response = await fetch('/api/admin/users-permissions');
-      // const data = await response.json();
-      
-      setUsers(MOCK_USERS);
+
+      const token = getAccessToken();
+      console.log('Token:', token ? 'exists' : 'missing');
+      const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
+      const result = await response.json();
+
+      // Fetch all available permissions to map user permission names to full objects
+      let allPermissions: PermissionItem[] = [];
+      try {
+        console.log('Fetching permissions from:', `${API_BASE_URL}/api/admin/users/permissions`);
+        const permissionsResponse = await fetch(`${API_BASE_URL}/api/admin/users/permissions`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        console.log('Permissions response status:', permissionsResponse.status, permissionsResponse.ok);
+
+        if (permissionsResponse.ok) {
+          const permissionsResult = await permissionsResponse.json();
+          console.log('Permissions API response:', permissionsResult);
+          // Extract all permissions from categories
+          const categories = permissionsResult.data || [];
+          console.log('Categories found:', categories.length);
+
+          allPermissions = categories.flatMap((cat: any) => {
+            console.log(`Category ${cat.name} has ${cat.permissions?.length || 0} permissions`);
+            return (cat.permissions || []).map((perm: any) => ({
+              id: perm.id,
+              name: perm.name,
+              description: perm.description,
+            }));
+          });
+          console.log('All permissions loaded:', allPermissions.length);
+        } else {
+          console.error('Permissions fetch failed with status:', permissionsResponse.status);
+          const errorText = await permissionsResponse.text();
+          console.error('Error response:', errorText);
+        }
+      } catch (error) {
+        console.error('Failed to fetch permissions list:', error);
+      }
+
+      // Transform API response to match our UserWithPermissions interface
+      // Fetch permissions for each user individually
+      const transformedUsers: UserWithPermissions[] = await Promise.all(
+        (result.data || []).map(async (user: any) => {
+          let permissions: PermissionItem[] = [];
+          console.log(`Processing user ${user.first_name}, allPermissions available:`, allPermissions.length);
+
+          // Try to fetch individual user details to get permissions
+          try {
+            const userDetailResponse = await fetch(`${API_BASE_URL}/api/admin/users/${user.id}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            });
+
+            if (userDetailResponse.ok) {
+              const userDetail = await userDetailResponse.json();
+              const userPermissionNames = userDetail.data?.user_permissions || [];
+
+              // Map permission names to full permission objects
+              if (allPermissions.length > 0) {
+                permissions = allPermissions.filter(perm =>
+                  userPermissionNames.includes(perm.name)
+                );
+              } else {
+                // Fallback: create placeholder objects using permission names
+                permissions = userPermissionNames.map((name: string, index: number) => ({
+                  id: `${user.id}-perm-${index}`,
+                  name: name,
+                  description: name.replace(/_/g, ' ').replace(/^can /, 'Can '),
+                }));
+              }
+            }
+          } catch (error) {
+            console.error(`Failed to fetch permissions for user ${user.id}:`, error);
+          }
+
+          return {
+            id: user.id,
+            name: `${user.first_name} ${user.last_name}`.trim(),
+            email: user.email,
+            role: user.role || 'user',
+            permissions,
+            createdAt: user.created_at,
+            lastLogin: user.last_login || user.updated_at,
+            isActive: user.account_status === 'active',
+          };
+        })
+      );
+
+      setUsers(transformedUsers);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch users');
     } finally {
@@ -113,11 +245,12 @@ export function useUsersWithPermissions() {
 export function usePermissionEditor(user: UserWithPermissions | null) {
   const { toast } = useToast();
   const currentUser = getUserFromStorage();
-  
+
   // State for permission editing
   const [isOpen, setIsOpen] = useState(false);
-  const [originalPermissions, setOriginalPermissions] = useState<Permission[]>([]);
-  const [editedPermissions, setEditedPermissions] = useState<Permission[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserWithPermissions | null>(null);
+  const [originalPermissions, setOriginalPermissions] = useState<PermissionItem[]>([]);
+  const [editedPermissions, setEditedPermissions] = useState<PermissionItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   // Initialize permissions when user changes
@@ -133,10 +266,16 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
 
   // Calculate permission diff
   const permissionDiff = useMemo((): PermissionDiff => {
-    const added = editedPermissions.filter(p => !originalPermissions.includes(p));
-    const removed = originalPermissions.filter(p => !editedPermissions.includes(p));
-    const unchanged = originalPermissions.filter(p => editedPermissions.includes(p));
-    
+    const added = editedPermissions
+      .filter(p => !originalPermissions.some(op => op.id === p.id))
+      .map(p => p.id);
+    const removed = originalPermissions
+      .filter(p => !editedPermissions.some(ep => ep.id === p.id))
+      .map(p => p.id);
+    const unchanged = originalPermissions
+      .filter(p => editedPermissions.some(ep => ep.id === p.id))
+      .map(p => p.id);
+
     return { added, removed, unchanged };
   }, [originalPermissions, editedPermissions]);
 
@@ -144,43 +283,87 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
   const hasChanges = permissionDiff.added.length > 0 || permissionDiff.removed.length > 0;
 
   // Toggle permission
-  const togglePermission = useCallback((permission: Permission) => {
-    if (!user || !currentUser) return;
+  const togglePermission = useCallback((permission: PermissionItem) => {
+    if (!selectedUser || !currentUser) return;
 
-    const isCurrentlySelected = editedPermissions.includes(permission);
-    
+    const isCurrentlySelected = editedPermissions.some(ep => ep.id === permission.id);
+
     if (isCurrentlySelected) {
-      // Check if we can remove this permission
-      if (!canRemovePermission(user.role, permission, currentUser || { role: 'user' })) {
-        toast({
-          title: "Cannot Remove Permission",
-          description: `The ${permission} permission cannot be removed from this role.`,
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      setEditedPermissions(prev => prev.filter(p => p !== permission));
+      setEditedPermissions(prev => prev.filter(p => p.id !== permission.id));
     } else {
-      // Check if we can assign this permission
-      if (!canAssignPermission(user.role, permission, currentUser?.role || 'user')) {
-        toast({
-          title: "Cannot Assign Permission",
-          description: `You don't have permission to assign ${permission} to this role.`,
-          variant: "destructive",
-        });
-        return;
-      }
-      
       setEditedPermissions(prev => [...prev, permission]);
     }
-  }, [user, currentUser, editedPermissions, toast]);
+  }, [selectedUser, currentUser, editedPermissions, toast]);
 
-  // Open editor
-  const openEditor = useCallback((userToEdit: UserWithPermissions) => {
-    setOriginalPermissions([...userToEdit.permissions]);
-    setEditedPermissions([...userToEdit.permissions]);
+  // Open editor and fetch user's current permissions
+  const openEditor = useCallback(async (userToEdit: UserWithPermissions) => {
     setIsOpen(true);
+    setSelectedUser(userToEdit);
+
+    // Fetch user's current permissions from API
+    try {
+      const token = getAccessToken();
+
+      // First, fetch all available permissions
+      const permissionsResponse = await fetch(`${API_BASE_URL}/api/admin/users/permissions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      let allPermissions: PermissionItem[] = [];
+      if (permissionsResponse.ok) {
+        const permissionsResult = await permissionsResponse.json();
+        const categories = permissionsResult.data || [];
+        allPermissions = categories.flatMap((cat: any) =>
+          (cat.permissions || []).map((perm: any) => ({
+            id: perm.id,
+            name: perm.name,
+            description: perm.description,
+          }))
+        );
+      }
+
+      // Then fetch user's permissions
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/${userToEdit.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const userPermissionNames = result.data?.user_permissions || [];
+
+        let userPermissions: PermissionItem[];
+
+        // Map permission names to full permission objects
+        if (allPermissions.length > 0) {
+          userPermissions = allPermissions.filter(perm =>
+            userPermissionNames.includes(perm.name)
+          );
+        } else {
+          // Fallback: create permission objects from names
+          userPermissions = userPermissionNames.map((name: string, index: number) => ({
+            id: `${userToEdit.id}-perm-${index}`,
+            name: name,
+            description: name.replace(/_/g, ' ').replace(/^can /, 'Can '),
+          }));
+        }
+
+        setOriginalPermissions(userPermissions);
+        setEditedPermissions(userPermissions);
+      } else {
+        // Fallback to user's existing permissions if fetch fails
+        setOriginalPermissions(userToEdit.permissions);
+        setEditedPermissions(userToEdit.permissions);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user permissions:', error);
+      // Fallback to user's existing permissions if fetch fails
+      setOriginalPermissions(userToEdit.permissions);
+      setEditedPermissions(userToEdit.permissions);
+    }
   }, []);
 
   // Close editor
@@ -188,6 +371,7 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
     setIsOpen(false);
     // Reset state after animation completes
     setTimeout(() => {
+      setSelectedUser(null);
       setOriginalPermissions([]);
       setEditedPermissions([]);
     }, 200);
@@ -195,33 +379,60 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
 
   // Save permissions
   const savePermissions = useCallback(async (): Promise<boolean> => {
-    if (!user || !hasChanges) return false;
+    if (!selectedUser || !hasChanges) return false;
 
     try {
       setIsSaving(true);
 
-      const request: UpdateUserPermissionsRequest = {
-        add: permissionDiff.added,
-        remove: permissionDiff.removed,
-      };
+      const token = getAccessToken();
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // Mock implementation - replace with actual API call
-      // const response = await fetch(`/api/admin/users/${user.id}/permissions`, {
-      //   method: 'PATCH',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(request),
-      // });
-      // 
-      // if (!response.ok) {
-      //   throw new Error('Failed to update permissions');
-      // }
+      // Handle additions
+      if (permissionDiff.added.length > 0) {
+        const addRequest: UpdateUserPermissionsRequest = {
+          action: 'assign',
+          user_ids: [selectedUser.id],
+          permission_ids: permissionDiff.added,
+        };
+
+        const addResponse = await fetch(`${API_BASE_URL}/api/admin/users/permissions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(addRequest),
+        });
+
+        if (!addResponse.ok) {
+          throw new Error('Failed to add permissions');
+        }
+      }
+
+      // Handle removals
+      if (permissionDiff.removed.length > 0) {
+        const removeRequest: UpdateUserPermissionsRequest = {
+          action: 'remove',
+          user_ids: [selectedUser.id],
+          permission_ids: permissionDiff.removed,
+        };
+
+        const removeResponse = await fetch(`${API_BASE_URL}/api/admin/users/permissions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(removeRequest),
+        });
+
+        if (!removeResponse.ok) {
+          throw new Error('Failed to remove permissions');
+        }
+      }
 
       toast({
         title: "Permissions Updated",
-        description: `Successfully updated permissions for ${user.name}.`,
+        description: `Successfully updated permissions for ${selectedUser.name}.`,
       });
 
       return true;
@@ -235,7 +446,7 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
     } finally {
       setIsSaving(false);
     }
-  }, [user, hasChanges, permissionDiff, toast]);
+  }, [selectedUser, hasChanges, permissionDiff, toast]);
 
   // Reset changes
   const resetChanges = useCallback(() => {
@@ -262,13 +473,13 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
 export function useUserPermissionFilters(users: UserWithPermissions[]) {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [permissionFilter, setPermissionFilter] = useState<Permission | 'all'>('all');
+  const [permissionFilter, setPermissionFilter] = useState<string>('all');
 
   // Filter users based on search and filters
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
       // Search filter
-      const matchesSearch = !searchTerm || 
+      const matchesSearch = !searchTerm ||
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -276,8 +487,8 @@ export function useUserPermissionFilters(users: UserWithPermissions[]) {
       const matchesRole = !roleFilter || roleFilter === 'all' || user.role === roleFilter;
 
       // Permission filter
-      const matchesPermission = !permissionFilter || permissionFilter === 'all' || 
-        user.permissions.includes(permissionFilter);
+      const matchesPermission = !permissionFilter || permissionFilter === 'all' ||
+        user.permissions.some(p => p.id === permissionFilter);
 
       return matchesSearch && matchesRole && matchesPermission;
     });
@@ -322,8 +533,8 @@ export function useBulkPermissionOperations() {
 
   // Toggle user selection
   const toggleUserSelection = useCallback((userId: string) => {
-    setSelectedUsers(prev => 
-      prev.includes(userId) 
+    setSelectedUsers(prev =>
+      prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
@@ -341,37 +552,36 @@ export function useBulkPermissionOperations() {
 
   // Bulk add permission
   const bulkAddPermission = useCallback(async (
-    users: UserWithPermissions[],
-    permission: Permission
+    permissionId: string
   ): Promise<boolean> => {
     if (selectedUsers.length === 0) return false;
 
     try {
       setIsProcessing(true);
 
-      // Filter selected users and validate permission assignment
-      const validUsers = users.filter(user => 
-        selectedUsers.includes(user.id) && 
-        !user.permissions.includes(permission)
-      );
+      const token = getAccessToken();
+      const request: UpdateUserPermissionsRequest = {
+        action: 'assign',
+        user_ids: selectedUsers,
+        permission_ids: [permissionId],
+      };
 
-      if (validUsers.length === 0) {
-        toast({
-          title: "No Changes Needed", 
-          description: "Selected users already have this permission.",
-        });
-        return false;
-      }
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/permissions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(request),
+      });
 
-      // Simulate API calls
-      for (const user of validUsers) {
-        await new Promise(resolve => setTimeout(resolve, 200));
-        // Mock API call - replace with actual implementation
+      if (!response.ok) {
+        throw new Error('Failed to add permissions');
       }
 
       toast({
         title: "Bulk Update Successful",
-        description: `Added ${permission} permission to ${validUsers.length} user(s).`,
+        description: `Added permission to ${selectedUsers.length} user(s).`,
       });
 
       clearSelection();
@@ -388,41 +598,38 @@ export function useBulkPermissionOperations() {
     }
   }, [selectedUsers, toast, clearSelection]);
 
-  // Bulk remove permission  
+  // Bulk remove permission
   const bulkRemovePermission = useCallback(async (
-    users: UserWithPermissions[],
-    permission: Permission
+    permissionId: string
   ): Promise<boolean> => {
     if (selectedUsers.length === 0) return false;
 
     try {
       setIsProcessing(true);
-      const currentUser = getUserFromStorage();
 
-      // Filter selected users and validate permission removal
-      const validUsers = users.filter(user => 
-        selectedUsers.includes(user.id) && 
-        user.permissions.includes(permission) &&
-        canRemovePermission(user.role, permission, currentUser || { role: 'user' })
-      );
+      const token = getAccessToken();
+      const request: UpdateUserPermissionsRequest = {
+        action: 'remove',
+        user_ids: selectedUsers,
+        permission_ids: [permissionId],
+      };
 
-      if (validUsers.length === 0) {
-        toast({
-          title: "No Changes Allowed",
-          description: "Selected users don't have this permission or it cannot be removed.",
-        });
-        return false;
-      }
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/permissions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(request),
+      });
 
-      // Simulate API calls
-      for (const user of validUsers) {
-        await new Promise(resolve => setTimeout(resolve, 200));
-        // Mock API call - replace with actual implementation
+      if (!response.ok) {
+        throw new Error('Failed to remove permissions');
       }
 
       toast({
         title: "Bulk Update Successful",
-        description: `Removed ${permission} permission from ${validUsers.length} user(s).`,
+        description: `Removed permission from ${selectedUsers.length} user(s).`,
       });
 
       clearSelection();

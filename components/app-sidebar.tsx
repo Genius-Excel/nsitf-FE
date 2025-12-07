@@ -84,12 +84,6 @@ const navigationItems = [
     roles: ["admin", "manager"] as Role[],
   },
   {
-    title: "Permission Management",
-    href: "/dashboard/permissions",
-    icon: Settings,
-    roles: ["admin"] as Role[],
-  },
-  {
     title: "Compliance",
     href: "/dashboard/compliance",
     icon: Shield,
