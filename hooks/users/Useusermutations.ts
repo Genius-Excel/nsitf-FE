@@ -38,10 +38,25 @@ export const useUserMutations = (options?: MutationOptions) => {
         setIsLoading(true);
         setError(null);
 
-        const payload: AddUserPayload = {
-          ...data,
+        // Build payload according to API requirements
+        // API requires either region_id, branch_id or organization_level='hq'
+        const payload: any = {
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          phone_number: data.phone_number,
+          role: data.role,
           password: "Nstif@12345", // Default password
         };
+
+        // Add optional fields
+        if (data.department) {
+          payload.department = data.department;
+        }
+
+        // For now, set organization_level to 'hq' as default
+        // TODO: Update form to collect region_id or branch_id instead of region name
+        payload.organization_level = 'hq';
 
         const response = await http.postData(payload, "/api/admin/users");
 
@@ -54,10 +69,16 @@ export const useUserMutations = (options?: MutationOptions) => {
 
         return response.data;
       } catch (err: any) {
-        const message =
-          err?.response?.data?.message ||
-          err.message ||
-          "Failed to create user";
+        // Extract error message from API response
+        let message = "Failed to create user";
+
+        if (err?.response?.data?.non_field_errors) {
+          message = err.response.data.non_field_errors.join(", ");
+        } else if (err?.response?.data?.message) {
+          message = err.response.data.message;
+        } else if (err.message) {
+          message = err.message;
+        }
 
         console.error("Add user error:", err);
         setError(message);

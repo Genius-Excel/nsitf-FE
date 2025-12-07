@@ -110,11 +110,13 @@ export function useUsersWithPermissions() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUsers = useCallback(async () => {
+    console.log('===== fetchUsers CALLED - NEW VERSION =====');
     try {
       setLoading(true);
       setError(null);
 
       const token = getAccessToken();
+      console.log('Token:', token ? 'exists' : 'missing');
       const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -127,43 +129,92 @@ export function useUsersWithPermissions() {
 
       const result = await response.json();
 
-      // Log the API response to see what we're getting
-      console.log('API Response:', result);
-      console.log('First user data:', result.data?.[0]);
+      // Fetch all available permissions to map user permission names to full objects
+      let allPermissions: PermissionItem[] = [];
+      try {
+        console.log('Fetching permissions from:', `${API_BASE_URL}/api/admin/users/permissions`);
+        const permissionsResponse = await fetch(`${API_BASE_URL}/api/admin/users/permissions`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        console.log('Permissions response status:', permissionsResponse.status, permissionsResponse.ok);
+
+        if (permissionsResponse.ok) {
+          const permissionsResult = await permissionsResponse.json();
+          console.log('Permissions API response:', permissionsResult);
+          // Extract all permissions from categories
+          const categories = permissionsResult.data || [];
+          console.log('Categories found:', categories.length);
+
+          allPermissions = categories.flatMap((cat: any) => {
+            console.log(`Category ${cat.name} has ${cat.permissions?.length || 0} permissions`);
+            return (cat.permissions || []).map((perm: any) => ({
+              id: perm.id,
+              name: perm.name,
+              description: perm.description,
+            }));
+          });
+          console.log('All permissions loaded:', allPermissions.length);
+        } else {
+          console.error('Permissions fetch failed with status:', permissionsResponse.status);
+          const errorText = await permissionsResponse.text();
+          console.error('Error response:', errorText);
+        }
+      } catch (error) {
+        console.error('Failed to fetch permissions list:', error);
+      }
 
       // Transform API response to match our UserWithPermissions interface
-      const transformedUsers: UserWithPermissions[] = (result.data || []).map((user: any) => {
-        // Check if permissions are included in the response
-        let permissions: PermissionItem[] = [];
+      // Fetch permissions for each user individually
+      const transformedUsers: UserWithPermissions[] = await Promise.all(
+        (result.data || []).map(async (user: any) => {
+          let permissions: PermissionItem[] = [];
+          console.log(`Processing user ${user.first_name}, allPermissions available:`, allPermissions.length);
 
-        if (user.permissions && Array.isArray(user.permissions)) {
-          // If permissions array is provided
-          permissions = user.permissions.map((perm: any) => ({
-            id: perm.id,
-            name: perm.name,
-            description: perm.description,
-          }));
-        } else if (user.permissions_count !== undefined) {
-          // If only count is provided, create placeholder array for display
-          // Actual permissions will be loaded when editing
-          permissions = Array(user.permissions_count).fill(null).map((_, i) => ({
-            id: `placeholder-${i}`,
-            name: '',
-            description: '',
-          }));
-        }
+          // Try to fetch individual user details to get permissions
+          try {
+            const userDetailResponse = await fetch(`${API_BASE_URL}/api/admin/users/${user.id}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            });
 
-        return {
-          id: user.id,
-          name: `${user.first_name} ${user.last_name}`.trim(),
-          email: user.email,
-          role: user.role || 'user',
-          permissions,
-          createdAt: user.created_at,
-          lastLogin: user.updated_at, // Using updated_at as last login for now
-          isActive: user.account_status === 'active',
-        };
-      });
+            if (userDetailResponse.ok) {
+              const userDetail = await userDetailResponse.json();
+              const userPermissionNames = userDetail.data?.user_permissions || [];
+
+              // Map permission names to full permission objects
+              if (allPermissions.length > 0) {
+                permissions = allPermissions.filter(perm =>
+                  userPermissionNames.includes(perm.name)
+                );
+              } else {
+                // Fallback: create placeholder objects using permission names
+                permissions = userPermissionNames.map((name: string, index: number) => ({
+                  id: `${user.id}-perm-${index}`,
+                  name: name,
+                  description: name.replace(/_/g, ' ').replace(/^can /, 'Can '),
+                }));
+              }
+            }
+          } catch (error) {
+            console.error(`Failed to fetch permissions for user ${user.id}:`, error);
+          }
+
+          return {
+            id: user.id,
+            name: `${user.first_name} ${user.last_name}`.trim(),
+            email: user.email,
+            role: user.role || 'user',
+            permissions,
+            createdAt: user.created_at,
+            lastLogin: user.last_login || user.updated_at,
+            isActive: user.account_status === 'active',
+          };
+        })
+      );
 
       setUsers(transformedUsers);
     } catch (err) {
@@ -252,6 +303,28 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
     // Fetch user's current permissions from API
     try {
       const token = getAccessToken();
+
+      // First, fetch all available permissions
+      const permissionsResponse = await fetch(`${API_BASE_URL}/api/admin/users/permissions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      let allPermissions: PermissionItem[] = [];
+      if (permissionsResponse.ok) {
+        const permissionsResult = await permissionsResponse.json();
+        const categories = permissionsResult.data || [];
+        allPermissions = categories.flatMap((cat: any) =>
+          (cat.permissions || []).map((perm: any) => ({
+            id: perm.id,
+            name: perm.name,
+            description: perm.description,
+          }))
+        );
+      }
+
+      // Then fetch user's permissions
       const response = await fetch(`${API_BASE_URL}/api/admin/users/${userToEdit.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -260,12 +333,24 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
 
       if (response.ok) {
         const result = await response.json();
-        // Transform the user permissions from API response
-        const userPermissions = (result.data?.permissions || []).map((perm: any) => ({
-          id: perm.id,
-          name: perm.name,
-          description: perm.description,
-        }));
+        const userPermissionNames = result.data?.user_permissions || [];
+
+        let userPermissions: PermissionItem[];
+
+        // Map permission names to full permission objects
+        if (allPermissions.length > 0) {
+          userPermissions = allPermissions.filter(perm =>
+            userPermissionNames.includes(perm.name)
+          );
+        } else {
+          // Fallback: create permission objects from names
+          userPermissions = userPermissionNames.map((name: string, index: number) => ({
+            id: `${userToEdit.id}-perm-${index}`,
+            name: name,
+            description: name.replace(/_/g, ' ').replace(/^can /, 'Can '),
+          }));
+        }
+
         setOriginalPermissions(userPermissions);
         setEditedPermissions(userPermissions);
       } else {
