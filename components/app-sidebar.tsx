@@ -19,6 +19,7 @@ import {
   LineChart,
   AlertTriangle,
   Wallet,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,6 +59,7 @@ const validRoles = [
   "hse_officer",
   "legal_officer",
   "inspection_officer",
+  "branch_data_officer",
 ] as const;
 type Role = (typeof validRoles)[number];
 
@@ -70,10 +72,22 @@ const navigationItems = [
     roles: ["admin", "manager", "user", "regional_manager", "claims_officer", "compliance_officer", "hse_officer", "legal_officer", "inspection_officer"] as Role[],
   },
   {
+    title: "Branch Portal",
+    href: "/branch/dashboard",
+    icon: FileCheck,
+    roles: ["branch_data_officer"] as Role[],
+  },
+  {
     title: "User and Role",
     href: "/dashboard/users",
     icon: Users,
     roles: ["admin", "manager"] as Role[],
+  },
+  {
+    title: "Permission Management",
+    href: "/dashboard/permissions",
+    icon: Settings,
+    roles: ["admin"] as Role[],
   },
   {
     title: "Compliance",
@@ -132,9 +146,12 @@ const navigationItems = [
 ];
 
 // Utility to construct role-based routes
-// All users now use the shared /admin routes, with permissions controlling access
+// Branch data officers get their dedicated branch routes, others use admin routes
 const getRoleBasedRoute = (role: Role | undefined, href: string) => {
-  // Route all authenticated users to /admin routes
+  if (role === "branch_data_officer") {
+    // Branch officers use their specific routes directly
+    return href;
+  }
   return role && validRoles.includes(role) ? `/admin${href}` : href;
 };
 

@@ -9,6 +9,7 @@ export type UserRole =
   | "hse_officer"
   | "legal_officer"
   | "inspection_officer"
+  | "branch_data_officer"
 
 export interface User {
   id: string
@@ -36,6 +37,15 @@ const MOCK_USERS: Record<string, { password: string; user: User }> = {
       email: "manager@company.com",
       name: "Regional Manager",
       role: "regional_manager",
+    },
+  },
+  "branch@company.com": {
+    password: "branch123",
+    user: {
+      id: "3",
+      email: "branch@company.com",
+      name: "Branch Data Officer",
+      role: "branch_data_officer",
     },
   },
 }
