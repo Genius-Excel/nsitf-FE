@@ -8,7 +8,8 @@
 "use client";
 
 import React from 'react';
-import { Search, Users, X, Plus, Settings, Upload } from 'lucide-react';
+import { Search, Users, X, Plus, Settings, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +24,6 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { LoadingState } from '@/components/design-system/LoadingState';
 import { ErrorState } from '@/components/design-system/ErrorState';
-import { BulkPermissionUpload } from '@/components/bulk-permission-upload';
 import {
   useUsersWithPermissions,
   useUserPermissionFilters,
@@ -287,15 +287,40 @@ function BulkActionsBar({
 
 interface PermissionManagerProps {
   onManagePermissions: (user: UserWithPermissions) => void;
+  onRegisterUpdateCallback?: (callback: (userId: string, newPermissions: PermissionItem[]) => void) => void;
 }
 
-export function PermissionManager({ onManagePermissions }: PermissionManagerProps) {
+export function PermissionManager({ onManagePermissions, onRegisterUpdateCallback }: PermissionManagerProps) {
+  // Router for navigation
+  const router = useRouter();
+
   // Data fetching
   const { users, loading, error, refetch } = useUsersWithPermissions();
   const { categories, loading: loadingPermissions } = usePermissions();
 
-  // Bulk upload state
-  const [isBulkUploadOpen, setIsBulkUploadOpen] = React.useState(false);
+  // Local state for users to enable optimistic updates
+  const [localUsers, setLocalUsers] = React.useState<UserWithPermissions[]>(users);
+
+  // Update local users when API users change
+  React.useEffect(() => {
+    setLocalUsers(users);
+  }, [users]);
+
+  // Register the update callback with the parent
+  React.useEffect(() => {
+    if (onRegisterUpdateCallback) {
+      const updateCallback = (userId: string, newPermissions: PermissionItem[]) => {
+        setLocalUsers(prevUsers =>
+          prevUsers.map(user =>
+            user.id === userId
+              ? { ...user, permissions: newPermissions }
+              : user
+          )
+        );
+      };
+      onRegisterUpdateCallback(updateCallback);
+    }
+  }, [onRegisterUpdateCallback]);
 
   // Get all permissions from categories
   const allPermissions = React.useMemo(() => {
@@ -314,7 +339,7 @@ export function PermissionManager({ onManagePermissions }: PermissionManagerProp
     availableRoles,
     hasActiveFilters,
     resetFilters,
-  } = useUserPermissionFilters(users);
+  } = useUserPermissionFilters(localUsers);
 
   // Bulk operations
   const {
@@ -378,17 +403,17 @@ export function PermissionManager({ onManagePermissions }: PermissionManagerProp
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Permission Management</h1>
           <p className="text-gray-500 mt-2">
-            Assign and manage permissions for {users.length} user{users.length !== 1 ? 's' : ''}
+            Assign and manage permissions for {localUsers.length} user{localUsers.length !== 1 ? 's' : ''}
           </p>
         </div>
         <div className="flex items-center space-x-3">
           <Button
-            onClick={() => setIsBulkUploadOpen(true)}
+            onClick={() => router.push('/admin/dashboard/users')}
             variant="outline"
             className="border-green-600 text-green-600 hover:bg-green-50"
           >
-            <Upload className="w-4 h-4 mr-2" />
-            Bulk Upload
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Return to Users
           </Button>
           <div className="flex items-center space-x-2 text-sm text-gray-500">
             <Users className="w-4 h-4" />
@@ -494,16 +519,6 @@ export function PermissionManager({ onManagePermissions }: PermissionManagerProp
           )}
         </CardContent>
       </Card>
-
-      {/* Bulk Upload Modal */}
-      <BulkPermissionUpload
-        isOpen={isBulkUploadOpen}
-        onClose={() => setIsBulkUploadOpen(false)}
-        onSuccess={() => {
-          refetch();
-          setIsBulkUploadOpen(false);
-        }}
-      />
     </div>
   );
 }
