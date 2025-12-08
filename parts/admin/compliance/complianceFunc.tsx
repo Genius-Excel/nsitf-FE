@@ -10,6 +10,7 @@ import {
   useComplianceDashboard,
   useRegions,
   useRegionMutations,
+  useBranchMutations,
   useComplianceFilters,
   useModalState,
   type RegionalSummary,
@@ -140,6 +141,17 @@ const ComplianceDashboard: React.FC = () => {
     },
   });
 
+  const {
+    createBranch,
+    deleteBranch,
+    isLoading: isBranchMutating,
+  } = useBranchMutations({
+    onSuccess: () => {
+      refetchRegions();
+      refetchDashboard();
+    },
+  });
+
   // Upload is now handled by the modal internally
   // No need for upload hook here
 
@@ -173,6 +185,34 @@ const ComplianceDashboard: React.FC = () => {
     ) {
       try {
         await deleteRegion(regionId, regionName);
+      } catch (err) {
+        // Error handled in mutation hook
+      }
+    }
+  };
+
+  const handleAddBranch = async (name: string, regionId: string, code?: string) => {
+    if (!canManage) {
+      toast.error("You don't have permission to create branches");
+      return;
+    }
+    try {
+      await createBranch({ name, region_id: regionId, code });
+    } catch (err) {
+      // Error handled in mutation hook
+    }
+  };
+
+  const handleDeleteBranch = async (branchId: string, branchName: string) => {
+    if (!canManage) {
+      toast.error("You don't have permission to delete branches");
+      return;
+    }
+    if (
+      window.confirm(`Delete branch '${branchName}'? This cannot be undone.`)
+    ) {
+      try {
+        await deleteBranch(branchId, branchName);
       } catch (err) {
         // Error handled in mutation hook
       }
@@ -371,7 +411,8 @@ const ComplianceDashboard: React.FC = () => {
         isOpen={addModal.isOpen}
         onClose={addModal.close}
         onAddEntry={() => {}} // Not used in new version
-        regions={regionNames}
+        regions={regions || []}
+        regionNames={regionNames}
         onAddRegion={handleAddRegion}
         onDeleteRegion={(name) => {
           const region = regions?.find((r: any) => r.name === name);
@@ -379,6 +420,8 @@ const ComplianceDashboard: React.FC = () => {
             handleDeleteRegion(region.id, region.name);
           }
         }}
+        onAddBranch={handleAddBranch}
+        onDeleteBranch={handleDeleteBranch}
       />
 
       <ComplianceUploadModal

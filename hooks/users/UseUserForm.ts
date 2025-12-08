@@ -10,7 +10,9 @@ export interface UserFormData {
   phone_number: string;
   role: string;
   department: string;
-  region: string;
+  organizational_level: string; // 'hq', 'region', or 'branch'
+  region_id: string;
+  branch_id: string;
 }
 
 const EMPTY_FORM: UserFormData = {
@@ -20,7 +22,9 @@ const EMPTY_FORM: UserFormData = {
   phone_number: "",
   role: "",
   department: "",
-  region: "",
+  organizational_level: "",
+  region_id: "",
+  branch_id: "",
 };
 
 // ============= HOOK =============
@@ -51,7 +55,9 @@ export const useUserForm = () => {
       phone_number: user.phone_number || "",
       role: user.role,
       department: user.department || "",
-      region: user.region || "",
+      organizational_level: "",
+      region_id: "",
+      branch_id: "",
     });
     setIsOpen(true);
   }, []);
