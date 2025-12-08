@@ -295,84 +295,18 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
     }
   }, [selectedUser, currentUser, editedPermissions, toast]);
 
-  // Open editor and fetch user's current permissions
+  // Open editor and use user's current permissions from the table state
+  // This ensures optimistic updates are reflected immediately
   const openEditor = useCallback(async (userToEdit: UserWithPermissions) => {
     setIsOpen(true);
     setSelectedUser(userToEdit);
 
-    try {
-      const token = getAccessToken();
-
-      // First, fetch all available permissions to ensure we have complete permission objects
-      const permissionsResponse = await fetch(`${API_BASE_URL}/api/admin/users/permissions`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      let allPermissions: PermissionItem[] = [];
-      if (permissionsResponse.ok) {
-        const permissionsResult = await permissionsResponse.json();
-        const categoriesData = permissionsResult.data || {};
-
-        // Extract all permissions from all categories
-        // API returns: { upload_and_data_management: [...], regional_management: [...], ... }
-        if (typeof categoriesData === 'object' && categoriesData !== null) {
-          allPermissions = Object.values(categoriesData).flatMap((permissionArray: any) =>
-            (Array.isArray(permissionArray) ? permissionArray : []).map((perm: any) => ({
-              id: perm.id,
-              name: perm.name,
-              description: perm.description,
-            }))
-          );
-        }
-      }
-
-      // Then fetch user's current permissions
-      const response = await fetch(`${API_BASE_URL}/api/admin/users/${userToEdit.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        const userPermissionNames = result.data?.user_permissions || [];
-
-        let userPermissions: PermissionItem[] = [];
-
-        if (allPermissions.length > 0) {
-          // Map user's permission names to full permission objects with matching IDs
-          userPermissions = allPermissions.filter(perm =>
-            userPermissionNames.includes(perm.name)
-          );
-        } else {
-          // Fallback: if we couldn't load all permissions, create objects from names
-          userPermissions = userPermissionNames.map((name: string, index: number) => ({
-            id: `fallback-${index}`,
-            name: name,
-            description: name.replace(/_/g, ' ').replace(/^can /, 'Can '),
-          }));
-        }
-
-        setOriginalPermissions(userPermissions);
-        setEditedPermissions(userPermissions);
-      } else {
-        // If API fails, use permissions from the table state
-        setOriginalPermissions(userToEdit.permissions);
-        setEditedPermissions(userToEdit.permissions);
-      }
-    } catch (error) {
-      console.error('Failed to fetch user permissions:', error);
-      toast({
-        title: "Warning",
-        description: "Failed to load current permissions. Using cached data.",
-        variant: "destructive",
-      });
-      setOriginalPermissions(userToEdit.permissions);
-      setEditedPermissions(userToEdit.permissions);
-    }
-  }, [toast]);
+    // Use permissions from the userToEdit object (which has already been optimistically updated)
+    // This prevents the modal from showing stale data from the API
+    console.log('Opening editor with permissions from local state:', userToEdit.permissions.length);
+    setOriginalPermissions(userToEdit.permissions);
+    setEditedPermissions(userToEdit.permissions);
+  }, []);
 
   // Close editor
   const closeEditor = useCallback(() => {
