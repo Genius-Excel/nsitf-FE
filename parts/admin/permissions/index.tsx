@@ -36,6 +36,9 @@ export default function PermissionManagementPage() {
   // Currently selected user for editing
   const [selectedUser, setSelectedUser] = React.useState<UserWithPermissions | null>(null);
 
+  // Callback to update user after permissions are saved
+  const [onPermissionsUpdated, setOnPermissionsUpdated] = React.useState<((userId: string, newPermissions: any[]) => void) | null>(null);
+
   // Handle opening the permission editor
   const handleManagePermissions = async (user: UserWithPermissions) => {
     setSelectedUser(user);
@@ -46,6 +49,16 @@ export default function PermissionManagementPage() {
   const handleCloseEditor = () => {
     closeEditor();
     setSelectedUser(null);
+  };
+
+  // Handle save with optimistic update
+  const handleSavePermissions = async () => {
+    const success = await savePermissions();
+    if (success && selectedUser && onPermissionsUpdated) {
+      // Update the user's permissions in the table without refetching
+      onPermissionsUpdated(selectedUser.id, editedPermissions);
+    }
+    return success;
   };
 
   return (
@@ -66,7 +79,10 @@ export default function PermissionManagementPage() {
     >
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <PermissionManager onManagePermissions={handleManagePermissions} />
+          <PermissionManager
+            onManagePermissions={handleManagePermissions}
+            onRegisterUpdateCallback={setOnPermissionsUpdated}
+          />
 
           <PermissionEditor
             isOpen={isOpen}
@@ -79,7 +95,7 @@ export default function PermissionManagementPage() {
             categories={categories}
             onClose={handleCloseEditor}
             onTogglePermission={togglePermission}
-            onSave={savePermissions}
+            onSave={handleSavePermissions}
             onReset={resetChanges}
           />
         </div>
