@@ -97,6 +97,31 @@ export default function UsersRolesManagement() {
 
   // ============== HANDLERS ==============
 
+  const handleEditUser = (user: any) => {
+    // Map role name to role ID if needed
+    let roleId = user.role;
+
+    // If the user.role is a name string (not a UUID), find the matching role ID
+    if (roles && roleId && !roleId.includes('-')) {
+      // It's likely a role name, find the role ID
+      const matchingRole = roles.find(
+        (r) => r.name.toLowerCase() === roleId.toLowerCase()
+      );
+      if (matchingRole) {
+        roleId = matchingRole.id;
+        console.log(`Mapped role name "${user.role}" to role ID "${roleId}"`);
+      }
+    }
+
+    // Create a modified user object with the correct role ID
+    const userWithRoleId = {
+      ...user,
+      role: roleId,
+    };
+
+    openForEdit(userWithRoleId);
+  };
+
   const handleSaveUser = async () => {
     // Validate form
     const { isValid, errors } = validate();
@@ -233,7 +258,7 @@ export default function UsersRolesManagement() {
           <div className="bg-white shadow-md rounded-lg overflow-hidden">
             <UsersTable
               users={filteredUsers}
-              onEdit={openForEdit}
+              onEdit={handleEditUser}
               onDeleteClick={(userId) => {
                 const user = users?.find((u: any) => u.id === userId);
                 if (user) {
