@@ -120,15 +120,43 @@ export const useUserMutations = (options?: MutationOptions) => {
         setIsLoading(true);
         setError(null);
 
-        const payload = {
+        console.log("Edit form data received:", JSON.stringify(data, null, 2));
+
+        // Build payload according to API requirements
+        const payload: any = {
           first_name: data.first_name,
           last_name: data.last_name,
           email: data.email,
           phone_number: data.phone_number,
           role: data.role,
-          department: data.department,
-          region: data.region,
         };
+
+        // Add optional fields
+        if (data.department) {
+          payload.department = data.department;
+        }
+
+        // Add organizational fields based on level
+        if (data.organizational_level === 'hq') {
+          payload.organization_level = 'hq';
+        } else if (data.organizational_level === 'region') {
+          // For regional users: only region_id is needed
+          if (!data.region_id) {
+            throw new Error("Region is required for regional users");
+          }
+          payload.region_id = data.region_id;
+        } else if (data.organizational_level === 'branch') {
+          // For branch users: both region_id and branch_id are needed
+          if (!data.region_id || !data.branch_id) {
+            throw new Error("Region and branch are required for branch users");
+          }
+          payload.region_id = data.region_id;
+          payload.branch_id = data.branch_id;
+        } else if (data.organizational_level) {
+          throw new Error("Please select a valid organizational level");
+        }
+
+        console.log("Updating user with payload:", JSON.stringify(payload, null, 2));
 
         const response = await http.patchDataJson(
           payload,
@@ -144,10 +172,16 @@ export const useUserMutations = (options?: MutationOptions) => {
 
         return response.data;
       } catch (err: any) {
-        const message =
-          err?.response?.data?.message ||
-          err.message ||
-          "Failed to update user";
+        // Extract error message from API response
+        let message = "Failed to update user";
+
+        if (err?.response?.data?.non_field_errors) {
+          message = err.response.data.non_field_errors.join(", ");
+        } else if (err?.response?.data?.message) {
+          message = err.response.data.message;
+        } else if (err.message) {
+          message = err.message;
+        }
 
         console.error("Edit user error:", err);
         setError(message);

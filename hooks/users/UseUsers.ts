@@ -13,6 +13,10 @@ export interface User {
   account_status: "active" | "inactive";
   department: string | null;
   region: string | null;
+  organizational_level?: string | null;
+  region_id?: string | null;
+  branch_id?: string | null;
+  organization_level?: string | null;
   created_at: string;
   updated_at: string;
 }

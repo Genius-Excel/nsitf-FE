@@ -196,7 +196,14 @@ export const UserFormModal: React.FC<{
   const { data: regions, loading: regionsLoading } = useRegions();
 
   // Fetch roles
-  const { data: roles, loading: rolesLoading } = useRoles();
+  const { data: roles, loading: rolesLoading, error: rolesError } = useRoles();
+
+  // Debug roles
+  useEffect(() => {
+    console.log("Roles in modal:", roles);
+    console.log("Roles loading:", rolesLoading);
+    console.log("Roles error:", rolesError);
+  }, [roles, rolesLoading, rolesError]);
 
   // Fetch branches when region is selected
   const { data: branches, fetchBranches, clearBranches } = useBranches();
@@ -316,13 +323,24 @@ export const UserFormModal: React.FC<{
                 <SelectValue placeholder={rolesLoading ? "Loading..." : "Select a role"} />
               </SelectTrigger>
               <SelectContent>
-                {roles?.map((role) => (
-                  <SelectItem key={role.id} value={role.id}>
-                    {capitalizeRole(role.name)}
-                  </SelectItem>
-                ))}
+                {roles && roles.length > 0 ? (
+                  roles.map((role) => (
+                    <SelectItem key={role.id} value={role.id}>
+                      {capitalizeRole(role.name)}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="px-2 py-1 text-xs text-gray-500">
+                    {rolesLoading ? "Loading roles..." : rolesError ? `Error: ${rolesError}` : "No roles available"}
+                  </div>
+                )}
               </SelectContent>
             </Select>
+            {rolesError && (
+              <p className="text-xs text-red-600 mt-1">
+                Failed to load roles. Please refresh or contact support.
+              </p>
+            )}
           </div>
 
           <div>
