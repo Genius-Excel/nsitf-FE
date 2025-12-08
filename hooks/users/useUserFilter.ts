@@ -29,7 +29,7 @@ export const useUserFilters = (users: User[] | null) => {
     }
 
     // Role filter - case-insensitive comparison
-    if (filterRole !== "All Roles") {
+    if (filterRole && filterRole !== "All Roles") {
       filtered = filtered.filter(
         (user) => user.role?.toLowerCase() === filterRole.toLowerCase()
       );
@@ -59,6 +59,6 @@ export const useUserFilters = (users: User[] | null) => {
     // Metadata
     totalCount: users?.length ?? 0,
     filteredCount: filteredUsers.length,
-    hasActiveFilters: searchTerm !== "" || filterRole !== "All Roles",
+    hasActiveFilters: searchTerm !== "" || (filterRole !== "All Roles" && filterRole !== undefined && filterRole !== ""),
   };
 };

@@ -48,6 +48,22 @@ export const useUserForm = () => {
   // Open modal for editing existing user
   const openForEdit = useCallback((user: User) => {
     setEditingUserId(user.id);
+
+    // Determine organizational level from user data
+    // The API may return either 'organizational_level' or 'organization_level'
+    let orgLevel = user.organizational_level || user.organization_level || "";
+
+    // If not directly provided, infer from other fields
+    if (!orgLevel) {
+      if (user.branch_id) {
+        orgLevel = "branch";
+      } else if (user.region_id) {
+        orgLevel = "region";
+      } else {
+        orgLevel = "hq"; // Default to HQ if no region or branch
+      }
+    }
+
     setFormData({
       first_name: user.first_name || "",
       last_name: user.last_name || "",
@@ -55,9 +71,9 @@ export const useUserForm = () => {
       phone_number: user.phone_number || "",
       role: user.role,
       department: user.department || "",
-      organizational_level: "",
-      region_id: "",
-      branch_id: "",
+      organizational_level: orgLevel,
+      region_id: user.region_id || "",
+      branch_id: user.branch_id || "",
     });
     setIsOpen(true);
   }, []);
