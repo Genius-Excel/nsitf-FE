@@ -310,13 +310,16 @@ export function PermissionManager({ onManagePermissions, onRegisterUpdateCallbac
   React.useEffect(() => {
     if (onRegisterUpdateCallback) {
       const updateCallback = (userId: string, newPermissions: PermissionItem[]) => {
-        setLocalUsers(prevUsers =>
-          prevUsers.map(user =>
+        console.log('Updating user permissions optimistically:', userId, newPermissions.length);
+        setLocalUsers(prevUsers => {
+          const updatedUsers = prevUsers.map(user =>
             user.id === userId
               ? { ...user, permissions: newPermissions }
               : user
-          )
-        );
+          );
+          console.log('Updated local users');
+          return updatedUsers;
+        });
       };
       onRegisterUpdateCallback(updateCallback);
     }
@@ -352,18 +355,43 @@ export function PermissionManager({ onManagePermissions, onRegisterUpdateCallbac
     bulkRemovePermission,
   } = useBulkPermissionOperations();
 
-  // Handle bulk operations with refetch
+  // Handle bulk operations with optimistic updates
   const handleBulkAddPermission = async (permissionId: string) => {
     const success = await bulkAddPermission(permissionId);
     if (success) {
-      refetch();
+      // Optimistically update affected users
+      const permissionToAdd = allPermissions.find(p => p.id === permissionId);
+      if (permissionToAdd) {
+        setLocalUsers(prevUsers =>
+          prevUsers.map(user =>
+            selectedUsers.includes(user.id)
+              ? {
+                  ...user,
+                  permissions: user.permissions.some(p => p.id === permissionId)
+                    ? user.permissions
+                    : [...user.permissions, permissionToAdd],
+                }
+              : user
+          )
+        );
+      }
     }
   };
 
   const handleBulkRemovePermission = async (permissionId: string) => {
     const success = await bulkRemovePermission(permissionId);
     if (success) {
-      refetch();
+      // Optimistically update affected users
+      setLocalUsers(prevUsers =>
+        prevUsers.map(user =>
+          selectedUsers.includes(user.id)
+            ? {
+                ...user,
+                permissions: user.permissions.filter(p => p.id !== permissionId),
+              }
+            : user
+        )
+      );
     }
   };
 
