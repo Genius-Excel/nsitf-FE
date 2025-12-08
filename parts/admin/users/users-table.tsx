@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect } from "react";
 import { Search, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +30,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { formatDate, getRoleBadgeColor, capitalizeRole } from "@/lib/utils";
 import { NewUserForm, User } from "@/lib/types";
-import { ROLES } from "@/lib/Constants";
+import { useRegions } from "@/hooks/compliance/Useregions";
+import { useBranches, useRoles } from "@/hooks/users";
 
 export const UsersTable: React.FC<{
   users: User[];
@@ -118,7 +122,8 @@ export const SearchAndFilter: React.FC<{
   onSearchChange: (value: string) => void;
   filterRole: string;
   onFilterChange: (value: string) => void;
-}> = ({ searchTerm, onSearchChange, filterRole, onFilterChange }) => (
+  roles?: Array<{ id: string; name: string; description: string }>;
+}> = ({ searchTerm, onSearchChange, filterRole, onFilterChange, roles = [] }) => (
   <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
     <div className="flex gap-3 items-center">
       <div className="flex-1 relative">
@@ -136,9 +141,9 @@ export const SearchAndFilter: React.FC<{
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="All Roles">All Roles</SelectItem>
-          {ROLES.map((role) => (
+          {roles.map((role) => (
             <SelectItem key={role.id} value={role.id}>
-              {role.label}
+              {capitalizeRole(role.name)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -147,19 +152,21 @@ export const SearchAndFilter: React.FC<{
   </div>
 );
 
-export const RolePermissionsOverview: React.FC = () => (
+export const RolePermissionsOverview: React.FC<{
+  roles?: Array<{ id: string; name: string; description: string }>;
+}> = ({ roles = [] }) => (
   <div className="mt-8">
     <h2 className="text-lg font-semibold text-gray-900 mb-4">
       Role Permissions Overview
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-      {ROLES.map((role) => (
+      {roles.map((role) => (
         <div
           key={role.id}
           className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow"
         >
           <h3 className="font-semibold text-gray-900 text-sm mb-1">
-            {role.label}
+            {capitalizeRole(role.name)}
           </h3>
           <p className="text-xs text-gray-600">{role.description}</p>
         </div>
@@ -184,165 +191,268 @@ export const UserFormModal: React.FC<{
   onFormChange,
   isEditing,
   isSaving = false,
-}) => (
-  <Dialog open={isOpen} onOpenChange={onOpenChange}>
-    <DialogContent className="max-w-md">
-      <DialogHeader>
-        <DialogTitle className="text-lg font-semibold">
-          {isEditing ? "Edit User" : "Onboard New User"}
-        </DialogTitle>
-      </DialogHeader>
+}) => {
+  // Fetch regions
+  const { data: regions, loading: regionsLoading } = useRegions();
 
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+  // Fetch roles
+  const { data: roles, loading: rolesLoading } = useRoles();
+
+  // Fetch branches when region is selected
+  const { data: branches, fetchBranches, clearBranches } = useBranches();
+
+  // Fetch branches when region changes
+  useEffect(() => {
+    if (formData.region_id) {
+      fetchBranches(formData.region_id);
+    } else {
+      clearBranches();
+    }
+  }, [formData.region_id, fetchBranches, clearBranches]);
+
+  // Clear region and branch when organizational level changes
+  const handleOrgLevelChange = (value: string) => {
+    onFormChange({
+      ...formData,
+      organizational_level: value,
+      region_id: "",
+      branch_id: "",
+    });
+  };
+
+  // Clear branch when region changes
+  const handleRegionChange = (value: string) => {
+    onFormChange({
+      ...formData,
+      region_id: value,
+      branch_id: "",
+    });
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold">
+            {isEditing ? "Edit User" : "Onboard New User"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-gray-900">
+                First Name *
+              </label>
+              <Input
+                placeholder="Enter first name"
+                value={formData.first_name}
+                onChange={(e) =>
+                  onFormChange({ ...formData, first_name: e.target.value })
+                }
+                className="mt-1 border-gray-200 text-sm"
+                disabled={isSaving}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-900">
+                Last Name
+              </label>
+              <Input
+                placeholder="Enter last name"
+                value={formData.last_name}
+                onChange={(e) =>
+                  onFormChange({ ...formData, last_name: e.target.value })
+                }
+                className="mt-1 border-gray-200 text-sm"
+                disabled={isSaving}
+              />
+            </div>
+          </div>
+
           <div>
             <label className="text-xs font-semibold text-gray-900">
-              First Name *
+              Email Address *
             </label>
             <Input
-              placeholder="Enter first name"
-              value={formData.first_name}
+              type="email"
+              placeholder="user@nsitf.gov.ng"
+              value={formData.email}
               onChange={(e) =>
-                onFormChange({ ...formData, first_name: e.target.value })
+                onFormChange({ ...formData, email: e.target.value })
               }
               className="mt-1 border-gray-200 text-sm"
               disabled={isSaving}
             />
           </div>
+
           <div>
             <label className="text-xs font-semibold text-gray-900">
-              Last Name
+              Phone Number
             </label>
             <Input
-              placeholder="Enter last name"
-              value={formData.last_name}
+              placeholder="+234 XXX XXX XXXX"
+              value={formData.phone_number}
               onChange={(e) =>
-                onFormChange({ ...formData, last_name: e.target.value })
+                onFormChange({ ...formData, phone_number: e.target.value })
               }
               className="mt-1 border-gray-200 text-sm"
               disabled={isSaving}
             />
           </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-900">
+              Assign Role *
+            </label>
+            <Select
+              value={formData.role}
+              onValueChange={(value) =>
+                onFormChange({ ...formData, role: value })
+              }
+              disabled={isSaving || rolesLoading}
+            >
+              <SelectTrigger className="mt-1 border-gray-200 text-sm">
+                <SelectValue placeholder={rolesLoading ? "Loading..." : "Select a role"} />
+              </SelectTrigger>
+              <SelectContent>
+                {roles?.map((role) => (
+                  <SelectItem key={role.id} value={role.id}>
+                    {capitalizeRole(role.name)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-900">
+              Department
+            </label>
+            <Input
+              placeholder="Enter department"
+              value={formData.department}
+              onChange={(e) =>
+                onFormChange({ ...formData, department: e.target.value })
+              }
+              className="mt-1 border-gray-200 text-sm"
+              disabled={isSaving}
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-900">
+              Organizational Level *
+            </label>
+            <Select
+              value={formData.organizational_level}
+              onValueChange={handleOrgLevelChange}
+              disabled={isSaving}
+            >
+              <SelectTrigger className="mt-1 border-gray-200 text-sm">
+                <SelectValue placeholder="Select organizational level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="hq">Headquarters (HQ)</SelectItem>
+                <SelectItem value="region">Region</SelectItem>
+                <SelectItem value="branch">Branch</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Show Region selector for Region and Branch levels */}
+          {(formData.organizational_level === "region" ||
+            formData.organizational_level === "branch") && (
+            <div>
+              <label className="text-xs font-semibold text-gray-900">
+                Region *
+              </label>
+              <Select
+                value={formData.region_id}
+                onValueChange={handleRegionChange}
+                disabled={isSaving || regionsLoading}
+              >
+                <SelectTrigger className="mt-1 border-gray-200 text-sm">
+                  <SelectValue placeholder={regionsLoading ? "Loading..." : "Select region"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {regions?.map((region) => (
+                    <SelectItem key={region.id} value={region.id}>
+                      {region.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Show Branch selector only for Branch level */}
+          {formData.organizational_level === "branch" && formData.region_id && (
+            <div>
+              <label className="text-xs font-semibold text-gray-900">
+                Branch *
+              </label>
+              {branches && branches.length > 0 ? (
+                <Select
+                  value={formData.branch_id}
+                  onValueChange={(value) =>
+                    onFormChange({ ...formData, branch_id: value })
+                  }
+                  disabled={isSaving}
+                >
+                  <SelectTrigger className="mt-1 border-gray-200 text-sm">
+                    <SelectValue placeholder="Select branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map((branch) => (
+                      <SelectItem key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <>
+                  <Input
+                    placeholder="Enter branch ID"
+                    value={formData.branch_id}
+                    onChange={(e) =>
+                      onFormChange({ ...formData, branch_id: e.target.value })
+                    }
+                    className="mt-1 border-gray-200 text-sm"
+                    disabled={isSaving}
+                  />
+                  <p className="text-xs text-amber-600 mt-1">
+                    ⚠️ Branch selection is not available. Please enter the branch ID manually or contact your administrator.
+                  </p>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
-        <div>
-          <label className="text-xs font-semibold text-gray-900">
-            Email Address *
-          </label>
-          <Input
-            type="email"
-            placeholder="user@nsitf.gov.ng"
-            value={formData.email}
-            onChange={(e) =>
-              onFormChange({ ...formData, email: e.target.value })
-            }
-            className="mt-1 border-gray-200 text-sm"
-            disabled={isSaving}
-          />
-        </div>
-
-        <div>
-          <label className="text-xs font-semibold text-gray-900">
-            Phone Number
-          </label>
-          <Input
-            placeholder="+234 XXX XXX XXXX"
-            value={formData.phone_number}
-            onChange={(e) =>
-              onFormChange({ ...formData, phone_number: e.target.value })
-            }
-            className="mt-1 border-gray-200 text-sm"
-            disabled={isSaving}
-          />
-        </div>
-
-        <div>
-          <label className="text-xs font-semibold text-gray-900">
-            Assign Role *
-          </label>
-          <Select
-            value={formData.role}
-            onValueChange={(value) =>
-              onFormChange({ ...formData, role: value })
-            }
+        <DialogFooter className="mt-6">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="text-sm"
             disabled={isSaving}
           >
-            <SelectTrigger className="mt-1 border-gray-200 text-sm">
-              <SelectValue placeholder="Select a role" />
-            </SelectTrigger>
-            <SelectContent>
-              {ROLES.map((role) => (
-                <SelectItem key={role.id} value={role.id}>
-                  {role.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="text-xs font-semibold text-gray-900">
-            Department
-          </label>
-          <Input
-            placeholder="Enter department"
-            value={formData.department}
-            onChange={(e) =>
-              onFormChange({ ...formData, department: e.target.value })
-            }
-            className="mt-1 border-gray-200 text-sm"
-            disabled={isSaving}
-          />
-        </div>
-
-        <div>
-          <label className="text-xs font-semibold text-gray-900">
-            Branch/Region
-          </label>
-          <Select
-            value={formData.region}
-            onValueChange={(value) =>
-              onFormChange({ ...formData, region: value })
-            }
+            Cancel
+          </Button>
+          <Button
+            onClick={onSave}
+            style={{ backgroundColor: "#00a63e" }}
+            className="text-white text-sm hover:opacity-90 disabled:opacity-50"
             disabled={isSaving}
           >
-            <SelectTrigger className="mt-1 border-gray-200 text-sm">
-              <SelectValue placeholder="Select region" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Abuja">Abuja</SelectItem>
-              <SelectItem value="Lagos">Lagos</SelectItem>
-              <SelectItem value="Kano">Kano</SelectItem>
-              <SelectItem value="Port Harcourt">Port Harcourt</SelectItem>
-              <SelectItem value="Ibadan">Ibadan</SelectItem>
-              <SelectItem value="Enugu">Enugu</SelectItem>
-              <SelectItem value="Kaduna">Kaduna</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <DialogFooter className="mt-6">
-        <Button
-          variant="outline"
-          onClick={() => onOpenChange(false)}
-          className="text-sm"
-          disabled={isSaving}
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={onSave}
-          style={{ backgroundColor: "#00a63e" }}
-          className="text-white text-sm hover:opacity-90 disabled:opacity-50"
-          disabled={isSaving}
-        >
-          {isSaving ? "Saving..." : isEditing ? "Save Changes" : "Create User"}
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-);
+            {isSaving ? "Saving..." : isEditing ? "Save Changes" : "Create User"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export const DeleteConfirmationDialog: React.FC<{
   isOpen: boolean;

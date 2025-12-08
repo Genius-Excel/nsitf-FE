@@ -17,6 +17,7 @@ import {
   useUserForm,
   useUserMutations,
   useDeleteDialog,
+  useRoles,
 } from "@/hooks/users";
 
 /**
@@ -34,6 +35,9 @@ export default function UsersRolesManagement() {
   // ============== DATA FETCHING ==============
   // Single fetch - source of truth
   const { data: users, loading, error, refetch } = useUsers();
+
+  // Fetch roles from API
+  const { data: roles } = useRoles();
 
   // ============== FILTERING ==============
   // Memoized filtering - no duplicate state
@@ -190,6 +194,7 @@ export default function UsersRolesManagement() {
           onSearchChange={setSearchTerm}
           filterRole={filterRole}
           onFilterChange={setFilterRole}
+          roles={roles || []}
         />
 
         {/* Loading State */}
@@ -244,7 +249,7 @@ export default function UsersRolesManagement() {
 
         {/* Role Permissions Overview */}
         <div className="mt-6">
-          <RolePermissionsOverview />
+          <RolePermissionsOverview roles={roles || []} />
         </div>
 
         {/* User Form Modal */}

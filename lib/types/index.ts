@@ -56,7 +56,9 @@ export interface NewUserForm {
   phone_number: string;
   role: string;
   department: string;
-  region: string;
+  organizational_level: string;
+  region_id: string;
+  branch_id: string;
 }
 
 export interface Role {

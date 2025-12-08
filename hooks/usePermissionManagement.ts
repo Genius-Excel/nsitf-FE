@@ -297,18 +297,13 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
 
   // Open editor and fetch user's current permissions
   const openEditor = useCallback(async (userToEdit: UserWithPermissions) => {
-    console.log('=== OPENING EDITOR ===');
-    console.log('User:', userToEdit.name);
-    console.log('User has permissions in state:', userToEdit.permissions.length);
-
     setIsOpen(true);
     setSelectedUser(userToEdit);
 
-    // Fetch user's current permissions from API
     try {
       const token = getAccessToken();
 
-      // First, fetch all available permissions
+      // First, fetch all available permissions to ensure we have complete permission objects
       const permissionsResponse = await fetch(`${API_BASE_URL}/api/admin/users/permissions`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -318,35 +313,22 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
       let allPermissions: PermissionItem[] = [];
       if (permissionsResponse.ok) {
         const permissionsResult = await permissionsResponse.json();
-        console.log('Permissions result:', permissionsResult);
-        const categories = permissionsResult.data || [];
-        console.log('Categories type:', typeof categories, 'Is array?', Array.isArray(categories));
+        const categoriesData = permissionsResult.data || {};
 
-        if (Array.isArray(categories)) {
-          allPermissions = categories.flatMap((cat: any) =>
-            (cat.permissions || []).map((perm: any) => ({
-              id: perm.id,
-              name: perm.name,
-              description: perm.description,
-            }))
-          );
-        } else if (categories && typeof categories === 'object') {
-          // If categories is an object, try to extract permissions from it
-          console.log('Categories is object, keys:', Object.keys(categories));
-          allPermissions = Object.values(categories).flatMap((cat: any) =>
-            (cat.permissions || []).map((perm: any) => ({
+        // Extract all permissions from all categories
+        // API returns: { upload_and_data_management: [...], regional_management: [...], ... }
+        if (typeof categoriesData === 'object' && categoriesData !== null) {
+          allPermissions = Object.values(categoriesData).flatMap((permissionArray: any) =>
+            (Array.isArray(permissionArray) ? permissionArray : []).map((perm: any) => ({
               id: perm.id,
               name: perm.name,
               description: perm.description,
             }))
           );
         }
-        console.log('Loaded all permissions:', allPermissions.length);
-      } else {
-        console.log('Failed to load all permissions');
       }
 
-      // Then fetch user's permissions
+      // Then fetch user's current permissions
       const response = await fetch(`${API_BASE_URL}/api/admin/users/${userToEdit.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -356,41 +338,41 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
       if (response.ok) {
         const result = await response.json();
         const userPermissionNames = result.data?.user_permissions || [];
-        console.log('User has permission names from API:', userPermissionNames.length);
 
-        let userPermissions: PermissionItem[];
+        let userPermissions: PermissionItem[] = [];
 
-        // Map permission names to full permission objects
         if (allPermissions.length > 0) {
+          // Map user's permission names to full permission objects with matching IDs
           userPermissions = allPermissions.filter(perm =>
             userPermissionNames.includes(perm.name)
           );
-          console.log('Mapped to objects:', userPermissions.length);
         } else {
-          // Fallback: create permission objects from names
+          // Fallback: if we couldn't load all permissions, create objects from names
           userPermissions = userPermissionNames.map((name: string, index: number) => ({
-            id: `${userToEdit.id}-perm-${index}`,
+            id: `fallback-${index}`,
             name: name,
             description: name.replace(/_/g, ' ').replace(/^can /, 'Can '),
           }));
-          console.log('Created fallback objects:', userPermissions.length);
         }
 
-        console.log('Setting permissions:', userPermissions.length);
-        console.log('First 3 permissions:', userPermissions.slice(0, 3));
         setOriginalPermissions(userPermissions);
         setEditedPermissions(userPermissions);
       } else {
-        console.log('User API failed, using existing permissions');
+        // If API fails, use permissions from the table state
         setOriginalPermissions(userToEdit.permissions);
         setEditedPermissions(userToEdit.permissions);
       }
     } catch (error) {
       console.error('Failed to fetch user permissions:', error);
+      toast({
+        title: "Warning",
+        description: "Failed to load current permissions. Using cached data.",
+        variant: "destructive",
+      });
       setOriginalPermissions(userToEdit.permissions);
       setEditedPermissions(userToEdit.permissions);
     }
-  }, []);
+  }, [toast]);
 
   // Close editor
   const closeEditor = useCallback(() => {

@@ -11,10 +11,12 @@ export interface NewUserForm {
   first_name: string;
   last_name: string;
   email: string;
-  phone: string;
+  phone_number: string;
   role: string;
   department: string;
-  branch: string;
+  organizational_level: string;
+  region_id: string;
+  branch_id: string;
 }
 
 export interface Role {

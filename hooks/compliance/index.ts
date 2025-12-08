@@ -15,6 +15,9 @@ export type { Region, RegionsResponse } from "./Useregions";
 // Region mutations hook
 export { useRegionMutations } from "./Useregionmutations";
 
+// Branch mutations hook
+export { useBranchMutations } from "./Usebranchmutations";
+
 // Filters hook
 export { useComplianceFilters } from "./Usecompliancefilters";
 
