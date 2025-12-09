@@ -23,6 +23,7 @@ export default function PermissionManagementPage() {
     isOpen,
     originalPermissions,
     editedPermissions,
+    roleDefaultPermissionNames,
     permissionDiff,
     hasChanges,
     isSaving,
@@ -101,6 +102,7 @@ export default function PermissionManagementPage() {
             user={selectedUser}
             originalPermissions={originalPermissions}
             editedPermissions={editedPermissions}
+            roleDefaultPermissionNames={roleDefaultPermissionNames}
             permissionDiff={permissionDiff}
             hasChanges={hasChanges}
             isSaving={isSaving}
