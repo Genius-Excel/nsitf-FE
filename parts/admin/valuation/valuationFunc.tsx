@@ -86,6 +86,11 @@ export function ValuationForecastingFunc() {
     expected_inflows_trend: valuationData.valuationMetrics.expectedInflowsTrend,
   });
 
+  // Debug: Log long-term forecasts data
+  console.log('=== Long-term Forecasts Data ===');
+  console.log('Array length:', valuationData.longTermForecasts?.length || 0);
+  console.log('Data:', JSON.stringify(valuationData.longTermForecasts, null, 2));
+
   return (
     <ValuationForecastingDesign
       valuationMetrics={formattedMetrics}
