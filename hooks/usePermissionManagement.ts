@@ -145,17 +145,12 @@ export function useUsersWithPermissions() {
           const permissionsResult = await permissionsResponse.json();
           console.log('Permissions API response:', permissionsResult);
           // Extract all permissions from categories
-          const categories = permissionsResult.data || [];
-          console.log('Categories found:', categories.length);
+          // API returns an object with category keys, not an array
+          const categoriesData = permissionsResult.data || {};
+          console.log('Categories data:', categoriesData);
 
-          allPermissions = categories.flatMap((cat: any) => {
-            console.log(`Category ${cat.name} has ${cat.permissions?.length || 0} permissions`);
-            return (cat.permissions || []).map((perm: any) => ({
-              id: perm.id,
-              name: perm.name,
-              description: perm.description,
-            }));
-          });
+          // Convert object values to flat array of all permissions
+          allPermissions = Object.values(categoriesData).flat() as PermissionItem[];
           console.log('All permissions loaded:', allPermissions.length);
         } else {
           console.error('Permissions fetch failed with status:', permissionsResponse.status);
@@ -299,12 +294,15 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
   // Open editor and use user's current permissions from the table state
   // This ensures optimistic updates are reflected immediately
   const openEditor = useCallback(async (userToEdit: UserWithPermissions) => {
+    console.log('=== Opening Permission Editor ===');
+    console.log('User:', userToEdit.name);
+    console.log('User role:', userToEdit.role);
+    console.log('User existing permissions:', userToEdit.permissions.length);
+
     setIsOpen(true);
     setSelectedUser(userToEdit);
 
-    // Use permissions from the userToEdit object (which has already been optimistically updated)
-    // This prevents the modal from showing stale data from the API
-    console.log('Opening editor with permissions from local state:', userToEdit.permissions.length);
+    // Set initial permissions (will be updated after fetching role defaults)
     setOriginalPermissions(userToEdit.permissions);
     setEditedPermissions(userToEdit.permissions);
 
@@ -327,10 +325,10 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
           // Extract all permissions from all categories
           const permissionsData = permissionsResult.data || {};
           allPermissions = Object.values(permissionsData).flat() as PermissionItem[];
-          console.log('All available permissions:', allPermissions.length);
+          console.log('✓ Fetched all available permissions:', allPermissions.length);
         }
       } catch (error) {
-        console.error('Failed to fetch all permissions:', error);
+        console.error('✗ Failed to fetch all permissions:', error);
       }
 
       // Fetch all roles to find the role ID for the user's role
@@ -343,6 +341,7 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
       if (rolesResponse.ok) {
         const rolesData = await rolesResponse.json();
         const roles = rolesData.data || [];
+        console.log('✓ Fetched roles:', roles.length);
 
         // Find matching role by name
         const userRole = roles.find((r: any) =>
@@ -350,6 +349,8 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
         );
 
         if (userRole) {
+          console.log('✓ Found matching role:', userRole.role_name);
+
           // Fetch role details with permissions
           const roleDetailResponse = await fetch(`${API_BASE_URL}/api/admin/roles/${userRole.role_id}`, {
             headers: {
@@ -360,42 +361,49 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
           if (roleDetailResponse.ok) {
             const roleDetail = await roleDetailResponse.json();
             const rolePermissionNames = roleDetail.data?.permissions || [];
-            console.log('Role default permission names:', rolePermissionNames);
+            console.log('✓ Role default permission names:', rolePermissionNames.length, rolePermissionNames);
             setRoleDefaultPermissionNames(rolePermissionNames);
 
             // Map role permission names to actual permission objects
             const rolePermissionObjects = allPermissions.filter(p =>
               rolePermissionNames.includes(p.name)
             );
-            console.log('Role default permission objects:', rolePermissionObjects.length);
+            console.log('✓ Mapped to permission objects:', rolePermissionObjects.length);
+            console.log('Permission objects:', rolePermissionObjects.map(p => ({ id: p.id, name: p.name })));
 
             // Merge role default permissions with user's existing permissions
             // Only add role permissions that aren't already in the user's permissions
             const existingPermissionIds = new Set(userToEdit.permissions.map(p => p.id));
             const newPermissions = rolePermissionObjects.filter(p => !existingPermissionIds.has(p.id));
 
+            console.log('✓ New permissions to add:', newPermissions.length);
             if (newPermissions.length > 0) {
-              console.log('Adding role default permissions to edited permissions:', newPermissions.length);
+              console.log('Adding these permissions:', newPermissions.map(p => p.name));
               const mergedPermissions = [...userToEdit.permissions, ...newPermissions];
+              console.log('✓ Merged permissions total:', mergedPermissions.length);
               setEditedPermissions(mergedPermissions);
-              // Keep original permissions as-is for diff calculation
+            } else {
+              console.log('ℹ All role permissions already in user permissions');
             }
           } else {
-            console.warn('Could not fetch role details');
+            console.warn('✗ Could not fetch role details, status:', roleDetailResponse.status);
             setRoleDefaultPermissionNames([]);
           }
         } else {
-          console.warn('Could not find matching role');
+          console.warn('✗ Could not find matching role for:', userToEdit.role);
+          console.warn('Available roles:', roles.map((r: any) => r.role_name));
           setRoleDefaultPermissionNames([]);
         }
       } else {
-        console.warn('Could not fetch roles list');
+        console.warn('✗ Could not fetch roles list, status:', rolesResponse.status);
         setRoleDefaultPermissionNames([]);
       }
     } catch (error) {
-      console.error('Failed to fetch role permissions:', error);
+      console.error('✗ Failed to fetch role permissions:', error);
       setRoleDefaultPermissionNames([]);
     }
+
+    console.log('=== Editor Opening Complete ===');
   }, []);
 
   // Close editor
