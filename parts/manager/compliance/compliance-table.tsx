@@ -21,15 +21,11 @@ export type ComplianceData = {
   period: string;
 };
 
-// Constants for regions
-const REGIONS = [
-  { id: "lagos", label: "Lagos" },
-  { id: "abuja", label: "Abuja" },
-  { id: "kano", label: "Kano" },
-  { id: "port_harcourt", label: "Port Harcourt" },
-  { id: "ibadan", label: "Ibadan" },
-  { id: "enugu", label: "Enugu" },
-];
+// Type for regions (from backend)
+export type Region = {
+  id: string;
+  name: string;
+};
 
 export const ComplianceTable: React.FC<{
   complianceData: ComplianceData[];
@@ -120,7 +116,8 @@ export const ComplianceSearchAndFilter: React.FC<{
   onSearchChange: (value: string) => void;
   filterRegion: string;
   onRegionFilterChange: (value: string) => void;
-}> = ({ searchTerm, onSearchChange, filterRegion, onRegionFilterChange }) => (
+  regions?: Region[]; // Regions from backend
+}> = ({ searchTerm, onSearchChange, filterRegion, onRegionFilterChange, regions = [] }) => (
   <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6 flex gap-3 items-center">
     <div className="flex-1 relative">
       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -140,13 +137,13 @@ export const ComplianceSearchAndFilter: React.FC<{
         <SelectItem value="All Regions" className="text-sm">
           All Regions
         </SelectItem>
-        {REGIONS.map((region) => (
+        {regions.map((region) => (
           <SelectItem
             key={region.id}
             value={region.id}
             className="text-sm hover:bg-gray-50"
           >
-            {region.label}
+            {region.name}
           </SelectItem>
         ))}
       </SelectContent>

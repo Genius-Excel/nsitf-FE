@@ -27,6 +27,7 @@ import {
   ComplianceTable,
 } from "./compliance-table";
 import * as XLSX from "xlsx";
+import { useRegions } from "@/hooks/compliance";
 
 const mockCompliance = [
   {
@@ -92,6 +93,9 @@ export default function CompliancePage() {
   const [filterRegion, setFilterRegion] = useState("All Regions");
   const [filterBranch, setFilterBranch] = useState("All Branches");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch regions from backend
+  const { data: regions } = useRegions();
 
   const filteredData = data.filter((data) => {
     const matchesSearch =
@@ -220,6 +224,7 @@ export default function CompliancePage() {
           onSearchChange={setSearchTerm}
           filterRegion={filterRegion}
           onRegionFilterChange={setFilterRegion}
+          regions={regions || []}
         />
         <ComplianceTable complianceData={filteredData} />
       </div>

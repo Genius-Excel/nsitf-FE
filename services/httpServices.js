@@ -1,6 +1,28 @@
 import { getAccessToken } from "@/lib/utils";
 import axios from "axios";
 
+// Setup axios interceptor to handle 401 errors globally
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Session expired or unauthorized
+      console.log("Session expired or unauthorized. Redirecting to login...");
+
+      // Clear user data from storage
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("user");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+
+        // Redirect to login page
+        window.location.href = "/";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 class HttpService {
   constructor() {
     // this.token = getAccessToken();
