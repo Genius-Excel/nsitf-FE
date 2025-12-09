@@ -51,15 +51,26 @@ export function LoginForm() {
   }, [loginError]);
   useEffect(() => {
     if (loginData) {
-      localStorage.setItem("user", JSON.stringify(loginData));
-      setUserRole(loginData.role);
+      // Extract user data - API returns array with single user object
+      const userData = Array.isArray(loginData) ? loginData[0] : loginData;
+
+      if (userData) {
+        // Store the user object (not the array)
+        localStorage.setItem("user", JSON.stringify(userData));
+        setUserRole(userData.role);
+      }
     }
     if (userRole) {
-      // All users route to /admin/dashboard, with permissions controlling access
-      router.push("/admin/dashboard");
+      // Route users based on their role
+      if (userRole === "Branch Officer") {
+        router.push("/branch/dashboard");
+      } else {
+        // All other users route to /admin/dashboard
+        router.push("/admin/dashboard");
+      }
       setIsLoading(false);
     }
-  }, [loginData, userRole]);
+  }, [loginData, userRole, router]);
 
   const routeToResetPassword = () => {
     router.push("/reset-password");
