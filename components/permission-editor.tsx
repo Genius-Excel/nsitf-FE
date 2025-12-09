@@ -67,6 +67,7 @@ interface PermissionCategorySectionProps {
     permissions: PermissionItem[];
   };
   editedPermissions: PermissionItem[];
+  roleDefaultPermissionNames: string[];
   permissionDiff: PermissionDiff;
   userRole: string;
   onTogglePermission: (permission: PermissionItem) => void;
@@ -76,6 +77,7 @@ interface PermissionCategorySectionProps {
 function PermissionCategorySection({
   category,
   editedPermissions,
+  roleDefaultPermissionNames,
   permissionDiff,
   userRole,
   onTogglePermission,
@@ -116,6 +118,7 @@ function PermissionCategorySection({
             const isSelected = editedPermissions.some(ep => ep.id === permission.id);
             const isAdded = permissionDiff.added.includes(permission.id);
             const isRemoved = permissionDiff.removed.includes(permission.id);
+            const isRoleDefault = roleDefaultPermissionNames.includes(permission.name);
             const canRemove = canRemovePermission(userRole, permission, currentUser || { role: 'user', permissions: [] });
             const canAssign = canAssignPermission(userRole, permission, currentUser?.role || 'user');
 
@@ -127,7 +130,9 @@ function PermissionCategorySection({
                 className={cn(
                   "flex items-center space-x-3 p-3 rounded-md border transition-colors",
                   isSelected
-                    ? "bg-green-50 border-green-200"
+                    ? isRoleDefault
+                      ? "bg-blue-50 border-blue-200"
+                      : "bg-green-50 border-green-200"
                     : "bg-gray-50 border-gray-200 hover:bg-gray-100",
                   isAdded && "ring-2 ring-green-300 bg-green-100",
                   isRemoved && "ring-2 ring-red-300 bg-red-50",
@@ -144,11 +149,16 @@ function PermissionCategorySection({
                   <div className="flex items-center justify-between">
                     <p className={cn(
                       "font-medium text-sm",
-                      isSelected ? "text-green-800" : "text-gray-700"
+                      isSelected ? (isRoleDefault ? "text-blue-800" : "text-green-800") : "text-gray-700"
                     )}>
                       {permission.description}
                     </p>
                     <div className="flex items-center space-x-1 ml-2">
+                      {isRoleDefault && (
+                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
+                          Role Default
+                        </Badge>
+                      )}
                       {isAdded && (
                         <Badge variant="default" className="text-xs bg-green-600">
                           <Check className="w-3 h-3 mr-1" />
@@ -181,6 +191,7 @@ interface PermissionEditorProps {
   user: UserWithPermissions | null;
   originalPermissions: PermissionItem[];
   editedPermissions: PermissionItem[];
+  roleDefaultPermissionNames: string[];
   permissionDiff: PermissionDiff;
   hasChanges: boolean;
   isSaving: boolean;
@@ -223,6 +234,7 @@ export function PermissionEditor({
   user,
   originalPermissions,
   editedPermissions,
+  roleDefaultPermissionNames,
   permissionDiff,
   hasChanges,
   isSaving,
@@ -285,6 +297,8 @@ export function PermissionEditor({
             </DialogTitle>
             <DialogDescription>
               Assign or remove permissions for this user. Changes will not be saved until you click "Save Changes".
+              <br />
+              <span className="text-blue-600 font-medium">Permissions marked as "Role Default"</span> are inherited from the user's role.
             </DialogDescription>
           </DialogHeader>
 
@@ -296,6 +310,7 @@ export function PermissionEditor({
                   key={category.id}
                   category={category}
                   editedPermissions={editedPermissions}
+                  roleDefaultPermissionNames={roleDefaultPermissionNames}
                   permissionDiff={permissionDiff}
                   userRole={user.role}
                   onTogglePermission={onTogglePermission}

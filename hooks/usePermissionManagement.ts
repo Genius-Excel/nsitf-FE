@@ -251,6 +251,7 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
   const [selectedUser, setSelectedUser] = useState<UserWithPermissions | null>(null);
   const [originalPermissions, setOriginalPermissions] = useState<PermissionItem[]>([]);
   const [editedPermissions, setEditedPermissions] = useState<PermissionItem[]>([]);
+  const [roleDefaultPermissionNames, setRoleDefaultPermissionNames] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   // Initialize permissions when user changes
@@ -306,6 +307,95 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
     console.log('Opening editor with permissions from local state:', userToEdit.permissions.length);
     setOriginalPermissions(userToEdit.permissions);
     setEditedPermissions(userToEdit.permissions);
+
+    // Fetch role default permissions to show which permissions come from the role
+    // This helps admins understand which permissions are inherited from the role
+    try {
+      const token = getAccessToken();
+
+      // First, fetch all available permissions to map names to objects
+      let allPermissions: PermissionItem[] = [];
+      try {
+        const permissionsResponse = await fetch(`${API_BASE_URL}/api/admin/users/permissions`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (permissionsResponse.ok) {
+          const permissionsResult = await permissionsResponse.json();
+          // Extract all permissions from all categories
+          const permissionsData = permissionsResult.data || {};
+          allPermissions = Object.values(permissionsData).flat() as PermissionItem[];
+          console.log('All available permissions:', allPermissions.length);
+        }
+      } catch (error) {
+        console.error('Failed to fetch all permissions:', error);
+      }
+
+      // Fetch all roles to find the role ID for the user's role
+      const rolesResponse = await fetch(`${API_BASE_URL}/api/admin/roles`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (rolesResponse.ok) {
+        const rolesData = await rolesResponse.json();
+        const roles = rolesData.data || [];
+
+        // Find matching role by name
+        const userRole = roles.find((r: any) =>
+          r.role_name === userToEdit.role || r.role_id === userToEdit.role
+        );
+
+        if (userRole) {
+          // Fetch role details with permissions
+          const roleDetailResponse = await fetch(`${API_BASE_URL}/api/admin/roles/${userRole.role_id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          if (roleDetailResponse.ok) {
+            const roleDetail = await roleDetailResponse.json();
+            const rolePermissionNames = roleDetail.data?.permissions || [];
+            console.log('Role default permission names:', rolePermissionNames);
+            setRoleDefaultPermissionNames(rolePermissionNames);
+
+            // Map role permission names to actual permission objects
+            const rolePermissionObjects = allPermissions.filter(p =>
+              rolePermissionNames.includes(p.name)
+            );
+            console.log('Role default permission objects:', rolePermissionObjects.length);
+
+            // Merge role default permissions with user's existing permissions
+            // Only add role permissions that aren't already in the user's permissions
+            const existingPermissionIds = new Set(userToEdit.permissions.map(p => p.id));
+            const newPermissions = rolePermissionObjects.filter(p => !existingPermissionIds.has(p.id));
+
+            if (newPermissions.length > 0) {
+              console.log('Adding role default permissions to edited permissions:', newPermissions.length);
+              const mergedPermissions = [...userToEdit.permissions, ...newPermissions];
+              setEditedPermissions(mergedPermissions);
+              // Keep original permissions as-is for diff calculation
+            }
+          } else {
+            console.warn('Could not fetch role details');
+            setRoleDefaultPermissionNames([]);
+          }
+        } else {
+          console.warn('Could not find matching role');
+          setRoleDefaultPermissionNames([]);
+        }
+      } else {
+        console.warn('Could not fetch roles list');
+        setRoleDefaultPermissionNames([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch role permissions:', error);
+      setRoleDefaultPermissionNames([]);
+    }
   }, []);
 
   // Close editor
@@ -316,6 +406,7 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
       setSelectedUser(null);
       setOriginalPermissions([]);
       setEditedPermissions([]);
+      setRoleDefaultPermissionNames([]);
     }, 200);
   }, []);
 
@@ -399,6 +490,7 @@ export function usePermissionEditor(user: UserWithPermissions | null) {
     isOpen,
     originalPermissions,
     editedPermissions,
+    roleDefaultPermissionNames,
     permissionDiff,
     hasChanges,
     isSaving,
