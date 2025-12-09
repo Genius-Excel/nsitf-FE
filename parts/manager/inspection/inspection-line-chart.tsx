@@ -1,13 +1,9 @@
 "use client"
 
-import { TrendingUp } from "lucide-react"
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts"
-
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -19,21 +15,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { useInspectionDashboard } from "@/hooks/inspection/useInspectionDashboard"
 
 export const description = "A line chart showing inspection-related trends"
-
-// Sample data for debts established, debts recovered, inspected, and letters served
-const chartData = [
-  { month: "January", debtsEstablished: 120, debtsRecovered: 80, inspected: 150, lettersServed: 200 },
-  { month: "February", debtsEstablished: 150, debtsRecovered: 100, inspected: 180, lettersServed: 220 },
-  { month: "March", debtsEstablished: 130, debtsRecovered: 90, inspected: 160, lettersServed: 190 },
-  { month: "April", debtsEstablished: 100, debtsRecovered: 70, inspected: 140, lettersServed: 170 },
-  { month: "May", debtsEstablished: 140, debtsRecovered: 110, inspected: 170, lettersServed: 200 },
-  { month: "June", debtsEstablished: 160, debtsRecovered: 120, inspected: 190, lettersServed: 230 },
-  { month: "July", debtsEstablished: 180, debtsRecovered: 130, inspected: 200, lettersServed: 240 },
-  { month: "August", debtsEstablished: 170, debtsRecovered: 125, inspected: 195, lettersServed: 235 },
-  { month: "September", debtsEstablished: 190, debtsRecovered: 140, inspected: 210, lettersServed: 250 },
-]
 
 // Chart configuration with updated labels and colors
 const chartConfig = {
@@ -45,17 +29,54 @@ const chartConfig = {
     label: "Debts Recovered",
     color: "#8B5CF6", // Purple
   },
-  inspected: {
-    label: "Inspected",
-    color: "#10B981", // Green
-  },
-  lettersServed: {
-    label: "Letters Served",
-    color: "#3B82F6", // Blue
-  },
 } satisfies ChartConfig
 
 export function InspectionLineChart() {
+  // Fetch inspection dashboard data from backend
+  const { data: dashboardData, loading, error } = useInspectionDashboard();
+
+  // Use data from backend instead of hardcoded values
+  const chartData = dashboardData?.monthlyDebtsComparison?.data || [];
+  const scale = dashboardData?.monthlyDebtsComparison?.scale;
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-normal">Inspection Trends (Month to Date (YTD))</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[500px]">
+          <p className="text-muted-foreground">Loading chart data...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-normal">Inspection Trends (Month to Date (YTD))</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[500px]">
+          <p className="text-destructive">Error: {error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!chartData || chartData.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-normal">Inspection Trends (Month to Date (YTD))</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[500px]">
+          <p className="text-muted-foreground">No inspection data available</p>
+        </CardContent>
+      </Card>
+    );
+  }
   return (
     <Card>
       <CardHeader>
@@ -111,20 +132,6 @@ export function InspectionLineChart() {
               dataKey="debtsRecovered"
               type="monotone"
               stroke="var(--color-debtsRecovered)"
-              strokeWidth={2}
-              dot={false}
-            />
-            <Line
-              dataKey="inspected"
-              type="monotone"
-              stroke="var(--color-inspected)"
-              strokeWidth={2}
-              dot={false}
-            />
-            <Line
-              dataKey="lettersServed"
-              type="monotone"
-              stroke="var(--color-lettersServed)"
               strokeWidth={2}
               dot={false}
             />

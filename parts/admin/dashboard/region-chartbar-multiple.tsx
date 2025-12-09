@@ -22,14 +22,9 @@ export function RegionChartBarMultiple({
 }: RegionChartBarMultipleProps) {
   const { data: rawData, scale } = useRegionalComplianceChart(dashboardData);
 
-  // All regions that should be displayed
-  const allRegions = ["Abuja", "Enugu", "Kano", "Lagos", "Port Harcourt"];
-
-  // Ensure all regions are included, even those with no data
-  const data = allRegions.map((region) => {
-    const existingData = rawData?.find((d) => d.region === region);
-    return existingData || { region, target: 0, actual: 0, performance_percent: 0 };
-  });
+  // Use regions from backend data instead of hardcoded values
+  // The hook already handles deduplication and filtering of empty regions
+  const data = rawData || [];
 
   if (loading) {
     return (
