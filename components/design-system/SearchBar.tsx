@@ -1,6 +1,7 @@
 import React from "react";
 import { Search, Filter, Download, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface SearchBarProps {
   searchTerm: string;
@@ -26,12 +27,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   showUpload = false,
 }) => {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 flex gap-3 items-center shadow-sm">
+    <div className="bg-white rounded-lg border border-gray-200 p-2 mb-4 flex gap-2 items-center shadow-sm">
       <div className="flex-1 relative">
-        <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" aria-hidden="true" />
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" aria-hidden="true" />
         <Input
           placeholder={placeholder}
-          className="pl-10 border-gray-200 text-sm"
+          className="pl-8 pr-2 py-1 border-gray-200 text-xs h-8"
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           aria-label="Search"
@@ -39,38 +40,43 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       </div>
 
       {showUpload && onUpload && (
-        <button
+        <Button
           type="button"
           onClick={onUpload}
-          className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-md transition-colors text-sm font-medium flex items-center gap-2"
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs"
           aria-label="Upload data"
         >
-          <Upload className="w-4 h-4" />
+          <Upload className="w-3.5 h-3.5" />
           Upload
-        </button>
+        </Button>
       )}
 
       {showExport && onExport && (
-        <button
+        <Button
           type="button"
           onClick={onExport}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors text-sm font-medium flex items-center gap-2"
+          className="bg-green-600 hover:bg-green-700 h-8 text-xs"
+          size="sm"
           aria-label="Export data"
         >
-          <Download className="w-4 h-4" />
+          <Download className="w-3.5 h-3.5" />
           Export
-        </button>
+        </Button>
       )}
 
       {showFilter && onFilter && (
-        <button
+        <Button
           type="button"
           onClick={onFilter}
-          className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0"
           aria-label="Filter data"
         >
-          <Filter className="w-4 h-4" />
-        </button>
+          <Filter className="w-3.5 h-3.5" />
+        </Button>
       )}
     </div>
   );

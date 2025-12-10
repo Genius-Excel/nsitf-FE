@@ -308,21 +308,14 @@ export function transformValuationFromAPI(
       })
     ),
     longTermForecasts: longTermClaims.map(
-      (claimsItem, index) => {
-        const forecast = {
-          year: claimsItem?.year?.toString() || '',
-          claims: claimsItem?.value ?? 0,
-          contributions: longTermContributions[index]?.value ?? 0,
-          liabilities: (metricCards.total_liabilities ?? 0) * (1 + index * 0.05), // 5% growth estimate
-          reserves: (metricCards.expected_inflows ?? 0) * (1 + index * 0.05), // 5% growth estimate
-          growth: annualGrowth.claims ?? 0,
-        };
-        console.log(`Long-term forecast year ${forecast.year}:`, {
-          claims: forecast.claims,
-          contributions: forecast.contributions,
-        });
-        return forecast;
-      }
+      (claimsItem, index) => ({
+        year: claimsItem?.year?.toString() || '',
+        claims: claimsItem?.value ?? 0,
+        contributions: longTermContributions[index]?.value ?? 0,
+        liabilities: (metricCards.total_liabilities ?? 0) * (1 + index * 0.05), // 5% growth estimate
+        reserves: (metricCards.expected_inflows ?? 0) * (1 + index * 0.05), // 5% growth estimate
+        growth: annualGrowth.claims ?? 0,
+      })
     ),
     averageAnnualGrowth: annualGrowth,
     meta: {

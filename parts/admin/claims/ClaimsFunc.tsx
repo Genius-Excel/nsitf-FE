@@ -23,6 +23,7 @@ import {
 } from "@/hooks/claims";
 import { getUserFromStorage } from "@/lib/auth";
 import { canManageClaims } from "@/lib/permissions";
+import { Button } from "@/components/ui/button";
 
 export default function ClaimsManagement() {
   // ==========================================
@@ -281,24 +282,22 @@ export default function ClaimsManagement() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <PageHeader
-            title="Claims and Compensation View"
-            description="Track and process employee compensation claims"
-          />
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <p className="text-red-800 font-semibold mb-2">
-              Failed to load claims data
-            </p>
-            <p className="text-red-600 text-sm mb-4">{error}</p>
-            <button
-              onClick={refetch}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-            >
-              Retry
-            </button>
-          </div>
+      <div className="space-y-4 w-full max-w-[calc(100vw-20rem)] xl:max-w-[1216px]">
+        <PageHeader
+          title="Claims and Compensation View"
+          description="Track and process employee compensation claims"
+        />
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <p className="text-red-800 font-semibold mb-2">
+            Failed to load claims data
+          </p>
+          <p className="text-red-600 text-sm mb-4">{error}</p>
+          <Button
+            onClick={refetch}
+            variant="destructive"
+          >
+            Retry
+          </Button>
         </div>
       </div>
     );
@@ -309,7 +308,7 @@ export default function ClaimsManagement() {
   // ==========================================
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-4 w-full max-w-[calc(100vw-20rem)] xl:max-w-[1216px]">
       {/* Header */}
       <PageHeader
         title="Claims and Compensation View"

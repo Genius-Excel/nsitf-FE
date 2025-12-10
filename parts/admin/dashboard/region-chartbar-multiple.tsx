@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import {
   Card,
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { DashboardSummaryResponse } from "@/lib/types/dashboard";
 import { useRegionalComplianceChart } from "@/hooks/Usedashboardcharts";
+import { useRegions } from "@/hooks/compliance/Useregions";
 
 interface RegionChartBarMultipleProps {
   dashboardData: DashboardSummaryResponse | null;
@@ -21,12 +23,30 @@ export function RegionChartBarMultiple({
   loading,
 }: RegionChartBarMultipleProps) {
   const { data: rawData, scale } = useRegionalComplianceChart(dashboardData);
+  const { data: allRegions, loading: regionsLoading } = useRegions();
 
-  // Use regions from backend data instead of hardcoded values
-  // The hook already handles deduplication and filtering of empty regions
-  const data = rawData || [];
+  // Merge all regions with data, showing 0 for regions without data
+  const data = useMemo(() => {
+    if (!allRegions || allRegions.length === 0) {
+      return rawData || [];
+    }
 
-  if (loading) {
+    // Create a map of regions with data
+    const dataMap = new Map(rawData?.map(item => [item.region, item]) || []);
+
+    // Include all regions, filling in 0 values for those without data
+    return allRegions.map(region => {
+      const existingData = dataMap.get(region.name);
+      return existingData || {
+        region: region.name,
+        target: 0,
+        actual: 0,
+        performance_percent: 0,
+      };
+    });
+  }, [allRegions, rawData]);
+
+  if (loading || regionsLoading) {
     return (
       <Card className="w-full border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
         <CardHeader>

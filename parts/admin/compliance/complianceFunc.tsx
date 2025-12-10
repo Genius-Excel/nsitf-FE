@@ -33,6 +33,7 @@ import { FilterPanel } from "./components/filters/FilterPanel";
 import { AddRegionModal } from "./complianceAddRegionModal";
 import { ComplianceDetailModal } from "./complianceDetailModal";
 import { PageHeader } from "@/components/design-system/PageHeader";
+import { Button } from "@/components/ui/button";
 
 /**
  * Map API response (RegionalSummary) to component format (ComplianceEntry)
@@ -277,18 +278,19 @@ const ComplianceDashboard: React.FC = () => {
   // ============== ERROR STATE ==============
   if (dashboardError || regionsError) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg">
+      <div className="space-y-10 w-full max-w-[calc(100vw-20rem)] xl:max-w-[1216px]">
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200">
           <p>Failed to load data: {dashboardError || regionsError}</p>
-          <button
+          <Button
             onClick={() => {
               refetchDashboard();
               refetchRegions();
             }}
-            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            variant="destructive"
+            className="mt-2"
           >
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -305,7 +307,7 @@ const ComplianceDashboard: React.FC = () => {
 
   // ============== RENDER ==============
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 w-full max-w-[calc(100vw-20rem)] xl:max-w-[1216px]">
       {/* Header */}
       <PageHeader
         title="Compliance View"
@@ -343,27 +345,29 @@ const ComplianceDashboard: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2 sm:gap-3">
-            <button
+            <Button
               onClick={handleUploadClick}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              variant="outline"
+              className="flex-1 sm:flex-none"
             >
               <Upload size={18} />
               <span>Upload Regional Data</span>
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleExport}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              variant="outline"
+              className="flex-1 sm:flex-none"
             >
               <Download size={18} />
               <span>Export</span>
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleCreateRegionClick}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
             >
               <Plus size={18} />
               <span>Create Region</span>
-            </button>
+            </Button>
           </div>
       </div>
 
