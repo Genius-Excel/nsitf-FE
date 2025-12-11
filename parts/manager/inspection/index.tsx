@@ -9,21 +9,20 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BigBtns from "./bigBtns";
 import { Calendar, TrendingUp, TriangleAlert } from "lucide-react";
+import { PageHeader } from "@/components/design-system/PageHeader";
 
 const Inspetion = () => {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-3xl tracking-tight">Inspection Management</h1>
-          <p className="text-muted-foreground">
-            Track and employers inspections, letters and debt recovery.
-          </p>
-        </div>
-        <PermissionGuard permission="manage_compliance" fallback={null}>
-          <ScheduleInspectionDate />
-        </PermissionGuard>
-      </div>
+    <div className="space-y-10">
+      <PageHeader
+        title="Inspection Management"
+        description="Track and employers inspections, letters and debt recovery."
+        action={
+          <PermissionGuard permission="manage_compliance" fallback={null}>
+            <ScheduleInspectionDate />
+          </PermissionGuard>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <InspectionCard

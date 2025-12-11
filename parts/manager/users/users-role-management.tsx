@@ -158,8 +158,8 @@ export default function UsersRolesManagement() {
 
   // ============== RENDER ==============
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="space-y-10">
+      <div>
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
           <div>

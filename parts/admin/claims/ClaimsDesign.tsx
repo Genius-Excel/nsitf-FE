@@ -72,27 +72,27 @@ export const ClaimsProcessingChart: React.FC<ClaimsProcessingChartProps> = ({
   };
 
   return (
-    <div className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 rounded-lg">
-      <div className="p-3 sm:p-4 border-b border-gray-200">
-        <h2 className="text-lg font-bold text-gray-900">
+    <div className="border shadow-sm bg-gradient-to-br from-white to-gray-50 rounded-lg">
+      <div className="p-2 border-b border-gray-200">
+        <h2 className="text-sm font-bold text-gray-900">
           Claims Processing: YTD vs Target
         </h2>
-        <p className="text-xs text-gray-600 mt-0.5">
+        <p className="text-[10px] text-gray-600 mt-0.5">
           Monthly claims processed compared to target
         </p>
       </div>
-      <div className="p-3 sm:p-4">
-        <div className="w-full h-[250px]">
+      <div className="p-2">
+        <div className="w-full h-[200px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
-              margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
-              barGap={4}
+              margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+              barGap={2}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#6b7280" }} />
+              <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#6b7280" }} />
               <YAxis
-                tick={{ fontSize: 12, fill: "#6b7280" }}
+                tick={{ fontSize: 10, fill: "#6b7280" }}
                 domain={[0, maxValue || 'auto']}
                 ticks={ticks}
                 tickFormatter={formatYAxis}
@@ -103,27 +103,28 @@ export const ClaimsProcessingChart: React.FC<ClaimsProcessingChartProps> = ({
                   borderRadius: "0.5rem",
                   borderColor: "#e5e7eb",
                   boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                  fontSize: "11px",
                 }}
                 formatter={(value) => [Number(value).toLocaleString(), ""]}
               />
               <Legend
-                wrapperStyle={{ fontSize: 12, color: "#374151" }}
+                wrapperStyle={{ fontSize: 10, color: "#374151" }}
                 verticalAlign="top"
-                height={36}
+                height={28}
               />
               <Bar
                 dataKey="processed"
                 name="Claims Processed"
                 fill="#22c55e"
-                radius={[6, 6, 0, 0]}
-                barSize={24}
+                radius={[4, 4, 0, 0]}
+                barSize={20}
               />
               <Bar
                 dataKey="target"
                 name="Target"
                 fill="#3b82f6"
-                radius={[6, 6, 0, 0]}
-                barSize={24}
+                radius={[4, 4, 0, 0]}
+                barSize={20}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -138,14 +139,14 @@ interface ClaimTypeCardsProps {
 }
 
 export const ClaimTypeCards: React.FC<ClaimTypeCardsProps> = ({ claimTypes }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5">
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
     {claimTypes.map((item) => (
       <div
         key={item.type}
-        className={`rounded-lg border border-border p-2.5 sm:p-3 ${item.color}`}
+        className={`rounded-lg border border-border p-2 ${item.color}`}
       >
-        <p className="text-xs font-medium text-muted-foreground truncate">{item.type}</p>
-        <p className="text-base font-semibold mt-0.5 text-foreground">
+        <p className="text-[10px] font-medium text-muted-foreground truncate">{item.type}</p>
+        <p className="text-sm font-semibold mt-0.5 text-foreground">
           {item.count.toLocaleString()} claims
         </p>
       </div>
@@ -230,52 +231,53 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
   };
 
   return (
-    <div className="bg-card rounded-lg border border-border overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-muted border-b border-border">
-            <tr>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                Claim ID
-              </th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                Employer
-              </th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                Claimant
-              </th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                Type
-              </th>
-              <th className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                Amount Requested (₦)
-              </th>
-              <th className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                Amount Paid (₦)
-              </th>
-              <th className="px-4 py-2.5 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                Status
-              </th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                Date Processed
-              </th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                Date Paid
-              </th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                Sector
-              </th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                Class
-              </th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                Payment Period
-              </th>
-              <th className="px-4 py-2.5 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                Actions
-              </th>
-            </tr>
-          </thead>
+    <div className="bg-card rounded-lg border border-border shadow-sm">
+      <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+        <div className="inline-block min-w-full align-middle">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-muted border-b border-border">
+              <tr>
+                <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Claim ID
+                </th>
+                <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Employer
+                </th>
+                <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Claimant
+                </th>
+                <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Type
+                </th>
+                <th className="px-2 py-1.5 text-right text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Amount Requested (₦)
+                </th>
+                <th className="px-2 py-1.5 text-right text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Amount Paid (₦)
+                </th>
+                <th className="px-2 py-1.5 text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Status
+                </th>
+                <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Date Processed
+                </th>
+                <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Date Paid
+                </th>
+                <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Sector
+                </th>
+                <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Class
+                </th>
+                <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Payment Period
+                </th>
+                <th className="px-2 py-1.5 text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Actions
+                </th>
+              </tr>
+            </thead>
           <tbody className="divide-y divide-border bg-card">
             {claims.map((claim) => {
               const difference = calculateDifference(
@@ -285,48 +287,48 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
 
               return (
                 <tr key={claim.id} className="hover:bg-muted/50 transition-colors">
-                  <td className="px-4 py-2.5 text-sm font-medium text-foreground whitespace-nowrap">
+                  <td className="px-2 py-1.5 text-xs font-medium text-foreground whitespace-nowrap">
                     {claim.claimId}
                   </td>
-                  <td className="px-4 py-2.5 text-sm text-muted-foreground max-w-[180px] truncate">
+                  <td className="px-2 py-1.5 text-xs text-muted-foreground max-w-[150px] truncate">
                     {claim.employer}
                   </td>
-                  <td className="px-4 py-2.5 text-sm text-muted-foreground max-w-[130px] truncate">
+                  <td className="px-2 py-1.5 text-xs text-muted-foreground max-w-[120px] truncate">
                     {claim.claimant}
                   </td>
-                  <td className="px-4 py-2.5 text-sm whitespace-nowrap">
+                  <td className="px-2 py-1.5 text-xs whitespace-nowrap">
                     <span className={getTypeTextColor(claim.type)}>
                       {claim.type}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-sm font-semibold text-foreground whitespace-nowrap text-right">
+                  <td className="px-2 py-1.5 text-xs font-semibold text-foreground whitespace-nowrap text-right">
                     {formatCurrency(claim.amountRequested)}
                   </td>
-                  <td className="px-4 py-2.5 text-sm whitespace-nowrap text-right">
+                  <td className="px-2 py-1.5 text-xs whitespace-nowrap text-right">
                     <div className="flex flex-col items-end">
                       <span className="font-semibold text-green-600">
                         {formatCurrency(claim.amountPaid)}
                       </span>
                       {difference && (
-                        <span className="text-xs text-destructive mt-0.5">
+                        <span className="text-[10px] text-destructive mt-0.5">
                           {difference}
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-2.5 text-sm whitespace-nowrap text-center">
+                  <td className="px-2 py-1.5 text-xs whitespace-nowrap text-center">
                     <Badge
                       className={`${getStatusBadgeColor(
                         claim.status
-                      )} font-medium text-xs`}
+                      )} font-medium text-[10px]`}
                     >
                       {claim.status}
                     </Badge>
                   </td>
-                  <td className="px-4 py-2.5 text-sm text-muted-foreground whitespace-nowrap">
+                  <td className="px-2 py-1.5 text-xs text-muted-foreground whitespace-nowrap">
                     {formatDate(claim.dateProcessed)}
                   </td>
-                  <td className="px-4 py-2.5 text-sm whitespace-nowrap">
+                  <td className="px-2 py-1.5 text-xs whitespace-nowrap">
                     <span
                       className={
                         claim.datePaid
@@ -337,33 +339,34 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
                       {formatDate(claim.datePaid)}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-sm text-muted-foreground whitespace-nowrap">
+                  <td className="px-2 py-1.5 text-xs text-muted-foreground whitespace-nowrap">
                     {claim.sector || "—"}
                   </td>
-                  <td className="px-4 py-2.5 text-sm text-muted-foreground whitespace-nowrap">
-                    <span className="px-2 py-0.5 bg-muted rounded text-xs font-medium">
+                  <td className="px-2 py-1.5 text-xs text-muted-foreground whitespace-nowrap">
+                    <span className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-medium">
                       {claim.class || "—"}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-sm text-muted-foreground whitespace-nowrap">
+                  <td className="px-2 py-1.5 text-xs text-muted-foreground whitespace-nowrap">
                     {claim.date || "—"}
                   </td>
-                  <td className="px-4 py-2.5 text-sm whitespace-nowrap text-center">
+                  <td className="px-2 py-1.5 text-xs whitespace-nowrap text-center">
                     <button
                       type="button"
                       onClick={() => onView?.(claim)}
                       title={`View details for claim ${claim.claimId}`}
-                      className="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground inline-flex items-center justify-center"
+                      className="p-1 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground inline-flex items-center justify-center"
                       aria-label={`View details for claim ${claim.claimId}`}
                     >
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-3.5 h-3.5" />
                     </button>
                   </td>
                 </tr>
               );
             })}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   );

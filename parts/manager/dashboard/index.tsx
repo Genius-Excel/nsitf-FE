@@ -47,7 +47,7 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-10">
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-3">

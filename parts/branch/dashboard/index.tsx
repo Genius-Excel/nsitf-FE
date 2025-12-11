@@ -20,7 +20,7 @@ export default function BranchDashboard() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* Page Header */}
       <div className="text-center">
         <div className="flex items-center justify-center space-x-3 mb-4">

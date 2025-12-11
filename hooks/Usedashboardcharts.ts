@@ -143,9 +143,8 @@ export const useRegionalComplianceChart = (
       }
     });
 
-    return Array.from(regionMap.values()).filter(
-      (item) => item.target > 0 || item.actual > 0
-    ); // Remove empty regions
+    // Return all regions, including those with 0 values
+    return Array.from(regionMap.values());
   }, [dashboardData]);
 
   const scale = useMemo(() => {

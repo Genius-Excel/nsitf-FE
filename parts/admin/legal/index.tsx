@@ -101,7 +101,7 @@ export default function LegalManagementDashboard() {
 
   // ============= RENDER =============
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="space-y-10">
       {/* Header */}
       <PageHeader
         title="Legal Activities View"
@@ -169,7 +169,7 @@ export default function LegalManagementDashboard() {
 
       {/* Legal Activities Table */}
       <div className="bg-white rounded-lg shadow mb-6">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>

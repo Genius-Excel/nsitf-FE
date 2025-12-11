@@ -333,10 +333,11 @@ export const ComplianceTable: React.FC<{
   }
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden shadow-sm">
-      <div className="overflow-x-auto">
-        <table className="w-full" role="table">
-          <thead className="bg-gray-50 border-b">
+    <div className="bg-white rounded-lg border shadow-sm">
+      <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+        <div className="inline-block min-w-full align-middle">
+          <table className="min-w-full divide-y divide-gray-200" role="table">
+            <thead className="bg-gray-50 border-b">
             <tr>
               <TableHeader
                 label="Region"
@@ -467,7 +468,8 @@ export const ComplianceTable: React.FC<{
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   );

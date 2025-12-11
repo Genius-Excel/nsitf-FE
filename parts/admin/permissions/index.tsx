@@ -90,29 +90,27 @@ export default function PermissionManagementPage() {
         </div>
       }
     >
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <PermissionManager
-            onManagePermissions={handleManagePermissions}
-            onRegisterUpdateCallback={handleRegisterCallback}
-          />
+      <div className="space-y-10">
+        <PermissionManager
+          onManagePermissions={handleManagePermissions}
+          onRegisterUpdateCallback={handleRegisterCallback}
+        />
 
-          <PermissionEditor
-            isOpen={isOpen}
-            user={selectedUser}
-            originalPermissions={originalPermissions}
-            editedPermissions={editedPermissions}
-            roleDefaultPermissionNames={roleDefaultPermissionNames}
-            permissionDiff={permissionDiff}
-            hasChanges={hasChanges}
-            isSaving={isSaving}
-            categories={categories}
-            onClose={handleCloseEditor}
-            onTogglePermission={togglePermission}
-            onSave={handleSavePermissions}
-            onReset={resetChanges}
-          />
-        </div>
+        <PermissionEditor
+          isOpen={isOpen}
+          user={selectedUser}
+          originalPermissions={originalPermissions}
+          editedPermissions={editedPermissions}
+          roleDefaultPermissionNames={roleDefaultPermissionNames}
+          permissionDiff={permissionDiff}
+          hasChanges={hasChanges}
+          isSaving={isSaving}
+          categories={categories}
+          onClose={handleCloseEditor}
+          onTogglePermission={togglePermission}
+          onSave={handleSavePermissions}
+          onReset={resetChanges}
+        />
       </div>
     </PermissionGuard>
   );

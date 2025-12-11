@@ -39,39 +39,39 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 }) => {
   return (
     <div
-      className={`${colorSchemes[colorScheme]} p-2.5 rounded-lg border transition-all hover:shadow-md`}
+      className={`${colorSchemes[colorScheme]} p-2 rounded-lg border transition-all hover:shadow-md`}
       role="article"
       aria-label={`${title}: ${value}`}
     >
-      <div className="flex items-center justify-between mb-0.5">
-        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide truncate">
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-[10px] font-medium text-gray-600 uppercase tracking-wide truncate pr-1">
           {title}
         </p>
         {icon && (
           <div
-            className={`opacity-60 ${iconColors[colorScheme]} text-xs`}
+            className={`opacity-60 ${iconColors[colorScheme]} flex-shrink-0 w-4 h-4`}
             aria-hidden="true"
           >
             {icon}
           </div>
         )}
       </div>
-      <p className="text-base sm:text-lg font-bold text-gray-900 truncate">
+      <p className="text-base font-bold text-gray-900 truncate">
         {typeof value === "number" ? value.toLocaleString() : value}
       </p>
       {change && (
-        <p className="text-xs text-green-600 mt-0.5 font-medium">{change}</p>
+        <p className="text-[10px] text-green-600 mt-0.5 font-medium truncate">{change}</p>
       )}
       {trend && (
-        <p className="text-xs text-blue-600 mt-0.5 font-medium">
+        <p className="text-[10px] text-blue-600 mt-0.5 font-medium truncate">
           {typeof trend === "string" && (trend === "up" || trend === "down")
             ? `Trend: ${trend}`
             : `Trend: ${trend}`}
         </p>
       )}
-      {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+      {subtitle && <p className="text-[10px] text-gray-500 mt-0.5 truncate">{subtitle}</p>}
       {description && (
-        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+        <p className="text-[10px] text-gray-500 mt-0.5 truncate">{description}</p>
       )}
     </div>
   );
@@ -89,7 +89,7 @@ export const MetricsGrid: React.FC<{
 
   return (
     <div
-      className={`grid grid-cols-1 sm:grid-cols-2 ${gridCols[columns]} gap-2 sm:gap-3`}
+      className={`grid grid-cols-2 md:grid-cols-3 ${gridCols[columns]} gap-2`}
     >
       {children}
     </div>

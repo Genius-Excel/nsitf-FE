@@ -528,10 +528,10 @@ export function ValuationForecastingDesign({
           <CardContent>
             <div className="w-full h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
+                <ComposedChart
                   data={longTermForecasts}
-                  margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
-                  barGap={4}
+                  margin={{ top: 20, right: 60, left: 10, bottom: 10 }}
+                  barGap={8}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis
@@ -539,8 +539,19 @@ export function ValuationForecastingDesign({
                     tick={{ fontSize: 12, fill: "#6b7280" }}
                   />
                   <YAxis
-                    tick={{ fontSize: 12, fill: "#6b7280" }}
+                    yAxisId="left"
+                    orientation="left"
+                    stroke="#16a34a"
+                    tick={{ fontSize: 12, fill: "#16a34a" }}
+                    label={{ value: "Claims", angle: -90, position: "insideLeft", style: { fill: "#16a34a" } }}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    stroke="#f59e0b"
+                    tick={{ fontSize: 12, fill: "#f59e0b" }}
                     tickFormatter={formatYAxis}
+                    label={{ value: "Contributions", angle: 90, position: "insideRight", style: { fill: "#f59e0b" } }}
                   />
                   <Tooltip
                     cursor={{ fill: "#f9fafb" }}
@@ -548,6 +559,12 @@ export function ValuationForecastingDesign({
                       borderRadius: "0.5rem",
                       borderColor: "#e5e7eb",
                       boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                    }}
+                    formatter={(value: any) => {
+                      if (typeof value === 'number') {
+                        return value >= 1000000 ? formatYAxis(value) : value.toLocaleString();
+                      }
+                      return value;
                     }}
                   />
                   <Legend
@@ -557,19 +574,21 @@ export function ValuationForecastingDesign({
                   />
                   <Bar
                     dataKey="claims"
+                    yAxisId="left"
                     fill="#16a34a"
                     radius={[6, 6, 0, 0]}
-                    barSize={24}
+                    barSize={32}
                     name="Claims"
                   />
                   <Bar
                     dataKey="contributions"
+                    yAxisId="right"
                     fill="#f59e0b"
                     radius={[6, 6, 0, 0]}
-                    barSize={24}
+                    barSize={32}
                     name="Contributions"
                   />
-                </BarChart>
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-4">

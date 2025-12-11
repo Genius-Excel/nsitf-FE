@@ -172,7 +172,7 @@ export default function CompliancePage() {
   };
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-10">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl tracking-tight">Compliance Management</h1>
