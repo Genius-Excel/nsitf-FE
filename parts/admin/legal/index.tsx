@@ -17,8 +17,11 @@ import {
   Scale,
   Gavel,
   Building,
+  CheckCircle,
+  FileCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
@@ -29,7 +32,7 @@ import { LegalUploadModal } from "./legalUploadModal";
 import { useLegalDashboard } from "@/hooks/legal/useLegalDashboard";
 import { useLegalFilters } from "@/hooks/legal/useLegalFilters";
 import type { LegalActivityRecord } from "@/lib/types/legal";
-import { getUserFromStorage } from "@/lib/auth";
+import { getUserFromStorage, type UserRole } from "@/lib/auth";
 import { canManageLegal } from "@/lib/permissions";
 
 export default function LegalManagementDashboard() {
@@ -39,6 +42,7 @@ export default function LegalManagementDashboard() {
   useEffect(() => {
     const user = getUserFromStorage();
     if (user) {
+      setUserRole(user.role);
       // Check backend permissions first
       if (user.permissions && Array.isArray(user.permissions)) {
         const hasBackendPermission = user.permissions.some(p =>
@@ -60,6 +64,9 @@ export default function LegalManagementDashboard() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedActivities, setSelectedActivities] = useState<Set<string>>(new Set());
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ============= HOOKS =============
   const { data, loading, error, refetch } = useLegalDashboard();
@@ -68,6 +75,77 @@ export default function LegalManagementDashboard() {
   });
 
   // ============= HANDLERS =============
+  const canReview = userRole === "regional_manager";
+  const canApprove = userRole && ["admin", "manager"].includes(userRole);
+
+  const handleSelectAll = () => {
+    if (selectedActivities.size === filteredRecords.length) {
+      setSelectedActivities(new Set());
+    } else {
+      setSelectedActivities(new Set(filteredRecords.map(a => a.id)));
+    }
+  };
+
+  const handleSelectActivity = (activityId: string) => {
+    const newSelected = new Set(selectedActivities);
+    if (newSelected.has(activityId)) {
+      newSelected.delete(activityId);
+    } else {
+      newSelected.add(activityId);
+    }
+    setSelectedActivities(newSelected);
+  };
+
+  const handleBulkReview = async () => {
+    if (selectedActivities.size === 0) {
+      toast.error("Please select at least one activity");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // TODO: Call API to bulk review legal activities
+      // const response = await fetch('/api/legal/bulk-review', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ activityIds: Array.from(selectedActivities) })
+      // });
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      toast.success(`${selectedActivities.size} activity(ies) marked as reviewed`);
+      setSelectedActivities(new Set());
+    } catch (error) {
+      toast.error("Failed to review activities");
+      console.error("Bulk review error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedActivities.size === 0) {
+      toast.error("Please select at least one activity");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // TODO: Call API to bulk approve legal activities
+      // const response = await fetch('/api/legal/bulk-approve', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ activityIds: Array.from(selectedActivities) })
+      // });
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      toast.success(`${selectedActivities.size} activity(ies) approved successfully`);
+      setSelectedActivities(new Set());
+    } catch (error) {
+      toast.error("Failed to approve activities");
+      console.error("Bulk approve error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleViewDetails = (activity: LegalActivityRecord) => {
     setSelectedActivity(activity);
     setIsDetailModalOpen(true);
@@ -169,10 +247,52 @@ export default function LegalManagementDashboard() {
 
       {/* Legal Activities Table */}
       <div className="bg-white rounded-lg shadow mb-6">
+        {(canReview || canApprove) && selectedActivities.size > 0 && (
+          <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
+              {selectedActivities.size} activity(ies) selected
+            </span>
+            <div className="flex gap-2">
+              {canReview && (
+                <Button
+                  onClick={handleBulkReview}
+                  disabled={isSubmitting}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <FileCheck className="w-4 h-4 mr-2" />
+                  {isSubmitting ? "Processing..." : "Mark as Reviewed"}
+                </Button>
+              )}
+              {canApprove && (
+                <Button
+                  onClick={handleBulkApprove}
+                  disabled={isSubmitting}
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  {isSubmitting ? "Processing..." : "Approve Selected"}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
         <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
+                {(canReview || canApprove) && (
+                  <th className="px-2 py-1.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <input
+                      type="checkbox"
+                      checked={selectedActivities.size === filteredRecords.length && filteredRecords.length > 0}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      aria-label="Select all activities"
+                    />
+                  </th>
+                )}
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Region
                 </th>
@@ -212,6 +332,17 @@ export default function LegalManagementDashboard() {
               {filteredRecords.length > 0 ? (
                 filteredRecords.map((activity) => (
                   <tr key={activity.id} className="hover:bg-gray-50 transition">
+                    {(canReview || canApprove) && (
+                      <td className="px-2 py-1.5 text-center whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={selectedActivities.has(activity.id)}
+                          onChange={() => handleSelectActivity(activity.id)}
+                          className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                          aria-label={`Select activity for ${activity.branch}`}
+                        />
+                      </td>
+                    )}
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">
                       {activity.region}
                     </td>

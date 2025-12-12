@@ -1,7 +1,10 @@
 "use client";
-import React from "react";
-import { Eye, ChevronDown } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Eye, ChevronDown, CheckCircle, FileCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { getUserFromStorage, type UserRole } from "@/lib/auth";
+import { toast } from "sonner";
 import type {
   HSERecord,
   HSEActivity,
@@ -478,6 +481,88 @@ export const HSERecordsTable: React.FC<{
   records: HSERecord[];
   onViewDetails: (record: HSERecord) => void;
 }> = ({ records, onViewDetails }) => {
+  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const user = getUserFromStorage();
+    if (user) {
+      setUserRole(user.role);
+    }
+  }, []);
+
+  const canReview = userRole === "regional_manager";
+  const canApprove = userRole && ["admin", "manager"].includes(userRole);
+
+  const handleSelectAll = () => {
+    if (selectedRecords.size === records.length) {
+      setSelectedRecords(new Set());
+    } else {
+      setSelectedRecords(new Set(records.map(r => r.id)));
+    }
+  };
+
+  const handleSelectRecord = (recordId: string) => {
+    const newSelected = new Set(selectedRecords);
+    if (newSelected.has(recordId)) {
+      newSelected.delete(recordId);
+    } else {
+      newSelected.add(recordId);
+    }
+    setSelectedRecords(newSelected);
+  };
+
+  const handleBulkReview = async () => {
+    if (selectedRecords.size === 0) {
+      toast.error("Please select at least one record");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // TODO: Call API to bulk review HSE records
+      // const response = await fetch('/api/hse/bulk-review', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ recordIds: Array.from(selectedRecords) })
+      // });
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      toast.success(`${selectedRecords.size} record(s) marked as reviewed`);
+      setSelectedRecords(new Set());
+    } catch (error) {
+      toast.error("Failed to review records");
+      console.error("Bulk review error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedRecords.size === 0) {
+      toast.error("Please select at least one record");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // TODO: Call API to bulk approve HSE records
+      // const response = await fetch('/api/hse/bulk-approve', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ recordIds: Array.from(selectedRecords) })
+      // });
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      toast.success(`${selectedRecords.size} record(s) approved successfully`);
+      setSelectedRecords(new Set());
+    } catch (error) {
+      toast.error("Failed to approve records");
+      console.error("Bulk approve error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!records || records.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
@@ -495,10 +580,52 @@ export const HSERecordsTable: React.FC<{
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {(canReview || canApprove) && selectedRecords.size > 0 && (
+        <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">
+            {selectedRecords.size} record(s) selected
+          </span>
+          <div className="flex gap-2">
+            {canReview && (
+              <Button
+                onClick={handleBulkReview}
+                disabled={isSubmitting}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <FileCheck className="w-4 h-4 mr-2" />
+                {isSubmitting ? "Processing..." : "Mark as Reviewed"}
+              </Button>
+            )}
+            {canApprove && (
+              <Button
+                onClick={handleBulkApprove}
+                disabled={isSubmitting}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {isSubmitting ? "Processing..." : "Approve Selected"}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
       <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
+              {(canReview || canApprove) && (
+                <th className="px-2 py-1.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    checked={selectedRecords.size === records.length}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    aria-label="Select all records"
+                  />
+                </th>
+              )}
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
                 Record Type
               </th>
@@ -525,6 +652,17 @@ export const HSERecordsTable: React.FC<{
                 key={record.id}
                 className="hover:bg-gray-50 transition-colors"
               >
+                {(canReview || canApprove) && (
+                  <td className="px-2 py-1.5 text-center whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={selectedRecords.has(record.id)}
+                      onChange={() => handleSelectRecord(record.id)}
+                      className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      aria-label={`Select record for ${record.employer}`}
+                    />
+                  </td>
+                )}
                 <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                   {record.recordType}
                 </td>

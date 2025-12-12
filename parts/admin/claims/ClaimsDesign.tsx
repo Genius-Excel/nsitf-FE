@@ -1,6 +1,8 @@
 "use client";
-import { Eye } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Eye, CheckCircle, FileCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   BarChart,
   Bar,
@@ -15,6 +17,8 @@ import { getStatusBadgeColor, getTypeTextColor } from "@/lib/utils";
 import { ChartDataPoint, Claim, StatCard } from "@/lib/types";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
 import { SearchBar } from "@/components/design-system/SearchBar";
+import { getUserFromStorage, type UserRole } from "@/lib/auth";
+import { toast } from "sonner";
 
 interface StatisticsCardsProps {
   stats: StatCard[];
@@ -186,6 +190,86 @@ interface ClaimsTableProps {
 }
 
 export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
+  const [selectedClaims, setSelectedClaims] = useState<Set<string>>(new Set());
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get user role
+  useEffect(() => {
+    const user = getUserFromStorage();
+    setUserRole(user?.role || null);
+  }, []);
+
+  // Permission checks
+  const canReview = userRole === "regional_manager";
+  const canApprove = userRole && ["admin", "manager"].includes(userRole);
+
+  // Select/deselect all
+  const handleSelectAll = () => {
+    if (selectedClaims.size === claims.length) {
+      setSelectedClaims(new Set());
+    } else {
+      setSelectedClaims(new Set(claims.map(c => c.id)));
+    }
+  };
+
+  // Select/deselect individual claim
+  const handleSelectClaim = (claimId: string) => {
+    const newSelected = new Set(selectedClaims);
+    if (newSelected.has(claimId)) {
+      newSelected.delete(claimId);
+    } else {
+      newSelected.add(claimId);
+    }
+    setSelectedClaims(newSelected);
+  };
+
+  // Bulk review handler
+  const handleBulkReview = async () => {
+    if (selectedClaims.size === 0) {
+      toast.error("Please select at least one claim");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // TODO: Call API to bulk review claims
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      toast.success(`${selectedClaims.size} claim(s) marked as reviewed`);
+      setSelectedClaims(new Set());
+      // Optionally refresh data here
+    } catch (error) {
+      toast.error("Failed to review claims");
+      console.error("Bulk review error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Bulk approve handler
+  const handleBulkApprove = async () => {
+    if (selectedClaims.size === 0) {
+      toast.error("Please select at least one claim");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // TODO: Call API to bulk approve claims
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      toast.success(`${selectedClaims.size} claim(s) approved successfully`);
+      setSelectedClaims(new Set());
+      // Optionally refresh data here
+    } catch (error) {
+      toast.error("Failed to approve claims");
+      console.error("Bulk approve error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!claims || claims.length === 0) {
     return (
       <div className="bg-card rounded-lg border border-border p-6 text-center">
@@ -232,11 +316,54 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
 
   return (
     <div className="bg-card rounded-lg border border-border shadow-sm">
+      {/* Bulk Action Buttons */}
+      {(canReview || canApprove) && selectedClaims.size > 0 && (
+        <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">
+            {selectedClaims.size} claim(s) selected
+          </span>
+          <div className="flex gap-2">
+            {canReview && (
+              <Button
+                onClick={handleBulkReview}
+                disabled={isSubmitting}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <FileCheck className="w-4 h-4 mr-2" />
+                {isSubmitting ? "Processing..." : "Mark as Reviewed"}
+              </Button>
+            )}
+            {canApprove && (
+              <Button
+                onClick={handleBulkApprove}
+                disabled={isSubmitting}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {isSubmitting ? "Processing..." : "Approve Selected"}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
       <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
         <div className="inline-block min-w-full align-middle">
           <table className="min-w-full divide-y divide-border">
             <thead className="bg-muted border-b border-border">
               <tr>
+                {(canReview || canApprove) && (
+                  <th className="px-2 py-1.5 text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={selectedClaims.size === claims.length}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      aria-label="Select all claims"
+                    />
+                  </th>
+                )}
                 <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                   Claim ID
                 </th>
@@ -287,6 +414,17 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
 
               return (
                 <tr key={claim.id} className="hover:bg-muted/50 transition-colors">
+                  {(canReview || canApprove) && (
+                    <td className="px-2 py-1.5 text-center whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedClaims.has(claim.id)}
+                        onChange={() => handleSelectClaim(claim.id)}
+                        className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        aria-label={`Select claim ${claim.claimId}`}
+                      />
+                    </td>
+                  )}
                   <td className="px-2 py-1.5 text-xs font-medium text-foreground whitespace-nowrap">
                     {claim.claimId}
                   </td>
