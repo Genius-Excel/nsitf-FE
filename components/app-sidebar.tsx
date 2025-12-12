@@ -183,10 +183,10 @@ const NavItem: React.FC<NavItemProps> = ({
         <Button
           variant={isActive ? "secondary" : "ghost"}
           className={cn(
-            "w-full justify-start gap-3 transition-colors",
+            "w-full justify-start gap-3 transition-colors px-3 py-2",
             isActive
-              ? "bg-green-500 text-white"
-              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              ? "bg-green-500 text-white hover:bg-green-600"
+              : "text-sidebar-foreground hover:bg-green-50 hover:text-green-700",
             isCollapsed && "justify-center px-2"
           )}
           onClick={onClick}
@@ -238,20 +238,29 @@ export function AppSidebar({
           .toLowerCase()
           .replace(/\s+/g, "_");
 
+        // Map backend role names to frontend role names
+        const roleMapping: Record<string, string> = {
+          "regional_officer": "compliance_officer", // Regional Officer maps to compliance_officer
+        };
+
+        const mappedRole = roleMapping[normalizedRole] || normalizedRole;
+
         const fetchedUser: User = {
           email: userData[0].email,
           id: userData[0].user_id,
           name: `${userData[0].first_name} ${userData[0].last_name}`,
-          role: normalizedRole,
+          role: mappedRole,
         };
         console.log("user data", userData[0]);
         console.log("normalized role", normalizedRole);
+        console.log("mapped role", mappedRole);
         // Validate role
         if (!validRoles.includes(fetchedUser.role as Role)) {
-          setError(`Invalid user role detected: ${normalizedRole}. Expected one of: ${validRoles.join(", ")}`);
+          setError(`Invalid user role detected: ${mappedRole}. Expected one of: ${validRoles.join(", ")}`);
           console.error("Role validation failed:", {
             originalRole: userData[0].role,
             normalizedRole,
+            mappedRole,
             validRoles,
           });
           setIsLoading(false);

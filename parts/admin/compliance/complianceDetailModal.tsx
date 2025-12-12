@@ -491,41 +491,23 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                     </>
                   )}
                 </div>
-                <div className={isEditMode ? "" : "flex justify-between items-center"}>
-                  {isEditMode ? (
-                    renderField("Region", displayData.region, "region")
-                  ) : (
-                    <>
-                      <span className="text-sm text-gray-600">Region:</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {displayData.region}
-                      </span>
-                    </>
-                  )}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Region:</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {displayData.region}
+                  </span>
                 </div>
-                <div className={isEditMode ? "" : "flex justify-between items-center"}>
-                  {isEditMode ? (
-                    renderField("Branch", displayData.branch || "Main Branch", "branch")
-                  ) : (
-                    <>
-                      <span className="text-sm text-gray-600">Branch:</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {displayData.branch || "Main Branch"}
-                      </span>
-                    </>
-                  )}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Branch:</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {displayData.branch || "Main Branch"}
+                  </span>
                 </div>
-                <div className={isEditMode ? "" : "flex justify-between items-center"}>
-                  {isEditMode ? (
-                    renderField("Period", displayData.period, "period")
-                  ) : (
-                    <>
-                      <span className="text-sm text-gray-600">Period:</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {displayData.period}
-                      </span>
-                    </>
-                  )}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Period:</span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {displayData.period}
+                  </span>
                 </div>
               </div>
             </section>

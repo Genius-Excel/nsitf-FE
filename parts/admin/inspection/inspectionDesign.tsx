@@ -92,7 +92,7 @@ export const InspectionBarChart: React.FC<InspectionBarChartProps> = ({
             <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#6b7280" }} />
             <YAxis
               tick={{ fontSize: 12, fill: "#6b7280" }}
-              domain={[0, data.scale?.max || 'auto']}
+              domain={[0, data.scale?.max || "auto"]}
               ticks={data.scale?.ticks}
               tickFormatter={(value) => `₦${(value / 1000000).toFixed(0)}M`}
             />
@@ -206,7 +206,9 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
   inspections,
   onView,
 }) => {
-  const [selectedInspections, setSelectedInspections] = useState<Set<string>>(new Set());
+  const [selectedInspections, setSelectedInspections] = useState<Set<string>>(
+    new Set()
+  );
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -224,7 +226,7 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
     if (selectedInspections.size === inspections.length) {
       setSelectedInspections(new Set());
     } else {
-      setSelectedInspections(new Set(inspections.map(i => i.id)));
+      setSelectedInspections(new Set(inspections.map((i) => i.id)));
     }
   };
 
@@ -253,7 +255,9 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
       // });
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      toast.success(`${selectedInspections.size} inspection(s) marked as reviewed`);
+      toast.success(
+        `${selectedInspections.size} inspection(s) marked as reviewed`
+      );
       setSelectedInspections(new Set());
     } catch (error) {
       toast.error("Failed to review inspections");
@@ -278,7 +282,9 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
       // });
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      toast.success(`${selectedInspections.size} inspection(s) approved successfully`);
+      toast.success(
+        `${selectedInspections.size} inspection(s) approved successfully`
+      );
       setSelectedInspections(new Set());
     } catch (error) {
       toast.error("Failed to approve inspections");
@@ -375,10 +381,10 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
                 Inspection Conducted
               </th>
               <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Debt Established (₦)
+                Cumulative Debt Established (₦)
               </th>
               <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Debt Recovered (₦)
+                Cumulative Debt Recovered (₦)
               </th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
                 Performance Rate (%)

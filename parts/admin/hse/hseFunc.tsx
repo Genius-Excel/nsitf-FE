@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 import { SearchBar } from "@/components/design-system/SearchBar";
+import { FilterPanel } from "@/components/design-system/FilterPanel";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
 import { getUserFromStorage } from "@/lib/auth";
 import { canManageHSE } from "@/lib/permissions";
@@ -67,6 +68,10 @@ export default function HSEDashboardContent() {
 
   // ============= STATE =============
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [recordTypeFilter, setRecordTypeFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<HSERecord | null>(null);
@@ -94,12 +99,30 @@ export default function HSEDashboardContent() {
     error: recordsError,
     refetch: refetchRecords,
   } = useHSERecords();
-  const { filteredRecords } = useHSEFilters(records, { searchTerm });
+  const { filteredRecords, totalCount, filteredCount } = useHSEFilters(records, {
+    searchTerm,
+    statusFilter,
+    recordTypeFilter,
+    dateFrom,
+    dateTo
+  });
   const { createRecord, loading: creating } = useCreateHSERecord();
   const { updateRecord, loading: updating } = useUpdateHSERecord();
   const { deleteRecord, loading: deleting } = useDeleteHSERecord();
 
+  // ============= COMPUTED VALUES =============
+  const uniqueStatuses = Array.from(new Set(records.map(r => r.status))).filter(Boolean);
+  const uniqueRecordTypes = Array.from(new Set(records.map(r => r.recordType))).filter(Boolean);
+  const hasActiveFilters = searchTerm || statusFilter || recordTypeFilter || dateFrom || dateTo;
+
   // ============= HANDLERS =============
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("");
+    setRecordTypeFilter("");
+    setDateFrom("");
+    setDateTo("");
+  };
   const handleAddNew = () => {
     if (!canManage) {
       toast.error("You don't have permission to add HSE records");
@@ -350,6 +373,70 @@ export default function HSEDashboardContent() {
         onSearchChange={setSearchTerm}
         placeholder="Search HSE records..."
       />
+
+      {/* Filter Panel */}
+      <FilterPanel
+        totalEntries={totalCount}
+        filteredCount={filteredCount}
+        onReset={handleResetFilters}
+        hasActiveFilters={hasActiveFilters}
+      >
+        {/* Status Filter */}
+        <div>
+          <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+          <select
+            id="status-filter"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          >
+            <option value="">All Statuses</option>
+            {uniqueStatuses.map((status) => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Record Type Filter */}
+        <div>
+          <label htmlFor="record-type-filter" className="block text-sm font-medium text-gray-700 mb-2">Record Type</label>
+          <select
+            id="record-type-filter"
+            value={recordTypeFilter}
+            onChange={(e) => setRecordTypeFilter(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          >
+            <option value="">All Types</option>
+            {uniqueRecordTypes.map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Date Range Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="date-from" className="block text-sm font-medium text-gray-700 mb-2">Date From</label>
+            <input
+              id="date-from"
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label htmlFor="date-to" className="block text-sm font-medium text-gray-700 mb-2">Date To</label>
+            <input
+              id="date-to"
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+      </FilterPanel>
 
       {/* HSE Records Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
