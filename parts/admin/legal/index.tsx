@@ -26,6 +26,7 @@ import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 import { SearchBar } from "@/components/design-system/SearchBar";
+import { FilterPanel } from "@/components/design-system/FilterPanel";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
 import { LegalDetailModal } from "./legalDetailModal";
 import { LegalUploadModal } from "./legalUploadModal";
@@ -64,17 +65,31 @@ export default function LegalManagementDashboard() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [regionFilter, setRegionFilter] = useState("");
+  const [minRecalcitrant, setMinRecalcitrant] = useState<number | undefined>(undefined);
   const [selectedActivities, setSelectedActivities] = useState<Set<string>>(new Set());
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ============= HOOKS =============
   const { data, loading, error, refetch } = useLegalDashboard();
-  const { filteredRecords } = useLegalFilters(data?.summaryTable || [], {
+  const { filteredRecords, totalCount, filteredCount } = useLegalFilters(data?.summaryTable || [], {
     searchTerm,
+    regionFilter,
+    minRecalcitrant,
   });
 
+  // ============= COMPUTED VALUES =============
+  const uniqueRegions = Array.from(new Set((data?.summaryTable || []).map(r => r.region))).filter(Boolean);
+  const hasActiveFilters = searchTerm || regionFilter || minRecalcitrant !== undefined;
+
   // ============= HANDLERS =============
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setRegionFilter("");
+    setMinRecalcitrant(undefined);
+  };
+
   const canReview = userRole === "regional_manager";
   const canApprove = userRole && ["admin", "manager"].includes(userRole);
 
@@ -244,6 +259,46 @@ export default function LegalManagementDashboard() {
         showExport={false}
         showFilter={false}
       />
+
+      {/* Filter Panel */}
+      <FilterPanel
+        totalEntries={totalCount}
+        filteredCount={filteredCount}
+        onReset={handleResetFilters}
+        hasActiveFilters={hasActiveFilters}
+      >
+        {/* Region Filter */}
+        <div>
+          <label htmlFor="region-filter" className="block text-sm font-medium text-gray-700 mb-2">Region</label>
+          <select
+            id="region-filter"
+            value={regionFilter}
+            onChange={(e) => setRegionFilter(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          >
+            <option value="">All Regions</option>
+            {uniqueRegions.map((region) => (
+              <option key={region} value={region}>{region}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Minimum Recalcitrant Employers Filter */}
+        <div>
+          <label htmlFor="min-recalcitrant-filter" className="block text-sm font-medium text-gray-700 mb-2">
+            Minimum Recalcitrant Employers
+          </label>
+          <input
+            id="min-recalcitrant-filter"
+            type="number"
+            min="0"
+            placeholder="e.g., 10"
+            value={minRecalcitrant !== undefined ? minRecalcitrant : ""}
+            onChange={(e) => setMinRecalcitrant(e.target.value ? parseInt(e.target.value) : undefined)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
+      </FilterPanel>
 
       {/* Legal Activities Table */}
       <div className="bg-white rounded-lg shadow mb-6">

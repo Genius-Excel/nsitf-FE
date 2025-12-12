@@ -13,6 +13,7 @@ import { ClaimDetailModal } from "./ClaimModal";
 import { ClaimsUploadModal } from "./ClaimsUploadModal";
 import { StatCard } from "@/lib/types";
 import { PageHeader } from "@/components/design-system/PageHeader";
+import { FilterPanel } from "@/components/design-system/FilterPanel";
 import {
   useClaimsDashboard,
   useClaimsFilters,
@@ -30,6 +31,8 @@ export default function ClaimsManagement() {
   // STATE
   // ==========================================
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [typeFilter, setTypeFilter] = useState<string>("");
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [canManage, setCanManage] = useState(false);
@@ -76,6 +79,8 @@ export default function ClaimsManagement() {
   const { filteredClaims } = useClaimsFilters({
     claims,
     searchTerm,
+    statusFilter,
+    typeFilter,
   });
 
   // 3. Fetch claim detail (for modal)
@@ -104,6 +109,20 @@ export default function ClaimsManagement() {
   // ==========================================
   // COMPUTED VALUES
   // ==========================================
+
+  // Get unique filter options
+  const uniqueStatuses = useMemo(() => {
+    const statuses = new Set(claims.map(c => c.status));
+    return Array.from(statuses).filter(Boolean);
+  }, [claims]);
+
+  const uniqueTypes = useMemo(() => {
+    const types = new Set(claims.map(c => c.type));
+    return Array.from(types).filter(Boolean);
+  }, [claims]);
+
+  // Check if filters are active
+  const hasActiveFilters = searchTerm || statusFilter || typeFilter;
 
   // Stats cards configuration
   const stats: StatCard[] = useMemo(() => {
@@ -201,8 +220,10 @@ export default function ClaimsManagement() {
     clearDetail();
   }, [clearDetail]);
 
-  const handleFilterClick = useCallback(() => {
-    toast.info("Filter functionality coming soon");
+  const handleResetFilters = useCallback(() => {
+    setSearchTerm("");
+    setStatusFilter("");
+    setTypeFilter("");
   }, []);
 
   const handleUploadClick = useCallback(() => {
@@ -344,10 +365,50 @@ export default function ClaimsManagement() {
           <SearchAndFilters
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            onFilterClick={handleFilterClick}
+            onFilterClick={() => {}}
             onExport={handleExport}
             onUpload={handleUploadClick}
           />
+
+          {/* Filter Panel */}
+          <FilterPanel
+            totalEntries={claims.length}
+            filteredCount={filteredClaims.length}
+            onReset={handleResetFilters}
+            hasActiveFilters={hasActiveFilters}
+          >
+            {/* Status Filter */}
+            <div>
+              <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <select
+                id="status-filter"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="">All Statuses</option>
+                {uniqueStatuses.map((status) => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Type Filter */}
+            <div>
+              <label htmlFor="type-filter" className="block text-sm font-medium text-gray-700 mb-2">Claim Type</label>
+              <select
+                id="type-filter"
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="">All Types</option>
+                {uniqueTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+          </FilterPanel>
 
           {/* Claims Table */}
           <ClaimsTable claims={filteredClaims} onView={handleViewClaim} />

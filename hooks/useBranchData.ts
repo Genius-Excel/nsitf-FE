@@ -225,7 +225,7 @@ export function useFileUpload() {
       return false;
     }
 
-    // Validate file size (e.g., max 10MB)
+    // Validate file size (max 10MB)
     if (formData.file.size > 10 * 1024 * 1024) {
       toast({
         title: "File Too Large",
@@ -238,35 +238,48 @@ export function useFileUpload() {
     try {
       setUploading(true);
 
-      // Simulate file upload
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Get access token from localStorage
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
 
-      // Mock implementation - replace with actual API call
-      // const uploadFormData = new FormData();
-      // uploadFormData.append('file', formData.file);
-      // uploadFormData.append('regionId', formData.regionId);
-      // uploadFormData.append('branchId', formData.branchId);
-      // uploadFormData.append('period', formData.period);
-      // 
-      // const response = await fetch('/api/branch/upload', {
-      //   method: 'POST',
-      //   body: uploadFormData,
-      // });
-      // 
-      // if (!response.ok) {
-      //   throw new Error('Upload failed');
-      // }
+      if (!token) {
+        throw new Error('Authentication required. Please log in again.');
+      }
 
+      // Create FormData for multipart upload
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', formData.file);
+      uploadFormData.append('region_id', formData.regionId);
+      uploadFormData.append('branch_id', formData.branchId);
+      uploadFormData.append('period', formData.period);
+
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+
+      const response = await fetch(`${API_BASE_URL}/api/branch/reports`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: uploadFormData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || result.error || 'Upload failed');
+      }
+
+      // Success response based on API documentation
       toast({
         title: "Upload Successful",
-        description: "Your report has been submitted successfully and is now under review.",
+        description: `Your report has been submitted successfully. Batch ID: ${result.batch_id}. Status: ${result.status}`,
       });
 
       return true;
     } catch (err) {
+      console.error('Upload error:', err);
       toast({
         title: "Upload Failed",
-        description: err instanceof Error ? err.message : "Failed to upload file",
+        description: err instanceof Error ? err.message : "Failed to upload file. Please try again.",
         variant: "destructive",
       });
       return false;
@@ -292,17 +305,49 @@ export function useUploadHistory() {
     try {
       setLoading(true);
       setError(null);
-      
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      
-      // Mock implementation - replace with actual API call
-      // const response = await fetch('/api/branch/upload-history');
-      // const data = await response.json();
-      
-      setHistory(MOCK_UPLOAD_HISTORY);
+
+      // Get access token from localStorage
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+
+      const response = await fetch(`${API_BASE_URL}/api/branch/reports/history`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch upload history');
+      }
+
+      const result = await response.json();
+
+      // Map API response to UploadRecord format
+      // Assuming the API returns an array of upload records
+      const mappedHistory: UploadRecord[] = (result.data || result || []).map((item: any) => ({
+        id: item.id || item.batch_id,
+        period: item.period,
+        fileName: item.file_name || item.fileName || 'Unknown',
+        submittedAt: item.created_at || item.submittedAt || item.uploaded_at,
+        status: item.status,
+        reviewerComment: item.reviewer_comment || item.reviewerComment,
+        reviewedAt: item.reviewed_at || item.reviewedAt,
+        reviewedBy: item.reviewed_by || item.reviewedBy,
+      }));
+
+      setHistory(mappedHistory);
     } catch (err) {
+      console.error('Fetch history error:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch upload history');
+      // Fallback to empty array on error
+      setHistory([]);
     } finally {
       setLoading(false);
     }

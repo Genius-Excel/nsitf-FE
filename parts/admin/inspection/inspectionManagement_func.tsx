@@ -9,6 +9,7 @@ import { PermissionGuard } from "@/components/permission-guard";
 import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
+import { FilterPanel } from "@/components/design-system/FilterPanel";
 import ScheduleInspectionModal from "@/components/shedule-inspection";
 import ViewAllInspectionsModal from "@/components/view-all-inspection";
 import { getUserFromStorage } from "@/lib/auth";
@@ -68,12 +69,14 @@ export default function InspectionManagement() {
     useState<InspectionRecord | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [performanceThreshold, setPerformanceThreshold] = useState<number | undefined>(undefined);
+  const [periodFilter, setPeriodFilter] = useState("");
 
   // ============= HOOKS =============
   const { data, loading, error } = useInspectionDashboard();
-  const { filteredRecords } = useInspectionFilters(
+  const { filteredRecords, totalCount, filteredCount } = useInspectionFilters(
     data?.inspectionSummary || [],
-    { searchTerm }
+    { searchTerm, performanceThreshold, periodFilter }
   );
 
   // Debug logging
@@ -85,6 +88,9 @@ export default function InspectionManagement() {
     canManage,
   });
 
+  // ============= COMPUTED VALUES =============
+  const hasActiveFilters = searchTerm || performanceThreshold !== undefined || periodFilter;
+
   // ============= HANDLERS =============
   const handleViewInspection = (inspection: InspectionRecord) => {
     setSelectedInspection(inspection);
@@ -94,6 +100,12 @@ export default function InspectionManagement() {
   const handleCloseDetailModal = () => {
     setIsDetailModalOpen(false);
     setSelectedInspection(null);
+  };
+
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setPerformanceThreshold(undefined);
+    setPeriodFilter("");
   };
 
   const handleExport = () => {
@@ -227,6 +239,44 @@ export default function InspectionManagement() {
         onSearchChange={setSearchTerm}
         onExport={handleExport}
       />
+
+      {/* Filter Panel */}
+      <FilterPanel
+        totalEntries={totalCount}
+        filteredCount={filteredCount}
+        onReset={handleResetFilters}
+        hasActiveFilters={hasActiveFilters}
+      >
+        {/* Period Filter */}
+        <div>
+          <label htmlFor="period-filter" className="block text-sm font-medium text-gray-700 mb-2">Period</label>
+          <input
+            id="period-filter"
+            type="text"
+            placeholder="e.g., June 2025"
+            value={periodFilter}
+            onChange={(e) => setPeriodFilter(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
+
+        {/* Performance Threshold Filter */}
+        <div>
+          <label htmlFor="performance-filter" className="block text-sm font-medium text-gray-700 mb-2">
+            Minimum Performance Rate (%)
+          </label>
+          <input
+            id="performance-filter"
+            type="number"
+            min="0"
+            max="100"
+            placeholder="e.g., 75"
+            value={performanceThreshold !== undefined ? performanceThreshold : ""}
+            onChange={(e) => setPerformanceThreshold(e.target.value ? parseFloat(e.target.value) : undefined)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
+      </FilterPanel>
 
       {/* Inspections Table */}
       <InspectionsTable

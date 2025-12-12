@@ -363,9 +363,18 @@ Generated on: ${new Date().toLocaleString()}
               </h3>
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {renderField("Region", displayData?.region, "region")}
-                  {renderField("Branch", displayData?.branch, "branch")}
-                  {renderField("Period", formatLegalDate(displayData?.period), "period")}
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase">Region</p>
+                    <p className="text-sm font-medium text-gray-900">{displayData?.region}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase">Branch</p>
+                    <p className="text-sm font-medium text-gray-900">{displayData?.branch}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase">Period</p>
+                    <p className="text-sm font-medium text-gray-900">{formatLegalDate(displayData?.period)}</p>
+                  </div>
                 </div>
               </div>
             </section>

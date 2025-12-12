@@ -386,9 +386,18 @@ Generated on: ${new Date().toLocaleString()}
                   </h3>
                 </div>
                 <div className="space-y-2">
-                  {renderField("Region", displayData?.branchInformation?.region, "branchInformation.region")}
-                  {renderField("Branch", displayData?.branchInformation?.branchName, "branchInformation.branchName")}
-                  {renderField("Period", displayData?.branchInformation?.period, "branchInformation.period")}
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase">Region</p>
+                    <p className="text-sm font-medium text-gray-900">{displayData?.branchInformation?.region}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase">Branch</p>
+                    <p className="text-sm font-medium text-gray-900">{displayData?.branchInformation?.branchName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase">Period</p>
+                    <p className="text-sm font-medium text-gray-900">{displayData?.branchInformation?.period}</p>
+                  </div>
                 </div>
               </div>
 
