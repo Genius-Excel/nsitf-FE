@@ -1,7 +1,10 @@
 "use client";
-import React from "react";
-import { Eye, CircleCheck } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Eye, CircleCheck, CheckCircle, FileCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { getUserFromStorage, type UserRole } from "@/lib/auth";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -203,6 +206,88 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
   inspections,
   onView,
 }) => {
+  const [selectedInspections, setSelectedInspections] = useState<Set<string>>(new Set());
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const user = getUserFromStorage();
+    if (user) {
+      setUserRole(user.role);
+    }
+  }, []);
+
+  const canReview = userRole === "regional_manager";
+  const canApprove = userRole && ["admin", "manager"].includes(userRole);
+
+  const handleSelectAll = () => {
+    if (selectedInspections.size === inspections.length) {
+      setSelectedInspections(new Set());
+    } else {
+      setSelectedInspections(new Set(inspections.map(i => i.id)));
+    }
+  };
+
+  const handleSelectInspection = (inspectionId: string) => {
+    const newSelected = new Set(selectedInspections);
+    if (newSelected.has(inspectionId)) {
+      newSelected.delete(inspectionId);
+    } else {
+      newSelected.add(inspectionId);
+    }
+    setSelectedInspections(newSelected);
+  };
+
+  const handleBulkReview = async () => {
+    if (selectedInspections.size === 0) {
+      toast.error("Please select at least one inspection");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // TODO: Call API to bulk review inspection records
+      // const response = await fetch('/api/inspection/bulk-review', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ inspectionIds: Array.from(selectedInspections) })
+      // });
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      toast.success(`${selectedInspections.size} inspection(s) marked as reviewed`);
+      setSelectedInspections(new Set());
+    } catch (error) {
+      toast.error("Failed to review inspections");
+      console.error("Bulk review error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedInspections.size === 0) {
+      toast.error("Please select at least one inspection");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // TODO: Call API to bulk approve inspection records
+      // const response = await fetch('/api/inspection/bulk-approve', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ inspectionIds: Array.from(selectedInspections) })
+      // });
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      toast.success(`${selectedInspections.size} inspection(s) approved successfully`);
+      setSelectedInspections(new Set());
+    } catch (error) {
+      toast.error("Failed to approve inspections");
+      console.error("Bulk approve error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!inspections || inspections.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
@@ -237,10 +322,52 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {(canReview || canApprove) && selectedInspections.size > 0 && (
+        <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">
+            {selectedInspections.size} inspection(s) selected
+          </span>
+          <div className="flex gap-2">
+            {canReview && (
+              <Button
+                onClick={handleBulkReview}
+                disabled={isSubmitting}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <FileCheck className="w-4 h-4 mr-2" />
+                {isSubmitting ? "Processing..." : "Mark as Reviewed"}
+              </Button>
+            )}
+            {canApprove && (
+              <Button
+                onClick={handleBulkApprove}
+                disabled={isSubmitting}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {isSubmitting ? "Processing..." : "Approve Selected"}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
+              {(canReview || canApprove) && (
+                <th className="px-2 py-1.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    checked={selectedInspections.size === inspections.length}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    aria-label="Select all inspections"
+                  />
+                </th>
+              )}
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
                 Branch
               </th>
@@ -282,6 +409,17 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
                   key={inspection.id}
                   className="hover:bg-gray-50 transition-colors"
                 >
+                  {(canReview || canApprove) && (
+                    <td className="px-2 py-1.5 text-center whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedInspections.has(inspection.id)}
+                        onChange={() => handleSelectInspection(inspection.id)}
+                        className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        aria-label={`Select inspection for ${inspection.branch}`}
+                      />
+                    </td>
+                  )}
                   <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                     {inspection.branch}
                   </td>

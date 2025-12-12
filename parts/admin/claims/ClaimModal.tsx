@@ -1,18 +1,23 @@
 "use client";
+import { useState, useEffect } from "react";
 import {
   X,
-  Download,
-  Printer,
+  Edit,
   FileText,
   Calendar,
   User,
   Building2,
   CreditCard,
   Loader2,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { getStatusBadgeColor, getTypeTextColor } from "@/lib/utils";
 import { ClaimDetail } from "@/hooks/claims";
+import { getUserFromStorage, type UserRole } from "@/lib/auth";
+import { toast } from "sonner";
 
 interface ClaimDetailModalProps {
   claimDetail: ClaimDetail | null;
@@ -29,6 +34,7 @@ interface ClaimDetailModalProps {
  * - No client-side calculations (API provides difference, percentage, processing time)
  * - Added loading state for detail fetch
  * - Uses camelCase field names (transformed by hook)
+ * - Role-based action buttons (Edit, Reviewed, Approve)
  */
 export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
   claimDetail,
@@ -36,7 +42,35 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
   onClose,
   loading = false,
 }) => {
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<"reviewed" | "approve" | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedData, setEditedData] = useState<ClaimDetail | null>(null);
+
+  useEffect(() => {
+    const user = getUserFromStorage();
+    setUserRole(user?.role || null);
+  }, []);
+
+  useEffect(() => {
+    if (claimDetail && isOpen) {
+      setEditedData(claimDetail);
+      setIsEditMode(false);
+    }
+  }, [claimDetail, isOpen]);
+
   if (!isOpen) return null;
+
+  // Check if user can edit (Regional Officer, Admin, HQ, HOD)
+  const canEdit = userRole && ["regional_manager", "admin", "manager"].includes(userRole);
+
+  // Check if user can review (Regional Officer only)
+  const canReview = userRole === "regional_manager";
+
+  // Check if user can approve (Admin, HQ, HOD)
+  const canApprove = userRole && ["admin", "manager"].includes(userRole);
 
   // Helper function to format currency
   const formatCurrency = (amount: number): string => {
@@ -66,54 +100,130 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleEdit = () => {
+    setIsEditMode(true);
   };
 
-  const handleDownload = () => {
-    if (!claimDetail) return;
-
-    const content = `
-CLAIM DETAILS
-=============
-
-Claim ID: ${claimDetail.claimId}
-Employer: ${claimDetail.employer}
-Claimant: ${claimDetail.claimant}
-Type: ${claimDetail.type}
-Status: ${claimDetail.status}
-
-FINANCIAL INFORMATION
-=====================
-Amount Requested: ${formatCurrency(claimDetail.financial.amountRequested)}
-Amount Paid: ${formatCurrency(claimDetail.financial.amountPaid)}
-Difference: ${formatCurrency(claimDetail.financial.difference)} (${
-      claimDetail.financial.differencePercent
-    }%)
-
-TIMELINE
-========
-Date Processed: ${formatDate(claimDetail.timeline.dateProcessed)}
-Date Paid: ${formatDate(claimDetail.timeline.datePaid)}
-Processing Time: ${claimDetail.timeline.processingTimeDays} days
-
-CLASSIFICATION
-==============
-Sector: ${claimDetail.classification.sector || "N/A"}
-Class: ${claimDetail.classification.class || "N/A"}
-Payment Period: ${claimDetail.classification.paymentPeriod || "N/A"}
-    `.trim();
-
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `claim-${claimDetail.claimId}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleCancelEdit = () => {
+    setEditedData(claimDetail);
+    setIsEditMode(false);
   };
+
+  const handleSaveEdit = async () => {
+    if (!editedData) return;
+
+    setIsSubmitting(true);
+    try {
+      // TODO: Make API call to save edited data
+      // const response = await updateClaim(editedData);
+
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+
+      toast.success("Claim updated successfully");
+      setIsEditMode(false);
+      // TODO: Refresh data
+    } catch (error) {
+      toast.error("Failed to update claim");
+      console.error("Error updating claim:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFieldChange = (field: string, value: any) => {
+    if (!editedData) return;
+
+    // Handle nested fields
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.');
+      setEditedData({
+        ...editedData,
+        [parent]: {
+          ...(editedData[parent as keyof ClaimDetail] as any),
+          [child]: value
+        }
+      });
+    } else {
+      setEditedData({
+        ...editedData,
+        [field]: value
+      });
+    }
+  };
+
+  const handleReviewedClick = () => {
+    setConfirmAction("reviewed");
+    setShowConfirmDialog(true);
+  };
+
+  const handleApproveClick = () => {
+    setConfirmAction("approve");
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (!claimDetail || !confirmAction) return;
+
+    setIsSubmitting(true);
+    try {
+      // TODO: Make API call to update status
+      // const response = await updateClaimStatus(claimDetail.id, confirmAction);
+
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+
+      toast.success(
+        confirmAction === "reviewed"
+          ? "Claim marked as reviewed successfully"
+          : "Claim approved successfully"
+      );
+
+      setShowConfirmDialog(false);
+      onClose();
+      // TODO: Refresh data
+    } catch (error) {
+      toast.error("Failed to update claim status");
+      console.error("Error updating claim:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancelConfirm = () => {
+    setShowConfirmDialog(false);
+    setConfirmAction(null);
+  };
+
+  // Render editable field or display value
+  const renderField = (label: string, value: any, field: string, type: "text" | "number" | "date" = "text") => {
+    if (isEditMode && editedData) {
+      const fieldValue = field.includes('.')
+        ? field.split('.').reduce((obj, key) => obj?.[key], editedData as any)
+        : (editedData as any)[field];
+
+      return (
+        <div>
+          <label htmlFor={field} className="text-xs text-gray-600 uppercase block mb-1">{label}</label>
+          <input
+            id={field}
+            type={type}
+            value={fieldValue || ''}
+            onChange={(e) => handleFieldChange(field, type === 'number' ? parseFloat(e.target.value) : e.target.value)}
+            placeholder={`Enter ${label.toLowerCase()}`}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <p className="text-xs text-gray-600 uppercase">{label}</p>
+        <p className="text-sm font-medium text-gray-900">{value}</p>
+      </div>
+    );
+  };
+
+  const displayData = editedData || claimDetail;
 
   return (
     <>
@@ -143,25 +253,46 @@ Payment Period: ${claimDetail.classification.paymentPeriod || "N/A"}
             </div>
 
             <div className="flex items-center gap-2">
-              {claimDetail && (
+              {claimDetail && canEdit && !isEditMode && (
+                <Button
+                  onClick={handleEdit}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </Button>
+              )}
+              {isEditMode && (
                 <>
-                  <button
-                    onClick={handleDownload}
-                    className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
-                    title="Download claim details"
+                  <Button
+                    onClick={handleCancelEdit}
+                    variant="outline"
+                    size="sm"
+                    disabled={isSubmitting}
                   >
-                    <Download className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={handlePrint}
-                    className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
-                    title="Print claim details"
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSaveEdit}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                    disabled={isSubmitting}
                   >
-                    <Printer className="w-5 h-5" />
-                  </button>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
                 </>
               )}
               <button
+                type="button"
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
                 title="Close"
@@ -212,28 +343,9 @@ Payment Period: ${claimDetail.classification.paymentPeriod || "N/A"}
                       </h3>
                     </div>
                     <div className="space-y-2">
-                      <div>
-                        <p className="text-xs text-gray-600 uppercase">
-                          Company Name
-                        </p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {claimDetail.employer}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-600 uppercase">
-                          Sector
-                        </p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {claimDetail.classification.sector || "—"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-600 uppercase">Class</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {claimDetail.classification.class || "—"}
-                        </p>
-                      </div>
+                      {renderField("Company Name", displayData?.employer, "employer")}
+                      {renderField("Sector", displayData?.classification.sector || "—", "classification.sector")}
+                      {renderField("Class", displayData?.classification.class || "—", "classification.class")}
                     </div>
                   </div>
 
@@ -245,14 +357,7 @@ Payment Period: ${claimDetail.classification.paymentPeriod || "N/A"}
                       </h3>
                     </div>
                     <div className="space-y-2">
-                      <div>
-                        <p className="text-xs text-gray-600 uppercase">
-                          Full Name
-                        </p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {claimDetail.claimant}
-                        </p>
-                      </div>
+                      {renderField("Full Name", displayData?.claimant, "claimant")}
                       <div>
                         <p className="text-xs text-gray-600 uppercase">
                           Claim Type
@@ -284,21 +389,33 @@ Payment Period: ${claimDetail.classification.paymentPeriod || "N/A"}
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <p className="text-xs text-gray-600 uppercase mb-1">
-                        Amount Requested
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {formatCurrency(claimDetail.financial.amountRequested)}
-                      </p>
+                      {isEditMode ? (
+                        renderField("Amount Requested", formatCurrency(displayData?.financial.amountRequested || 0), "financial.amountRequested", "number")
+                      ) : (
+                        <>
+                          <p className="text-xs text-gray-600 uppercase mb-1">
+                            Amount Requested
+                          </p>
+                          <p className="text-2xl font-bold text-gray-900">
+                            {formatCurrency(claimDetail.financial.amountRequested)}
+                          </p>
+                        </>
+                      )}
                     </div>
 
                     <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <p className="text-xs text-gray-600 uppercase mb-1">
-                        Amount Paid
-                      </p>
-                      <p className="text-2xl font-bold text-green-700">
-                        {formatCurrency(claimDetail.financial.amountPaid)}
-                      </p>
+                      {isEditMode ? (
+                        renderField("Amount Paid", formatCurrency(displayData?.financial.amountPaid || 0), "financial.amountPaid", "number")
+                      ) : (
+                        <>
+                          <p className="text-xs text-gray-600 uppercase mb-1">
+                            Amount Paid
+                          </p>
+                          <p className="text-2xl font-bold text-green-700">
+                            {formatCurrency(claimDetail.financial.amountPaid)}
+                          </p>
+                        </>
+                      )}
                     </div>
 
                     <div className="bg-white rounded-lg p-4 border border-gray-200">
@@ -407,23 +524,89 @@ Payment Period: ${claimDetail.classification.paymentPeriod || "N/A"}
 
           {/* Footer */}
           <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
-            <button
+            <Button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              variant="outline"
             >
-              Close
-            </button>
-            {claimDetail && (
-              <button
-                onClick={handleDownload}
-                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
+              Cancel
+            </Button>
+            {claimDetail && canReview && (
+              <Button
+                onClick={handleReviewedClick}
+                className="bg-blue-600 hover:bg-blue-700"
               >
-                Download Report
-              </button>
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Mark as Reviewed
+              </Button>
+            )}
+            {claimDetail && canApprove && (
+              <Button
+                onClick={handleApproveClick}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Approve
+              </Button>
             )}
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-60 z-[60]" onClick={handleCancelConfirm} />
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
+              <div className="flex items-start gap-4">
+                <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
+                  confirmAction === "reviewed" ? "bg-blue-100" : "bg-green-100"
+                }`}>
+                  <AlertCircle className={`w-6 h-6 ${
+                    confirmAction === "reviewed" ? "text-blue-600" : "text-green-600"
+                  }`} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {confirmAction === "reviewed" ? "Mark as Reviewed?" : "Approve Claim?"}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {confirmAction === "reviewed"
+                      ? "Are you sure you want to mark this claim as reviewed? This action will update the claim status."
+                      : "Are you sure you want to approve this claim? This action will finalize the claim approval."}
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  onClick={handleCancelConfirm}
+                  variant="outline"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleConfirmAction}
+                  disabled={isSubmitting}
+                  className={confirmAction === "reviewed" ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      {confirmAction === "reviewed" ? "Yes, Mark as Reviewed" : "Yes, Approve"}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 };

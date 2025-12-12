@@ -1,7 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import {
   Card,
   CardContent,
@@ -32,17 +41,19 @@ export function RegionChartBarMultiple({
     }
 
     // Create a map of regions with data
-    const dataMap = new Map(rawData?.map(item => [item.region, item]) || []);
+    const dataMap = new Map(rawData?.map((item) => [item.region, item]) || []);
 
     // Include all regions, filling in 0 values for those without data
-    return allRegions.map(region => {
+    return allRegions.map((region) => {
       const existingData = dataMap.get(region.name);
-      return existingData || {
-        region: region.name,
-        target: 0,
-        actual: 0,
-        performance_percent: 0,
-      };
+      return (
+        existingData || {
+          region: region.name,
+          target: 0,
+          actual: 0,
+          performance_percent: 0,
+        }
+      );
     });
   }, [allRegions, rawData]);
 
