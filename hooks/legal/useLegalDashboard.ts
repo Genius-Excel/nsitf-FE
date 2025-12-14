@@ -24,7 +24,7 @@ interface UseLegalDashboardReturn {
   refetch: () => Promise<void>;
 }
 
-export function useLegalDashboard(): UseLegalDashboardReturn {
+export function useLegalDashboard(filters: Record<string, string> = {}): UseLegalDashboardReturn {
   const [data, setData] = useState<LegalDashboard | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,14 @@ export function useLegalDashboard(): UseLegalDashboardReturn {
       setError(null);
 
       const httpService = new HttpService();
-      const response = await httpService.getData("/api/legal-ops/dashboard");
+
+      // Build query string from filters
+      const queryParams = new URLSearchParams(filters).toString();
+      const url = queryParams
+        ? `/api/legal-ops/dashboard?${queryParams}`
+        : "/api/legal-ops/dashboard";
+
+      const response = await httpService.getData(url);
 
       const apiData: LegalDashboardAPI = response.data;
       const transformedData = transformLegalDashboardFromAPI(apiData.data);
@@ -52,7 +59,7 @@ export function useLegalDashboard(): UseLegalDashboardReturn {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [JSON.stringify(filters)]);
 
   useEffect(() => {
     fetchDashboard();

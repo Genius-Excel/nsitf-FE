@@ -38,7 +38,7 @@ export const StatisticsCards: React.FC<{ stats: HSEStatCard[] }> = ({
   }
 
   return (
-    <MetricsGrid columns={5}>
+    <MetricsGrid columns={6}>
       {stats.map((stat, idx) => (
         <MetricCard
           key={idx}

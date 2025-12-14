@@ -21,6 +21,7 @@ export interface InspectionDashboardAPI {
   };
   inspection_summary: {
     id: string;
+    region?: string;
     branch: string;
     inspections_conducted: number;
     debt_established: number;
@@ -81,6 +82,7 @@ export interface InspectionMetricCards {
 
 export interface InspectionRecord {
   id: string;
+  region?: string;
   branch: string;
   inspectionsConducted: number;
   debtEstablished: number;
@@ -193,6 +195,7 @@ export function transformInspectionDashboardFromAPI(
     },
     inspectionSummary: inspectionSummaryData.map((record) => ({
       id: record.id,
+      region: record.region,
       branch: record.branch,
       inspectionsConducted: record.inspections_conducted,
       debtEstablished: record.debt_established,

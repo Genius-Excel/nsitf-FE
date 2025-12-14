@@ -375,25 +375,28 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
                 </th>
               )}
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Branch
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Inspection Conducted
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Cumulative Debt Established (₦)
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Cumulative Debt Recovered (₦)
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Performance Rate (%)
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Demand Notice
+                REGION
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Period
+                BRANCH
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 tracking-wide whitespace-nowrap">
+                Inspection conducted
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                CUMULATIVE Debt established (₦)
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                CUMULATIVE Debt recovered (₦)
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 tracking-wide whitespace-nowrap">
+                Performance rate (%) (D/E)
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                DEMAND NOTICE
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                PERIOD
               </th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
                 Actions
@@ -426,6 +429,9 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
                       />
                     </td>
                   )}
+                  <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                    {inspection.region || "—"}
+                  </td>
                   <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                     {inspection.branch}
                   </td>

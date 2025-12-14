@@ -25,7 +25,7 @@ interface StatisticsCardsProps {
 }
 
 export const StatisticsCards: React.FC<StatisticsCardsProps> = ({ stats }) => (
-  <MetricsGrid columns={5}>
+  <MetricsGrid columns={7}>
     {stats.map((stat, idx) => {
       const colorSchemes: Array<"green" | "blue" | "purple" | "orange" | "gray"> = [
         "green",
@@ -33,6 +33,8 @@ export const StatisticsCards: React.FC<StatisticsCardsProps> = ({ stats }) => (
         "blue",
         "purple",
         "orange",
+        "purple",
+        "blue",
       ];
 
       return (
@@ -181,6 +183,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
     onExport={onExport}
     onUpload={onUpload}
     showUpload={true}
+    showFilter={false}
   />
 );
 
@@ -365,40 +368,43 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
                   </th>
                 )}
                 <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                  Claim ID
+                  ECS NO.
                 </th>
                 <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                   Employer
                 </th>
                 <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                  Claimant
+                  BENEFICIARY
                 </th>
                 <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                   Type
                 </th>
-                <th className="px-2 py-1.5 text-right text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                  Amount Requested (₦)
+                <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  GENDER
                 </th>
                 <th className="px-2 py-1.5 text-right text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                  Amount Paid (₦)
+                  Amount REQUESTED (₦)
+                </th>
+                <th className="px-2 py-1.5 text-right text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  Amount PAID (₦)
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                   Status
                 </th>
                 <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                  Date Processed
+                  Date PROCESSED
                 </th>
                 <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                  Date Paid
+                  DATE PAID
                 </th>
                 <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                  Sector
+                  SECTOR
                 </th>
                 <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                  Class
+                  CLASS
                 </th>
                 <th className="px-2 py-1.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                  Payment Period
+                  PERIOD
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                   Actions
@@ -438,6 +444,9 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
                     <span className={getTypeTextColor(claim.type)}>
                       {claim.type}
                     </span>
+                  </td>
+                  <td className="px-2 py-1.5 text-xs text-muted-foreground whitespace-nowrap">
+                    {claim.gender || "—"}
                   </td>
                   <td className="px-2 py-1.5 text-xs font-semibold text-foreground whitespace-nowrap text-right">
                     {formatCurrency(claim.amountRequested)}

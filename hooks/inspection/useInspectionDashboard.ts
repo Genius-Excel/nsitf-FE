@@ -25,7 +25,7 @@ interface UseInspectionDashboardReturn {
   refetch: () => Promise<void>;
 }
 
-export function useInspectionDashboard(): UseInspectionDashboardReturn {
+export function useInspectionDashboard(filters: Record<string, string> = {}): UseInspectionDashboardReturn {
   const [data, setData] = useState<InspectionDashboard | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,9 +38,14 @@ export function useInspectionDashboard(): UseInspectionDashboardReturn {
       console.log("🔍 [Inspection Dashboard] Starting fetch...");
 
       const httpService = new HttpService();
-      const response = await httpService.getData(
-        "/api/inspection-ops/inspections/dashboard"
-      );
+
+      // Build query string from filters
+      const queryParams = new URLSearchParams(filters).toString();
+      const url = queryParams
+        ? `/api/inspection-ops/inspections/dashboard?${queryParams}`
+        : "/api/inspection-ops/inspections/dashboard";
+
+      const response = await httpService.getData(url);
 
       console.log("✅ [Inspection Dashboard] API Response received:", response);
 
@@ -81,7 +86,7 @@ export function useInspectionDashboard(): UseInspectionDashboardReturn {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [JSON.stringify(filters)]);
 
   useEffect(() => {
     fetchDashboard();

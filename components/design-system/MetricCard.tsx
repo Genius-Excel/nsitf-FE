@@ -60,7 +60,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         {typeof value === "number" ? value.toLocaleString() : value}
       </p>
       {change && (
-        <p className="text-[10px] text-green-600 mt-0.5 font-medium truncate">{change}</p>
+        <p className="text-[10px] text-green-600 mt-0.5 font-medium truncate">
+          {change}
+        </p>
       )}
       {trend && (
         <p className="text-[10px] text-blue-600 mt-0.5 font-medium truncate">
@@ -69,9 +71,13 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             : `Trend: ${trend}`}
         </p>
       )}
-      {subtitle && <p className="text-[10px] text-gray-500 mt-0.5 truncate">{subtitle}</p>}
+      {subtitle && (
+        <p className="text-[10px] text-gray-500 mt-0.5 truncate">{subtitle}</p>
+      )}
       {description && (
-        <p className="text-[10px] text-gray-500 mt-0.5 truncate">{description}</p>
+        <p className="text-[10px] text-gray-500 mt-0.5 truncate">
+          {description}
+        </p>
       )}
     </div>
   );
@@ -79,12 +85,13 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
 export const MetricsGrid: React.FC<{
   children: React.ReactNode;
-  columns?: 4 | 5 | 6;
+  columns?: 4 | 5 | 6 | 7;
 }> = ({ children, columns = 5 }) => {
   const gridCols = {
     4: "lg:grid-cols-4",
     5: "lg:grid-cols-5",
     6: "lg:grid-cols-6",
+    7: "lg:grid-cols-7",
   };
 
   return (

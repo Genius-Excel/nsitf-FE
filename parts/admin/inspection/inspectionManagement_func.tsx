@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -9,7 +9,8 @@ import { PermissionGuard } from "@/components/permission-guard";
 import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
-import { FilterPanel } from "@/components/design-system/FilterPanel";
+import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPanel";
+import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import ScheduleInspectionModal from "@/components/shedule-inspection";
 import ViewAllInspectionsModal from "@/components/view-all-inspection";
 import { getUserFromStorage } from "@/lib/auth";
@@ -22,6 +23,7 @@ import {
   InspectionsTable,
 } from "./inspectionDesign";
 import { InspectionDetailModal } from "./inspectionModal";
+import { InspectionUploadModal } from "./inspectionUploadModal";
 import { useInspectionDashboard } from "@/hooks/inspection/useInspectionDashboard";
 import { useInspectionFilters } from "@/hooks/inspection/useInspectionFilters";
 import type {
@@ -65,6 +67,7 @@ export default function InspectionManagement() {
   // ============= STATE =============
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isViewAllModalOpen, setIsViewAllModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedInspection, setSelectedInspection] =
     useState<InspectionRecord | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -73,7 +76,20 @@ export default function InspectionManagement() {
   const [periodFilter, setPeriodFilter] = useState("");
 
   // ============= HOOKS =============
-  const { data, loading, error } = useInspectionDashboard();
+  const {
+    filters,
+    regions,
+    branches,
+    apiParams,
+    userRole,
+    userRegionId,
+    handleFilterChange,
+    resetFilters,
+  } = useAdvancedFilters({
+    module: "inspection",
+  });
+
+  const { data, loading, error } = useInspectionDashboard(apiParams);
   const { filteredRecords, totalCount, filteredCount } = useInspectionFilters(
     data?.inspectionSummary || [],
     { searchTerm, performanceThreshold, periodFilter }
@@ -102,10 +118,24 @@ export default function InspectionManagement() {
     setSelectedInspection(null);
   };
 
+  const handleUploadClick = () => {
+    if (!canManage) {
+      toast.error("You don't have permission to upload inspection data");
+      return;
+    }
+    setIsUploadModalOpen(true);
+  };
+
+  const handleUploadSuccess = () => {
+    // Refresh dashboard after successful upload
+    window.location.reload();
+  };
+
   const handleResetFilters = () => {
     setSearchTerm("");
     setPerformanceThreshold(undefined);
     setPeriodFilter("");
+    resetFilters();
   };
 
   const handleExport = () => {
@@ -176,13 +206,7 @@ export default function InspectionManagement() {
       icon: "notice",
     },
     {
-      title: "Demand Notice",
-      value: data.metricCards.totalDemandNotice,
-      bgColor: "#22c55e",
-      icon: "alert-circle",
-    },
-    {
-      title: "Total Debt Established",
+      title: "Cumulative Debt Established",
       value: `₦${(data.metricCards.totalDebtEstablished / 1_000_000).toFixed(
         1
       )}M`,
@@ -190,18 +214,24 @@ export default function InspectionManagement() {
       icon: "file-text",
     },
     {
-      title: "Debt Recovered",
-      value: `₦${(data.metricCards.totalDebtRecovered / 1_000_000).toFixed(
-        1
-      )}M`,
-      bgColor: "#16a34a",
-      icon: "naira-sign",
+      title: "Demand Notice",
+      value: data.metricCards.totalDemandNotice,
+      bgColor: "#22c55e",
+      icon: "alert-circle",
     },
     {
       title: "Performance Rate",
       value: `${data.metricCards.performanceRate}%`,
       bgColor: "#3b82f6",
       icon: "trending-up",
+    },
+    {
+      title: "Cumulative Debt Recovered",
+      value: `₦${(data.metricCards.totalDebtRecovered / 1_000_000).toFixed(
+        1
+      )}M`,
+      bgColor: "#16a34a",
+      icon: "naira-sign",
     },
   ];
 
@@ -217,6 +247,7 @@ export default function InspectionManagement() {
         action={
           <PermissionGuard permission="manage_inspection" fallback={null}>
             <button
+              type="button"
               onClick={() => setIsScheduleModalOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
             >
@@ -233,50 +264,41 @@ export default function InspectionManagement() {
       {/* Bar Chart */}
       <InspectionBarChart data={data.monthlyDebtsComparison} />
 
-      {/* Search and Filters */}
-      <SearchAndFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        onExport={handleExport}
-      />
+      {/* Search and Filters with Upload Button */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1">
+          <SearchAndFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            onExport={handleExport}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={handleUploadClick}
+          className="flex items-center gap-1.5 px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+        >
+          <Upload size={16} />
+          Upload Inspection Data
+        </button>
+      </div>
 
-      {/* Filter Panel */}
-      <FilterPanel
+      {/* Advanced Filter Panel */}
+      <AdvancedFilterPanel
+        regions={regions}
+        branches={branches}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onReset={handleResetFilters}
         totalEntries={totalCount}
         filteredCount={filteredCount}
-        onReset={handleResetFilters}
-        hasActiveFilters={hasActiveFilters}
-      >
-        {/* Period Filter */}
-        <div>
-          <label htmlFor="period-filter" className="block text-sm font-medium text-gray-700 mb-2">Period</label>
-          <input
-            id="period-filter"
-            type="text"
-            placeholder="e.g., June 2025"
-            value={periodFilter}
-            onChange={(e) => setPeriodFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-        </div>
-
-        {/* Performance Threshold Filter */}
-        <div>
-          <label htmlFor="performance-filter" className="block text-sm font-medium text-gray-700 mb-2">
-            Minimum Performance Rate (%)
-          </label>
-          <input
-            id="performance-filter"
-            type="number"
-            min="0"
-            max="100"
-            placeholder="e.g., 75"
-            value={performanceThreshold !== undefined ? performanceThreshold : ""}
-            onChange={(e) => setPerformanceThreshold(e.target.value ? parseFloat(e.target.value) : undefined)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-        </div>
-      </FilterPanel>
+        userRole={userRole}
+        userRegionId={userRegionId}
+        showRegionFilter={true}
+        showBranchFilter={true}
+        showMonthYearFilter={true}
+        showDateRangeFilter={false}
+      />
 
       {/* Inspections Table */}
       <InspectionsTable
@@ -328,6 +350,12 @@ export default function InspectionManagement() {
         inspection={selectedInspection}
         isOpen={isDetailModalOpen}
         onClose={handleCloseDetailModal}
+      />
+
+      <InspectionUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUploadSuccess={handleUploadSuccess}
       />
     </div>
   );

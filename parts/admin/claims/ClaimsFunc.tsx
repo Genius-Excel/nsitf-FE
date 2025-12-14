@@ -13,7 +13,8 @@ import { ClaimDetailModal } from "./ClaimModal";
 import { ClaimsUploadModal } from "./ClaimsUploadModal";
 import { StatCard } from "@/lib/types";
 import { PageHeader } from "@/components/design-system/PageHeader";
-import { FilterPanel } from "@/components/design-system/FilterPanel";
+import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPanel";
+import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import {
   useClaimsDashboard,
   useClaimsFilters,
@@ -27,6 +28,22 @@ import { canManageClaims } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 
 export default function ClaimsManagement() {
+  // ==========================================
+  // ADVANCED FILTERS
+  // ==========================================
+  const {
+    filters,
+    regions,
+    branches,
+    apiParams,
+    userRole,
+    userRegionId,
+    handleFilterChange,
+    resetFilters,
+  } = useAdvancedFilters({
+    module: "claims",
+  });
+
   // ==========================================
   // STATE
   // ==========================================
@@ -43,6 +60,11 @@ export default function ClaimsManagement() {
   useEffect(() => {
     const user = getUserFromStorage();
     if (user) {
+      // Claims upload is only for regional officers, not admin
+      const isRegionalOfficer = user.role === "regional_manager" ||
+                                user.role === "compliance_officer" ||
+                                user.role === "claims_officer";
+
       // Check backend permissions first
       if (user.permissions && Array.isArray(user.permissions)) {
         const hasBackendPermission = user.permissions.some(p =>
@@ -50,10 +72,11 @@ export default function ClaimsManagement() {
           p === "can_create_claims_record" ||
           p === "can_edit_claims_record"
         );
-        setCanManage(hasBackendPermission);
+        // Only allow if user has permission AND is a regional officer (not admin)
+        setCanManage(hasBackendPermission && isRegionalOfficer);
       } else {
-        // Fallback to role-based permissions
-        setCanManage(canManageClaims(user.role));
+        // Fallback to role-based permissions, but exclude admin
+        setCanManage(canManageClaims(user.role) && isRegionalOfficer);
       }
     }
   }, []);
@@ -62,7 +85,7 @@ export default function ClaimsManagement() {
   // API HOOKS
   // ==========================================
 
-  // 1. Fetch dashboard data (with pagination support)
+  // 1. Fetch dashboard data (with pagination support and filters)
   const {
     claims,
     metrics,
@@ -73,7 +96,10 @@ export default function ClaimsManagement() {
     error,
     refetch,
     setPage,
-  } = useClaimsDashboard({ page: 1 });
+  } = useClaimsDashboard({
+    page: 1,
+    ...apiParams, // Add filter parameters from advanced filters
+  });
 
   // 2. Client-side filtering
   const { filteredClaims } = useClaimsFilters({
@@ -157,20 +183,36 @@ export default function ClaimsManagement() {
         bgColor: "#3b82f6",
       },
       {
-        title: "Disability Beneficiaries",
+        title: "Disability RSA Benefit",
         description: "",
-        value: metrics.disabilityBeneficiaries,
+        value: metrics.disabilityRSABenefit || metrics.disabilityBeneficiaries || 0,
         change: `${mockChangePercent}% from last month`,
         icon: <BarChart3 />,
         bgColor: "#a855f7",
       },
       {
-        title: "Retiree Benefit Beneficiaries",
+        title: "Disabilities Beneficiaries",
         description: "",
-        value: metrics.retireeBenefitBeneficiaries,
+        value: metrics.disabilitiesBeneficiaries || metrics.retireeBenefitBeneficiaries || 0,
         change: `${mockChangePercent}% from last month`,
         icon: <BarChart3 />,
         bgColor: "#f59e0b",
+      },
+      {
+        title: "LOP",
+        description: "",
+        value: metrics.lop || 0,
+        change: `${mockChangePercent}% from last month`,
+        icon: <FileText />,
+        bgColor: "#8b5cf6",
+      },
+      {
+        title: "MER",
+        description: "",
+        value: metrics.mer || 0,
+        change: `${mockChangePercent}% from last month`,
+        icon: <Activity />,
+        bgColor: "#ec4899",
       },
     ];
   }, [metrics]);
@@ -370,45 +412,22 @@ export default function ClaimsManagement() {
             onUpload={handleUploadClick}
           />
 
-          {/* Filter Panel */}
-          <FilterPanel
+          {/* Advanced Filter Panel */}
+          <AdvancedFilterPanel
+            regions={regions}
+            branches={branches}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onReset={resetFilters}
             totalEntries={claims.length}
             filteredCount={filteredClaims.length}
-            onReset={handleResetFilters}
-            hasActiveFilters={hasActiveFilters}
-          >
-            {/* Status Filter */}
-            <div>
-              <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-              <select
-                id="status-filter"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                <option value="">All Statuses</option>
-                {uniqueStatuses.map((status) => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Type Filter */}
-            <div>
-              <label htmlFor="type-filter" className="block text-sm font-medium text-gray-700 mb-2">Claim Type</label>
-              <select
-                id="type-filter"
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                <option value="">All Types</option>
-                {uniqueTypes.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
-          </FilterPanel>
+            userRole={userRole}
+            userRegionId={userRegionId}
+            showRegionFilter={true}
+            showBranchFilter={true}
+            showMonthYearFilter={true}
+            showDateRangeFilter={false}
+          />
 
           {/* Claims Table */}
           <ClaimsTable claims={filteredClaims} onView={handleViewClaim} />

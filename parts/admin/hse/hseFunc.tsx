@@ -8,14 +8,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 import { SearchBar } from "@/components/design-system/SearchBar";
-import { FilterPanel } from "@/components/design-system/FilterPanel";
+import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPanel";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
+import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import { getUserFromStorage } from "@/lib/auth";
 import { canManageHSE } from "@/lib/permissions";
 import {
@@ -26,6 +27,7 @@ import {
   HSERecordsTable,
 } from "./hseDesign";
 import { HSEFormModal, ViewDetailsModal } from "./hseModal";
+import { HSEUploadModal } from "./hseUploadModal";
 import { useHSEDashboard } from "@/hooks/hse/useGetHSEDashboard";
 import { useHSERecords } from "@/hooks/hse/useHSERecords";
 import { useHSEFilters } from "@/hooks/hse/useHSEFilters";
@@ -74,6 +76,7 @@ export default function HSEDashboardContent() {
   const [dateTo, setDateTo] = useState("");
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<HSERecord | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<HSEFormData>({
@@ -88,11 +91,24 @@ export default function HSEDashboardContent() {
 
   // ============= HOOKS =============
   const {
+    filters,
+    regions,
+    branches,
+    apiParams,
+    userRole,
+    userRegionId,
+    handleFilterChange,
+    resetFilters,
+  } = useAdvancedFilters({
+    module: "hse",
+  });
+
+  const {
     data: dashboardData,
     loading: dashboardLoading,
     error: dashboardError,
     refetch: refetchDashboard,
-  } = useHSEDashboard();
+  } = useHSEDashboard(apiParams);
   const {
     data: records,
     loading: recordsLoading,
@@ -122,6 +138,7 @@ export default function HSEDashboardContent() {
     setRecordTypeFilter("");
     setDateFrom("");
     setDateTo("");
+    resetFilters();
   };
   const handleAddNew = () => {
     if (!canManage) {
@@ -191,6 +208,19 @@ export default function HSEDashboardContent() {
     setIsDetailModalOpen(true);
   };
 
+  const handleUploadClick = () => {
+    if (!canManage) {
+      toast.error("You don't have permission to upload HSE data");
+      return;
+    }
+    setIsUploadModalOpen(true);
+  };
+
+  const handleUploadSuccess = () => {
+    refetch(); // Refresh dashboard after successful upload
+    setIsUploadModalOpen(false);
+  };
+
   // ============= LOADING & ERROR STATES =============
   if (dashboardLoading || recordsLoading) {
     return <LoadingState message="Loading HSE dashboard..." />;
@@ -211,10 +241,19 @@ export default function HSEDashboardContent() {
   // ============= PREPARE STATS =============
   const stats: HSEStatCard[] = [
     {
-      title: "Total OSH Activities",
+      title: "Total Actual OSH Activities",
       value: dashboardData.metricCards.totalActualOSHActivities,
       colorScheme: "blue",
-      description: `Target: ${dashboardData.metricCards.targetOSHActivities}`,
+    },
+    {
+      title: "OSH Enlightenment & Awareness",
+      value: dashboardData.metricCards.oshEnlightenment,
+      colorScheme: "green",
+    },
+    {
+      title: "OSH Inspection & Audit",
+      value: dashboardData.metricCards.oshAudit,
+      colorScheme: "orange",
     },
     {
       title: "Performance Rate",
@@ -227,19 +266,14 @@ export default function HSEDashboardContent() {
           : "gray",
     },
     {
-      title: "OSH Enlightenment",
-      value: dashboardData.metricCards.oshEnlightenment,
-      colorScheme: "green",
-    },
-    {
-      title: "OSH Audit",
-      value: dashboardData.metricCards.oshAudit,
-      colorScheme: "orange",
-    },
-    {
-      title: "Accident Investigation",
+      title: "Accident & Incident Investigation",
       value: dashboardData.metricCards.accidentInvestigation,
       colorScheme: "purple",
+    },
+    {
+      title: "Target OSH Activities",
+      value: dashboardData.metricCards.targetOSHActivities,
+      colorScheme: "blue",
     },
   ];
 
@@ -269,174 +303,46 @@ export default function HSEDashboardContent() {
       <PageHeader
         title="HSE Management Dashboard"
         description="Health, Safety, and Environment monitoring and compliance tracking"
-        action={
-          <button
-            onClick={handleAddNew}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-          >
-            <Plus size={20} />
-            Add HSE Record
-          </button>
-        }
       />
 
       {/* Statistics Cards */}
       <StatisticsCards stats={stats} />
 
-      {/* Regional Summary Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold">
-            Regional OSH Activities Summary
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Performance by region and branch for {dashboardData.filters.period}
-          </p>
+      {/* Search Bar with Upload Button */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1">
+          <SearchBar
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            placeholder="Search HSE records..."
+          />
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                  Region
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                  Branch
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                  Total Activities
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                  Target
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                  Performance
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                  Enlightenment
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                  Audit
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                  Investigation
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {dashboardData.regionalSummary.map((region) => (
-                <tr key={region.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                    {region.region}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {region.branch}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-center">
-                    {region.totalActualOSHActivities}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-center">
-                    {region.targetOSHActivities}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-center">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        region.performanceRate >= 80
-                          ? "bg-green-100 text-green-700"
-                          : region.performanceRate >= 60
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {region.performanceRate.toFixed(1)}%
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-center">
-                    {region.oshEnlightenment}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-center">
-                    {region.oshInspectionAudit}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-center">
-                    {region.accidentInvestigation}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <button
+          type="button"
+          onClick={handleUploadClick}
+          className="flex items-center gap-1.5 px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+        >
+          <Upload size={16} />
+          Upload HSE Data
+        </button>
       </div>
 
-      {/* Search Bar */}
-      <SearchBar
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        placeholder="Search HSE records..."
-      />
-
-      {/* Filter Panel */}
-      <FilterPanel
+      {/* Advanced Filter Panel */}
+      <AdvancedFilterPanel
+        regions={regions}
+        branches={branches}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onReset={handleResetFilters}
         totalEntries={totalCount}
         filteredCount={filteredCount}
-        onReset={handleResetFilters}
-        hasActiveFilters={hasActiveFilters}
-      >
-        {/* Status Filter */}
-        <div>
-          <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-          <select
-            id="status-filter"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          >
-            <option value="">All Statuses</option>
-            {uniqueStatuses.map((status) => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Record Type Filter */}
-        <div>
-          <label htmlFor="record-type-filter" className="block text-sm font-medium text-gray-700 mb-2">Record Type</label>
-          <select
-            id="record-type-filter"
-            value={recordTypeFilter}
-            onChange={(e) => setRecordTypeFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          >
-            <option value="">All Types</option>
-            {uniqueRecordTypes.map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Date Range Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="date-from" className="block text-sm font-medium text-gray-700 mb-2">Date From</label>
-            <input
-              id="date-from"
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label htmlFor="date-to" className="block text-sm font-medium text-gray-700 mb-2">Date To</label>
-            <input
-              id="date-to"
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </FilterPanel>
+        userRole={userRole}
+        userRegionId={userRegionId}
+        showRegionFilter={true}
+        showBranchFilter={true}
+        showMonthYearFilter={true}
+        showDateRangeFilter={false}
+      />
 
       {/* HSE Records Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -490,6 +396,12 @@ export default function HSEDashboardContent() {
               }
             : null
         }
+      />
+
+      <HSEUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUploadSuccess={handleUploadSuccess}
       />
     </div>
   );
