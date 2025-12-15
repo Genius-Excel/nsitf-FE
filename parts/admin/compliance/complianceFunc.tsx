@@ -272,7 +272,7 @@ const ComplianceDashboard: React.FC = () => {
   // ============== ERROR STATE ==============
   if (dashboardError || regionsError) {
     return (
-      <div className="space-y-10 w-full max-w-[calc(100vw-20rem)] xl:max-w-[1216px]">
+      <div className="space-y-10">
         <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200">
           <p>Failed to load data: {dashboardError || regionsError}</p>
           <Button
@@ -301,7 +301,7 @@ const ComplianceDashboard: React.FC = () => {
 
   // ============== RENDER ==============
   return (
-    <div className="space-y-10 w-full max-w-[calc(100vw-20rem)] xl:max-w-[1216px]">
+    <div className="space-y-10">
       {/* Header */}
       <PageHeader
         title="Compliance View"

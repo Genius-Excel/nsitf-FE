@@ -52,34 +52,11 @@ export default function ClaimsManagement() {
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [canManage, setCanManage] = useState(false);
 
   // ==========================================
-  // PERMISSIONS
+  // PERMISSIONS REMOVED
   // ==========================================
-  useEffect(() => {
-    const user = getUserFromStorage();
-    if (user) {
-      // Claims upload is only for regional officers, not admin
-      const isRegionalOfficer = user.role === "regional_manager" ||
-                                user.role === "compliance_officer" ||
-                                user.role === "claims_officer";
-
-      // Check backend permissions first
-      if (user.permissions && Array.isArray(user.permissions)) {
-        const hasBackendPermission = user.permissions.some(p =>
-          p === "can_upload_claims" ||
-          p === "can_create_claims_record" ||
-          p === "can_edit_claims_record"
-        );
-        // Only allow if user has permission AND is a regional officer (not admin)
-        setCanManage(hasBackendPermission && isRegionalOfficer);
-      } else {
-        // Fallback to role-based permissions, but exclude admin
-        setCanManage(canManageClaims(user.role) && isRegionalOfficer);
-      }
-    }
-  }, []);
+  // All users can access upload and management features
 
   // ==========================================
   // API HOOKS
@@ -269,18 +246,10 @@ export default function ClaimsManagement() {
   }, []);
 
   const handleUploadClick = useCallback(() => {
-    if (!canManage) {
-      toast.error("You don't have permission to upload claims");
-      return;
-    }
     setIsUploadModalOpen(true);
-  }, [canManage]);
+  }, []);
 
   const handleExport = useCallback(() => {
-    if (!canManage) {
-      toast.error("You don't have permission to export claims");
-      return;
-    }
 
     if (filteredClaims.length === 0) {
       toast.error("No claims to export");
@@ -337,7 +306,7 @@ export default function ClaimsManagement() {
     URL.revokeObjectURL(url);
 
     toast.success(`Exported ${filteredClaims.length} claims`);
-  }, [filteredClaims, canManage]);
+  }, [filteredClaims]);
 
   // ==========================================
   // ERROR HANDLING
@@ -345,7 +314,7 @@ export default function ClaimsManagement() {
 
   if (error) {
     return (
-      <div className="space-y-4 w-full max-w-[calc(100vw-20rem)] xl:max-w-[1216px]">
+      <div className="space-y-10">
         <PageHeader
           title="Claims and Compensation View"
           description="Track and process employee compensation claims"
@@ -371,7 +340,7 @@ export default function ClaimsManagement() {
   // ==========================================
 
   return (
-    <div className="space-y-4 w-full max-w-[calc(100vw-20rem)] xl:max-w-[1216px]">
+    <div className="space-y-10">
       {/* Header */}
       <PageHeader
         title="Claims and Compensation View"
@@ -408,7 +377,6 @@ export default function ClaimsManagement() {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onFilterClick={() => {}}
-            onExport={handleExport}
             onUpload={handleUploadClick}
           />
 

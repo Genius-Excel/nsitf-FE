@@ -32,37 +32,8 @@ import type {
 } from "@/lib/types/inspection";
 
 export default function InspectionManagement() {
-  // ============= PERMISSIONS =============
-  const [canManage, setCanManage] = useState(false);
-
-  useEffect(() => {
-    const user = getUserFromStorage();
-    if (user) {
-      // Check backend permissions first
-      if (user.permissions && Array.isArray(user.permissions)) {
-        const hasBackendPermission = user.permissions.some(p =>
-          p === "can_upload_inspection" ||
-          p === "can_create_inspection_record" ||
-          p === "can_edit_inspection_record"
-        );
-        console.log("🔍 [InspectionManagement] Checking permissions:", {
-          user,
-          userRole: user.role,
-          backendPermissions: user.permissions,
-          hasBackendPermission,
-        });
-        setCanManage(hasBackendPermission);
-      } else {
-        // Fallback to role-based permissions
-        console.log("🔍 [InspectionManagement] Using role-based permissions:", {
-          user,
-          userRole: user.role,
-          canManage: canManageInspection(user.role),
-        });
-        setCanManage(canManageInspection(user.role));
-      }
-    }
-  }, []);
+  // ============= PERMISSIONS REMOVED =============
+  // All users can access upload and management features
 
   // ============= STATE =============
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
@@ -101,7 +72,6 @@ export default function InspectionManagement() {
     hasError: !!error,
     error,
     hasData: !!data,
-    canManage,
   });
 
   // ============= COMPUTED VALUES =============
@@ -119,10 +89,6 @@ export default function InspectionManagement() {
   };
 
   const handleUploadClick = () => {
-    if (!canManage) {
-      toast.error("You don't have permission to upload inspection data");
-      return;
-    }
     setIsUploadModalOpen(true);
   };
 
@@ -139,10 +105,6 @@ export default function InspectionManagement() {
   };
 
   const handleExport = () => {
-    if (!canManage) {
-      toast.error("You don't have permission to export inspection data");
-      return;
-    }
 
     const headers = [
       "Branch",
@@ -264,24 +226,12 @@ export default function InspectionManagement() {
       {/* Bar Chart */}
       <InspectionBarChart data={data.monthlyDebtsComparison} />
 
-      {/* Search and Filters with Upload Button */}
-      <div className="flex items-center gap-3">
-        <div className="flex-1">
-          <SearchAndFilters
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onExport={handleExport}
-          />
-        </div>
-        <button
-          type="button"
-          onClick={handleUploadClick}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-        >
-          <Upload size={16} />
-          Upload Inspection Data
-        </button>
-      </div>
+      {/* Search and Filters */}
+      <SearchAndFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        onUpload={handleUploadClick}
+      />
 
       {/* Advanced Filter Panel */}
       <AdvancedFilterPanel

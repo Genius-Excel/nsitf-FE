@@ -611,12 +611,12 @@ export const HSERecordsTable: React.FC<{
           </div>
         </div>
       )}
-      <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+      <div className="overflow-x-auto">
+        <table className="w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
               {(canReview || canApprove) && (
-                <th className="px-2 py-1.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <input
                     type="checkbox"
                     checked={selectedRecords.size === records.length}
@@ -626,34 +626,34 @@ export const HSERecordsTable: React.FC<{
                   />
                 </th>
               )}
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Record Type
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Employer
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Date Logged
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Safety Compliance (%)
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
+          <tbody className="bg-white divide-y divide-gray-200">
             {records.map((record) => (
               <tr
                 key={record.id}
-                className="hover:bg-gray-50 transition-colors"
+                className="hover:bg-gray-50 transition"
               >
                 {(canReview || canApprove) && (
-                  <td className="px-2 py-1.5 text-center whitespace-nowrap">
+                  <td className="px-4 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={selectedRecords.has(record.id)}
@@ -676,16 +676,16 @@ export const HSERecordsTable: React.FC<{
                     day: "numeric",
                   })}
                 </td>
-                <td className="px-4 py-4 text-sm whitespace-nowrap text-center">
+                <td className="px-4 py-4 text-sm whitespace-nowrap">
                   <Badge
                     className={`${getComplianceBadge(
                       record.safetyComplianceRate
-                    )} font-semibold`}
+                    )} font-medium`}
                   >
                     {record.safetyComplianceRate}%
                   </Badge>
                 </td>
-                <td className="px-4 py-4 text-sm whitespace-nowrap text-center">
+                <td className="px-4 py-4 text-sm whitespace-nowrap">
                   <Badge
                     className={`${getHSEStatusColor(
                       record.status
@@ -694,12 +694,12 @@ export const HSERecordsTable: React.FC<{
                     {record.status}
                   </Badge>
                 </td>
-                <td className="px-4 py-4 text-sm whitespace-nowrap text-center">
+                <td className="px-4 py-4 text-sm whitespace-nowrap">
                   <button
                     type="button"
                     onClick={() => onViewDetails(record)}
                     title={`View details for ${record.employer}`}
-                    className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900 inline-flex items-center justify-center"
+                    className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
                     aria-label={`View details for ${record.employer}`}
                   >
                     <Eye className="w-4 h-4" />

@@ -37,36 +37,8 @@ import { useDeleteHSERecord } from "@/hooks/hse/useDeleteHSERecord";
 import type { HSERecord, HSEFormData, HSEStatCard } from "@/lib/types/hse";
 
 export default function HSEDashboardContent() {
-  // ============= PERMISSIONS =============
-  const [canManage, setCanManage] = useState(false);
-
-  useEffect(() => {
-    const user = getUserFromStorage();
-    console.log("🔐 [HSE] User from storage:", user);
-    if (user) {
-      // Check backend permissions first
-      if (user.permissions && Array.isArray(user.permissions)) {
-        const hasBackendPermission = user.permissions.some(p =>
-          p === "can_upload_hse" ||
-          p === "can_create_hse_record" ||
-          p === "can_edit_hse_record"
-        );
-        console.log("🔐 [HSE] Backend permissions check:", {
-          permissions: user.permissions,
-          hasBackendPermission,
-          lookingFor: ["can_upload_hse", "can_create_hse_record", "can_edit_hse_record"]
-        });
-        setCanManage(hasBackendPermission);
-      } else {
-        // Fallback to role-based permissions
-        console.log("🔐 [HSE] Using role-based permissions:", {
-          role: user.role,
-          canManage: canManageHSE(user.role)
-        });
-        setCanManage(canManageHSE(user.role));
-      }
-    }
-  }, []);
+  // ============= PERMISSIONS REMOVED =============
+  // All users can access upload and management features
 
   // ============= STATE =============
   const [searchTerm, setSearchTerm] = useState("");
@@ -178,10 +150,6 @@ export default function HSEDashboardContent() {
   };
 
   const handleSave = async () => {
-    if (!canManage) {
-      toast.error("You don't have permission to save HSE records");
-      return;
-    }
     if (isEditing && selectedRecord) {
       const success = await updateRecord(selectedRecord.id, {
         details: formData.details,
@@ -209,10 +177,6 @@ export default function HSEDashboardContent() {
   };
 
   const handleUploadClick = () => {
-    if (!canManage) {
-      toast.error("You don't have permission to upload HSE data");
-      return;
-    }
     setIsUploadModalOpen(true);
   };
 
@@ -308,24 +272,17 @@ export default function HSEDashboardContent() {
       {/* Statistics Cards */}
       <StatisticsCards stats={stats} />
 
-      {/* Search Bar with Upload Button */}
-      <div className="flex items-center gap-3">
-        <div className="flex-1">
-          <SearchBar
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            placeholder="Search HSE records..."
-          />
-        </div>
-        <button
-          type="button"
-          onClick={handleUploadClick}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-        >
-          <Upload size={16} />
-          Upload HSE Data
-        </button>
-      </div>
+      {/* Search Bar */}
+      <SearchBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        placeholder="Search HSE records..."
+        showUpload={true}
+        onUpload={handleUploadClick}
+        uploadButtonText="Upload HSE Data"
+        uploadButtonColor="green"
+        showFilter={false}
+      />
 
       {/* Advanced Filter Panel */}
       <AdvancedFilterPanel

@@ -38,25 +38,13 @@ import { getUserFromStorage, type UserRole } from "@/lib/auth";
 import { canManageLegal } from "@/lib/permissions";
 
 export default function LegalManagementDashboard() {
-  // ============= PERMISSIONS =============
-  const [canManage, setCanManage] = useState(false);
+  // ============= PERMISSIONS REMOVED =============
+  // All users can access upload and management features
 
   useEffect(() => {
     const user = getUserFromStorage();
     if (user) {
       setUserRole(user.role);
-      // Check backend permissions first
-      if (user.permissions && Array.isArray(user.permissions)) {
-        const hasBackendPermission = user.permissions.some(p =>
-          p === "can_upload_legal" ||
-          p === "can_create_legal_record" ||
-          p === "can_edit_legal_record"
-        );
-        setCanManage(hasBackendPermission);
-      } else {
-        // Fallback to role-based permissions
-        setCanManage(canManageLegal(user.role));
-      }
     }
   }, []);
 
@@ -187,10 +175,6 @@ export default function LegalManagementDashboard() {
   };
 
   const handleUploadClick = () => {
-    if (!canManage) {
-      toast.error("You don't have permission to upload legal data");
-      return;
-    }
     setIsUploadModalOpen(true);
   };
 
@@ -256,27 +240,17 @@ export default function LegalManagementDashboard() {
         />
       </MetricsGrid>
 
-      {/* Search Bar with Upload Button */}
-      <div className="flex items-center gap-3">
-        <div className="flex-1">
-          <SearchBar
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            placeholder="Search by branch, period..."
-            showUpload={false}
-            showExport={false}
-            showFilter={false}
-          />
-        </div>
-        <button
-          type="button"
-          onClick={handleUploadClick}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-        >
-          <Upload size={16} />
-          Upload Legal Data
-        </button>
-      </div>
+      {/* Search Bar */}
+      <SearchBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        placeholder="Search by branch, period..."
+        showUpload={true}
+        onUpload={handleUploadClick}
+        uploadButtonText="Upload Legal Data"
+        uploadButtonColor="green"
+        showFilter={false}
+      />
 
       {/* Advanced Filter Panel */}
       <AdvancedFilterPanel
@@ -328,7 +302,7 @@ export default function LegalManagementDashboard() {
             </div>
           </div>
         )}
-        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+        <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
