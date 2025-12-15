@@ -25,7 +25,7 @@ interface UseHSEDashboardReturn {
   refetch: () => Promise<void>;
 }
 
-export function useHSEDashboard(): UseHSEDashboardReturn {
+export function useHSEDashboard(filters: Record<string, string> = {}): UseHSEDashboardReturn {
   const [data, setData] = useState<HSEDashboardMetrics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +36,12 @@ export function useHSEDashboard(): UseHSEDashboardReturn {
       setError(null);
 
       const httpService = new HttpService();
-      const response = await httpService.getData("/api/hse-ops/dashboard?view=table");
+
+      // Build query string from filters
+      const queryParams = new URLSearchParams({ view: 'table', ...filters }).toString();
+      const url = `/api/hse-ops/dashboard?${queryParams}`;
+
+      const response = await httpService.getData(url);
 
       const apiData: HSEDashboardResponseAPI = response.data;
       const transformedData = transformHSEDashboardFromAPI(apiData.data);
@@ -53,7 +58,7 @@ export function useHSEDashboard(): UseHSEDashboardReturn {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [JSON.stringify(filters)]);
 
   useEffect(() => {
     fetchDashboard();

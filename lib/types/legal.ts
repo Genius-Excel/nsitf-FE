@@ -25,6 +25,7 @@ export interface LegalDashboardAPI {
       plan_issued: number;
       adr_cases: number;
       cases_instituted: number;
+      cases_won?: number;
       sectors_covered: number;
     };
     summary_table: {
@@ -37,6 +38,7 @@ export interface LegalDashboardAPI {
       plan_issued: number;
       adr: number;
       cases_instituted: number;
+      cases_won?: number;
       sectors: string[];
       activities_period: string;
     }[];
@@ -82,6 +84,7 @@ export interface LegalMetricCards {
   planIssued: number;
   adrCases: number;
   casesInstituted: number;
+  casesWon?: number;
   sectorsCovered: number;
 }
 
@@ -95,6 +98,7 @@ export interface LegalActivityRecord {
   planIssued: number;
   adr: number;
   casesInstituted: number;
+  casesWon?: number;
   sectors: string[];
   activitiesPeriod: string;
 }
@@ -164,6 +168,7 @@ export function transformLegalDashboardFromAPI(
       planIssued: apiData.metric_cards.plan_issued,
       adrCases: apiData.metric_cards.adr_cases,
       casesInstituted: apiData.metric_cards.cases_instituted,
+      casesWon: apiData.metric_cards.cases_won,
       sectorsCovered: apiData.metric_cards.sectors_covered,
     },
     summaryTable: apiData.summary_table.map((record) => ({
@@ -176,6 +181,7 @@ export function transformLegalDashboardFromAPI(
       planIssued: record.plan_issued,
       adr: record.adr,
       casesInstituted: record.cases_instituted,
+      casesWon: record.cases_won,
       sectors: record.sectors,
       activitiesPeriod: record.activities_period,
     })),

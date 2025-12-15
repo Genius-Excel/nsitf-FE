@@ -860,6 +860,7 @@ export const ComplianceUploadModal: React.FC<{
                 Select Region <span className="text-red-500">*</span>
               </label>
               <select
+                aria-label="Select region"
                 value={selectedRegionId}
                 onChange={(e) => setSelectedRegionId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"

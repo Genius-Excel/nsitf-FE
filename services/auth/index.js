@@ -42,7 +42,24 @@ export const useLogin =(handleSuccess)=>{
       ),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log(requestParams?.data);
+
+      // Store access token in localStorage
+      // API returns tokens with hyphenated field names
+      const accessToken = resData["access-token"] || resData?.access || resData?.access_token || resData?.token;
+      const refreshToken = resData["refresh-token"] || resData?.refresh || resData?.refresh_token;
+
+      if (typeof window !== "undefined" && accessToken) {
+        try {
+          localStorage.setItem("access_token", accessToken);
+
+          if (refreshToken) {
+            localStorage.setItem("refresh_token", refreshToken);
+          }
+        } catch (storageError) {
+          console.error("Failed to store tokens:", storageError);
+        }
+      }
+
       handleSuccess(resData);
     },
   });

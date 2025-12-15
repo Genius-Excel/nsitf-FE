@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { X, Plus, Trash2, AlertCircle } from "lucide-react";
-import { useBranches } from "@/hooks/users";
 import type { Region } from "@/hooks/compliance";
 
 interface AddRegionModalProps {
@@ -25,12 +24,9 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
   isOpen,
   onClose,
   onAddEntry,
-  regions,
   regionNames,
   onAddRegion,
   onDeleteRegion,
-  onAddBranch,
-  onDeleteBranch,
 }) => {
   const [formData, setFormData] = useState({
     region: "",
@@ -40,25 +36,10 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
   });
 
   const [newRegionName, setNewRegionName] = useState("");
-  const [newBranchName, setNewBranchName] = useState("");
-  const [newBranchCode, setNewBranchCode] = useState("");
-  const [selectedRegionForBranch, setSelectedRegionForBranch] = useState("");
   const [formErrors, setFormErrors] = useState<string[]>([]);
-
-  // Fetch branches for the selected region
-  const { data: branches, fetchBranches, clearBranches } = useBranches();
 
   const modalRef = useRef<HTMLDivElement>(null);
   const regionSelectRef = useRef<HTMLSelectElement>(null);
-
-  // Fetch branches when region is selected for branch management
-  useEffect(() => {
-    if (selectedRegionForBranch) {
-      fetchBranches(selectedRegionForBranch);
-    } else {
-      clearBranches();
-    }
-  }, [selectedRegionForBranch, fetchBranches, clearBranches]);
 
   useEffect(() => {
     if (isOpen) {
@@ -87,9 +68,6 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
       period: "",
     });
     setNewRegionName("");
-    setNewBranchName("");
-    setNewBranchCode("");
-    setSelectedRegionForBranch("");
     setFormErrors([]);
     onClose();
   };
@@ -128,18 +106,6 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
     setNewRegionName("");
   };
 
-  const handleAddBranch = () => {
-    const name = newBranchName.trim();
-    if (!name || !selectedRegionForBranch) {
-      return;
-    }
-
-    const code = newBranchCode.trim() || undefined;
-    onAddBranch(name, selectedRegionForBranch, code);
-    setNewBranchName("");
-    setNewBranchCode("");
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -167,9 +133,9 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
                 id="add-region-modal-title"
                 className="text-lg sm:text-xl font-bold text-gray-900"
               >
-                Create Region
+                Manage Region
               </h2>
-              <p className="text-sm text-gray-600">Add a new region target</p>
+              <p className="text-sm text-gray-600">Add or remove regions</p>
             </div>
             <button
               onClick={handleClose}
@@ -393,131 +359,6 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
               </div>
             </div>
 
-            {/* Manage Branches */}
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-2">
-                Manage Branches
-              </h3>
-              <p className="text-sm text-gray-600 mb-3">
-                Create branches for a specific region. Select a region first, then add branches.
-              </p>
-
-              <div className="space-y-3">
-                {/* Region Selector for Branches */}
-                <div>
-                  <label
-                    htmlFor="branch-region-select"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Select Region
-                  </label>
-                  <select
-                    id="branch-region-select"
-                    value={selectedRegionForBranch}
-                    onChange={(e) => setSelectedRegionForBranch(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  >
-                    <option value="">Select a region</option>
-                    {regions.map((region) => (
-                      <option key={region.id} value={region.id}>
-                        {region.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Branch Name and Code Inputs */}
-                {selectedRegionForBranch && (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        placeholder="Branch name"
-                        value={newBranchName}
-                        onChange={(e) => setNewBranchName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleAddBranch();
-                          }
-                        }}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        aria-label="New branch name"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Branch code (optional)"
-                        value={newBranchCode}
-                        onChange={(e) => setNewBranchCode(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleAddBranch();
-                          }
-                        }}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        aria-label="New branch code"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleAddBranch}
-                      disabled={!newBranchName.trim()}
-                      className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label="Add new branch"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <Plus className="w-5 h-5" aria-hidden="true" />
-                        <span>Add Branch</span>
-                      </div>
-                    </button>
-
-                    {/* Display Branches for Selected Region */}
-                    {branches && branches.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-xs text-gray-600 mb-2">
-                          Branches in {regions.find((r) => r.id === selectedRegionForBranch)?.name}:
-                        </p>
-                        <div
-                          className="flex flex-wrap gap-2"
-                          role="list"
-                          aria-label="Available branches"
-                        >
-                          {branches.map((branch) => (
-                            <div
-                              key={branch.id}
-                              className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full"
-                              role="listitem"
-                            >
-                              <span className="text-sm font-medium">
-                                {branch.name}
-                                {branch.code && (
-                                  <span className="text-xs text-gray-500 ml-1">
-                                    ({branch.code})
-                                  </span>
-                                )}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => onDeleteBranch(branch.id, branch.name)}
-                                className="p-1 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
-                                aria-label={`Delete ${branch.name} branch`}
-                                title={`Delete ${branch.name}`}
-                              >
-                                <Trash2
-                                  className="w-4 h-4 text-gray-600"
-                                  aria-hidden="true"
-                                />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
           </form>
 
           {/* Footer */}

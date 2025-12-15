@@ -36,7 +36,7 @@ export const UserProfileViewPage: React.FC<{
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">User Profile</h1>
@@ -236,7 +236,7 @@ export const EditProfilePage: React.FC<{
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-10 max-w-3xl">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Edit Profile</h1>

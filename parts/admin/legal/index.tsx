@@ -26,8 +26,9 @@ import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 import { SearchBar } from "@/components/design-system/SearchBar";
-import { FilterPanel } from "@/components/design-system/FilterPanel";
+import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPanel";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
+import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import { LegalDetailModal } from "./legalDetailModal";
 import { LegalUploadModal } from "./legalUploadModal";
 import { useLegalDashboard } from "@/hooks/legal/useLegalDashboard";
@@ -37,25 +38,13 @@ import { getUserFromStorage, type UserRole } from "@/lib/auth";
 import { canManageLegal } from "@/lib/permissions";
 
 export default function LegalManagementDashboard() {
-  // ============= PERMISSIONS =============
-  const [canManage, setCanManage] = useState(false);
+  // ============= PERMISSIONS REMOVED =============
+  // All users can access upload and management features
 
   useEffect(() => {
     const user = getUserFromStorage();
     if (user) {
       setUserRole(user.role);
-      // Check backend permissions first
-      if (user.permissions && Array.isArray(user.permissions)) {
-        const hasBackendPermission = user.permissions.some(p =>
-          p === "can_upload_legal" ||
-          p === "can_create_legal_record" ||
-          p === "can_edit_legal_record"
-        );
-        setCanManage(hasBackendPermission);
-      } else {
-        // Fallback to role-based permissions
-        setCanManage(canManageLegal(user.role));
-      }
     }
   }, []);
 
@@ -72,7 +61,20 @@ export default function LegalManagementDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ============= HOOKS =============
-  const { data, loading, error, refetch } = useLegalDashboard();
+  const {
+    filters,
+    regions,
+    branches,
+    apiParams,
+    userRole: filterUserRole,
+    userRegionId,
+    handleFilterChange,
+    resetFilters,
+  } = useAdvancedFilters({
+    module: "legal",
+  });
+
+  const { data, loading, error, refetch } = useLegalDashboard(apiParams);
   const { filteredRecords, totalCount, filteredCount } = useLegalFilters(data?.summaryTable || [], {
     searchTerm,
     regionFilter,
@@ -88,6 +90,7 @@ export default function LegalManagementDashboard() {
     setSearchTerm("");
     setRegionFilter("");
     setMinRecalcitrant(undefined);
+    resetFilters();
   };
 
   const canReview = userRole === "regional_manager";
@@ -172,10 +175,6 @@ export default function LegalManagementDashboard() {
   };
 
   const handleUploadClick = () => {
-    if (!canManage) {
-      toast.error("You don't have permission to upload legal data");
-      return;
-    }
     setIsUploadModalOpen(true);
   };
 
@@ -199,53 +198,44 @@ export default function LegalManagementDashboard() {
       <PageHeader
         title="Legal Activities View"
         description={`Period: ${data.filters.asOf}`}
-        action={
-          <button
-            onClick={handleUploadClick}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-          >
-            <Upload size={16} />
-            Upload Legal Data
-          </button>
-        }
       />
 
       {/* Dashboard Metrics */}
       <MetricsGrid columns={6}>
         <MetricCard
-          title="Recalcitrant Employers"
+          title="TOTAL RECALCITRANT EMPLOYERS"
           value={data.metricCards.recalcitrantEmployers}
           icon={<AlertTriangle className="w-5 h-5" />}
           colorScheme="orange"
         />
         <MetricCard
-          title="Defaulting Employers"
-          value={data.metricCards.defaultingEmployers}
-          icon={<Users className="w-5 h-5" />}
-          colorScheme="blue"
-        />
-        <MetricCard
-          title="Plan Issued"
-          value={data.metricCards.planIssued}
-          icon={<FileText className="w-5 h-5" />}
-          colorScheme="green"
-        />
-        <MetricCard
-          title="ADR Cases"
-          value={data.metricCards.adrCases}
-          icon={<Scale className="w-5 h-5" />}
-          colorScheme="purple"
-        />
-        <MetricCard
-          title="Cases Instituted"
+          title="CASES INSTITUTED IN COURT"
           value={data.metricCards.casesInstituted}
           icon={<Gavel className="w-5 h-5" />}
           colorScheme="gray"
         />
         <MetricCard
-          title="Sectors Covered"
-          value={data.metricCards.sectorsCovered}
-          icon={<Building className="w-5 h-5" />}
+          title="ALTERNATE DISPUTE RESOLUTION (ADR)"
+          value={data.metricCards.adrCases}
+          icon={<Scale className="w-5 h-5" />}
+          colorScheme="purple"
+        />
+        <MetricCard
+          title="TOTAL PLAN ISSUED"
+          value={data.metricCards.planIssued}
+          icon={<FileText className="w-5 h-5" />}
+          colorScheme="green"
+        />
+        <MetricCard
+          title="CASES WON"
+          value={data.metricCards.casesWon || data.metricCards.sectorsCovered || 0}
+          icon={<CheckCircle className="w-5 h-5" />}
+          colorScheme="green"
+        />
+        <MetricCard
+          title="TOTAL DEFAULTING EMPLOYERS"
+          value={data.metricCards.defaultingEmployers}
+          icon={<Users className="w-5 h-5" />}
           colorScheme="blue"
         />
       </MetricsGrid>
@@ -255,50 +245,29 @@ export default function LegalManagementDashboard() {
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         placeholder="Search by branch, period..."
-        showUpload={false}
-        showExport={false}
+        showUpload={true}
+        onUpload={handleUploadClick}
+        uploadButtonText="Upload Legal Data"
+        uploadButtonColor="green"
         showFilter={false}
       />
 
-      {/* Filter Panel */}
-      <FilterPanel
+      {/* Advanced Filter Panel */}
+      <AdvancedFilterPanel
+        regions={regions}
+        branches={branches}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onReset={handleResetFilters}
         totalEntries={totalCount}
         filteredCount={filteredCount}
-        onReset={handleResetFilters}
-        hasActiveFilters={hasActiveFilters}
-      >
-        {/* Region Filter */}
-        <div>
-          <label htmlFor="region-filter" className="block text-sm font-medium text-gray-700 mb-2">Region</label>
-          <select
-            id="region-filter"
-            value={regionFilter}
-            onChange={(e) => setRegionFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          >
-            <option value="">All Regions</option>
-            {uniqueRegions.map((region) => (
-              <option key={region} value={region}>{region}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Minimum Recalcitrant Employers Filter */}
-        <div>
-          <label htmlFor="min-recalcitrant-filter" className="block text-sm font-medium text-gray-700 mb-2">
-            Minimum Recalcitrant Employers
-          </label>
-          <input
-            id="min-recalcitrant-filter"
-            type="number"
-            min="0"
-            placeholder="e.g., 10"
-            value={minRecalcitrant !== undefined ? minRecalcitrant : ""}
-            onChange={(e) => setMinRecalcitrant(e.target.value ? parseInt(e.target.value) : undefined)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-        </div>
-      </FilterPanel>
+        userRole={filterUserRole}
+        userRegionId={userRegionId}
+        showRegionFilter={true}
+        showBranchFilter={true}
+        showMonthYearFilter={true}
+        showDateRangeFilter={false}
+      />
 
       {/* Legal Activities Table */}
       <div className="bg-white rounded-lg shadow mb-6">
@@ -333,7 +302,7 @@ export default function LegalManagementDashboard() {
             </div>
           </div>
         )}
-        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+        <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -352,31 +321,34 @@ export default function LegalManagementDashboard() {
                   Region
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Branch
+                  BRANCH
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Recalcitrant Employers
+                  RECALCITANT EMPLOYERS
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Defaulting Employers
+                  DEFAULTING EMPLOYERS
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   ECS NO.
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Plan Issued
+                  PLAN ISSUED
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ADR
+                  ALTERNATE DISPUTE RESOLUTION (ADR)
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Cases Instituted
+                  CASES INSTITUTED IN COURT
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sectors
+                  CASES WON
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Activities Period
+                  SECTOR
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  PERIOD
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -423,6 +395,9 @@ export default function LegalManagementDashboard() {
                       {activity.casesInstituted}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
+                      {activity.casesWon || 0}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
                       {activity.sectors.join(", ") || "None"}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
@@ -442,7 +417,7 @@ export default function LegalManagementDashboard() {
               ) : (
                 <tr>
                   <td
-                    colSpan={11}
+                    colSpan={12}
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     No legal activities found

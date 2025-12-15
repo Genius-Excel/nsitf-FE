@@ -158,7 +158,7 @@ export function InvestmentTreasury() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       {/* Breadcrumb */}
       <Breadcrumb>
         <BreadcrumbList>

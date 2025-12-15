@@ -30,9 +30,12 @@ export interface ComplianceDashboardResponse {
   filters: {
     period: string;
     as_of: string;
+    region_id?: string;
+    region_name?: string;
   };
   metric_cards: ComplianceMetrics;
-  regional_summary: RegionalSummary[];
+  regional_summary?: RegionalSummary[];
+  branch_summary?: RegionalSummary[];
 }
 
 export interface ComplianceFilters {
@@ -91,7 +94,7 @@ export const useComplianceDashboard = (filters?: ComplianceFilters) => {
     } finally {
       setLoading(false);
     }
-  }, [filters?.period, filters?.region_id, filters?.branch]);
+  }, [JSON.stringify(filters)]);
 
   useEffect(() => {
     fetchData();

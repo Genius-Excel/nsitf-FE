@@ -20,6 +20,7 @@ export interface User {
   first_name?: string // API returns first_name
   last_name?: string // API returns last_name
   role: UserRole
+  region_id?: string // Region ID for regional officers
   permissions?: string[] // Backend permissions like "can_upload_claims", "can_upload_hse", etc.
   phone_number?: string
   alternative_number?: string | null

@@ -13,7 +13,8 @@ import { ClaimDetailModal } from "./ClaimModal";
 import { ClaimsUploadModal } from "./ClaimsUploadModal";
 import { StatCard } from "@/lib/types";
 import { PageHeader } from "@/components/design-system/PageHeader";
-import { FilterPanel } from "@/components/design-system/FilterPanel";
+import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPanel";
+import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import {
   useClaimsDashboard,
   useClaimsFilters,
@@ -28,6 +29,22 @@ import { Button } from "@/components/ui/button";
 
 export default function ClaimsManagement() {
   // ==========================================
+  // ADVANCED FILTERS
+  // ==========================================
+  const {
+    filters,
+    regions,
+    branches,
+    apiParams,
+    userRole,
+    userRegionId,
+    handleFilterChange,
+    resetFilters,
+  } = useAdvancedFilters({
+    module: "claims",
+  });
+
+  // ==========================================
   // STATE
   // ==========================================
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,34 +52,17 @@ export default function ClaimsManagement() {
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [canManage, setCanManage] = useState(false);
 
   // ==========================================
-  // PERMISSIONS
+  // PERMISSIONS REMOVED
   // ==========================================
-  useEffect(() => {
-    const user = getUserFromStorage();
-    if (user) {
-      // Check backend permissions first
-      if (user.permissions && Array.isArray(user.permissions)) {
-        const hasBackendPermission = user.permissions.some(p =>
-          p === "can_upload_claims" ||
-          p === "can_create_claims_record" ||
-          p === "can_edit_claims_record"
-        );
-        setCanManage(hasBackendPermission);
-      } else {
-        // Fallback to role-based permissions
-        setCanManage(canManageClaims(user.role));
-      }
-    }
-  }, []);
+  // All users can access upload and management features
 
   // ==========================================
   // API HOOKS
   // ==========================================
 
-  // 1. Fetch dashboard data (with pagination support)
+  // 1. Fetch dashboard data (with pagination support and filters)
   const {
     claims,
     metrics,
@@ -73,7 +73,10 @@ export default function ClaimsManagement() {
     error,
     refetch,
     setPage,
-  } = useClaimsDashboard({ page: 1 });
+  } = useClaimsDashboard({
+    page: 1,
+    ...apiParams, // Add filter parameters from advanced filters
+  });
 
   // 2. Client-side filtering
   const { filteredClaims } = useClaimsFilters({
@@ -157,20 +160,36 @@ export default function ClaimsManagement() {
         bgColor: "#3b82f6",
       },
       {
-        title: "Disability Beneficiaries",
+        title: "Disability RSA Benefit",
         description: "",
-        value: metrics.disabilityBeneficiaries,
+        value: metrics.disabilityRSABenefit || metrics.disabilityBeneficiaries || 0,
         change: `${mockChangePercent}% from last month`,
         icon: <BarChart3 />,
         bgColor: "#a855f7",
       },
       {
-        title: "Retiree Benefit Beneficiaries",
+        title: "Disabilities Beneficiaries",
         description: "",
-        value: metrics.retireeBenefitBeneficiaries,
+        value: metrics.disabilitiesBeneficiaries || metrics.retireeBenefitBeneficiaries || 0,
         change: `${mockChangePercent}% from last month`,
         icon: <BarChart3 />,
         bgColor: "#f59e0b",
+      },
+      {
+        title: "LOP",
+        description: "",
+        value: metrics.lop || 0,
+        change: `${mockChangePercent}% from last month`,
+        icon: <FileText />,
+        bgColor: "#8b5cf6",
+      },
+      {
+        title: "MER",
+        description: "",
+        value: metrics.mer || 0,
+        change: `${mockChangePercent}% from last month`,
+        icon: <Activity />,
+        bgColor: "#ec4899",
       },
     ];
   }, [metrics]);
@@ -227,18 +246,10 @@ export default function ClaimsManagement() {
   }, []);
 
   const handleUploadClick = useCallback(() => {
-    if (!canManage) {
-      toast.error("You don't have permission to upload claims");
-      return;
-    }
     setIsUploadModalOpen(true);
-  }, [canManage]);
+  }, []);
 
   const handleExport = useCallback(() => {
-    if (!canManage) {
-      toast.error("You don't have permission to export claims");
-      return;
-    }
 
     if (filteredClaims.length === 0) {
       toast.error("No claims to export");
@@ -295,7 +306,7 @@ export default function ClaimsManagement() {
     URL.revokeObjectURL(url);
 
     toast.success(`Exported ${filteredClaims.length} claims`);
-  }, [filteredClaims, canManage]);
+  }, [filteredClaims]);
 
   // ==========================================
   // ERROR HANDLING
@@ -303,7 +314,7 @@ export default function ClaimsManagement() {
 
   if (error) {
     return (
-      <div className="space-y-4 w-full max-w-[calc(100vw-20rem)] xl:max-w-[1216px]">
+      <div className="space-y-10">
         <PageHeader
           title="Claims and Compensation View"
           description="Track and process employee compensation claims"
@@ -329,7 +340,7 @@ export default function ClaimsManagement() {
   // ==========================================
 
   return (
-    <div className="space-y-4 w-full max-w-[calc(100vw-20rem)] xl:max-w-[1216px]">
+    <div className="space-y-10">
       {/* Header */}
       <PageHeader
         title="Claims and Compensation View"
@@ -366,49 +377,25 @@ export default function ClaimsManagement() {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onFilterClick={() => {}}
-            onExport={handleExport}
             onUpload={handleUploadClick}
           />
 
-          {/* Filter Panel */}
-          <FilterPanel
+          {/* Advanced Filter Panel */}
+          <AdvancedFilterPanel
+            regions={regions}
+            branches={branches}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onReset={resetFilters}
             totalEntries={claims.length}
             filteredCount={filteredClaims.length}
-            onReset={handleResetFilters}
-            hasActiveFilters={hasActiveFilters}
-          >
-            {/* Status Filter */}
-            <div>
-              <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-              <select
-                id="status-filter"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                <option value="">All Statuses</option>
-                {uniqueStatuses.map((status) => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Type Filter */}
-            <div>
-              <label htmlFor="type-filter" className="block text-sm font-medium text-gray-700 mb-2">Claim Type</label>
-              <select
-                id="type-filter"
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                <option value="">All Types</option>
-                {uniqueTypes.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
-          </FilterPanel>
+            userRole={userRole}
+            userRegionId={userRegionId}
+            showRegionFilter={true}
+            showBranchFilter={true}
+            showMonthYearFilter={true}
+            showDateRangeFilter={false}
+          />
 
           {/* Claims Table */}
           <ClaimsTable claims={filteredClaims} onView={handleViewClaim} />

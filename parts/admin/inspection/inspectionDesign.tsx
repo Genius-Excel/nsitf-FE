@@ -177,22 +177,25 @@ interface SearchAndFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   onFilterClick?: () => void;
-  onExport?: () => void;
+  onUpload?: () => void;
 }
 
 export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
   searchTerm,
   onSearchChange,
   onFilterClick,
-  onExport,
+  onUpload,
 }) => (
   <SearchBar
     searchTerm={searchTerm}
     onSearchChange={onSearchChange}
     placeholder="Search by branch, period..."
     onFilter={onFilterClick}
-    onExport={onExport}
-    showUpload={false}
+    onUpload={onUpload}
+    showUpload={!!onUpload}
+    uploadButtonText="Upload Inspection Data"
+    uploadButtonColor="green"
+    showFilter={false}
   />
 );
 
@@ -360,11 +363,11 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
         </div>
       )}
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+        <table className="w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
               {(canReview || canApprove) && (
-                <th className="px-2 py-1.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <input
                     type="checkbox"
                     checked={selectedInspections.size === inspections.length}
@@ -374,33 +377,36 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
                   />
                 </th>
               )}
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Branch
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                REGION
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Inspection Conducted
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                BRANCH
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Cumulative Debt Established (₦)
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                Inspection conducted
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Cumulative Debt Recovered (₦)
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                CUMULATIVE Debt established (₦)
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Performance Rate (%)
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                CUMULATIVE Debt recovered (₦)
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Demand Notice
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                Performance rate (%) (D/E)
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                Period
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                DEMAND NOTICE
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                PERIOD
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
+          <tbody className="bg-white divide-y divide-gray-200">
             {inspections.map((inspection) => {
               const recoveryRate =
                 inspection.debtEstablished > 0
@@ -413,10 +419,10 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
               return (
                 <tr
                   key={inspection.id}
-                  className="hover:bg-gray-50 transition-colors"
+                  className="hover:bg-gray-50 transition"
                 >
                   {(canReview || canApprove) && (
-                    <td className="px-2 py-1.5 text-center whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <input
                         type="checkbox"
                         checked={selectedInspections.has(inspection.id)}
@@ -427,47 +433,50 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
                     </td>
                   )}
                   <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                    {inspection.region || "—"}
+                  </td>
+                  <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                     {inspection.branch}
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-900 text-center font-semibold">
+                  <td className="px-4 py-4 text-sm text-gray-900 font-semibold">
                     {inspection.inspectionsConducted.toLocaleString()}
                   </td>
-                  <td className="px-4 py-4 text-sm font-semibold text-gray-900 whitespace-nowrap text-right">
+                  <td className="px-4 py-4 text-sm font-semibold text-gray-900 whitespace-nowrap">
                     {formatCurrency(inspection.debtEstablished)}
                   </td>
-                  <td className="px-4 py-4 text-sm whitespace-nowrap text-right">
-                    <div className="flex flex-col items-end">
+                  <td className="px-4 py-4 text-sm whitespace-nowrap">
+                    <div className="flex flex-col">
                       <span className="font-semibold text-green-700">
                         {formatCurrency(inspection.debtRecovered)}
                       </span>
-                      <span className="text-xs text-gray-600 mt-1">
+                      <span className="text-xs text-gray-600 mt-0.5">
                         {recoveryRate}% recovered
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-sm whitespace-nowrap text-center">
+                  <td className="px-4 py-4 text-sm whitespace-nowrap">
                     <Badge
                       className={`${getPerformanceBadge(
                         inspection.performanceRate
-                      )} font-semibold`}
+                      )} font-medium`}
                     >
                       {inspection.performanceRate}%
                     </Badge>
                   </td>
-                  <td className="px-4 py-4 text-sm text-center">
+                  <td className="px-4 py-4 text-sm">
                     <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold">
                       {inspection.demandNotice}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
+                  <td className="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">
                     {inspection.period}
                   </td>
-                  <td className="px-4 py-4 text-sm whitespace-nowrap text-center">
+                  <td className="px-4 py-4 text-sm whitespace-nowrap">
                     <button
                       type="button"
                       onClick={() => onView?.(inspection)}
                       title={`View details for ${inspection.branch}`}
-                      className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900 inline-flex items-center justify-center"
+                      className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
                       aria-label={`View details for ${inspection.branch}`}
                     >
                       <Eye className="w-4 h-4" />

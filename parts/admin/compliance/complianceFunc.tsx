@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Download, Plus, Upload, Search } from "lucide-react";
-import * as XLSX from "xlsx";
+import React, { useState, useEffect, useMemo } from "react";
+import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 
 // Hooks
@@ -11,7 +10,6 @@ import {
   useRegions,
   useRegionMutations,
   useBranchMutations,
-  useComplianceFilters,
   useModalState,
   type RegionalSummary,
 } from "@/hooks/compliance";
@@ -27,10 +25,11 @@ import type { ComplianceEntry } from "@/lib/types";
 import {
   DashboardCards,
   ComplianceTable,
-  ComplianceUploadModal,
 } from "./complianceDesign";
-import { FilterPanel } from "./components/filters/FilterPanel";
+import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPanel";
+import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import { AddRegionModal } from "./complianceAddRegionModal";
+import { ManageBranchesModal } from "./complianceManageBranchesModal";
 import { ComplianceDetailModal } from "./complianceDetailModal";
 import { PageHeader } from "@/components/design-system/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -84,12 +83,29 @@ const ComplianceDashboard: React.FC = () => {
     }
   }, []);
 
-  // ============== API FILTERS ==============
-  const [apiFilters, setApiFilters] = useState({
-    period: undefined as string | undefined,
-    region_id: undefined as string | undefined,
-    branch: undefined as string | undefined,
+  // ============== ADVANCED FILTERS ==============
+  const {
+    filters,
+    regions: filterRegions,
+    branches: filterBranches,
+    apiParams,
+    userRole: filterUserRole,
+    userRegionId,
+    handleFilterChange,
+    resetFilters: resetAdvancedFilters,
+  } = useAdvancedFilters({
+    module: "compliance",
   });
+
+  // ============== API FILTERS ==============
+  // Convert advanced filter params to compliance API format
+  const apiFilters = useMemo(() => ({
+    period: apiParams.month && apiParams.year
+      ? `${apiParams.year}-${apiParams.month.padStart(2, '0')}`
+      : undefined,
+    region_id: apiParams.region_id || undefined,
+    branch_id: apiParams.branch_id || undefined,
+  }), [apiParams]);
 
   // ============== DATA FETCHING ==============
   // Single fetch - source of truth
@@ -109,26 +125,36 @@ const ComplianceDashboard: React.FC = () => {
   } = useRegions();
 
   // ============== CLIENT-SIDE FILTERING ==============
-  // Memoized filtering - no duplicate state
-  const {
-    filteredSummary,
-    searchTerm,
-    setSearchTerm,
-    selectedRegions,
-    toggleRegion,
-    periodSearch,
-    setPeriodSearch,
-    branchSearch,
-    setBranchSearch,
-    resetFilters,
-    totalCount,
-    filteredCount,
-  } = useComplianceFilters(dashboardData?.regional_summary ?? null);
+  // Use backend-filtered data directly (already filtered by apiParams)
+  // Backend returns regional_summary when no region filter, branch_summary when region is selected
+  const regionalSummary = dashboardData?.regional_summary ?? dashboardData?.branch_summary ?? [];
+
+  // Additional client-side search filter (optional)
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredSummary = useMemo(() => {
+    if (!searchTerm) return regionalSummary;
+
+    const searchLower = searchTerm.toLowerCase();
+    return regionalSummary.filter((entry: any) =>
+      entry.region?.toLowerCase().includes(searchLower) ||
+      entry.branch?.toLowerCase().includes(searchLower)
+    );
+  }, [regionalSummary, searchTerm]);
+
+  // Combined reset function
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    resetAdvancedFilters();
+  };
 
   // Map filtered summary to ComplianceEntry format
   const mappedEntries: ComplianceEntry[] = (filteredSummary || []).map(
     mapToComplianceEntry
   );
+
+  const totalCount = regionalSummary.length;
+  const filteredCount = filteredSummary.length;
 
   // ============== MUTATIONS ==============
   const {
@@ -158,7 +184,7 @@ const ComplianceDashboard: React.FC = () => {
 
   // ============== MODALS ==============
   const addModal = useModalState(false);
-  const uploadModal = useModalState(false);
+  const branchModal = useModalState(false);
   const detailModal = useModalState(false);
 
   const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
@@ -220,38 +246,6 @@ const ComplianceDashboard: React.FC = () => {
     }
   };
 
-  const handleExport = () => {
-    if (!canManage) {
-      toast.error("You don't have permission to export data");
-      return;
-    }
-
-    const exportData = (filteredSummary || []).map((entry: any) => ({
-      Region: entry.region,
-      Branch: entry.branch || "N/A",
-      "Contributions Collected": entry.collected,
-      Target: entry.target,
-      "Performance Rate": `${entry.performance_rate.toFixed(1)}%`,
-      Employers: entry.employers,
-      Employees: entry.employees,
-      "Registration Fees": entry.registration_fees,
-      "Certificate Fees": entry.certificate_fees,
-      Period: entry.period,
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Compliance Data");
-    XLSX.writeFile(wb, "compliance_data.xlsx");
-  };
-
-  const handleUploadClick = () => {
-    if (!canManage) {
-      toast.error("You don't have permission to upload data");
-      return;
-    }
-    uploadModal.open();
-  };
 
   const handleCreateRegionClick = () => {
     if (!canManage) {
@@ -278,7 +272,7 @@ const ComplianceDashboard: React.FC = () => {
   // ============== ERROR STATE ==============
   if (dashboardError || regionsError) {
     return (
-      <div className="space-y-10 w-full max-w-[calc(100vw-20rem)] xl:max-w-[1216px]">
+      <div className="space-y-10">
         <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200">
           <p>Failed to load data: {dashboardError || regionsError}</p>
           <Button
@@ -307,7 +301,7 @@ const ComplianceDashboard: React.FC = () => {
 
   // ============== RENDER ==============
   return (
-    <div className="space-y-10 w-full max-w-[calc(100vw-20rem)] xl:max-w-[1216px]">
+    <div className="space-y-10">
       {/* Header */}
       <PageHeader
         title="Compliance View"
@@ -346,43 +340,37 @@ const ComplianceDashboard: React.FC = () => {
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <Button
-              onClick={handleUploadClick}
-              variant="outline"
-              className="flex-1 sm:flex-none"
-            >
-              <Upload size={18} />
-              <span>Upload Regional Data</span>
-            </Button>
-            <Button
-              onClick={handleExport}
-              variant="outline"
-              className="flex-1 sm:flex-none"
-            >
-              <Download size={18} />
-              <span>Export</span>
-            </Button>
-            <Button
               onClick={handleCreateRegionClick}
               className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
             >
               <Plus size={18} />
-              <span>Create Region</span>
+              <span>Manage Region</span>
+            </Button>
+            <Button
+              onClick={() => branchModal.open()}
+              className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus size={18} />
+              <span>Manage Branches</span>
             </Button>
           </div>
       </div>
 
-      {/* Filter Panel */}
-      <FilterPanel
-          selectedRegions={selectedRegions}
-          periodSearch={periodSearch}
-          branchSearch={branchSearch}
-          availableRegions={regionNames}
-          totalEntries={totalCount}
-          filteredCount={filteredCount}
-          onRegionToggle={toggleRegion}
-          onPeriodChange={setPeriodSearch}
-          onBranchChange={setBranchSearch}
-          onReset={resetFilters}
+      {/* Advanced Filter Panel */}
+      <AdvancedFilterPanel
+        regions={filterRegions}
+        branches={filterBranches}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onReset={handleResetFilters}
+        totalEntries={totalCount}
+        filteredCount={filteredCount}
+        userRole={filterUserRole}
+        userRegionId={userRegionId}
+        showRegionFilter={true}
+        showBranchFilter={true}
+        showMonthYearFilter={true}
+        showDateRangeFilter={false}
       />
 
       {/* Main Table */}
@@ -428,15 +416,12 @@ const ComplianceDashboard: React.FC = () => {
         onDeleteBranch={handleDeleteBranch}
       />
 
-      <ComplianceUploadModal
-        isOpen={uploadModal.isOpen}
-        onClose={uploadModal.close}
-        onUploadSuccess={() => {
-          // The modal handles the upload internally
-          // Just refetch and close on success
-          refetchDashboard();
-        }}
-        regions={mappedRegions}
+      <ManageBranchesModal
+        isOpen={branchModal.isOpen}
+        onClose={branchModal.close}
+        regions={regions || []}
+        onAddBranch={handleAddBranch}
+        onDeleteBranch={handleDeleteBranch}
       />
 
       <ComplianceDetailModal

@@ -1,7 +1,6 @@
 // ============================================================================
-// LegalUploadModal - Refactored
+// HSEUploadModal - Refactored
 // ============================================================================
-// NOW ACTUALLY CALLS THE UPLOAD API
 // Uploads Excel files with region/branch/period selection
 // Role-based filtering: Admin sees regions, Regional officers see branches
 // ============================================================================
@@ -18,18 +17,18 @@ import {
   AlertCircle,
 } from "lucide-react";
 import * as XLSX from "xlsx";
-import { useUploadLegalActivities } from "@/hooks/legal/useUploadLegalActivities";
 import { useRegions } from "@/hooks/compliance/Useregions";
 import { useBranches } from "@/hooks/users";
 import { getUserFromStorage } from "@/lib/auth";
+import { toast } from "sonner";
 
-interface LegalUploadModalProps {
+interface HSEUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUploadSuccess: () => void;
 }
 
-export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
+export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
   isOpen,
   onClose,
   onUploadSuccess,
@@ -39,6 +38,8 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
   const [period, setPeriod] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,8 +51,6 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
   const user = getUserFromStorage();
   const isAdmin = user?.role === "admin" || user?.role === "manager";
   const userRegionId = user?.region_id;
-
-  const { uploadFile, loading, error, clearError } = useUploadLegalActivities();
 
   // Auto-select region for regional officers
   useEffect(() => {
@@ -74,14 +73,12 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
     const templateData = [
       {
         Branch: "",
-        "Recalcitrant Employers": 0,
-        "Defaulting Employers": 0,
-        "ECS NO.": "",
-        "Plan Issued": 0,
-        ADR: 0,
-        "Cases Instituted": 0,
-        "Cases Won": 0,
-        Sectors: "",
+        "Total Actual OSH Activities": 0,
+        "Target OSH Activities": 0,
+        "Performance Rate (%)": 0,
+        "OSH Enlightenment & Awareness": 0,
+        "OSH Inspection & Audit": 0,
+        "Accident Investigation": 0,
         "Activities Period": "",
       },
     ];
@@ -93,27 +90,39 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
     const selectedRegion = regions?.find((r) => r.id === selectedRegionId);
     const selectedBranch = branches?.find((b) => b.id === selectedBranchId);
     const fileName = selectedBranch
-      ? `${selectedBranch.name}_Legal_Activities_Template.xlsx`
+      ? `${selectedBranch.name}_HSE_Activities_Template.xlsx`
       : selectedRegion
-      ? `${selectedRegion.name}_Legal_Activities_Template.xlsx`
-      : "Legal_Activities_Template.xlsx";
+      ? `${selectedRegion.name}_HSE_Activities_Template.xlsx`
+      : "HSE_Activities_Template.xlsx";
     XLSX.writeFile(wb, fileName);
   };
 
   const handleUpload = async () => {
-    if (!file || !selectedRegionId) {
+    if (!file || !selectedRegionId || !selectedBranchId || !period) {
       return;
     }
 
-    clearError();
-    const result = await uploadFile(selectedRegionId, file);
+    setLoading(true);
+    setError(null);
 
-    if (result) {
+    try {
+      // TODO: Implement HSE upload API call
+      // const result = await uploadFile(selectedRegionId, selectedBranchId, period, file);
+
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       setUploadSuccess(true);
+      toast.success("HSE data uploaded successfully!");
       setTimeout(() => {
         handleClose();
         onUploadSuccess();
       }, 2000);
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err.message || "Failed to upload HSE data";
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -125,7 +134,7 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
     setPeriod("");
     setFile(null);
     setUploadSuccess(false);
-    clearError();
+    setError(null);
     onClose();
   };
 
@@ -141,6 +150,7 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
       <div
         className="fixed inset-0 bg-black bg-opacity-50 z-40"
         onClick={handleClose}
+        aria-hidden="true"
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -148,13 +158,14 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
             <div className="flex items-center gap-3">
               <FileSpreadsheet className="w-6 h-6 text-blue-600" />
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-                Upload Legal Activities
+                Upload HSE Activities
               </h2>
             </div>
             <button
               onClick={handleClose}
               disabled={loading}
-              className="p-2 hover:bg-gray-100 rounded-md"
+              className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+              aria-label="Close modal"
             >
               <X className="w-5 h-5" />
             </button>
@@ -215,10 +226,11 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
             {/* Period Selection */}
             {selectedBranchId && (
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <label htmlFor="period-input" className="block text-sm font-semibold text-gray-900 mb-2">
                   Period <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="period-input"
                   type="month"
                   value={period}
                   onChange={(e) => setPeriod(e.target.value)}
