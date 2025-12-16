@@ -10,12 +10,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Edit,
-  Loader2,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
+import { Edit, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { HSEActivity, HSEFormData } from "@/lib/types/hse";
 import { getActivityStatusColor } from "@/lib/utils";
 import { getUserFromStorage, type UserRole } from "@/lib/auth";
@@ -196,7 +191,9 @@ export const ViewDetailsModal: React.FC<{
   // State management
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<"reviewed" | "approve" | null>(null);
+  const [confirmAction, setConfirmAction] = useState<
+    "reviewed" | "approve" | null
+  >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedData, setEditedData] = useState<HSEActivity | null>(null);
@@ -217,10 +214,18 @@ export const ViewDetailsModal: React.FC<{
 
   if (!activity) return null;
 
-  // Permission checks
-  const canEdit = userRole && ["regional_manager", "admin", "manager"].includes(userRole);
-  const canReview = userRole === "regional_manager";
-  const canApprove = userRole && ["admin", "manager"].includes(userRole);
+  // Permission checks (case-insensitive)
+  const normalizedRole = userRole?.toLowerCase();
+  const canEdit =
+    normalizedRole &&
+    ["regional_manager", "regional officer", "admin", "manager"].includes(
+      normalizedRole
+    );
+  const canReview =
+    normalizedRole === "regional_manager" ||
+    normalizedRole === "regional officer";
+  const canApprove =
+    normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
   // Use edited data or original data
   const displayData = editedData || activity;
@@ -285,9 +290,10 @@ export const ViewDetailsModal: React.FC<{
       // TODO: Call API to update status
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const message = confirmAction === "reviewed"
-        ? "HSE record marked as reviewed"
-        : "HSE record approved successfully";
+      const message =
+        confirmAction === "reviewed"
+          ? "HSE record marked as reviewed"
+          : "HSE record approved successfully";
 
       toast.success(message);
       setShowConfirmDialog(false);
@@ -314,10 +320,12 @@ export const ViewDetailsModal: React.FC<{
       if (type === "textarea") {
         return (
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">{label}</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">
+              {label}
+            </h3>
             <textarea
               id={field}
-              value={fieldValue || ''}
+              value={fieldValue || ""}
               onChange={(e) => handleFieldChange(field, e.target.value)}
               placeholder={`Enter ${label.toLowerCase()}`}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm min-h-[80px] resize-none"
@@ -328,13 +336,16 @@ export const ViewDetailsModal: React.FC<{
 
       return (
         <div>
-          <label htmlFor={field} className="text-sm font-semibold text-gray-900 block mb-2">
+          <label
+            htmlFor={field}
+            className="text-sm font-semibold text-gray-900 block mb-2"
+          >
             {label}
           </label>
           <input
             id={field}
             type="text"
-            value={fieldValue || ''}
+            value={fieldValue || ""}
             onChange={(e) => handleFieldChange(field, e.target.value)}
             placeholder={`Enter ${label.toLowerCase()}`}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
@@ -356,39 +367,54 @@ export const ViewDetailsModal: React.FC<{
                 {isEditMode ? (
                   <div className="space-y-3">
                     <div>
-                      <label htmlFor="type" className="text-sm font-semibold text-gray-900 block mb-1">
+                      <label
+                        htmlFor="type"
+                        className="text-sm font-semibold text-gray-900 block mb-1"
+                      >
                         Activity Type
                       </label>
                       <input
                         id="type"
                         type="text"
-                        value={displayData.type || ''}
-                        onChange={(e) => handleFieldChange('type', e.target.value)}
+                        value={displayData.type || ""}
+                        onChange={(e) =>
+                          handleFieldChange("type", e.target.value)
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label htmlFor="organization" className="text-xs font-semibold text-gray-900 block mb-1">
+                        <label
+                          htmlFor="organization"
+                          className="text-xs font-semibold text-gray-900 block mb-1"
+                        >
                           Organization
                         </label>
                         <input
                           id="organization"
                           type="text"
-                          value={displayData.organization || ''}
-                          onChange={(e) => handleFieldChange('organization', e.target.value)}
+                          value={displayData.organization || ""}
+                          onChange={(e) =>
+                            handleFieldChange("organization", e.target.value)
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
                         />
                       </div>
                       <div>
-                        <label htmlFor="date" className="text-xs font-semibold text-gray-900 block mb-1">
+                        <label
+                          htmlFor="date"
+                          className="text-xs font-semibold text-gray-900 block mb-1"
+                        >
                           Date
                         </label>
                         <input
                           id="date"
                           type="date"
-                          value={displayData.date || ''}
-                          onChange={(e) => handleFieldChange('date', e.target.value)}
+                          value={displayData.date || ""}
+                          onChange={(e) =>
+                            handleFieldChange("date", e.target.value)
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
                         />
                       </div>
@@ -407,17 +433,32 @@ export const ViewDetailsModal: React.FC<{
               </div>
               <div className="flex items-center gap-2 ml-4">
                 {canEdit && !isEditMode && (
-                  <Button onClick={handleEdit} variant="outline" size="sm" className="gap-2">
+                  <Button
+                    onClick={handleEdit}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
                     <Edit className="w-4 h-4" />
                     Edit
                   </Button>
                 )}
                 {isEditMode && (
                   <>
-                    <Button onClick={handleCancelEdit} variant="outline" size="sm" disabled={isSubmitting}>
+                    <Button
+                      onClick={handleCancelEdit}
+                      variant="outline"
+                      size="sm"
+                      disabled={isSubmitting}
+                    >
                       Cancel
                     </Button>
-                    <Button onClick={handleSaveEdit} size="sm" className="bg-green-600 hover:bg-green-700" disabled={isSubmitting}>
+                    <Button
+                      onClick={handleSaveEdit}
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                      disabled={isSubmitting}
+                    >
                       {isSubmitting ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -447,10 +488,14 @@ export const ViewDetailsModal: React.FC<{
               <div>
                 {isEditMode ? (
                   <>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">Details:</h3>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                      Details:
+                    </h3>
                     <textarea
                       value={displayData.details}
-                      onChange={(e) => handleFieldChange('details', e.target.value)}
+                      onChange={(e) =>
+                        handleFieldChange("details", e.target.value)
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm min-h-[80px] resize-none"
                     />
                   </>
@@ -470,10 +515,14 @@ export const ViewDetailsModal: React.FC<{
               <div>
                 {isEditMode ? (
                   <>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">Recommendations/Actions:</h3>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                      Recommendations/Actions:
+                    </h3>
                     <textarea
                       value={displayData.recommendations}
-                      onChange={(e) => handleFieldChange('recommendations', e.target.value)}
+                      onChange={(e) =>
+                        handleFieldChange("recommendations", e.target.value)
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm min-h-[80px] resize-none"
                     />
                   </>
@@ -492,17 +541,29 @@ export const ViewDetailsModal: React.FC<{
           </div>
 
           <DialogFooter className="mt-6 flex justify-end gap-3">
-            <Button type="button" onClick={() => onOpenChange(false)} variant="outline">
+            <Button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              variant="outline"
+            >
               Cancel
             </Button>
             {canReview && (
-              <Button type="button" onClick={handleReviewedClick} className="bg-blue-600 hover:bg-blue-700">
+              <Button
+                type="button"
+                onClick={handleReviewedClick}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 <CheckCircle className="w-4 h-4 mr-2" />
                 Mark as Reviewed
               </Button>
             )}
             {canApprove && (
-              <Button type="button" onClick={handleApproveClick} className="bg-green-600 hover:bg-green-700">
+              <Button
+                type="button"
+                onClick={handleApproveClick}
+                className="bg-green-600 hover:bg-green-700"
+              >
                 <CheckCircle className="w-4 h-4 mr-2" />
                 Approve
               </Button>
@@ -514,20 +575,33 @@ export const ViewDetailsModal: React.FC<{
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
         <>
-          <div className="fixed inset-0 bg-black bg-opacity-60 z-[60]" onClick={handleCancelConfirm} />
+          <div
+            className="fixed inset-0 bg-black bg-opacity-60 z-[60]"
+            onClick={handleCancelConfirm}
+          />
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
               <div className="flex items-start gap-4">
-                <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
-                  confirmAction === "reviewed" ? "bg-blue-100" : "bg-green-100"
-                }`}>
-                  <AlertCircle className={`w-6 h-6 ${
-                    confirmAction === "reviewed" ? "text-blue-600" : "text-green-600"
-                  }`} />
+                <div
+                  className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
+                    confirmAction === "reviewed"
+                      ? "bg-blue-100"
+                      : "bg-green-100"
+                  }`}
+                >
+                  <AlertCircle
+                    className={`w-6 h-6 ${
+                      confirmAction === "reviewed"
+                        ? "text-blue-600"
+                        : "text-green-600"
+                    }`}
+                  />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {confirmAction === "reviewed" ? "Mark as Reviewed?" : "Approve HSE Record?"}
+                    {confirmAction === "reviewed"
+                      ? "Mark as Reviewed?"
+                      : "Approve HSE Record?"}
                   </h3>
                   <p className="text-sm text-gray-600">
                     {confirmAction === "reviewed"
@@ -537,14 +611,23 @@ export const ViewDetailsModal: React.FC<{
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-6">
-                <Button type="button" onClick={handleCancelConfirm} variant="outline" disabled={isSubmitting}>
+                <Button
+                  type="button"
+                  onClick={handleCancelConfirm}
+                  variant="outline"
+                  disabled={isSubmitting}
+                >
                   Cancel
                 </Button>
                 <Button
                   type="button"
                   onClick={handleConfirmAction}
                   disabled={isSubmitting}
-                  className={confirmAction === "reviewed" ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
+                  className={
+                    confirmAction === "reviewed"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "bg-green-600 hover:bg-green-700"
+                  }
                 >
                   {isSubmitting ? (
                     <>
@@ -554,7 +637,9 @@ export const ViewDetailsModal: React.FC<{
                   ) : (
                     <>
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      {confirmAction === "reviewed" ? "Yes, Mark as Reviewed" : "Yes, Approve"}
+                      {confirmAction === "reviewed"
+                        ? "Yes, Mark as Reviewed"
+                        : "Yes, Approve"}
                     </>
                   )}
                 </Button>

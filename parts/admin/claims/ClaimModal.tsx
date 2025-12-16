@@ -15,15 +15,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getStatusBadgeColor, getTypeTextColor } from "@/lib/utils";
-import { ClaimDetail } from "@/hooks/claims";
+import { ClaimDetail, useBulkClaimActions } from "@/hooks/claims";
 import { getUserFromStorage, type UserRole } from "@/lib/auth";
 import { toast } from "sonner";
 
 interface ClaimDetailModalProps {
   claimDetail: ClaimDetail | null;
+  claimId?: string; // UUID for API calls
   isOpen: boolean;
   onClose: () => void;
   loading?: boolean;
+  onRefresh?: () => void;
 }
 
 /**
@@ -35,19 +37,27 @@ interface ClaimDetailModalProps {
  * - Added loading state for detail fetch
  * - Uses camelCase field names (transformed by hook)
  * - Role-based action buttons (Edit, Reviewed, Approve)
+ * - Integrated with bulk actions API
  */
 export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
   claimDetail,
+  claimId,
   isOpen,
   onClose,
   loading = false,
+  onRefresh,
 }) => {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<"reviewed" | "approve" | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<
+    "reviewed" | "approve" | null
+  >(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedData, setEditedData] = useState<ClaimDetail | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Use the bulk actions hook for single claim updates
+  const { updateSingleClaim, loading: apiLoading } = useBulkClaimActions();
 
   useEffect(() => {
     const user = getUserFromStorage();
@@ -64,13 +74,21 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
   if (!isOpen) return null;
 
   // Check if user can edit (Regional Officer, Admin, HQ, HOD)
-  const canEdit = userRole && ["regional_manager", "admin", "manager"].includes(userRole);
+  const normalizedRole = userRole?.toLowerCase();
+  const canEdit =
+    normalizedRole &&
+    ["regional_manager", "regional officer", "admin", "manager"].includes(
+      normalizedRole
+    );
 
   // Check if user can review (Regional Officer only)
-  const canReview = userRole === "regional_manager";
+  const canReview =
+    normalizedRole === "regional_manager" ||
+    normalizedRole === "regional officer";
 
   // Check if user can approve (Admin, HQ, HOD)
-  const canApprove = userRole && ["admin", "manager"].includes(userRole);
+  const canApprove =
+    normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
   // Helper function to format currency
   const formatCurrency = (amount: number): string => {
@@ -117,7 +135,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
       // TODO: Make API call to save edited data
       // const response = await updateClaim(editedData);
 
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
 
       toast.success("Claim updated successfully");
       setIsEditMode(false);
@@ -134,19 +152,19 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
     if (!editedData) return;
 
     // Handle nested fields
-    if (field.includes('.')) {
-      const [parent, child] = field.split('.');
+    if (field.includes(".")) {
+      const [parent, child] = field.split(".");
       setEditedData({
         ...editedData,
         [parent]: {
           ...(editedData[parent as keyof ClaimDetail] as any),
-          [child]: value
-        }
+          [child]: value,
+        },
       });
     } else {
       setEditedData({
         ...editedData,
-        [field]: value
+        [field]: value,
       });
     }
   };
@@ -162,15 +180,11 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
   };
 
   const handleConfirmAction = async () => {
-    if (!claimDetail || !confirmAction) return;
+    if (!claimId || !confirmAction) return;
 
-    setIsSubmitting(true);
-    try {
-      // TODO: Make API call to update status
-      // const response = await updateClaimStatus(claimDetail.id, confirmAction);
+    const success = await updateSingleClaim(claimId, confirmAction);
 
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-
+    if (success) {
       toast.success(
         confirmAction === "reviewed"
           ? "Claim marked as reviewed successfully"
@@ -178,13 +192,15 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
       );
 
       setShowConfirmDialog(false);
+      setConfirmAction(null);
+
+      if (onRefresh) {
+        onRefresh();
+      }
+
       onClose();
-      // TODO: Refresh data
-    } catch (error) {
+    } else {
       toast.error("Failed to update claim status");
-      console.error("Error updating claim:", error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -194,20 +210,35 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
   };
 
   // Render editable field or display value
-  const renderField = (label: string, value: any, field: string, type: "text" | "number" | "date" = "text") => {
+  const renderField = (
+    label: string,
+    value: any,
+    field: string,
+    type: "text" | "number" | "date" = "text"
+  ) => {
     if (isEditMode && editedData) {
-      const fieldValue = field.includes('.')
-        ? field.split('.').reduce((obj, key) => obj?.[key], editedData as any)
+      const fieldValue = field.includes(".")
+        ? field.split(".").reduce((obj, key) => obj?.[key], editedData as any)
         : (editedData as any)[field];
 
       return (
         <div>
-          <label htmlFor={field} className="text-xs text-gray-600 uppercase block mb-1">{label}</label>
+          <label
+            htmlFor={field}
+            className="text-xs text-gray-600 uppercase block mb-1"
+          >
+            {label}
+          </label>
           <input
             id={field}
             type={type}
-            value={fieldValue || ''}
-            onChange={(e) => handleFieldChange(field, type === 'number' ? parseFloat(e.target.value) : e.target.value)}
+            value={fieldValue || ""}
+            onChange={(e) =>
+              handleFieldChange(
+                field,
+                type === "number" ? parseFloat(e.target.value) : e.target.value
+              )
+            }
             placeholder={`Enter ${label.toLowerCase()}`}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
           />
@@ -270,7 +301,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                     onClick={handleCancelEdit}
                     variant="outline"
                     size="sm"
-                    disabled={isSubmitting}
+                    disabled={apiLoading}
                   >
                     Cancel
                   </Button>
@@ -278,9 +309,9 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                     onClick={handleSaveEdit}
                     size="sm"
                     className="bg-green-600 hover:bg-green-700"
-                    disabled={isSubmitting}
+                    disabled={apiLoading}
                   >
-                    {isSubmitting ? (
+                    {apiLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Saving...
@@ -343,9 +374,21 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                       </h3>
                     </div>
                     <div className="space-y-2">
-                      {renderField("Company Name", displayData?.employer, "employer")}
-                      {renderField("Sector", displayData?.classification.sector || "—", "classification.sector")}
-                      {renderField("Class", displayData?.classification.class || "—", "classification.class")}
+                      {renderField(
+                        "Company Name",
+                        displayData?.employer,
+                        "employer"
+                      )}
+                      {renderField(
+                        "Sector",
+                        displayData?.classification.sector || "—",
+                        "classification.sector"
+                      )}
+                      {renderField(
+                        "Class",
+                        displayData?.classification.class || "—",
+                        "classification.class"
+                      )}
                     </div>
                   </div>
 
@@ -357,7 +400,11 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                       </h3>
                     </div>
                     <div className="space-y-2">
-                      {renderField("Full Name", displayData?.claimant, "claimant")}
+                      {renderField(
+                        "Full Name",
+                        displayData?.claimant,
+                        "claimant"
+                      )}
                       <div>
                         <p className="text-xs text-gray-600 uppercase">
                           Claim Type
@@ -390,14 +437,23 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-white rounded-lg p-4 border border-gray-200">
                       {isEditMode ? (
-                        renderField("Amount Requested", formatCurrency(displayData?.financial.amountRequested || 0), "financial.amountRequested", "number")
+                        renderField(
+                          "Amount Requested",
+                          formatCurrency(
+                            displayData?.financial.amountRequested || 0
+                          ),
+                          "financial.amountRequested",
+                          "number"
+                        )
                       ) : (
                         <>
                           <p className="text-xs text-gray-600 uppercase mb-1">
                             Amount Requested
                           </p>
                           <p className="text-2xl font-bold text-gray-900">
-                            {formatCurrency(claimDetail.financial.amountRequested)}
+                            {formatCurrency(
+                              claimDetail.financial.amountRequested
+                            )}
                           </p>
                         </>
                       )}
@@ -405,7 +461,14 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
 
                     <div className="bg-white rounded-lg p-4 border border-gray-200">
                       {isEditMode ? (
-                        renderField("Amount Paid", formatCurrency(displayData?.financial.amountPaid || 0), "financial.amountPaid", "number")
+                        renderField(
+                          "Amount Paid",
+                          formatCurrency(
+                            displayData?.financial.amountPaid || 0
+                          ),
+                          "financial.amountPaid",
+                          "number"
+                        )
                       ) : (
                         <>
                           <p className="text-xs text-gray-600 uppercase mb-1">
@@ -524,29 +587,38 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
 
           {/* Footer */}
           <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
-            <Button
-              onClick={onClose}
-              variant="outline"
-            >
-              Cancel
-            </Button>
-            {claimDetail && canReview && (
-              <Button
-                onClick={handleReviewedClick}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Mark as Reviewed
-              </Button>
-            )}
-            {claimDetail && canApprove && (
-              <Button
-                onClick={handleApproveClick}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Approve
-              </Button>
+            {/* Admin Buttons: Edit (in header), Approve, Cancel */}
+            {normalizedRole === "admin" || normalizedRole === "manager" ? (
+              <>
+                {claimDetail && canApprove && (
+                  <Button
+                    onClick={handleApproveClick}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve
+                  </Button>
+                )}
+                <Button onClick={onClose} variant="outline">
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              // Regional Officer Buttons: Edit (in header), Review, Cancel
+              <>
+                {claimDetail && canReview && (
+                  <Button
+                    onClick={handleReviewedClick}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Review
+                  </Button>
+                )}
+                <Button onClick={onClose} variant="outline">
+                  Cancel
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -555,25 +627,38 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
         <>
-          <div className="fixed inset-0 bg-black bg-opacity-60 z-[60]" onClick={handleCancelConfirm} />
+          <div
+            className="fixed inset-0 bg-black bg-opacity-60 z-[60]"
+            onClick={handleCancelConfirm}
+          />
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
               <div className="flex items-start gap-4">
-                <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
-                  confirmAction === "reviewed" ? "bg-blue-100" : "bg-green-100"
-                }`}>
-                  <AlertCircle className={`w-6 h-6 ${
-                    confirmAction === "reviewed" ? "text-blue-600" : "text-green-600"
-                  }`} />
+                <div
+                  className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
+                    confirmAction === "reviewed"
+                      ? "bg-blue-100"
+                      : "bg-green-100"
+                  }`}
+                >
+                  <AlertCircle
+                    className={`w-6 h-6 ${
+                      confirmAction === "reviewed"
+                        ? "text-blue-600"
+                        : "text-green-600"
+                    }`}
+                  />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {confirmAction === "reviewed" ? "Mark as Reviewed?" : "Approve Claim?"}
+                    {confirmAction === "reviewed"
+                      ? "Mark as Reviewed?"
+                      : "Approve Claim?"}
                   </h3>
                   <p className="text-sm text-gray-600">
                     {confirmAction === "reviewed"
-                      ? "Are you sure you want to mark this claim as reviewed? This action will update the claim status."
-                      : "Are you sure you want to approve this claim? This action will finalize the claim approval."}
+                      ? "Are you sure you want to mark this claim as reviewed?"
+                      : "Are you sure you want to approve this claim?"}
                   </p>
                 </div>
               </div>
@@ -581,16 +666,20 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                 <Button
                   onClick={handleCancelConfirm}
                   variant="outline"
-                  disabled={isSubmitting}
+                  disabled={apiLoading}
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleConfirmAction}
-                  disabled={isSubmitting}
-                  className={confirmAction === "reviewed" ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
+                  disabled={apiLoading}
+                  className={
+                    confirmAction === "reviewed"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "bg-green-600 hover:bg-green-700"
+                  }
                 >
-                  {isSubmitting ? (
+                  {apiLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Processing...
@@ -598,7 +687,9 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                   ) : (
                     <>
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      {confirmAction === "reviewed" ? "Yes, Mark as Reviewed" : "Yes, Approve"}
+                      {confirmAction === "reviewed"
+                        ? "Mark as Reviewed"
+                        : "Approve"}
                     </>
                   )}
                 </Button>

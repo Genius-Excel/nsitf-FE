@@ -25,8 +25,10 @@ import {
   MonthlySummary,
   ComplianceRate,
   HSERecordsTable,
+  RegionalOSHSummaryTable,
+  ViewDetailsModal,
 } from "./hseDesign";
-import { HSEFormModal, ViewDetailsModal } from "./hseModal";
+import { HSEFormModal } from "./hseModal";
 import { HSEUploadModal } from "./hseUploadModal";
 import { useHSEDashboard } from "@/hooks/hse/useGetHSEDashboard";
 import { useHSERecords } from "@/hooks/hse/useHSERecords";
@@ -34,7 +36,7 @@ import { useHSEFilters } from "@/hooks/hse/useHSEFilters";
 import { useCreateHSERecord } from "@/hooks/hse/useCreateHSERecord";
 import { useUpdateHSERecord } from "@/hooks/hse/useUpdateHSERecord";
 import { useDeleteHSERecord } from "@/hooks/hse/useDeleteHSERecord";
-import type { HSERecord, HSEFormData, HSEStatCard } from "@/lib/types/hse";
+import type { HSERecord, HSEFormData, HSEStatCard, HSEActivity } from "@/lib/types/hse";
 
 export default function HSEDashboardContent() {
   // ============= PERMISSIONS REMOVED =============
@@ -113,10 +115,6 @@ export default function HSEDashboardContent() {
     resetFilters();
   };
   const handleAddNew = () => {
-    if (!canManage) {
-      toast.error("You don't have permission to add HSE records");
-      return;
-    }
     setIsEditing(false);
     setFormData({
       recordType: "",
@@ -131,10 +129,6 @@ export default function HSEDashboardContent() {
   };
 
   const handleEdit = (record: HSERecord) => {
-    if (!canManage) {
-      toast.error("You don't have permission to edit HSE records");
-      return;
-    }
     setIsEditing(true);
     setSelectedRecord(record);
     setFormData({
@@ -176,12 +170,37 @@ export default function HSEDashboardContent() {
     setIsDetailModalOpen(true);
   };
 
+  const handleEditFromModal = (activity: HSEActivity) => {
+    const record = records.find(r => r.id === activity.id);
+    if (record) {
+      handleEdit(record);
+    }
+  };
+
+  const handleApprove = async (activity: HSEActivity) => {
+    try {
+      // TODO: Call API to approve HSE record
+      // const response = await fetch(`/api/hse/${activity.id}/approve`, {
+      //   method: 'POST',
+      // });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      toast.success("HSE record approved successfully");
+      refetchRecords();
+      refetchDashboard();
+    } catch (error) {
+      toast.error("Failed to approve HSE record");
+      console.error("Approve error:", error);
+    }
+  };
+
   const handleUploadClick = () => {
     setIsUploadModalOpen(true);
   };
 
   const handleUploadSuccess = () => {
-    refetch(); // Refresh dashboard after successful upload
+    refetchDashboard();
+    refetchRecords();
     setIsUploadModalOpen(false);
   };
 
@@ -301,21 +320,10 @@ export default function HSEDashboardContent() {
         showDateRangeFilter={false}
       />
 
-      {/* HSE Records Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold">
-            HSE Records
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Detailed HSE activities and compliance records
-          </p>
-        </div>
-        <HSERecordsTable
-          records={filteredRecords}
-          onViewDetails={handleViewDetails}
-        />
-      </div>
+      {/* Regional OSH Activities Summary */}
+      <RegionalOSHSummaryTable
+        regionalData={dashboardData.regionalSummary}
+      />
 
       {/* Dashboard Metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -353,6 +361,8 @@ export default function HSEDashboardContent() {
               }
             : null
         }
+        onEdit={handleEditFromModal}
+        onApprove={handleApprove}
       />
 
       <HSEUploadModal

@@ -31,7 +31,9 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   // State management
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<"reviewed" | "approve" | null>(null);
+  const [confirmAction, setConfirmAction] = useState<
+    "reviewed" | "approve" | null
+  >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedData, setEditedData] = useState<ComplianceEntry | null>(null);
@@ -78,10 +80,18 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   const shortfall = entry.target - entry.contributionCollected;
   const isTargetMet = entry.contributionCollected >= entry.target;
 
-  // Permission checks
-  const canEdit = userRole && ["regional_manager", "admin", "manager"].includes(userRole);
-  const canReview = userRole === "regional_manager";
-  const canApprove = userRole && ["admin", "manager"].includes(userRole);
+  // Permission checks (case-insensitive)
+  const normalizedRole = userRole?.toLowerCase();
+  const canEdit =
+    normalizedRole &&
+    ["regional_manager", "regional officer", "admin", "manager"].includes(
+      normalizedRole
+    );
+  const canReview =
+    normalizedRole === "regional_manager" ||
+    normalizedRole === "regional officer";
+  const canApprove =
+    normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
   // Use edited data or original data
   const displayData = editedData || entry;
@@ -122,8 +132,8 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
       if (!prev) return prev;
 
       // Handle nested fields (e.g., "financial.amountRequested")
-      if (field.includes('.')) {
-        const keys = field.split('.');
+      if (field.includes(".")) {
+        const keys = field.split(".");
         const newData = { ...prev };
         let current: any = newData;
 
@@ -161,9 +171,10 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
       // TODO: Call API to update status
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const message = confirmAction === "reviewed"
-        ? "Compliance record marked as reviewed"
-        : "Compliance record approved successfully";
+      const message =
+        confirmAction === "reviewed"
+          ? "Compliance record marked as reviewed"
+          : "Compliance record approved successfully";
 
       toast.success(message);
       setShowConfirmDialog(false);
@@ -185,20 +196,28 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
     type: "text" | "number" | "date" = "text"
   ) => {
     if (isEditMode && editedData) {
-      const fieldValue = field.includes('.')
-        ? field.split('.').reduce((obj, key) => obj?.[key], editedData as any)
+      const fieldValue = field.includes(".")
+        ? field.split(".").reduce((obj, key) => obj?.[key], editedData as any)
         : (editedData as any)[field];
 
       return (
         <div>
-          <label htmlFor={field} className="text-xs text-gray-600 uppercase block mb-1">
+          <label
+            htmlFor={field}
+            className="text-xs text-gray-600 uppercase block mb-1"
+          >
             {label}
           </label>
           <input
             id={field}
             type={type}
-            value={fieldValue || ''}
-            onChange={(e) => handleFieldChange(field, type === 'number' ? parseFloat(e.target.value) : e.target.value)}
+            value={fieldValue || ""}
+            onChange={(e) =>
+              handleFieldChange(
+                field,
+                type === "number" ? parseFloat(e.target.value) : e.target.value
+              )
+            }
             placeholder={`Enter ${label.toLowerCase()}`}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
           />
@@ -321,17 +340,32 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
             </div>
             <div className="flex items-center gap-2">
               {canEdit && !isEditMode && (
-                <Button onClick={handleEdit} variant="outline" size="sm" className="gap-2">
+                <Button
+                  onClick={handleEdit}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
                   <Edit className="w-4 h-4" />
                   Edit
                 </Button>
               )}
               {isEditMode && (
                 <>
-                  <Button onClick={handleCancelEdit} variant="outline" size="sm" disabled={isSubmitting}>
+                  <Button
+                    onClick={handleCancelEdit}
+                    variant="outline"
+                    size="sm"
+                    disabled={isSubmitting}
+                  >
                     Cancel
                   </Button>
-                  <Button onClick={handleSaveEdit} size="sm" className="bg-green-600 hover:bg-green-700" disabled={isSubmitting}>
+                  <Button
+                    onClick={handleSaveEdit}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                    disabled={isSubmitting}
+                  >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -364,10 +398,17 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                   {isEditMode ? (
-                    renderField("Target", formatCurrencyFull(displayData.target), "target", "number")
+                    renderField(
+                      "Target",
+                      formatCurrencyFull(displayData.target),
+                      "target",
+                      "number"
+                    )
                   ) : (
                     <>
-                      <p className="text-xs text-gray-600 uppercase mb-1">Target</p>
+                      <p className="text-xs text-gray-600 uppercase mb-1">
+                        Target
+                      </p>
                       <p className="text-xl sm:text-2xl font-bold text-blue-700">
                         {formatCurrencyFull(displayData.target)}
                       </p>
@@ -376,7 +417,12 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                   {isEditMode ? (
-                    renderField("Collected", formatCurrencyFull(displayData.contributionCollected), "contributionCollected", "number")
+                    renderField(
+                      "Collected",
+                      formatCurrencyFull(displayData.contributionCollected),
+                      "contributionCollected",
+                      "number"
+                    )
                   ) : (
                     <>
                       <p className="text-xs text-gray-600 uppercase mb-1">
@@ -396,7 +442,12 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                   } p-4 rounded-lg border`}
                 >
                   {isEditMode ? (
-                    renderField("Performance Rate", displayData.achievement.toFixed(1), "achievement", "number")
+                    renderField(
+                      "Performance Rate",
+                      displayData.achievement.toFixed(1),
+                      "achievement",
+                      "number"
+                    )
                   ) : (
                     <>
                       <p className="text-xs text-gray-600 uppercase mb-1">
@@ -441,7 +492,12 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                   {isEditMode ? (
-                    renderField("Total Employers", displayData.employersRegistered.toLocaleString(), "employersRegistered", "number")
+                    renderField(
+                      "Total Employers",
+                      displayData.employersRegistered.toLocaleString(),
+                      "employersRegistered",
+                      "number"
+                    )
                   ) : (
                     <>
                       <p className="text-xs text-gray-600 uppercase mb-1">
@@ -455,7 +511,12 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                   {isEditMode ? (
-                    renderField("Total Employees", displayData.employees.toLocaleString(), "employees", "number")
+                    renderField(
+                      "Total Employees",
+                      displayData.employees.toLocaleString(),
+                      "employees",
+                      "number"
+                    )
                   ) : (
                     <>
                       <p className="text-xs text-gray-600 uppercase mb-1">
@@ -479,12 +540,23 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                 Additional Information
               </h3>
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
-                <div className={isEditMode ? "" : "flex justify-between items-center"}>
+                <div
+                  className={
+                    isEditMode ? "" : "flex justify-between items-center"
+                  }
+                >
                   {isEditMode ? (
-                    renderField("Certificate Fees", formatCurrencyFull(displayData.certificateFees), "certificateFees", "number")
+                    renderField(
+                      "Certificate Fees",
+                      formatCurrencyFull(displayData.certificateFees),
+                      "certificateFees",
+                      "number"
+                    )
                   ) : (
                     <>
-                      <span className="text-sm text-gray-600">Certificate Fees:</span>
+                      <span className="text-sm text-gray-600">
+                        Certificate Fees:
+                      </span>
                       <span className="text-sm font-semibold text-gray-900">
                         {formatCurrencyFull(displayData.certificateFees)}
                       </span>
@@ -519,13 +591,21 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
               Cancel
             </Button>
             {canReview && (
-              <Button type="button" onClick={handleReviewedClick} className="bg-blue-600 hover:bg-blue-700">
+              <Button
+                type="button"
+                onClick={handleReviewedClick}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 <CheckCircle className="w-4 h-4 mr-2" />
                 Mark as Reviewed
               </Button>
             )}
             {canApprove && (
-              <Button type="button" onClick={handleApproveClick} className="bg-green-600 hover:bg-green-700">
+              <Button
+                type="button"
+                onClick={handleApproveClick}
+                className="bg-green-600 hover:bg-green-700"
+              >
                 <CheckCircle className="w-4 h-4 mr-2" />
                 Approve
               </Button>
@@ -537,20 +617,33 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
         <>
-          <div className="fixed inset-0 bg-black bg-opacity-60 z-[60]" onClick={handleCancelConfirm} />
+          <div
+            className="fixed inset-0 bg-black bg-opacity-60 z-[60]"
+            onClick={handleCancelConfirm}
+          />
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
               <div className="flex items-start gap-4">
-                <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
-                  confirmAction === "reviewed" ? "bg-blue-100" : "bg-green-100"
-                }`}>
-                  <AlertCircle className={`w-6 h-6 ${
-                    confirmAction === "reviewed" ? "text-blue-600" : "text-green-600"
-                  }`} />
+                <div
+                  className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
+                    confirmAction === "reviewed"
+                      ? "bg-blue-100"
+                      : "bg-green-100"
+                  }`}
+                >
+                  <AlertCircle
+                    className={`w-6 h-6 ${
+                      confirmAction === "reviewed"
+                        ? "text-blue-600"
+                        : "text-green-600"
+                    }`}
+                  />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {confirmAction === "reviewed" ? "Mark as Reviewed?" : "Approve Compliance Record?"}
+                    {confirmAction === "reviewed"
+                      ? "Mark as Reviewed?"
+                      : "Approve Compliance Record?"}
                   </h3>
                   <p className="text-sm text-gray-600">
                     {confirmAction === "reviewed"
@@ -560,14 +653,23 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-6">
-                <Button type="button" onClick={handleCancelConfirm} variant="outline" disabled={isSubmitting}>
+                <Button
+                  type="button"
+                  onClick={handleCancelConfirm}
+                  variant="outline"
+                  disabled={isSubmitting}
+                >
                   Cancel
                 </Button>
                 <Button
                   type="button"
                   onClick={handleConfirmAction}
                   disabled={isSubmitting}
-                  className={confirmAction === "reviewed" ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
+                  className={
+                    confirmAction === "reviewed"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "bg-green-600 hover:bg-green-700"
+                  }
                 >
                   {isSubmitting ? (
                     <>
@@ -577,7 +679,9 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                   ) : (
                     <>
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      {confirmAction === "reviewed" ? "Yes, Mark as Reviewed" : "Yes, Approve"}
+                      {confirmAction === "reviewed"
+                        ? "Yes, Mark as Reviewed"
+                        : "Yes, Approve"}
                     </>
                   )}
                 </Button>

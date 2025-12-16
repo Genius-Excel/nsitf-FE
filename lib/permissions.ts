@@ -1,4 +1,4 @@
-import type { UserRole } from "./auth"
+import type { UserRole } from "./auth";
 
 // Define permissions for each role
 export const rolePermissions: Record<UserRole, string[]> = {
@@ -51,12 +51,7 @@ export const rolePermissions: Record<UserRole, string[]> = {
   ],
 
   // User has basic view access
-  user: [
-    "view_dashboard",
-    "view_claims",
-    "view_hse",
-    "view_inspection",
-  ],
+  user: ["view_dashboard", "view_claims", "view_hse", "view_inspection"],
 
   // Claims Officer - full access to claims, view-only access to others
   claims_officer: [
@@ -116,50 +111,91 @@ export const rolePermissions: Record<UserRole, string[]> = {
     "view_hse",
     "view_legal",
   ],
-}
+};
 
-export function hasPermission(role: UserRole, permission: string, backendPermissions?: string[]): boolean {
+export function hasPermission(
+  role: UserRole,
+  permission: string,
+  backendPermissions?: string[]
+): boolean {
   // Check backend permissions first if available
   if (backendPermissions && Array.isArray(backendPermissions)) {
     // Map frontend permission names to backend permission names
     const permissionMapping: Record<string, string[]> = {
-      "manage_hse": ["can_upload_hse", "can_create_hse_record", "can_edit_hse_record"],
-      "manage_claims": ["can_upload_claims", "can_create_claims_record", "can_edit_claims_record"],
-      "manage_legal": ["can_upload_legal", "can_create_legal_record", "can_edit_legal_record"],
-      "manage_inspection": ["can_upload_inspection", "can_create_inspection_record", "can_edit_inspection_record"],
-      "manage_compliance": ["can_upload_compliance", "can_create_compliance_record", "can_edit_compliance_record"],
-    }
+      manage_hse: [
+        "can_upload_hse",
+        "can_create_hse_record",
+        "can_edit_hse_record",
+        "can_delete_hse_record",
+      ],
+      manage_claims: [
+        "can_upload_claims",
+        "can_create_claim",
+        "can_create_claims_record",
+        "can_edit_claim",
+        "can_edit_claims_record",
+        "can_approve_claim",
+        "can_delete_claim",
+        "can_process_claim",
+      ],
+      manage_legal: [
+        "can_upload_legal",
+        "can_create_legal_case",
+        "can_create_legal_record",
+        "can_edit_legal_case",
+        "can_edit_legal_record",
+        "can_update_legal_status",
+        "can_delete_legal_case",
+      ],
+      manage_inspection: [
+        "can_upload_inspection",
+        "can_create_inspection_record",
+        "can_edit_inspection_record",
+        "can_upload_inspection_report",
+        "can_delete_inspection",
+        "can_update_inspection",
+      ],
+      manage_compliance: [
+        "can_upload_compliance",
+        "can_create_compliance_record",
+        "can_edit_compliance_record",
+        "can_delete_compliance_record",
+        "can_generate_compliance_report",
+      ],
+    };
 
-    const backendPerms = permissionMapping[permission] || []
-    const hasMappedPermission = backendPerms.some(p => backendPermissions.includes(p))
+    const backendPerms = permissionMapping[permission] || [];
+    const hasMappedPermission = backendPerms.some((p) =>
+      backendPermissions.includes(p)
+    );
 
-    if (hasMappedPermission) return true
+    if (hasMappedPermission) return true;
   }
 
   // Fallback to role-based permissions
-  return rolePermissions[role]?.includes(permission) ?? false
+  return rolePermissions[role]?.includes(permission) ?? false;
 }
 
 export function canManageUsers(role: UserRole): boolean {
-  return hasPermission(role, "manage_users")
+  return hasPermission(role, "manage_users");
 }
 
 export function canManageCompliance(role: UserRole): boolean {
-  return hasPermission(role, "manage_compliance")
+  return hasPermission(role, "manage_compliance");
 }
 
 export function canManageClaims(role: UserRole): boolean {
-  return hasPermission(role, "manage_claims")
+  return hasPermission(role, "manage_claims");
 }
 
 export function canManageHSE(role: UserRole): boolean {
-  return hasPermission(role, "manage_hse")
+  return hasPermission(role, "manage_hse");
 }
 
 export function canManageLegal(role: UserRole): boolean {
-  return hasPermission(role, "manage_legal")
+  return hasPermission(role, "manage_legal");
 }
 
 export function canManageInspection(role: UserRole): boolean {
-  return hasPermission(role, "manage_inspection")
+  return hasPermission(role, "manage_inspection");
 }

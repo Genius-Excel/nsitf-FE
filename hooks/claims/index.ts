@@ -6,6 +6,7 @@ export { useClaimsFilters } from "./Useclaimsfilters";
 export { useClaimDetail } from "./Useclaimdetail";
 export { useClaimsUpload } from "./Useclaimsupload";
 export { useClaimsCharts } from "./Useclaimscharts";
+export { useBulkClaimActions } from "./UsebulkClaimActions";
 
 // Export types
 export type {
