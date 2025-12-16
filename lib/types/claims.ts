@@ -44,6 +44,9 @@ export interface MetricCards {
   nok_beneficiaries: number;
   disability_beneficiaries: number;
   retiree_benefit_beneficiaries: number;
+  lop: number;
+  mer: number;
+  disability_rsa: number;
 }
 
 export interface CategoryMetrics {
@@ -181,6 +184,9 @@ export interface DashboardMetrics {
   nokBeneficiaries: number;
   disabilityBeneficiaries: number;
   retireeBenefitBeneficiaries: number;
+  lop: number;
+  mer: number;
+  disabilityRsa: number;
 }
 
 export interface ClaimCategories {
@@ -366,6 +372,9 @@ export const transformMetrics = (metrics: MetricCards): DashboardMetrics => ({
   nokBeneficiaries: metrics.nok_beneficiaries,
   disabilityBeneficiaries: metrics.disability_beneficiaries,
   retireeBenefitBeneficiaries: metrics.retiree_benefit_beneficiaries,
+  lop: metrics.lop,
+  mer: metrics.mer,
+  disabilityRsa: metrics.disability_rsa,
 });
 
 /**
