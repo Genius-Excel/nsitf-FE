@@ -39,6 +39,8 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
   const [period, setPeriod] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState<"idle" | "uploading" | "processing" | "complete">("idle");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -113,14 +115,41 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
     }
 
     clearError();
+    setUploadProgress(0);
+    setUploadStage("uploading");
+
+    // Simulate upload progress
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + 10;
+      });
+    }, 200);
+
     const result = await uploadFile(selectedRegionId, file);
 
+    clearInterval(progressInterval);
+
     if (result) {
+      setUploadProgress(95);
+      setUploadStage("processing");
+
+      // Simulate processing time
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setUploadProgress(100);
+      setUploadStage("complete");
       setUploadSuccess(true);
+
       setTimeout(() => {
         handleClose();
         onUploadSuccess();
       }, 2000);
+    } else {
+      setUploadStage("idle");
     }
   };
 
@@ -130,6 +159,8 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
     setPeriod("");
     setFile(null);
     setUploadSuccess(false);
+    setUploadProgress(0);
+    setUploadStage("idle");
     clearError();
     onClose();
   };
@@ -303,6 +334,31 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
                   </p>
                   <p className="text-xs text-gray-500">Accepted formats: .xlsx, .xls</p>
                 </div>
+              </div>
+            )}
+
+            {/* Upload Progress Bar */}
+            {loading && uploadStage !== "idle" && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-gray-700">
+                    {uploadStage === "uploading" && "Uploading file..."}
+                    {uploadStage === "processing" && "Processing data..."}
+                    {uploadStage === "complete" && "Upload complete!"}
+                  </span>
+                  <span className="text-gray-600">{uploadProgress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className="h-2.5 bg-green-600 transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                {uploadStage === "processing" && (
+                  <p className="text-xs text-gray-500 italic">
+                    Please wait while the server processes your file...
+                  </p>
+                )}
               </div>
             )}
 

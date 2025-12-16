@@ -40,6 +40,8 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState<"idle" | "uploading" | "processing" | "complete">("idle");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -114,15 +116,38 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
 
     setLoading(true);
     setError(null);
+    setUploadProgress(0);
+    setUploadStage("uploading");
 
     try {
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
       // TODO: Implement HSE upload API call
       // const result = await uploadFile(selectedRegionId, selectedBranchId, period, file);
 
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
+      clearInterval(progressInterval);
+      setUploadProgress(95);
+      setUploadStage("processing");
+
+      // Simulate processing time
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setUploadProgress(100);
+      setUploadStage("complete");
       setUploadSuccess(true);
       toast.success("HSE data uploaded successfully!");
+
       setTimeout(() => {
         handleClose();
         onUploadSuccess();
@@ -131,6 +156,7 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
       const message = err?.response?.data?.message || err.message || "Failed to upload HSE data";
       setError(message);
       toast.error(message);
+      setUploadStage("idle");
     } finally {
       setLoading(false);
     }
@@ -143,6 +169,8 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
     setFile(null);
     setUploadSuccess(false);
     setError(null);
+    setUploadProgress(0);
+    setUploadStage("idle");
     onClose();
   };
 
@@ -164,7 +192,7 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <div className="sticky top-0 bg-white border-b px-4 sm:px-6 py-4 flex items-center justify-between z-10">
             <div className="flex items-center gap-3">
-              <FileSpreadsheet className="w-6 h-6 text-blue-600" />
+              <FileSpreadsheet className="w-6 h-6 text-green-600" />
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                 Upload HSE Activities
               </h2>
@@ -189,7 +217,7 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
                 id="region-select"
                 value={selectedRegionId}
                 onChange={(e) => setSelectedRegionId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 disabled={loading || regionsLoading}
                 aria-label="Select region"
               >
@@ -215,7 +243,7 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
                   id="branch-select"
                   value={selectedBranchId}
                   onChange={(e) => setSelectedBranchId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   disabled={loading || branchesLoading}
                   aria-label="Select branch"
                 >
@@ -252,7 +280,7 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
                   type="month"
                   value={period}
                   onChange={(e) => setPeriod(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   disabled={loading}
                   placeholder="Select period (e.g., 2024-01)"
                 />
@@ -264,9 +292,9 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
 
             {/* Template Download */}
             {canDownloadTemplate && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="text-sm text-blue-800">
+                  <div className="text-sm text-green-800">
                     <p className="font-medium">Download template for:</p>
                     <p className="text-xs mt-1">
                       {selectedRegion?.name} → {selectedBranch?.name} ({period})
@@ -274,7 +302,7 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
                   </div>
                   <button
                     onClick={handleDownloadTemplate}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                   >
                     <Download className="w-4 h-4" />
                     Download Template
@@ -325,6 +353,31 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
               </div>
             )}
 
+            {/* Upload Progress Bar */}
+            {loading && uploadStage !== "idle" && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-gray-700">
+                    {uploadStage === "uploading" && "Uploading file..."}
+                    {uploadStage === "processing" && "Processing data..."}
+                    {uploadStage === "complete" && "Upload complete!"}
+                  </span>
+                  <span className="text-gray-600">{uploadProgress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className="h-2.5 bg-green-600 transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                {uploadStage === "processing" && (
+                  <p className="text-xs text-gray-500 italic">
+                    Please wait while the server processes your file...
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Success Message */}
             {uploadSuccess && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -362,7 +415,7 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
             <button
               onClick={handleUpload}
               disabled={!canUpload || loading}
-              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               title={
                 !canUpload
                   ? "Please select region, branch, period, and upload file"

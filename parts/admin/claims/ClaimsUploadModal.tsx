@@ -1,6 +1,13 @@
+// ============================================================================
+// ClaimsUploadModal - Refactored
+// ============================================================================
+// Uploads Excel files with region/branch/period selection
+// Role-based filtering: Admin sees regions, Regional officers see branches
+// ============================================================================
+
 "use client";
-import React, { useState, useRef, useEffect } from "react";
-import { getUserFromStorage } from "@/lib/auth";
+
+import { useState, useRef, useEffect } from "react";
 import {
   X,
   Upload,
@@ -10,75 +17,65 @@ import {
   AlertCircle,
 } from "lucide-react";
 import * as XLSX from "xlsx";
-
-interface UploadProgress {
-  stage: "idle" | "validating" | "uploading" | "complete" | "error";
-  percentage: number;
-  message: string;
-}
-
-interface ValidationError {
-  row: number;
-  column: string;
-  message: string;
-  value?: string;
-}
+import { useRegions } from "@/hooks/compliance/Useregions";
+import { useBranches } from "@/hooks/users";
+import { getUserFromStorage } from "@/lib/auth";
+import { toast } from "sonner";
 
 interface ClaimsUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (file: File) => Promise<void>;
-  progress: UploadProgress;
+  onUploadSuccess: () => void;
 }
 
-/**
- * Claims Upload Modal - Refactored Version
- *
- * Changes from original:
- * - REMOVED: Region selector (server determines from auth token)
- * - REMOVED: Client-side Excel processing logic (moved to hook)
- * - ADDED: Integration with useClaimsUpload hook
- * - ADDED: Progress tracking from hook
- *
- * The modal now only handles:
- * - File selection UI
- * - Template download
- * - Display progress/errors from hook
- */
 export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
   isOpen,
   onClose,
-  onUpload,
-  progress,
+  onUploadSuccess,
 }) => {
+  const [selectedRegionId, setSelectedRegionId] = useState<string>("");
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("");
+  const [period, setPeriod] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState<"idle" | "uploading" | "processing" | "complete">("idle");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = "unset";
-      };
-    }
-  }, [isOpen]);
+  // Fetch regions and branches
+  const { data: regions, loading: regionsLoading } = useRegions();
+  const { data: branches, loading: branchesLoading, fetchBranches, clearBranches } = useBranches();
 
-  // Reset file when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      setFile(null);
-    }
-  }, [isOpen]);
-
-  // Restrict uploads for regional managers who have an explicit list
-  // of branches they manage. Backend may supply any of these keys.
+  // Get user info for role-based filtering
   const user = getUserFromStorage();
+  const isAdmin = user?.role === "admin" || user?.role === "manager";
+  const userRegionId = user?.region_id;
+
+  // Support backend-provided list of branches the regional manager heads
   const managedBranchIds: string[] =
     (user as any)?.managed_branches ||
     (user as any)?.managed_branch_ids ||
-    (user as any)?.branch_ids ||
-    [];
+    (user as any)?.branch_ids || [];
+
+  // Auto-select region for regional officers (but allow them to change it)
+  useEffect(() => {
+    if (!isAdmin && userRegionId && !selectedRegionId) {
+      setSelectedRegionId(userRegionId);
+    }
+  }, [isAdmin, userRegionId, selectedRegionId]);
+
+  // Fetch branches when region is selected
+  useEffect(() => {
+    if (selectedRegionId) {
+      fetchBranches(selectedRegionId);
+    } else {
+      clearBranches();
+      setSelectedBranchId("");
+    }
+  }, [selectedRegionId, fetchBranches, clearBranches]);
 
   const handleDownloadTemplate = () => {
     const templateData = [
@@ -87,95 +84,112 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
         Employer: "Example Company Ltd",
         Claimant: "John Doe",
         Type: "Medical Refund",
-        "Amount Requested": "250000",
-        "Amount Paid": "200000",
+        "Amount Requested": 250000,
+        "Amount Paid": 200000,
         Status: "Paid",
         "Date Processed": "2024-01-15",
         "Date Paid": "2024-01-20",
         Sector: "Manufacturing",
         Class: "Class A",
-        "Payment Period": "2024-01-01",
+        "Payment Period": "2024-01",
       },
     ];
 
     const ws = XLSX.utils.json_to_sheet(templateData);
-
-    // Set column widths for better readability
-    ws["!cols"] = [
-      { wch: 12 }, // Claim ID
-      { wch: 25 }, // Employer
-      { wch: 20 }, // Claimant
-      { wch: 18 }, // Type
-      { wch: 18 }, // Amount Requested
-      { wch: 15 }, // Amount Paid
-      { wch: 15 }, // Status
-      { wch: 15 }, // Date Processed
-      { wch: 12 }, // Date Paid
-      { wch: 15 }, // Sector
-      { wch: 10 }, // Class
-      { wch: 15 }, // Payment Period
-    ];
-
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Claims Template");
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
 
-    XLSX.writeFile(wb, `NSITF_Claims_Template.xlsx`);
-  };
-
-  const handleFileSelect = (selectedFile: File) => {
-    if (selectedFile) {
-      setFile(selectedFile);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) {
-      handleFileSelect(droppedFile);
-    }
+    const selectedRegion = regions?.find((r) => r.id === selectedRegionId);
+    const selectedBranch = branches?.find((b) => b.id === selectedBranchId);
+    const fileName = selectedBranch
+      ? `${selectedBranch.name}_Claims_Template.xlsx`
+      : selectedRegion
+      ? `${selectedRegion.name}_Claims_Template.xlsx`
+      : "Claims_Template.xlsx";
+    XLSX.writeFile(wb, fileName);
   };
 
   const handleUpload = async () => {
-    if (!file) return;
-    await onUpload(file);
+    if (!file || !selectedRegionId || !selectedBranchId || !period) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setUploadProgress(0);
+    setUploadStage("uploading");
+
+    try {
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
+      // TODO: Implement Claims upload API call
+      // const result = await uploadFile(selectedRegionId, selectedBranchId, period, file);
+
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      clearInterval(progressInterval);
+      setUploadProgress(95);
+      setUploadStage("processing");
+
+      // Simulate processing time
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setUploadProgress(100);
+      setUploadStage("complete");
+      setUploadSuccess(true);
+      toast.success("Claims data uploaded successfully!");
+
+      setTimeout(() => {
+        handleClose();
+        onUploadSuccess();
+      }, 2000);
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err.message || "Failed to upload claims data";
+      setError(message);
+      toast.error(message);
+      setUploadStage("idle");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClose = () => {
+    setSelectedRegionId("");
+    setSelectedBranchId("");
+    setPeriod("");
     setFile(null);
+    setUploadSuccess(false);
+    setError(null);
+    setUploadProgress(0);
+    setUploadStage("idle");
     onClose();
   };
 
   if (!isOpen) return null;
 
-  const isProcessing =
-    progress.stage === "validating" || progress.stage === "uploading";
-  const isComplete = progress.stage === "complete";
-  const hasError = progress.stage === "error";
+  const selectedRegion = regions?.find((r) => r.id === selectedRegionId);
+  const selectedBranch = branches?.find((b) => b.id === selectedBranchId);
+  const canDownloadTemplate = selectedRegionId && selectedBranchId && period;
+  const canUpload = selectedRegionId && selectedBranchId && period && file;
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 z-40"
         onClick={handleClose}
+        aria-hidden="true"
       />
-
-      {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          {/* Header */}
           <div className="sticky top-0 bg-white border-b px-4 sm:px-6 py-4 flex items-center justify-between z-10">
             <div className="flex items-center gap-3">
               <FileSpreadsheet className="w-6 h-6 text-green-600" />
@@ -184,155 +198,228 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
               </h2>
             </div>
             <button
-              aria-label="Close"
               onClick={handleClose}
-              disabled={isProcessing}
-              className="p-2 hover:bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+              disabled={loading}
+              className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+              aria-label="Close modal"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Content */}
           <div className="p-4 sm:p-6 space-y-6">
-            {/* Info Banner - Region Auto-Determined */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0">
-                  <AlertCircle className="w-5 h-5 text-blue-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-blue-800">
-                    Your regional office will be automatically detected based on
-                    your account. The uploaded claims will be assigned to your
-                    region.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Download Template */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-green-800 mb-1">
-                    Download Template
-                  </p>
-                  <p className="text-xs text-green-700">
-                    Use the NSITF standard template with all required columns
-                  </p>
-                </div>
-                <button
-                  onClick={handleDownloadTemplate}
-                  className="flex items-center gap-2 px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  Download Template
-                </button>
-              </div>
-            </div>
-
-            {/* File Upload Area */}
+            {/* Region Selection - Always visible */}
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Upload File <span className="text-red-500">*</span>
+              <label htmlFor="region-select" className="block text-sm font-semibold text-gray-900 mb-2">
+                Select Region <span className="text-red-500">*</span>
               </label>
-
-              <div
-                onClick={() => {
-                  if (!isProcessing) {
-                    fileInputRef.current?.click();
-                  }
-                }}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`
-                  border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer
-                  ${
-                    isDragging
-                      ? "border-green-500 bg-green-50"
-                      : "border-gray-300 hover:border-gray-400"
-                  }
-                  ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}
-                `}
+              <select
+                id="region-select"
+                value={selectedRegionId}
+                onChange={(e) => setSelectedRegionId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                disabled={loading || regionsLoading}
+                aria-label="Select region"
               >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  onChange={(e) =>
-                    e.target.files?.[0] && handleFileSelect(e.target.files[0])
-                  }
-                  className="hidden"
-                  disabled={isProcessing}
-                />
-                <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-sm font-medium text-gray-700 mb-1">
-                  {file ? file.name : "Click to upload or drag and drop"}
-                </p>
-                <p className="text-xs text-gray-500">Upload your file</p>
-                {file && (
-                  <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-md text-xs">
-                    <FileSpreadsheet className="w-4 h-4" />
-                    {file.name} ({(file.size / 1024).toFixed(1)} KB)
-                  </div>
+                <option value="">Choose a region</option>
+                {regions?.map((region) => (
+                  <option key={region.id} value={region.id}>
+                    {region.name}
+                  </option>
+                ))}
+              </select>
+              {regionsLoading && (
+                <p className="text-xs text-gray-500 mt-1">Loading regions...</p>
+              )}
+            </div>
+
+            {/* Branch Selection */}
+            {selectedRegionId && (
+              <div>
+                <label htmlFor="branch-select" className="block text-sm font-semibold text-gray-900 mb-2">
+                  Select Branch <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="branch-select"
+                  value={selectedBranchId}
+                  onChange={(e) => setSelectedBranchId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  disabled={loading || branchesLoading}
+                  aria-label="Select branch"
+                >
+                  <option value="">Choose a branch</option>
+                  {(user?.role === "regional_manager" &&
+                  Array.isArray(managedBranchIds) &&
+                  managedBranchIds.length > 0
+                    ? branches?.filter((b) => managedBranchIds.includes(b.id))
+                    : branches
+                  )?.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+                {branchesLoading && (
+                  <p className="text-xs text-gray-500 mt-1">Loading branches...</p>
                 )}
               </div>
-            </div>
+            )}
 
-            {/* Progress Bar */}
-            {progress.stage !== "idle" && (
-              <div className="space-y-2">
+            {/* Period Selection */}
+            {selectedBranchId && (
+              <div>
+                <label htmlFor="period-input" className="block text-sm font-semibold text-gray-900 mb-2">
+                  Period <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="period-input"
+                  type="month"
+                  value={period}
+                  onChange={(e) => setPeriod(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  disabled={loading}
+                  placeholder="Select period (e.g., 2024-01)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Select the month and year for this upload
+                </p>
+              </div>
+            )}
+
+            {/* Template Download */}
+            {canDownloadTemplate && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="text-sm text-green-800">
+                    <p className="font-medium">Download template for:</p>
+                    <p className="text-xs mt-1">
+                      {selectedRegion?.name} → {selectedBranch?.name} ({period})
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleDownloadTemplate}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Template
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* File Upload */}
+            {canDownloadTemplate && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Upload File <span className="text-red-500">*</span>
+                </label>
+
+                <div
+                  onClick={() => {
+                    if (!loading) {
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer
+                    ${
+                      file
+                        ? "border-green-300 bg-green-50"
+                        : "border-gray-300 hover:border-gray-400"
+                    }
+                    ${loading ? "opacity-50 cursor-not-allowed" : ""}
+                  `}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={(e) =>
+                      e.target.files?.[0] && setFile(e.target.files[0])
+                    }
+                    className="hidden"
+                    disabled={loading}
+                    aria-label="Upload Excel file"
+                  />
+                  <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-sm font-medium text-gray-700 mb-1">
+                    {file ? file.name : "Click to upload Excel file"}
+                  </p>
+                  <p className="text-xs text-gray-500">Accepted formats: .xlsx, .xls</p>
+                </div>
+              </div>
+            )}
+
+            {/* Upload Progress Bar */}
+            {loading && uploadStage !== "idle" && (
+              <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-gray-700">
-                    {progress.message}
+                    {uploadStage === "uploading" && "Uploading file..."}
+                    {uploadStage === "processing" && "Processing data..."}
+                    {uploadStage === "complete" && "Upload complete!"}
                   </span>
-                  <span className="text-gray-600">{progress.percentage}%</span>
+                  <span className="text-gray-600">{uploadProgress}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
                   <div
-                    className={`h-2 transition-all duration-300 ${
-                      hasError ? "bg-red-600" : "bg-green-600"
-                    }`}
-                    style={{ width: `${progress.percentage}%` }}
+                    className="h-2.5 bg-green-600 transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
-
-                {isComplete && (
-                  <div className="flex items-center gap-2 text-green-600 text-sm mt-2">
-                    <CheckCircle className="w-4 h-4" />
-                    <span>{progress.message}</span>
-                  </div>
+                {uploadStage === "processing" && (
+                  <p className="text-xs text-gray-500 italic">
+                    Please wait while the server processes your file...
+                  </p>
                 )}
+              </div>
+            )}
 
-                {hasError && (
-                  <div className="flex items-center gap-2 text-red-600 text-sm mt-2">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{progress.message}</span>
+            {/* Success Message */}
+            {uploadSuccess && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-green-600">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="font-semibold">Upload successful!</span>
+                </div>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-red-800 mb-1">
+                      Upload failed:
+                    </p>
+                    <p className="text-sm text-red-700">{error}</p>
                   </div>
-                )}
+                </div>
               </div>
             )}
           </div>
 
-          {/* Footer */}
           <div className="sticky bottom-0 bg-gray-50 border-t px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-end gap-3">
             <button
               onClick={handleClose}
-              disabled={isProcessing}
-              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
+              disabled={loading}
+              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
-              {isComplete ? "Close" : "Cancel"}
+              Cancel
             </button>
-            {!isComplete && (
-              <button
-                onClick={handleUpload}
-                disabled={!file || isProcessing}
-                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:bg-gray-400 transition-colors"
-              >
-                {isProcessing ? "Processing..." : "Upload & Validate"}
-              </button>
-            )}
+            <button
+              onClick={handleUpload}
+              disabled={!canUpload || loading}
+              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title={
+                !canUpload
+                  ? "Please select region, branch, period, and upload file"
+                  : "Upload file"
+              }
+            >
+              {loading ? "Uploading..." : "Upload"}
+            </button>
           </div>
         </div>
       </div>

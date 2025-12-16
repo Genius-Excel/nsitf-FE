@@ -19,7 +19,6 @@ import {
   useClaimsDashboard,
   useClaimsFilters,
   useClaimDetail,
-  useClaimsUpload,
   useClaimsCharts,
   Claim,
 } from "@/hooks/claims";
@@ -123,17 +122,11 @@ export default function ClaimsManagement() {
     clearDetail,
   } = useClaimDetail();
 
-  // 4. Upload handler
-  const { uploadClaims, progress: uploadProgress } = useClaimsUpload({
-    onSuccess: (count, region) => {
-      toast.success(`Successfully uploaded ${count} claims to ${region}`);
-      refetch(); // Refresh dashboard data
-      setIsUploadModalOpen(false);
-    },
-    onError: (error) => {
-      toast.error(`Upload failed: ${error}`);
-    },
-  });
+  // 4. Upload success handler
+  const handleUploadSuccess = () => {
+    refetch(); // Refresh dashboard data
+    setIsUploadModalOpen(false);
+  };
 
   // 5. Transform chart data
   const { chartData, maxValue, ticks } = useClaimsCharts({ monthlyChart });
@@ -471,8 +464,7 @@ export default function ClaimsManagement() {
       <ClaimsUploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
-        onUpload={uploadClaims}
-        progress={uploadProgress}
+        onUploadSuccess={handleUploadSuccess}
       />
     </div>
   );
