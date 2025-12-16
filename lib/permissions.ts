@@ -122,6 +122,15 @@ export function hasPermission(
   if (backendPermissions && Array.isArray(backendPermissions)) {
     // Map frontend permission names to backend permission names
     const permissionMapping: Record<string, string[]> = {
+      // View permissions
+      view_claims: ["can_view_claims", "can_view_claim"],
+      view_hse: ["can_view_hse", "can_view_hse_record"],
+      view_legal: ["can_view_legal", "can_view_legal_case"],
+      view_inspection: ["can_view_inspection", "can_view_inspection_record"],
+      view_compliance: ["can_view_compliance", "can_view_compliance_record"],
+      view_dashboard: ["can_view_dashboard"],
+
+      // Manage permissions
       manage_hse: [
         "can_upload_hse",
         "can_create_hse_record",
@@ -170,6 +179,9 @@ export function hasPermission(
     );
 
     if (hasMappedPermission) return true;
+
+    // Also check if the exact permission string exists in backend permissions
+    if (backendPermissions.includes(permission)) return true;
   }
 
   // Fallback to role-based permissions

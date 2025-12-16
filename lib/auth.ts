@@ -91,6 +91,22 @@ export function getUserFromStorage(): User | null {
 
 export function clearUserFromStorage() {
   if (typeof window !== "undefined") {
-    localStorage.removeItem("user")
+    // Clear user data
+    localStorage.removeItem("user");
+
+    // Clear authentication token
+    localStorage.removeItem("token");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("access_token");
+
+    // Clear any other auth-related data
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("refresh_token");
+
+    // Clear session storage as well
+    sessionStorage.clear();
+
+    // Force a hard refresh to clear any cached state
+    window.location.href = "/";
   }
 }

@@ -14,6 +14,30 @@ export interface ClaimRecord {
   payment_period: string | null;
 }
 
+// Manage-claims endpoint response type (different field names)
+export interface ManageClaimRecord {
+  id: string;
+  ecs_number: string;
+  employer: string;
+  beneficiary: string;
+  claim_type: string;
+  amount_requested: number;
+  amount_paid: number;
+  claim_status: string;
+  date_processed: string;
+  date_paid: string | null;
+  sector: string | null;
+  claim_class: string | null;
+  period: string | null;
+  record_status: "pending" | "reviewed" | "approved";
+  region?: string;
+  branch?: string;
+  gender?: string;
+  reviewed_by?: string | null;
+  approved_by?: string | null;
+  payment_month?: string;
+}
+
 export interface MetricCards {
   total_claims_paid: number;
   beneficiaries_rehabilitated: number;
@@ -105,6 +129,7 @@ export interface Claim {
   claimId: string;
   employer: string;
   claimant: string;
+  gender?: string | null;
   type:
     | "Medical Refund"
     | "Disability"
@@ -198,12 +223,12 @@ function normalizeClaimType(
     "Medical Refund" | "Disability" | "Death Claim" | "Loss of Productivity"
   > = {
     "medical refund": "Medical Refund",
-    "medical_refund": "Medical Refund",
+    medical_refund: "Medical Refund",
     disability: "Disability",
     "death claim": "Death Claim",
-    "death_claim": "Death Claim",
+    death_claim: "Death Claim",
     "loss of productivity": "Loss of Productivity",
-    "loss_of_productivity": "Loss of Productivity",
+    loss_of_productivity: "Loss of Productivity",
   };
   return typeMap[type.toLowerCase()] || "Medical Refund";
 }
@@ -229,6 +254,66 @@ export const transformClaimRecord = (record: ClaimRecord): Claim => ({
   sector: record.sector,
   class: record.class,
   date: record.payment_period,
+});
+
+/**
+ * Transforms ManageClaimRecord to component Claim
+ * Handles the different field naming from /manage-claims endpoint
+ */
+export const transformManageClaimRecord = (
+  record: ManageClaimRecord
+): Claim => ({
+  id: record.id,
+  claimId: record.ecs_number,
+  employer: record.employer,
+  claimant: record.beneficiary,
+  gender: record.gender || null,
+  type: normalizeClaimType(record.claim_type),
+  amountRequested: record.amount_requested,
+  amountPaid: record.amount_paid,
+  status: capitalizeStatus(record.claim_status),
+  dateProcessed: record.date_processed,
+  datePaid: record.date_paid,
+  sector: record.sector,
+  class: record.claim_class,
+  date: record.period,
+});
+
+/**
+ * Build a ClaimDetail from a ManageClaimRecord when a dedicated detail
+ * endpoint is not available. Fills missing fields with sensible defaults.
+ */
+export const transformManageRecordToDetail = (
+  record: ManageClaimRecord
+): ClaimDetail => ({
+  claimId: record.ecs_number,
+  employer: record.employer,
+  claimant: record.beneficiary,
+  type: normalizeClaimType(record.claim_type),
+  status: capitalizeStatus(record.claim_status),
+  financial: {
+    amountRequested: record.amount_requested,
+    amountPaid: record.amount_paid,
+    difference: record.amount_requested - record.amount_paid,
+    differencePercent:
+      record.amount_requested > 0
+        ? Math.round(
+            ((record.amount_requested - record.amount_paid) /
+              record.amount_requested) *
+              10000
+          ) / 100
+        : 0,
+  },
+  timeline: {
+    dateProcessed: record.date_processed,
+    datePaid: record.date_paid,
+    processingTimeDays: 0,
+  },
+  classification: {
+    sector: record.sector || null,
+    class: record.claim_class || null,
+    paymentPeriod: record.period || null,
+  },
 });
 
 /**

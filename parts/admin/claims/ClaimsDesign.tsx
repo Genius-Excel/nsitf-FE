@@ -384,6 +384,9 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({
                 Type
               </th>
               <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                Gender
+              </th>
+              <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
                 Amount REQUESTED (₦)
               </th>
               <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
@@ -446,6 +449,9 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({
                     <span className={getTypeTextColor(claim.type)}>
                       {claim.type}
                     </span>
+                  </td>
+                  <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
+                    {claim.gender || "—"}
                   </td>
                   <td className="px-2 py-1.5 text-center text-xs font-semibold text-gray-900 whitespace-nowrap">
                     {formatCurrency(claim.amountRequested)}

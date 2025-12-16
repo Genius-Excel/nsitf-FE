@@ -86,9 +86,11 @@ export const useClaimsDashboard = (
 
       const apiData = response.data as ClaimsDashboardResponse;
 
-      // Transform claims from snake_case to camelCase
-      const transformedClaims =
-        apiData.data.claims_table.results.map(transformClaimRecord);
+      // Safely handle claims table - may not exist in all responses
+      const claimsTableData = apiData.data?.claims_table;
+      const transformedClaims = claimsTableData?.results
+        ? claimsTableData.results.map(transformClaimRecord)
+        : [];
       setClaims(transformedClaims);
 
       // Transform metrics
@@ -106,10 +108,10 @@ export const useClaimsDashboard = (
 
       // Set pagination state
       setPagination({
-        page: apiData.data.claims_table.page,
-        perPage: apiData.data.claims_table.per_page,
-        totalPages: apiData.data.claims_table.total_pages,
-        totalCount: apiData.data.claims_table.count,
+        page: claimsTableData?.page || currentPage,
+        perPage: claimsTableData?.per_page || 20,
+        totalPages: claimsTableData?.total_pages || 1,
+        totalCount: claimsTableData?.count || transformedClaims.length,
       });
     } catch (err: any) {
       const errorMessage =

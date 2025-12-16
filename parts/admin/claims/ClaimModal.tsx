@@ -56,8 +56,12 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
   const [editedData, setEditedData] = useState<ClaimDetail | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Use the bulk actions hook for single claim updates
-  const { updateSingleClaim, loading: apiLoading } = useBulkClaimActions();
+  // Use the bulk actions hook for single claim updates and detail updates
+  const {
+    updateSingleClaim,
+    updateClaimDetails,
+    loading: apiLoading,
+  } = useBulkClaimActions();
 
   useEffect(() => {
     const user = getUserFromStorage();
@@ -128,18 +132,51 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
   };
 
   const handleSaveEdit = async () => {
-    if (!editedData) return;
+    if (!editedData || !claimId) return;
 
     setIsSubmitting(true);
     try {
-      // TODO: Make API call to save edited data
-      // const response = await updateClaim(editedData);
+      // Build API payload (snake_case) from editedData
+      const payload: Record<string, any> = {};
 
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
+      // Employer
+      if (editedData.employer) payload.employer = editedData.employer;
 
-      toast.success("Claim updated successfully");
-      setIsEditMode(false);
-      // TODO: Refresh data
+      // Beneficiary / claimant
+      if (editedData.claimant) payload.beneficiary = editedData.claimant;
+
+      // Financials
+      if (editedData.financial) {
+        payload.amount_requested = editedData.financial.amountRequested;
+        payload.amount_paid = editedData.financial.amountPaid;
+      }
+
+      // Classification
+      if (editedData.classification) {
+        payload.claim_class =
+          editedData.classification.class ?? editedData.classification.class;
+        payload.sector = editedData.classification.sector;
+        payload.period = editedData.classification.paymentPeriod;
+      }
+
+      // Type/status
+      if (editedData.type) payload.claim_type = editedData.type;
+      if (editedData.status) payload.claim_status = editedData.status;
+
+      // Optional gender
+      // @ts-ignore
+      if ((editedData as any).gender)
+        payload.gender = (editedData as any).gender;
+
+      const success = await updateClaimDetails(claimId, payload);
+
+      if (success) {
+        toast.success("Claim updated successfully");
+        setIsEditMode(false);
+        if (onRefresh) onRefresh();
+      } else {
+        toast.error("Failed to update claim");
+      }
     } catch (error) {
       toast.error("Failed to update claim");
       console.error("Error updating claim:", error);

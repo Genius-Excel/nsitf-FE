@@ -17,6 +17,7 @@ import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPa
 import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import {
   useClaimsDashboard,
+  useManageClaims,
   useClaimsFilters,
   useClaimDetail,
   useClaimsCharts,
@@ -90,31 +91,38 @@ export default function ClaimsManagement() {
   // API HOOKS
   // ==========================================
 
-  // 1. Fetch dashboard data (with pagination support and filters)
-  const {
-    claims,
-    metrics,
-    categories,
-    monthlyChart,
-    pagination,
-    loading,
-    error,
-    refetch,
-    setPage,
-  } = useClaimsDashboard({
+  // Map display status to record_status for API
+  const recordStatusMap: Record<string, "pending" | "reviewed" | "approved"> = {
+    Pending: "pending",
+    "Under Review": "reviewed",
+    Approved: "approved",
+    Paid: "approved",
+  };
+
+  // 1. Fetch claims from manage-claims endpoint (supports record_status filtering)
+  const { claims, pagination, loading, error, refetch, setPage } =
+    useManageClaims({
+      page: 1,
+      record_status: statusFilter ? recordStatusMap[statusFilter] : undefined,
+      region_id: apiParams.region_id,
+      period: apiParams.period,
+    });
+
+  // 2. Fetch dashboard metrics separately for KPI cards
+  const { metrics, categories, monthlyChart } = useClaimsDashboard({
     page: 1,
-    ...apiParams, // Add filter parameters from advanced filters
+    ...apiParams,
   });
 
-  // 2. Client-side filtering
+  // 3. Client-side filtering (search term and type filter)
   const { filteredClaims } = useClaimsFilters({
     claims,
     searchTerm,
-    statusFilter,
+    statusFilter: "", // Already filtered at API level
     typeFilter,
   });
 
-  // 3. Fetch claim detail (for modal)
+  // 4. Fetch claim detail (for modal)
   const {
     data: claimDetail,
     loading: detailLoading,
@@ -122,13 +130,13 @@ export default function ClaimsManagement() {
     clearDetail,
   } = useClaimDetail();
 
-  // 4. Upload success handler
+  // 5. Upload success handler
   const handleUploadSuccess = () => {
-    refetch(); // Refresh dashboard data
+    refetch(); // Refresh claims data
     setIsUploadModalOpen(false);
   };
 
-  // 5. Transform chart data
+  // 6. Transform chart data
   const { chartData, maxValue, ticks } = useClaimsCharts({ monthlyChart });
 
   // ==========================================
