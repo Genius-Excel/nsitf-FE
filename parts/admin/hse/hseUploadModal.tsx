@@ -231,7 +231,8 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
                         {branch.name}
                       </option>
                     ))
-                  }
+                  )}
+                </select>
                 </select>
                 {branchesLoading && (
                   <p className="text-xs text-gray-500 mt-1">Loading branches...</p>
