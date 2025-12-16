@@ -220,10 +220,12 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
                   aria-label="Select branch"
                 >
                   <option value="">Choose a branch</option>
-                  {(
+                  {
                     // For regional managers with an explicit managed-branches list,
                     // only show branches they manage. Otherwise show API results.
-                    (user?.role === "regional_manager" && Array.isArray(managedBranchIds) && managedBranchIds.length > 0
+                    (user?.role === "regional_manager" &&
+                    Array.isArray(managedBranchIds) &&
+                    managedBranchIds.length > 0
                       ? branches?.filter((b) => managedBranchIds.includes(b.id))
                       : branches
                     )?.map((branch) => (
@@ -231,8 +233,7 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
                         {branch.name}
                       </option>
                     ))
-                  )}
-                </select>
+                  }
                 </select>
                 {branchesLoading && (
                   <p className="text-xs text-gray-500 mt-1">Loading branches...</p>

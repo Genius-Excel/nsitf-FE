@@ -1,8 +1,21 @@
-import { useCallback, useState } from "react";
+import { useState, useCallback } from "react";
 
-export const useModalState = (initial = false) => {
-  const [isOpen, setIsOpen] = useState(initial);
+/**
+ * Simple modal state management hook
+ * Encapsulates open/close logic
+ */
+export const useModalState = (initialState = false) => {
+  const [isOpen, setIsOpen] = useState(initialState);
+
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
-  return { isOpen, open, close, setIsOpen };
+  const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
+
+  return {
+    isOpen,
+    open,
+    close,
+    toggle,
+    setIsOpen,
+  };
 };

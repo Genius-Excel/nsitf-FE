@@ -215,15 +215,16 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
                   aria-label="Select branch"
                 >
                   <option value="">Choose a branch</option>
-                  {(
-                    (user?.role === "regional_manager" && Array.isArray(managedBranchIds) && managedBranchIds.length > 0
-                      ? branches?.filter((b) => managedBranchIds.includes(b.id))
-                      : branches
-                    )?.map((branch) => (
-                      <option key={branch.id} value={branch.id}>
-                        {branch.name}
-                      </option>
-                    ))}
+                  {(user?.role === "regional_manager" &&
+                  Array.isArray(managedBranchIds) &&
+                  managedBranchIds.length > 0
+                    ? branches?.filter((b) => managedBranchIds.includes(b.id))
+                    : branches
+                  )?.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
                 </select>
                 {branchesLoading && (
                   <p className="text-xs text-gray-500 mt-1">Loading branches...</p>
