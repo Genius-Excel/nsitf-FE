@@ -106,6 +106,8 @@ export default function ClaimsManagement() {
       record_status: statusFilter ? recordStatusMap[statusFilter] : undefined,
       region_id: apiParams.region_id,
       period: apiParams.period,
+      period_from: apiParams.period_from,
+      period_to: apiParams.period_to,
     });
 
   // 2. Fetch dashboard metrics separately for KPI cards

@@ -78,7 +78,9 @@ export function useAdvancedFilters({
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Regions API error:", errorData);
-        throw new Error(errorData.detail || errorData.message || "Failed to fetch regions");
+        throw new Error(
+          errorData.detail || errorData.message || "Failed to fetch regions"
+        );
       }
 
       const result = await response.json();

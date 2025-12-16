@@ -15,6 +15,8 @@ interface UseManageClaimsParams {
   region_id?: string;
   record_status?: "pending" | "reviewed" | "approved";
   period?: string; // YYYY-MM format
+  period_from?: string; // YYYY-MM format - start period
+  period_to?: string; // YYYY-MM format - end period
 }
 
 interface UseManageClaimsReturn {
@@ -48,6 +50,8 @@ interface ManageClaimsApiResponse {
  * @param params.record_status - Filter by status: pending | reviewed | approved
  * @param params.region_id - Filter by region
  * @param params.period - Filter by period (YYYY-MM)
+ * @param params.period_from - Filter by start period (YYYY-MM)
+ * @param params.period_to - Filter by end period (YYYY-MM)
  *
  * @returns Transformed claims list with pagination
  *
@@ -87,6 +91,12 @@ export const useManageClaims = (
       }
       if (params.period) {
         queryParams.append("period", params.period);
+      }
+      if (params.period_from) {
+        queryParams.append("period_from", params.period_from);
+      }
+      if (params.period_to) {
+        queryParams.append("period_to", params.period_to);
       }
 
       const response = await http.getData(
@@ -138,6 +148,8 @@ export const useManageClaims = (
     params.record_status,
     params.region_id,
     params.period,
+    params.period_from,
+    params.period_to,
   ]);
 
   useEffect(() => {
