@@ -104,8 +104,9 @@ export default function ClaimsManagement() {
   const manageClaimsParams = useMemo(
     () => ({
       page: 1,
-      record_status: filters.recordStatus || undefined,
+      branch_id: apiParams.branch_id || undefined,
       region_id: apiParams.region_id || undefined,
+      record_status: filters.recordStatus || undefined,
       // Only use period if period_from/period_to are not set
       period:
         !apiParams.period_from && !apiParams.period_to
@@ -115,8 +116,9 @@ export default function ClaimsManagement() {
       period_to: apiParams.period_to || undefined,
     }),
     [
-      filters.recordStatus,
+      apiParams.branch_id,
       apiParams.region_id,
+      filters.recordStatus,
       apiParams.period,
       apiParams.period_from,
       apiParams.period_to,
@@ -129,8 +131,11 @@ export default function ClaimsManagement() {
 
   // 2. Fetch dashboard metrics separately for KPI cards
   const { metrics, categories, monthlyChart } = useClaimsDashboard({
-    page: 1,
-    ...apiParams,
+    branchId: apiParams.branch_id,
+    regionId: apiParams.region_id,
+    period: apiParams.period,
+    periodFrom: apiParams.period_from,
+    periodTo: apiParams.period_to,
   });
 
   // 3. Client-side filtering (search term and type filter)
@@ -465,7 +470,7 @@ export default function ClaimsManagement() {
             userRegionId={userRegionId}
             showRegionFilter={true}
             showBranchFilter={true}
-            showMonthYearFilter={true}
+            showMonthYearFilter={false}
             showDateRangeFilter={true}
             showRecordStatusFilter={true}
           />

@@ -16,6 +16,11 @@ const http = new HttpService();
 interface UseClaimsDashboardParams {
   page?: number;
   perPage?: number;
+  branchId?: string;
+  regionId?: string;
+  period?: string;
+  periodFrom?: string;
+  periodTo?: string;
 }
 
 interface UseClaimsDashboardReturn {
@@ -69,29 +74,41 @@ export const useClaimsDashboard = (
       setLoading(true);
       setError(null);
 
-      // Build query params
+      // Build query params for metrics endpoint
       const queryParams = new URLSearchParams();
-      queryParams.append("page", String(currentPage));
-      if (params.perPage) {
-        queryParams.append("per_page", String(params.perPage));
+
+      // Add filter params if provided
+      if (params.branchId) {
+        queryParams.append("branch_id", params.branchId);
+      }
+      if (params.regionId) {
+        queryParams.append("region_id", params.regionId);
+      }
+      if (params.period) {
+        queryParams.append("period", params.period);
+      }
+      if (params.periodFrom) {
+        queryParams.append("period_from", params.periodFrom);
+      }
+      if (params.periodTo) {
+        queryParams.append("period_to", params.periodTo);
       }
 
-      const response = await http.getData(
-        `/api/claims/dashboard?${queryParams.toString()}`
-      );
+      const queryString = queryParams.toString();
+      const metricsUrl = `/api/claims/metrics${
+        queryString ? `?${queryString}` : ""
+      }`;
+
+      const response = await http.getData(metricsUrl);
 
       if (!response?.data) {
         throw new Error("Invalid response format from API");
       }
 
-      const apiData = response.data as ClaimsDashboardResponse;
+      const apiData = response.data;
 
-      // Safely handle claims table - may not exist in all responses
-      const claimsTableData = apiData.data?.claims_table;
-      const transformedClaims = claimsTableData?.results
-        ? claimsTableData.results.map(transformClaimRecord)
-        : [];
-      setClaims(transformedClaims);
+      // No claims table in metrics endpoint, set empty array
+      setClaims([]);
 
       // Transform metrics
       const transformedMetrics = transformMetrics(apiData.data.metric_cards);
@@ -106,24 +123,27 @@ export const useClaimsDashboard = (
       // Monthly chart stays as-is (already has correct structure)
       setMonthlyChart(apiData.data.monthly_chart);
 
-      // Set pagination state
-      setPagination({
-        page: claimsTableData?.page || currentPage,
-        perPage: claimsTableData?.per_page || 20,
-        totalPages: claimsTableData?.total_pages || 1,
-        totalCount: claimsTableData?.count || transformedClaims.length,
-      });
+      // Set pagination state (metrics endpoint doesn't have pagination)
+      setPagination(null);
     } catch (err: any) {
       const errorMessage =
         err?.response?.data?.message ||
         err.message ||
-        "Failed to fetch claims dashboard";
+        "Failed to fetch claims metrics";
       setError(errorMessage);
-      console.error("Error fetching claims dashboard:", err);
+      console.error("Error fetching claims metrics:", err);
     } finally {
       setLoading(false);
     }
-  }, [currentPage, params.perPage]);
+  }, [
+    currentPage,
+    params.perPage,
+    params.branchId,
+    params.regionId,
+    params.period,
+    params.periodFrom,
+    params.periodTo,
+  ]);
 
   useEffect(() => {
     fetchDashboard();

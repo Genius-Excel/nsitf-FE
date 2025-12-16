@@ -12,6 +12,7 @@ const http = new HttpService();
 interface UseManageClaimsParams {
   page?: number;
   perPage?: number;
+  branch_id?: string;
   region_id?: string;
   record_status?: "pending" | "reviewed" | "approved";
   period?: string; // YYYY-MM format
@@ -85,6 +86,9 @@ export const useManageClaims = (
       }
       if (params.record_status && params.record_status !== "") {
         queryParams.append("record_status", params.record_status);
+      }
+      if (params.branch_id && params.branch_id !== "") {
+        queryParams.append("branch_id", params.branch_id);
       }
       if (params.region_id && params.region_id !== "") {
         queryParams.append("region_id", params.region_id);

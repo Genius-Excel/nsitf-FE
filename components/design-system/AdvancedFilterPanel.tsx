@@ -93,8 +93,9 @@ export function AdvancedFilterPanel({
 }: AdvancedFilterPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Determine if user is admin (can see all regions)
-  const isAdmin = userRole === "admin" || userRole === "manager";
+  // Determine if user is admin (can see all regions) - case-insensitive
+  const normalizedRole = userRole?.toLowerCase();
+  const isAdmin = normalizedRole === "admin" || normalizedRole === "manager";
 
   // Filter regions based on user role
   const visibleRegions = useMemo(() => {
@@ -248,42 +249,37 @@ export function AdvancedFilterPanel({
           id="filter-content"
           className="px-4 py-4 border-t border-gray-200 space-y-4"
         >
-          {/* Region Filter (Admin only or single region for Regional Officer) */}
-          {showRegionFilter && visibleRegions.length > 0 && (
+          {/* Region Filter - Only show for Admin */}
+          {showRegionFilter && isAdmin && (
             <div>
               <label
                 htmlFor="region-filter"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Region{" "}
-                {!isAdmin && (
-                  <span className="text-xs text-gray-500">(Your Region)</span>
-                )}
+                Region
               </label>
 
-              {isAdmin ? (
-                <Select
-                  value={filters.selectedRegionId || "all"}
-                  onValueChange={handleRegionChange}
-                >
-                  <SelectTrigger id="region-filter">
-                    <SelectValue placeholder="All Regions" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Regions</SelectItem>
-                    {visibleRegions.map((region) => (
-                      <SelectItem key={region.id} value={region.id}>
-                        {region.name} {region.code && `(${region.code})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm font-medium text-gray-900">
-                  {visibleRegions[0]?.name}{" "}
-                  {visibleRegions[0]?.code && `(${visibleRegions[0].code})`}
-                </div>
-              )}
+              <Select
+                value={filters.selectedRegionId || "all"}
+                onValueChange={handleRegionChange}
+              >
+                <SelectTrigger id="region-filter">
+                  <SelectValue placeholder="All Regions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Regions</SelectItem>
+                  {visibleRegions.length === 0 && (
+                    <SelectItem value="" disabled>
+                      No regions available
+                    </SelectItem>
+                  )}
+                  {visibleRegions.map((region) => (
+                    <SelectItem key={region.id} value={region.id}>
+                      {region.name} {region.code && `(${region.code})`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
