@@ -10,6 +10,7 @@ import type {
   HSEActivity,
   HSEFormData,
   HSEStatCard,
+  RegionalSummary,
 } from "@/lib/types/hse";
 import { getActivityStatusColor } from "@/lib/utils";
 import { getHSEStatusColor } from "@/lib/types/hse";
@@ -387,7 +388,27 @@ export const ViewDetailsModal: React.FC<{
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   activity: HSEActivity | null;
-}> = ({ isOpen, onOpenChange, activity }) => {
+  onEdit?: (activity: HSEActivity) => void;
+  onApprove?: (activity: HSEActivity) => void;
+}> = ({ isOpen, onOpenChange, activity, onEdit, onApprove }) => {
+  const [userRole, setUserRole] = React.useState<UserRole | null>(null);
+
+  React.useEffect(() => {
+    const user = getUserFromStorage();
+    if (user) {
+      setUserRole(user.role);
+    }
+  }, []);
+
+  const normalizedRole = userRole?.toLowerCase();
+  const canEdit =
+    normalizedRole &&
+    ["admin", "manager", "regional_manager", "regional officer"].includes(
+      normalizedRole
+    );
+  const canApprove =
+    normalizedRole && ["admin", "manager"].includes(normalizedRole);
+
   if (!activity) return null;
 
   return (
@@ -462,7 +483,34 @@ export const ViewDetailsModal: React.FC<{
           </div>
         </div>
 
-        <DialogFooter className="mt-6">
+        <DialogFooter className="mt-6 flex justify-between">
+          <div className="flex gap-2">
+            {canEdit && onEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  onEdit(activity);
+                  onOpenChange(false);
+                }}
+                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Edit
+              </button>
+            )}
+            {canApprove && onApprove && (
+              <button
+                type="button"
+                onClick={() => {
+                  onApprove(activity);
+                  onOpenChange(false);
+                }}
+                style={{ backgroundColor: "#00a63e" }}
+                className="px-4 py-2 text-sm text-white rounded-md hover:opacity-90 transition-opacity"
+              >
+                Approve
+              </button>
+            )}
+          </div>
           <button
             type="button"
             onClick={() => onOpenChange(false)}
@@ -476,12 +524,13 @@ export const ViewDetailsModal: React.FC<{
   );
 };
 
-// ============== HSE RECORDS TABLE ==============
-export const HSERecordsTable: React.FC<{
-  records: HSERecord[];
-  onViewDetails: (record: HSERecord) => void;
-}> = ({ records, onViewDetails }) => {
-  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
+// ============== REGIONAL OSH ACTIVITIES SUMMARY TABLE ==============
+export const RegionalOSHSummaryTable: React.FC<{
+  regionalData: RegionalSummary[];
+}> = ({ regionalData }) => {
+  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
+    new Set()
+  );
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -492,14 +541,247 @@ export const HSERecordsTable: React.FC<{
     }
   }, []);
 
-  const canReview = userRole === "regional_manager";
-  const canApprove = userRole && ["admin", "manager"].includes(userRole);
+  const normalizedRole = userRole?.toLowerCase();
+  const canReview =
+    normalizedRole === "regional_manager" ||
+    normalizedRole === "regional officer";
+  const canApprove =
+    normalizedRole && ["admin", "manager"].includes(normalizedRole);
+
+  const handleSelectAll = () => {
+    if (selectedRecords.size === regionalData.length) {
+      setSelectedRecords(new Set());
+    } else {
+      setSelectedRecords(new Set(regionalData.map((r) => r.id)));
+    }
+  };
+
+  const handleSelectRecord = (recordId: string) => {
+    const newSelected = new Set(selectedRecords);
+    if (newSelected.has(recordId)) {
+      newSelected.delete(recordId);
+    } else {
+      newSelected.add(recordId);
+    }
+    setSelectedRecords(newSelected);
+  };
+
+  const handleBulkReview = async () => {
+    if (selectedRecords.size === 0) {
+      toast.error("Please select at least one record");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      toast.success(`${selectedRecords.size} record(s) marked as reviewed`);
+      setSelectedRecords(new Set());
+    } catch (error) {
+      toast.error("Failed to review records");
+      console.error("Bulk review error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedRecords.size === 0) {
+      toast.error("Please select at least one record");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      toast.success(`${selectedRecords.size} record(s) approved successfully`);
+      setSelectedRecords(new Set());
+    } catch (error) {
+      toast.error("Failed to approve records");
+      console.error("Bulk approve error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!regionalData || regionalData.length === 0) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+        <p className="text-gray-500">No regional OSH data available</p>
+      </div>
+    );
+  }
+
+  const getPerformanceBadge = (rate: number): string => {
+    if (rate >= 80) return "bg-green-100 text-green-700";
+    if (rate >= 60) return "bg-yellow-100 text-yellow-700";
+    return "bg-red-100 text-red-700";
+  };
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {selectedRecords.size > 0 && (
+        <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">
+            {selectedRecords.size} record(s) selected
+          </span>
+          <div className="flex gap-2">
+            {canReview && (
+              <Button
+                onClick={handleBulkReview}
+                disabled={isSubmitting}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <FileCheck className="w-4 h-4 mr-2" />
+                {isSubmitting ? "Processing..." : "Mark as Reviewed"}
+              </Button>
+            )}
+            {canApprove && (
+              <Button
+                onClick={handleBulkApprove}
+                disabled={isSubmitting}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {isSubmitting ? "Processing..." : "Approve Selected"}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+      <div className="p-4 border-b border-gray-200 bg-gray-50">
+        <h2 className="text-base font-bold text-gray-900">
+          Regional OSH Activities Summary
+        </h2>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <input
+                  type="checkbox"
+                  checked={selectedRecords.size === regionalData.length}
+                  onChange={handleSelectAll}
+                  className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  aria-label="Select all records"
+                />
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Region
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Branch
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Total Actual OSH Activities
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Target OSH Activities
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Performance Rate (%)
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                OSH Enlightenment & Awareness
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                OSH Inspection & Audit
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Accident Investigation
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Period
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {regionalData.map((data) => (
+              <tr key={data.id} className="hover:bg-gray-50 transition">
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    checked={selectedRecords.has(data.id)}
+                    onChange={() => handleSelectRecord(data.id)}
+                    className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    aria-label={`Select record for ${data.branch}`}
+                  />
+                </td>
+                <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                  {data.region}
+                </td>
+                <td className="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">
+                  {data.branch}
+                </td>
+                <td className="px-4 py-4 text-sm text-center text-gray-700 whitespace-nowrap">
+                  {data.totalActualOSHActivities.toLocaleString()}
+                </td>
+                <td className="px-4 py-4 text-sm text-center text-gray-700 whitespace-nowrap">
+                  {data.targetOSHActivities.toLocaleString()}
+                </td>
+                <td className="px-4 py-4 text-sm text-center whitespace-nowrap">
+                  <Badge
+                    className={`${getPerformanceBadge(
+                      data.performanceRate
+                    )} font-medium`}
+                  >
+                    {data.performanceRate}%
+                  </Badge>
+                </td>
+                <td className="px-4 py-4 text-sm text-center text-gray-700 whitespace-nowrap">
+                  {data.oshEnlightenment.toLocaleString()}
+                </td>
+                <td className="px-4 py-4 text-sm text-center text-gray-700 whitespace-nowrap">
+                  {data.oshInspectionAudit.toLocaleString()}
+                </td>
+                <td className="px-4 py-4 text-sm text-center text-gray-700 whitespace-nowrap">
+                  {data.accidentInvestigation.toLocaleString()}
+                </td>
+                <td className="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">
+                  {data.period}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// ============== HSE RECORDS TABLE ==============
+export const HSERecordsTable: React.FC<{
+  records: HSERecord[];
+  onViewDetails: (record: HSERecord) => void;
+}> = ({ records, onViewDetails }) => {
+  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
+    new Set()
+  );
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const user = getUserFromStorage();
+    if (user) {
+      setUserRole(user.role);
+    }
+  }, []);
+
+  const normalizedRole = userRole?.toLowerCase();
+  const canReview =
+    normalizedRole === "regional_manager" ||
+    normalizedRole === "regional officer";
+  const canApprove =
+    normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
   const handleSelectAll = () => {
     if (selectedRecords.size === records.length) {
       setSelectedRecords(new Set());
     } else {
-      setSelectedRecords(new Set(records.map(r => r.id)));
+      setSelectedRecords(new Set(records.map((r) => r.id)));
     }
   };
 
@@ -580,7 +862,7 @@ export const HSERecordsTable: React.FC<{
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      {(canReview || canApprove) && selectedRecords.size > 0 && (
+      {selectedRecords.size > 0 && (
         <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
             {selectedRecords.size} record(s) selected
@@ -615,17 +897,15 @@ export const HSERecordsTable: React.FC<{
         <table className="w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {(canReview || canApprove) && (
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <input
-                    type="checkbox"
-                    checked={selectedRecords.size === records.length}
-                    onChange={handleSelectAll}
-                    className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                    aria-label="Select all records"
-                  />
-                </th>
-              )}
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <input
+                  type="checkbox"
+                  checked={selectedRecords.size === records.length}
+                  onChange={handleSelectAll}
+                  className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  aria-label="Select all records"
+                />
+              </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Record Type
               </th>
@@ -648,21 +928,16 @@ export const HSERecordsTable: React.FC<{
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {records.map((record) => (
-              <tr
-                key={record.id}
-                className="hover:bg-gray-50 transition"
-              >
-                {(canReview || canApprove) && (
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={selectedRecords.has(record.id)}
-                      onChange={() => handleSelectRecord(record.id)}
-                      className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                      aria-label={`Select record for ${record.employer}`}
-                    />
-                  </td>
-                )}
+              <tr key={record.id} className="hover:bg-gray-50 transition">
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    checked={selectedRecords.has(record.id)}
+                    onChange={() => handleSelectRecord(record.id)}
+                    className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    aria-label={`Select record for ${record.employer}`}
+                  />
+                </td>
                 <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                   {record.recordType}
                 </td>

@@ -222,8 +222,12 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
     }
   }, []);
 
-  const canReview = userRole === "regional_manager";
-  const canApprove = userRole && ["admin", "manager"].includes(userRole);
+  const normalizedRole = userRole?.toLowerCase();
+  const canReview =
+    normalizedRole === "regional_manager" ||
+    normalizedRole === "regional officer";
+  const canApprove =
+    normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
   const handleSelectAll = () => {
     if (selectedInspections.size === inspections.length) {
@@ -331,7 +335,7 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      {(canReview || canApprove) && selectedInspections.size > 0 && (
+      {selectedInspections.size > 0 && (
         <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
             {selectedInspections.size} inspection(s) selected
@@ -366,17 +370,15 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
         <table className="w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {(canReview || canApprove) && (
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <input
-                    type="checkbox"
-                    checked={selectedInspections.size === inspections.length}
-                    onChange={handleSelectAll}
-                    className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                    aria-label="Select all inspections"
-                  />
-                </th>
-              )}
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <input
+                  type="checkbox"
+                  checked={selectedInspections.size === inspections.length}
+                  onChange={handleSelectAll}
+                  className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  aria-label="Select all inspections"
+                />
+              </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 REGION
               </th>
@@ -417,21 +419,16 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
                   : "0";
 
               return (
-                <tr
-                  key={inspection.id}
-                  className="hover:bg-gray-50 transition"
-                >
-                  {(canReview || canApprove) && (
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={selectedInspections.has(inspection.id)}
-                        onChange={() => handleSelectInspection(inspection.id)}
-                        className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                        aria-label={`Select inspection for ${inspection.branch}`}
-                      />
-                    </td>
-                  )}
+                <tr key={inspection.id} className="hover:bg-gray-50 transition">
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={selectedInspections.has(inspection.id)}
+                      onChange={() => handleSelectInspection(inspection.id)}
+                      className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      aria-label={`Select inspection for ${inspection.branch}`}
+                    />
+                  </td>
                   <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                     {inspection.region || "—"}
                   </td>

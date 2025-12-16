@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
+import { getUserFromStorage } from "@/lib/auth";
 import {
   X,
   Upload,
@@ -69,6 +70,15 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
       setFile(null);
     }
   }, [isOpen]);
+
+  // Restrict uploads for regional managers who have an explicit list
+  // of branches they manage. Backend may supply any of these keys.
+  const user = getUserFromStorage();
+  const managedBranchIds: string[] =
+    (user as any)?.managed_branches ||
+    (user as any)?.managed_branch_ids ||
+    (user as any)?.branch_ids ||
+    [];
 
   const handleDownloadTemplate = () => {
     const templateData = [

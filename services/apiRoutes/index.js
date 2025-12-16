@@ -20,9 +20,12 @@ export const routes = {
   adminGetUsers: () => "/api/admin/users",
   editUser: (userId) => `/api/admin/users/${userId}`,
   deleteUser: (userId) => `/api/admin/users/${userId}`,
+  getUserPermissions: (userId) => `/api/admin/users/${userId}/permissions`,
+  assignUserPermissions: () => "/api/admin/users/permissions",
+  removeUserPermissions: () => "/api/admin/users/permissions",
+  getAllPermissions: () => "/api/admin/permissions",
 
-getComplianceDashboard: () => "/api/dashboard/compliance",
-
+  getComplianceDashboard: () => "/api/dashboard/compliance",
 
   createHSE: () => "/api/hse-ops/hse-records",
   getHseRecords: () => "/api/hse-ops/hse-records",

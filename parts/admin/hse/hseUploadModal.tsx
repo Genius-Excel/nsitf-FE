@@ -52,12 +52,22 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
   const isAdmin = user?.role === "admin" || user?.role === "manager";
   const userRegionId = user?.region_id;
 
-  // Auto-select region for regional officers
+  // If backend provides a list of branches the regional manager heads,
+  // prefer that list to restrict branch choices. Supported keys:
+  // - managed_branches (array of ids)
+  // - managed_branch_ids
+  // - branch_ids
+  const managedBranchIds: string[] =
+    (user as any)?.managed_branches ||
+    (user as any)?.managed_branch_ids ||
+    (user as any)?.branch_ids || [];
+
+  // Auto-select region for regional officers (but allow them to change it)
   useEffect(() => {
-    if (!isAdmin && userRegionId) {
+    if (!isAdmin && userRegionId && !selectedRegionId) {
       setSelectedRegionId(userRegionId);
     }
-  }, [isAdmin, userRegionId]);
+  }, [isAdmin, userRegionId, selectedRegionId]);
 
   // Fetch branches when region is selected
   useEffect(() => {
@@ -127,9 +137,7 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
   };
 
   const handleClose = () => {
-    if (isAdmin) {
-      setSelectedRegionId("");
-    }
+    setSelectedRegionId("");
     setSelectedBranchId("");
     setPeriod("");
     setFile(null);
@@ -172,29 +180,30 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
           </div>
 
           <div className="p-4 sm:p-6 space-y-6">
-            {/* Region Selection - Only for Admins */}
-            {isAdmin && (
-              <div>
-                <label htmlFor="region-select" className="block text-sm font-semibold text-gray-900 mb-2">
-                  Select Region <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="region-select"
-                  value={selectedRegionId}
-                  onChange={(e) => setSelectedRegionId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={loading || regionsLoading}
-                  aria-label="Select region"
-                >
-                  <option value="">Choose a region</option>
-                  {regions?.map((region) => (
-                    <option key={region.id} value={region.id}>
-                      {region.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            {/* Region Selection - Always visible */}
+            <div>
+              <label htmlFor="region-select" className="block text-sm font-semibold text-gray-900 mb-2">
+                Select Region <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="region-select"
+                value={selectedRegionId}
+                onChange={(e) => setSelectedRegionId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading || regionsLoading}
+                aria-label="Select region"
+              >
+                <option value="">Choose a region</option>
+                {regions?.map((region) => (
+                  <option key={region.id} value={region.id}>
+                    {region.name}
+                  </option>
+                ))}
+              </select>
+              {regionsLoading && (
+                <p className="text-xs text-gray-500 mt-1">Loading regions...</p>
+              )}
+            </div>
 
             {/* Branch Selection */}
             {selectedRegionId && (
@@ -211,11 +220,20 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
                   aria-label="Select branch"
                 >
                   <option value="">Choose a branch</option>
-                  {branches?.map((branch) => (
-                    <option key={branch.id} value={branch.id}>
-                      {branch.name}
-                    </option>
-                  ))}
+                  {
+                    // For regional managers with an explicit managed-branches list,
+                    // only show branches they manage. Otherwise show API results.
+                    (user?.role === "regional_manager" &&
+                    Array.isArray(managedBranchIds) &&
+                    managedBranchIds.length > 0
+                      ? branches?.filter((b) => managedBranchIds.includes(b.id))
+                      : branches
+                    )?.map((branch) => (
+                      <option key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </option>
+                    ))
+                  }
                 </select>
                 {branchesLoading && (
                   <p className="text-xs text-gray-500 mt-1">Loading branches...</p>

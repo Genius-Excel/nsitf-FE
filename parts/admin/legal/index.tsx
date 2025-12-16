@@ -55,8 +55,12 @@ export default function LegalManagementDashboard() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
-  const [minRecalcitrant, setMinRecalcitrant] = useState<number | undefined>(undefined);
-  const [selectedActivities, setSelectedActivities] = useState<Set<string>>(new Set());
+  const [minRecalcitrant, setMinRecalcitrant] = useState<number | undefined>(
+    undefined
+  );
+  const [selectedActivities, setSelectedActivities] = useState<Set<string>>(
+    new Set()
+  );
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -75,15 +79,21 @@ export default function LegalManagementDashboard() {
   });
 
   const { data, loading, error, refetch } = useLegalDashboard(apiParams);
-  const { filteredRecords, totalCount, filteredCount } = useLegalFilters(data?.summaryTable || [], {
-    searchTerm,
-    regionFilter,
-    minRecalcitrant,
-  });
+  const { filteredRecords, totalCount, filteredCount } = useLegalFilters(
+    data?.summaryTable || [],
+    {
+      searchTerm,
+      regionFilter,
+      minRecalcitrant,
+    }
+  );
 
   // ============= COMPUTED VALUES =============
-  const uniqueRegions = Array.from(new Set((data?.summaryTable || []).map(r => r.region))).filter(Boolean);
-  const hasActiveFilters = searchTerm || regionFilter || minRecalcitrant !== undefined;
+  const uniqueRegions = Array.from(
+    new Set((data?.summaryTable || []).map((r) => r.region))
+  ).filter(Boolean);
+  const hasActiveFilters =
+    searchTerm || regionFilter || minRecalcitrant !== undefined;
 
   // ============= HANDLERS =============
   const handleResetFilters = () => {
@@ -93,14 +103,18 @@ export default function LegalManagementDashboard() {
     resetFilters();
   };
 
-  const canReview = userRole === "regional_manager";
-  const canApprove = userRole && ["admin", "manager"].includes(userRole);
+  const normalizedRole = userRole?.toLowerCase();
+  const canReview =
+    normalizedRole === "regional_manager" ||
+    normalizedRole === "regional officer";
+  const canApprove =
+    normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
   const handleSelectAll = () => {
     if (selectedActivities.size === filteredRecords.length) {
       setSelectedActivities(new Set());
     } else {
-      setSelectedActivities(new Set(filteredRecords.map(a => a.id)));
+      setSelectedActivities(new Set(filteredRecords.map((a) => a.id)));
     }
   };
 
@@ -129,7 +143,9 @@ export default function LegalManagementDashboard() {
       // });
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      toast.success(`${selectedActivities.size} activity(ies) marked as reviewed`);
+      toast.success(
+        `${selectedActivities.size} activity(ies) marked as reviewed`
+      );
       setSelectedActivities(new Set());
     } catch (error) {
       toast.error("Failed to review activities");
@@ -154,7 +170,9 @@ export default function LegalManagementDashboard() {
       // });
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      toast.success(`${selectedActivities.size} activity(ies) approved successfully`);
+      toast.success(
+        `${selectedActivities.size} activity(ies) approved successfully`
+      );
       setSelectedActivities(new Set());
     } catch (error) {
       toast.error("Failed to approve activities");
@@ -228,7 +246,9 @@ export default function LegalManagementDashboard() {
         />
         <MetricCard
           title="CASES WON"
-          value={data.metricCards.casesWon || data.metricCards.sectorsCovered || 0}
+          value={
+            data.metricCards.casesWon || data.metricCards.sectorsCovered || 0
+          }
           icon={<CheckCircle className="w-5 h-5" />}
           colorScheme="green"
         />
@@ -271,7 +291,7 @@ export default function LegalManagementDashboard() {
 
       {/* Legal Activities Table */}
       <div className="bg-white rounded-lg shadow mb-6">
-        {(canReview || canApprove) && selectedActivities.size > 0 && (
+        {selectedActivities.size > 0 && (
           <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
               {selectedActivities.size} activity(ies) selected
@@ -306,17 +326,18 @@ export default function LegalManagementDashboard() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                {(canReview || canApprove) && (
-                  <th className="px-2 py-1.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <input
-                      type="checkbox"
-                      checked={selectedActivities.size === filteredRecords.length && filteredRecords.length > 0}
-                      onChange={handleSelectAll}
-                      className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                      aria-label="Select all activities"
-                    />
-                  </th>
-                )}
+                <th className="px-2 py-1.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <input
+                    type="checkbox"
+                    checked={
+                      selectedActivities.size === filteredRecords.length &&
+                      filteredRecords.length > 0
+                    }
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    aria-label="Select all activities"
+                  />
+                </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Region
                 </th>
@@ -359,17 +380,15 @@ export default function LegalManagementDashboard() {
               {filteredRecords.length > 0 ? (
                 filteredRecords.map((activity) => (
                   <tr key={activity.id} className="hover:bg-gray-50 transition">
-                    {(canReview || canApprove) && (
-                      <td className="px-2 py-1.5 text-center whitespace-nowrap">
-                        <input
-                          type="checkbox"
-                          checked={selectedActivities.has(activity.id)}
-                          onChange={() => handleSelectActivity(activity.id)}
-                          className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                          aria-label={`Select activity for ${activity.branch}`}
-                        />
-                      </td>
-                    )}
+                    <td className="px-2 py-1.5 text-center whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedActivities.has(activity.id)}
+                        onChange={() => handleSelectActivity(activity.id)}
+                        className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        aria-label={`Select activity for ${activity.branch}`}
+                      />
+                    </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">
                       {activity.region}
                     </td>

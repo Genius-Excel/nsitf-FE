@@ -179,95 +179,48 @@ export const NotificationContainer: React.FC<{
 
 // ============= DASHBOARD CARDS =============
 
-interface MetricCardProps {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-  colorClass: string;
-  ariaLabel: string;
-}
-
-const MetricCard: React.FC<MetricCardProps> = ({
-  label,
-  value,
-  icon,
-  colorClass,
-  ariaLabel,
-}) => (
-  <div
-    className={`${colorClass} p-4 sm:p-5 rounded-lg border transition-all hover:shadow-md`}
-    role="article"
-    aria-label={ariaLabel}
-  >
-    <div className="flex items-center justify-between mb-2">
-      <p className="text-xs sm:text-sm font-medium text-gray-600">{label}</p>
-      <div className="opacity-60" aria-hidden="true">
-        {icon}
-      </div>
-    </div>
-    <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">
-      {value}
-    </p>
-  </div>
-);
+import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
 
 export const DashboardCards: React.FC<{ metrics: DashboardMetrics }> = ({
   metrics,
 }) => {
   return (
-    <section aria-labelledby="dashboard-metrics-heading" className="mb-6">
-      <h2 id="dashboard-metrics-heading" className="sr-only">
-        Dashboard Metrics Overview
-      </h2>
+    <MetricsGrid columns={5}>
+      <MetricCard
+        title="TOTAL ACTUAL CONTRIBUTIONS"
+        value={formatCurrency(metrics.totalActualContributions)}
+        icon={<TrendingUp className="w-5 h-5" />}
+        colorScheme="green"
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-        <MetricCard
-          label="Total Actual Contributions"
-          value={formatCurrency(metrics.totalActualContributions)}
-          icon={<TrendingUp className="w-5 h-5 text-green-600" />}
-          colorClass="bg-green-50 border-green-200"
-          ariaLabel={`Total contributions: ${formatCurrency(
-            metrics.totalActualContributions
-          )}`}
-        />
+      <MetricCard
+        title="CONTRIBUTIONS TARGET"
+        value={formatCurrency(metrics.contributionsTarget)}
+        icon={<Target className="w-5 h-5" />}
+        colorScheme="blue"
+      />
 
-        <MetricCard
-          label="Contributions Target"
-          value={formatCurrency(metrics.contributionsTarget)}
-          icon={<Target className="w-5 h-5 text-blue-600" />}
-          colorClass="bg-blue-50 border-blue-200"
-          ariaLabel={`Target amount: ${formatCurrency(
-            metrics.contributionsTarget
-          )}`}
-        />
+      <MetricCard
+        title="PERFORMANCE RATE"
+        value={`${metrics.performanceRate.toFixed(1)}%`}
+        icon={<TrendingUp className="w-5 h-5" />}
+        colorScheme="green"
+      />
 
-        <MetricCard
-          label="Performance Rate"
-          value={`${metrics.performanceRate.toFixed(1)}%`}
-          icon={<TrendingUp className="w-5 h-5 text-green-600" />}
-          colorClass="bg-green-50 border-green-200"
-          ariaLabel={`Performance rate: ${metrics.performanceRate.toFixed(
-            1
-          )} percent`}
-        />
+      <MetricCard
+        title="TOTAL EMPLOYERS"
+        value={metrics.totalEmployers.toLocaleString()}
+        icon={<Building2 className="w-5 h-5" />}
+        colorScheme="blue"
+      />
 
-        <MetricCard
-          label="Total Employers"
-          value={metrics.totalEmployers.toLocaleString()}
-          icon={<Building2 className="w-5 h-5 text-blue-600" />}
-          colorClass="bg-blue-50 border-blue-200"
-          ariaLabel={`Total employers: ${metrics.totalEmployers.toLocaleString()}`}
-        />
-
-        <MetricCard
-          label="Total Employees"
-          value={metrics.totalEmployees.toLocaleString()}
-          icon={<UserCheck className="w-5 h-5 text-green-600" />}
-          colorClass="bg-green-50 border-green-200"
-          ariaLabel={`Total employees: ${metrics.totalEmployees.toLocaleString()}`}
-        />
-      </div>
-    </section>
+      <MetricCard
+        title="TOTAL EMPLOYEES"
+        value={metrics.totalEmployees.toLocaleString()}
+        icon={<UserCheck className="w-5 h-5" />}
+        colorScheme="green"
+      />
+    </MetricsGrid>
   );
 };
 

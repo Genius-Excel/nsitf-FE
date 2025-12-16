@@ -43,7 +43,9 @@ export const LegalDetailModal: React.FC<LegalDetailModalProps> = ({
   // State management
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<"reviewed" | "approve" | null>(null);
+  const [confirmAction, setConfirmAction] = useState<
+    "reviewed" | "approve" | null
+  >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedData, setEditedData] = useState<any>(null);
@@ -105,10 +107,18 @@ Generated on: ${new Date().toLocaleString()}
     URL.revokeObjectURL(url);
   };
 
-  // Permission checks
-  const canEdit = userRole && ["regional_manager", "admin", "manager"].includes(userRole);
-  const canReview = userRole === "regional_manager";
-  const canApprove = userRole && ["admin", "manager"].includes(userRole);
+  // Permission checks (case-insensitive)
+  const normalizedRole = userRole?.toLowerCase();
+  const canEdit =
+    normalizedRole &&
+    ["regional_manager", "regional officer", "admin", "manager"].includes(
+      normalizedRole
+    );
+  const canReview =
+    normalizedRole === "regional_manager" ||
+    normalizedRole === "regional officer";
+  const canApprove =
+    normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
   // Use edited data or original data
   const displayData = editedData || detailData;
@@ -149,8 +159,8 @@ Generated on: ${new Date().toLocaleString()}
       if (!prev) return prev;
 
       // Handle nested fields
-      if (field.includes('.')) {
-        const keys = field.split('.');
+      if (field.includes(".")) {
+        const keys = field.split(".");
         const newData = { ...prev };
         let current: any = newData;
 
@@ -188,9 +198,10 @@ Generated on: ${new Date().toLocaleString()}
       // TODO: Call API to update status
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const message = confirmAction === "reviewed"
-        ? "Legal record marked as reviewed"
-        : "Legal record approved successfully";
+      const message =
+        confirmAction === "reviewed"
+          ? "Legal record marked as reviewed"
+          : "Legal record approved successfully";
 
       toast.success(message);
       setShowConfirmDialog(false);
@@ -212,8 +223,8 @@ Generated on: ${new Date().toLocaleString()}
     type: "text" | "number" = "text"
   ) => {
     if (isEditMode && editedData) {
-      const fieldValue = field.includes('.')
-        ? field.split('.').reduce((obj, key) => obj?.[key], editedData as any)
+      const fieldValue = field.includes(".")
+        ? field.split(".").reduce((obj, key) => obj?.[key], editedData as any)
         : (editedData as any)[field];
 
       return (
@@ -222,8 +233,13 @@ Generated on: ${new Date().toLocaleString()}
           <input
             id={field}
             type={type}
-            value={fieldValue || ''}
-            onChange={(e) => handleFieldChange(field, type === 'number' ? parseFloat(e.target.value) : e.target.value)}
+            value={fieldValue || ""}
+            onChange={(e) =>
+              handleFieldChange(
+                field,
+                type === "number" ? parseFloat(e.target.value) : e.target.value
+              )
+            }
             placeholder={`Enter ${label.toLowerCase()}`}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
           />
@@ -321,17 +337,32 @@ Generated on: ${new Date().toLocaleString()}
             </div>
             <div className="flex items-center gap-2">
               {canEdit && !isEditMode && (
-                <Button onClick={handleEdit} variant="outline" size="sm" className="gap-2">
+                <Button
+                  onClick={handleEdit}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
                   <Edit className="w-4 h-4" />
                   Edit
                 </Button>
               )}
               {isEditMode && (
                 <>
-                  <Button onClick={handleCancelEdit} variant="outline" size="sm" disabled={isSubmitting}>
+                  <Button
+                    onClick={handleCancelEdit}
+                    variant="outline"
+                    size="sm"
+                    disabled={isSubmitting}
+                  >
                     Cancel
                   </Button>
-                  <Button onClick={handleSaveEdit} size="sm" className="bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
+                  <Button
+                    onClick={handleSaveEdit}
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700"
+                    disabled={isSubmitting}
+                  >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -365,15 +396,21 @@ Generated on: ${new Date().toLocaleString()}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <p className="text-xs text-gray-600 uppercase">Region</p>
-                    <p className="text-sm font-medium text-gray-900">{displayData?.region}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {displayData?.region}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-600 uppercase">Branch</p>
-                    <p className="text-sm font-medium text-gray-900">{displayData?.branch}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {displayData?.branch}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-600 uppercase">Period</p>
-                    <p className="text-sm font-medium text-gray-900">{formatLegalDate(displayData?.period)}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {formatLegalDate(displayData?.period)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -388,9 +425,23 @@ Generated on: ${new Date().toLocaleString()}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {isEditMode ? (
                     <>
-                      {renderField("Recalcitrant Employers", displayData?.metrics?.recalcitrantEmployers, "metrics.recalcitrantEmployers", "number")}
-                      {renderField("Defaulting Employers", displayData?.metrics?.defaultingEmployers, "metrics.defaultingEmployers", "number")}
-                      {renderField("ECS Number", displayData?.metrics?.ecsNumber, "metrics.ecsNumber")}
+                      {renderField(
+                        "Recalcitrant Employers",
+                        displayData?.metrics?.recalcitrantEmployers,
+                        "metrics.recalcitrantEmployers",
+                        "number"
+                      )}
+                      {renderField(
+                        "Defaulting Employers",
+                        displayData?.metrics?.defaultingEmployers,
+                        "metrics.defaultingEmployers",
+                        "number"
+                      )}
+                      {renderField(
+                        "ECS Number",
+                        displayData?.metrics?.ecsNumber,
+                        "metrics.ecsNumber"
+                      )}
                     </>
                   ) : (
                     <>
@@ -433,9 +484,24 @@ Generated on: ${new Date().toLocaleString()}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {isEditMode ? (
                     <>
-                      {renderField("Plan Issued", displayData?.legalActions?.planIssued, "legalActions.planIssued", "number")}
-                      {renderField("ADR", displayData?.legalActions?.adr, "legalActions.adr", "number")}
-                      {renderField("Cases Instituted", displayData?.legalActions?.casesInstituted, "legalActions.casesInstituted", "number")}
+                      {renderField(
+                        "Plan Issued",
+                        displayData?.legalActions?.planIssued,
+                        "legalActions.planIssued",
+                        "number"
+                      )}
+                      {renderField(
+                        "ADR",
+                        displayData?.legalActions?.adr,
+                        "legalActions.adr",
+                        "number"
+                      )}
+                      {renderField(
+                        "Cases Instituted",
+                        displayData?.legalActions?.casesInstituted,
+                        "legalActions.casesInstituted",
+                        "number"
+                      )}
                     </>
                   ) : (
                     <>
@@ -448,7 +514,9 @@ Generated on: ${new Date().toLocaleString()}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-blue-600 uppercase mb-1">ADR</p>
+                        <p className="text-xs text-blue-600 uppercase mb-1">
+                          ADR
+                        </p>
                         <p className="text-2xl font-bold text-blue-900">
                           {displayData?.legalActions?.adr}
                         </p>
@@ -501,13 +569,21 @@ Generated on: ${new Date().toLocaleString()}
               Cancel
             </Button>
             {canReview && (
-              <Button type="button" onClick={handleReviewedClick} className="bg-blue-600 hover:bg-blue-700">
+              <Button
+                type="button"
+                onClick={handleReviewedClick}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 <CheckCircle className="w-4 h-4 mr-2" />
                 Mark as Reviewed
               </Button>
             )}
             {canApprove && (
-              <Button type="button" onClick={handleApproveClick} className="bg-green-600 hover:bg-green-700">
+              <Button
+                type="button"
+                onClick={handleApproveClick}
+                className="bg-green-600 hover:bg-green-700"
+              >
                 <CheckCircle className="w-4 h-4 mr-2" />
                 Approve
               </Button>
@@ -519,20 +595,33 @@ Generated on: ${new Date().toLocaleString()}
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
         <>
-          <div className="fixed inset-0 bg-black bg-opacity-60 z-[60]" onClick={handleCancelConfirm} />
+          <div
+            className="fixed inset-0 bg-black bg-opacity-60 z-[60]"
+            onClick={handleCancelConfirm}
+          />
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
               <div className="flex items-start gap-4">
-                <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
-                  confirmAction === "reviewed" ? "bg-blue-100" : "bg-green-100"
-                }`}>
-                  <AlertCircle className={`w-6 h-6 ${
-                    confirmAction === "reviewed" ? "text-blue-600" : "text-green-600"
-                  }`} />
+                <div
+                  className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
+                    confirmAction === "reviewed"
+                      ? "bg-blue-100"
+                      : "bg-green-100"
+                  }`}
+                >
+                  <AlertCircle
+                    className={`w-6 h-6 ${
+                      confirmAction === "reviewed"
+                        ? "text-blue-600"
+                        : "text-green-600"
+                    }`}
+                  />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {confirmAction === "reviewed" ? "Mark as Reviewed?" : "Approve Legal Record?"}
+                    {confirmAction === "reviewed"
+                      ? "Mark as Reviewed?"
+                      : "Approve Legal Record?"}
                   </h3>
                   <p className="text-sm text-gray-600">
                     {confirmAction === "reviewed"
@@ -542,14 +631,23 @@ Generated on: ${new Date().toLocaleString()}
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-6">
-                <Button type="button" onClick={handleCancelConfirm} variant="outline" disabled={isSubmitting}>
+                <Button
+                  type="button"
+                  onClick={handleCancelConfirm}
+                  variant="outline"
+                  disabled={isSubmitting}
+                >
                   Cancel
                 </Button>
                 <Button
                   type="button"
                   onClick={handleConfirmAction}
                   disabled={isSubmitting}
-                  className={confirmAction === "reviewed" ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
+                  className={
+                    confirmAction === "reviewed"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "bg-green-600 hover:bg-green-700"
+                  }
                 >
                   {isSubmitting ? (
                     <>
@@ -559,7 +657,9 @@ Generated on: ${new Date().toLocaleString()}
                   ) : (
                     <>
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      {confirmAction === "reviewed" ? "Yes, Mark as Reviewed" : "Yes, Approve"}
+                      {confirmAction === "reviewed"
+                        ? "Yes, Mark as Reviewed"
+                        : "Yes, Approve"}
                     </>
                   )}
                 </Button>

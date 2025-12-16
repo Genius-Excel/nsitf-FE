@@ -26,11 +26,35 @@ import {
 import { getUserFromStorage } from "@/lib/auth";
 import { canManageClaims } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
+import { useCheckPermission } from "@/hooks/useCheckPermission";
+import { LoadingState } from "@/components/design-system/LoadingState";
+import { ErrorState } from "@/components/design-system/ErrorState";
+import { PermissionButton } from "@/components/permission-button";
+import { PermissionGuard } from "@/components/permission-guard";
 
+/**
+ * Claims & Compensation Module - Functional Container
+ *
+ * Permissions Required:
+ * - view_claims: Required to view this page
+ * - manage_claims: Required for create/edit/delete/upload operations
+ *
+ * Access Pattern:
+ * 1. Users without view_claims see "Access Denied"
+ * 2. Users with view_claims but no manage_claims see view-only content
+ * 3. Users with manage_claims see full content with action buttons
+ */
 export default function ClaimsManagement() {
   // ==========================================
-  // ADVANCED FILTERS
+  // PERMISSION CHECK
   // ==========================================
+  const {
+    canView,
+    canManage,
+    loading: permissionLoading,
+  } = useCheckPermission("claims");
+
+  // Always initialize advanced filters hook (hooks must be called unconditionally)
   const {
     filters,
     regions,
@@ -43,6 +67,10 @@ export default function ClaimsManagement() {
   } = useAdvancedFilters({
     module: "claims",
   });
+  // Page-level access control will be rendered after hooks are declared
+  // ==========================================
+  // ADVANCED FILTERS (initialized above to avoid conditional hooks)
+  // ==========================================
 
   // ==========================================
   // STATE
@@ -52,6 +80,7 @@ export default function ClaimsManagement() {
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
 
   // ==========================================
   // PERMISSIONS REMOVED
@@ -115,12 +144,12 @@ export default function ClaimsManagement() {
 
   // Get unique filter options
   const uniqueStatuses = useMemo(() => {
-    const statuses = new Set(claims.map(c => c.status));
+    const statuses = new Set(claims.map((c) => c.status));
     return Array.from(statuses).filter(Boolean);
   }, [claims]);
 
   const uniqueTypes = useMemo(() => {
-    const types = new Set(claims.map(c => c.type));
+    const types = new Set(claims.map((c) => c.type));
     return Array.from(types).filter(Boolean);
   }, [claims]);
 
@@ -162,7 +191,8 @@ export default function ClaimsManagement() {
       {
         title: "Disability RSA Benefit",
         description: "",
-        value: metrics.disabilityRSABenefit || metrics.disabilityBeneficiaries || 0,
+        value:
+          metrics.disabilityRSABenefit || metrics.disabilityBeneficiaries || 0,
         change: `${mockChangePercent}% from last month`,
         icon: <BarChart3 />,
         bgColor: "#a855f7",
@@ -170,7 +200,10 @@ export default function ClaimsManagement() {
       {
         title: "Disabilities Beneficiaries",
         description: "",
-        value: metrics.disabilitiesBeneficiaries || metrics.retireeBenefitBeneficiaries || 0,
+        value:
+          metrics.disabilitiesBeneficiaries ||
+          metrics.retireeBenefitBeneficiaries ||
+          0,
         change: `${mockChangePercent}% from last month`,
         icon: <BarChart3 />,
         bgColor: "#f59e0b",
@@ -228,6 +261,7 @@ export default function ClaimsManagement() {
 
   const handleViewClaim = useCallback(
     (claim: Claim) => {
+      setSelectedClaimId(claim.id);
       fetchDetail(claim.id);
       setIsDetailModalOpen(true);
     },
@@ -236,6 +270,7 @@ export default function ClaimsManagement() {
 
   const handleCloseDetailModal = useCallback(() => {
     setIsDetailModalOpen(false);
+    setSelectedClaimId(null);
     clearDetail();
   }, [clearDetail]);
 
@@ -250,7 +285,6 @@ export default function ClaimsManagement() {
   }, []);
 
   const handleExport = useCallback(() => {
-
     if (filteredClaims.length === 0) {
       toast.error("No claims to export");
       return;
@@ -311,10 +345,23 @@ export default function ClaimsManagement() {
   // ==========================================
   // ERROR HANDLING
   // ==========================================
+  // Page-level access control (render after hooks to keep hook order stable)
+  if (permissionLoading) {
+    return <LoadingState />;
+  }
+
+  if (!canView) {
+    return (
+      <ErrorState
+        title="Access Denied"
+        description="You don't have permission to view claims"
+      />
+    );
+  }
 
   if (error) {
     return (
-      <div className="space-y-10">
+      <div className="space-y-10 max-w-7xl mx-auto px-4">
         <PageHeader
           title="Claims and Compensation View"
           description="Track and process employee compensation claims"
@@ -324,10 +371,7 @@ export default function ClaimsManagement() {
             Failed to load claims data
           </p>
           <p className="text-red-600 text-sm mb-4">{error}</p>
-          <Button
-            onClick={refetch}
-            variant="destructive"
-          >
+          <Button onClick={refetch} variant="destructive">
             Retry
           </Button>
         </div>
@@ -340,7 +384,7 @@ export default function ClaimsManagement() {
   // ==========================================
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 max-w-7xl mx-auto px-4">
       {/* Header */}
       <PageHeader
         title="Claims and Compensation View"
@@ -368,16 +412,15 @@ export default function ClaimsManagement() {
           )}
 
           {/* Claim Type Cards */}
-          {claimTypes.length > 0 && (
-            <ClaimTypeCards claimTypes={claimTypes} />
-          )}
+          {claimTypes.length > 0 && <ClaimTypeCards claimTypes={claimTypes} />}
 
           {/* Search and Filters */}
           <SearchAndFilters
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onFilterClick={() => {}}
-            onUpload={handleUploadClick}
+            onUpload={canManage ? handleUploadClick : undefined}
+            canManage={canManage}
           />
 
           {/* Advanced Filter Panel */}
@@ -398,7 +441,11 @@ export default function ClaimsManagement() {
           />
 
           {/* Claims Table */}
-          <ClaimsTable claims={filteredClaims} onView={handleViewClaim} />
+          <ClaimsTable
+            claims={filteredClaims}
+            onView={handleViewClaim}
+            onRefresh={refetch}
+          />
 
           {/* Pagination Info (Optional) */}
           {pagination && pagination.totalPages > 1 && (
@@ -413,9 +460,11 @@ export default function ClaimsManagement() {
       {/* Claim Detail Modal */}
       <ClaimDetailModal
         claimDetail={claimDetail}
+        claimId={selectedClaimId || undefined}
         isOpen={isDetailModalOpen}
         onClose={handleCloseDetailModal}
         loading={detailLoading}
+        onRefresh={refetch}
       />
 
       {/* Claims Upload Modal */}

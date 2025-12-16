@@ -19,6 +19,7 @@ import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
 import { SearchBar } from "@/components/design-system/SearchBar";
 import { getUserFromStorage, type UserRole } from "@/lib/auth";
 import { toast } from "sonner";
+import { useBulkClaimActions } from "@/hooks/claims";
 
 interface StatisticsCardsProps {
   stats: StatCard[];
@@ -27,15 +28,9 @@ interface StatisticsCardsProps {
 export const StatisticsCards: React.FC<StatisticsCardsProps> = ({ stats }) => (
   <MetricsGrid columns={5}>
     {stats.map((stat, idx) => {
-      const colorSchemes: Array<"green" | "blue" | "purple" | "orange" | "gray"> = [
-        "green",
-        "green",
-        "blue",
-        "purple",
-        "orange",
-        "purple",
-        "blue",
-      ];
+      const colorSchemes: Array<
+        "green" | "blue" | "purple" | "orange" | "gray"
+      > = ["green", "green", "blue", "purple", "orange", "purple", "blue"];
 
       return (
         <MetricCard
@@ -99,7 +94,7 @@ export const ClaimsProcessingChart: React.FC<ClaimsProcessingChartProps> = ({
               <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#6b7280" }} />
               <YAxis
                 tick={{ fontSize: 10, fill: "#6b7280" }}
-                domain={[0, maxValue || 'auto']}
+                domain={[0, maxValue || "auto"]}
                 ticks={ticks}
                 tickFormatter={formatYAxis}
               />
@@ -144,14 +139,18 @@ interface ClaimTypeCardsProps {
   claimTypes: Array<{ type: string; count: number; color: string }>;
 }
 
-export const ClaimTypeCards: React.FC<ClaimTypeCardsProps> = ({ claimTypes }) => (
+export const ClaimTypeCards: React.FC<ClaimTypeCardsProps> = ({
+  claimTypes,
+}) => (
   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
     {claimTypes.map((item) => (
       <div
         key={item.type}
         className={`rounded-lg border border-border p-2 ${item.color}`}
       >
-        <p className="text-[10px] font-medium text-muted-foreground truncate">{item.type}</p>
+        <p className="text-[10px] font-medium text-muted-foreground truncate">
+          {item.type}
+        </p>
         <p className="text-sm font-semibold mt-0.5 text-foreground">
           {item.count.toLocaleString()} claims
         </p>
@@ -165,6 +164,7 @@ interface SearchAndFiltersProps {
   onSearchChange: (value: string) => void;
   onFilterClick?: () => void;
   onUpload?: () => void;
+  canManage?: boolean;
 }
 
 export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
@@ -172,6 +172,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
   onSearchChange,
   onFilterClick,
   onUpload,
+  canManage = false,
 }) => (
   <SearchBar
     searchTerm={searchTerm}
@@ -189,12 +190,19 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
 interface ClaimsTableProps {
   claims: Claim[];
   onView?: (claim: Claim) => void;
+  onRefresh?: () => void;
 }
 
-export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
+export const ClaimsTable: React.FC<ClaimsTableProps> = ({
+  claims,
+  onView,
+  onRefresh,
+}) => {
   const [selectedClaims, setSelectedClaims] = useState<Set<string>>(new Set());
   const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Import the bulk actions hook
+  const { bulkReview, bulkApprove, loading } = useBulkClaimActions();
 
   // Get user role
   useEffect(() => {
@@ -203,15 +211,19 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
   }, []);
 
   // Permission checks
-  const canReview = userRole === "regional_manager";
-  const canApprove = userRole && ["admin", "manager"].includes(userRole);
+  const normalizedRole = userRole?.toLowerCase();
+  const canReview =
+    normalizedRole === "regional_manager" ||
+    normalizedRole === "regional officer";
+  const canApprove =
+    normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
   // Select/deselect all
   const handleSelectAll = () => {
     if (selectedClaims.size === claims.length) {
       setSelectedClaims(new Set());
     } else {
-      setSelectedClaims(new Set(claims.map(c => c.id)));
+      setSelectedClaims(new Set(claims.map((c) => c.id)));
     }
   };
 
@@ -233,19 +245,17 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      // TODO: Call API to bulk review claims
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+    const claimIds = Array.from(selectedClaims);
+    const success = await bulkReview(claimIds);
 
-      toast.success(`${selectedClaims.size} claim(s) marked as reviewed`);
+    if (success) {
+      toast.success(`${claimIds.length} claim(s) marked as reviewed`);
       setSelectedClaims(new Set());
-      // Optionally refresh data here
-    } catch (error) {
+      if (onRefresh) {
+        onRefresh();
+      }
+    } else {
       toast.error("Failed to review claims");
-      console.error("Bulk review error:", error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -256,19 +266,17 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      // TODO: Call API to bulk approve claims
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+    const claimIds = Array.from(selectedClaims);
+    const success = await bulkApprove(claimIds);
 
-      toast.success(`${selectedClaims.size} claim(s) approved successfully`);
+    if (success) {
+      toast.success(`${claimIds.length} claim(s) approved successfully`);
       setSelectedClaims(new Set());
-      // Optionally refresh data here
-    } catch (error) {
+      if (onRefresh) {
+        onRefresh();
+      }
+    } else {
       toast.error("Failed to approve claims");
-      console.error("Bulk approve error:", error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -293,11 +301,11 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
   // Helper function to format dates
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return "—";
-    
+
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString; // Return as-is if invalid
-      
+
       return new Intl.DateTimeFormat("en-GB", {
         day: "2-digit",
         month: "short",
@@ -319,7 +327,7 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
   return (
     <div className="bg-card rounded-lg border border-border shadow-sm">
       {/* Bulk Action Buttons */}
-      {(canReview || canApprove) && selectedClaims.size > 0 && (
+      {selectedClaims.size > 0 && (
         <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
             {selectedClaims.size} claim(s) selected
@@ -328,23 +336,23 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
             {canReview && (
               <Button
                 onClick={handleBulkReview}
-                disabled={isSubmitting}
+                disabled={loading}
                 size="sm"
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <FileCheck className="w-4 h-4 mr-2" />
-                {isSubmitting ? "Processing..." : "Mark as Reviewed"}
+                {loading ? "Processing..." : "Mark as Reviewed"}
               </Button>
             )}
             {canApprove && (
               <Button
                 onClick={handleBulkApprove}
-                disabled={isSubmitting}
+                disabled={loading}
                 size="sm"
                 className="bg-green-600 hover:bg-green-700"
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
-                {isSubmitting ? "Processing..." : "Approve Selected"}
+                {loading ? "Processing..." : "Approve Selected"}
               </Button>
             )}
           </div>
@@ -354,17 +362,15 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
         <table className="w-full divide-y divide-border">
           <thead className="bg-muted border-b border-border sticky top-0">
             <tr>
-              {(canReview || canApprove) && (
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    checked={selectedClaims.size === claims.length}
-                    onChange={handleSelectAll}
-                    className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                    aria-label="Select all claims"
-                  />
-                </th>
-              )}
+              <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  checked={selectedClaims.size === claims.length}
+                  onChange={handleSelectAll}
+                  className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  aria-label="Select all claims"
+                />
+              </th>
               <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
                 ECS NO.
               </th>
@@ -414,18 +420,19 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = ({ claims, onView }) => {
               );
 
               return (
-                <tr key={claim.id} className="hover:bg-muted/50 transition-colors">
-                  {(canReview || canApprove) && (
-                    <td className="px-2 py-1.5 text-center whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={selectedClaims.has(claim.id)}
-                        onChange={() => handleSelectClaim(claim.id)}
-                        className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                        aria-label={`Select claim ${claim.claimId}`}
-                      />
-                    </td>
-                  )}
+                <tr
+                  key={claim.id}
+                  className="hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-2 py-1.5 text-center whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={selectedClaims.has(claim.id)}
+                      onChange={() => handleSelectClaim(claim.id)}
+                      className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      aria-label={`Select claim ${claim.claimId}`}
+                    />
+                  </td>
                   <td className="px-2 py-1.5 text-center text-xs font-medium text-gray-900 whitespace-nowrap">
                     {claim.claimId}
                   </td>
