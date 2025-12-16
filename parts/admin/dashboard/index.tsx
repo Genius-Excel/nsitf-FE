@@ -5,6 +5,7 @@ import { Users, Shield, ClipboardCheck, HardHat, Scale } from "lucide-react";
 import { getUserFromStorage, User } from "@/lib/auth";
 import { useDashboardSummary } from "@/hooks/useDashboardSummary";
 import { useMetricCards } from "@/hooks/Usedashboardcharts";
+import { useCheckPermission } from "@/hooks/useCheckPermission";
 import { DashboardLineChart } from "./line-chart";
 import { ClaimsPieChart } from "./claims-chart";
 import { RegionChartBarMultiple } from "./region-chartbar-multiple";
@@ -40,6 +41,12 @@ const COLOR_SCHEMES: Array<"green" | "blue" | "purple" | "orange" | "gray"> = [
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
 
+  // Check permissions for dashboard access
+  const {
+    canView,
+    loading: permissionLoading,
+  } = useCheckPermission("dashboard");
+
   // SINGLE FETCH for all dashboard data
   const {
     data: dashboardData,
@@ -56,7 +63,22 @@ export default function DashboardPage() {
     setUser(getUserFromStorage());
   }, []);
 
-  // Loading state
+  // Permission loading state
+  if (permissionLoading) {
+    return <LoadingState message="Checking permissions..." />;
+  }
+
+  // Permission denied state
+  if (!canView) {
+    return (
+      <ErrorState
+        title="Access Denied"
+        description="You don't have permission to view the dashboard"
+      />
+    );
+  }
+
+  // Data loading state
   if (loading) {
     return <LoadingState message="Loading dashboard data..." />;
   }

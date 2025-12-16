@@ -39,6 +39,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useGetUserProfile } from "@/services/auth";
+import { hasPermission } from "@/lib/permissions";
 
 // Define User type for TypeScript
 interface User {
@@ -46,6 +47,7 @@ interface User {
   id: string;
   name: string;
   role: string;
+  permissions?: string[];
 }
 
 // Define valid roles
@@ -63,19 +65,33 @@ const validRoles = [
 ] as const;
 type Role = (typeof validRoles)[number];
 
+// Define navigation item type
+interface NavigationItem {
+  title: string;
+  href: string;
+  icon: any;
+  roles?: Role[];
+  permission?: string;
+}
+
 // Define navigation items with role-based access
-const navigationItems = [
+const navigationItems: NavigationItem[] = [
   {
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    roles: ["admin", "manager", "user", "regional_manager", "claims_officer", "compliance_officer", "hse_officer", "legal_officer", "inspection_officer"] as Role[],
-  },
-  {
-    title: "Branch Portal",
-    href: "/branch/dashboard",
-    icon: FileCheck,
-    roles: ["branch_data_officer"] as Role[],
+    // Remove `regional_manager` so regional officers don't see the generic admin dashboard link
+    roles: [
+      "admin",
+      "manager",
+      "user",
+      "claims_officer",
+      "compliance_officer",
+      "hse_officer",
+      "legal_officer",
+      "inspection_officer",
+    ] as Role[],
+    permission: "view_dashboard", // Requires view_dashboard permission
   },
   {
     title: "User and Role",
@@ -87,31 +103,79 @@ const navigationItems = [
     title: "Compliance",
     href: "/dashboard/compliance",
     icon: Shield,
-    roles: ["admin", "manager", "compliance_officer", "regional_manager", "claims_officer", "hse_officer", "legal_officer", "inspection_officer"] as Role[],
+    roles: [
+      "admin",
+      "manager",
+      "compliance_officer",
+      "regional_manager",
+      "claims_officer",
+      "hse_officer",
+      "legal_officer",
+      "inspection_officer",
+    ] as Role[],
   },
   {
     title: "Claims and compensation",
     href: "/dashboard/claims",
     icon: FileText,
-    roles: ["admin", "manager", "user", "regional_manager", "claims_officer", "compliance_officer", "hse_officer", "legal_officer", "inspection_officer"] as Role[],
+    roles: [
+      "admin",
+      "manager",
+      "user",
+      "regional_manager",
+      "claims_officer",
+      "compliance_officer",
+      "hse_officer",
+      "legal_officer",
+      "inspection_officer",
+    ] as Role[],
   },
   {
     title: "Inspection",
     href: "/dashboard/inspections",
     icon: ShieldCheck,
-    roles: ["admin", "manager", "user", "regional_manager", "claims_officer", "compliance_officer", "hse_officer", "legal_officer", "inspection_officer"] as Role[],
+    roles: [
+      "admin",
+      "manager",
+      "user",
+      "regional_manager",
+      "claims_officer",
+      "compliance_officer",
+      "hse_officer",
+      "legal_officer",
+      "inspection_officer",
+    ] as Role[],
   },
   {
     title: "OSH",
     href: "/dashboard/hse",
     icon: HardHat,
-    roles: ["admin", "manager", "user", "regional_manager", "claims_officer", "compliance_officer", "hse_officer", "legal_officer", "inspection_officer"] as Role[],
+    roles: [
+      "admin",
+      "manager",
+      "user",
+      "regional_manager",
+      "claims_officer",
+      "compliance_officer",
+      "hse_officer",
+      "legal_officer",
+      "inspection_officer",
+    ] as Role[],
   },
   {
     title: "Legal",
     href: "/dashboard/legal",
     icon: Scale,
-    roles: ["admin", "manager", "regional_manager", "claims_officer", "compliance_officer", "hse_officer", "legal_officer", "inspection_officer"] as Role[],
+    roles: [
+      "admin",
+      "manager",
+      "regional_manager",
+      "claims_officer",
+      "compliance_officer",
+      "hse_officer",
+      "legal_officer",
+      "inspection_officer",
+    ] as Role[],
   },
   {
     title: "KPI Analytics",
@@ -145,6 +209,10 @@ const getRoleBasedRoute = (role: Role | undefined, href: string) => {
   if (role === "branch_data_officer") {
     // Branch officers use their specific routes directly
     return href;
+  }
+  if (role === "regional_manager") {
+    // Regional managers use manager routes
+    return href === "/dashboard" ? "/manager/dashboard" : `/manager${href}`;
   }
   return role && validRoles.includes(role) ? `/admin${href}` : href;
 };
@@ -240,7 +308,7 @@ export function AppSidebar({
 
         // Map backend role names to frontend role names
         const roleMapping: Record<string, string> = {
-          "regional_officer": "compliance_officer", // Regional Officer maps to compliance_officer
+          regional_officer: "compliance_officer", // Regional Officer maps to compliance_officer
         };
 
         const mappedRole = roleMapping[normalizedRole] || normalizedRole;
@@ -256,7 +324,11 @@ export function AppSidebar({
         console.log("mapped role", mappedRole);
         // Validate role
         if (!validRoles.includes(fetchedUser.role as Role)) {
-          setError(`Invalid user role detected: ${mappedRole}. Expected one of: ${validRoles.join(", ")}`);
+          setError(
+            `Invalid user role detected: ${mappedRole}. Expected one of: ${validRoles.join(
+              ", "
+            )}`
+          );
           console.error("Role validation failed:", {
             originalRole: userData[0].role,
             normalizedRole,
@@ -284,14 +356,14 @@ export function AppSidebar({
 
   const confirmLogout = useCallback(async () => {
     try {
-      await clearUserFromStorage();
-      router.push("/");
       setIsDialogOpen(false);
+      // clearUserFromStorage will handle the redirect and clear all data
+      await clearUserFromStorage();
     } catch (error) {
       setError("Failed to log out. Please try again.");
       console.error("Logout error:", error);
     }
-  }, [router]);
+  }, []);
 
   const cancelLogout = useCallback(() => {
     setIsDialogOpen(false);
@@ -302,16 +374,31 @@ export function AppSidebar({
     setIsCollapsed(!isCollapsed);
   }, [isCollapsed, setIsCollapsed]);
 
-  // Filter navigation items based on user role
+  // Filter navigation items based on user role and permissions
   const filteredNavItems = useMemo(() => {
-    return navigationItems.filter(
-      (item) =>
+    return navigationItems.filter((item) => {
+      // Check role-based access
+      const hasRoleAccess =
         !item.roles ||
         (user?.role &&
           validRoles.includes(user.role as Role) &&
-          item.roles.includes(user.role as Role))
-    );
-  }, [user?.role]);
+          item.roles.includes(user.role as Role));
+
+      if (!hasRoleAccess) return false;
+
+      // Check permission-based access if permission is specified
+      if (item.permission && user?.role) {
+        const normalizedRole = user.role.toLowerCase();
+        return hasPermission(
+          normalizedRole as any,
+          item.permission,
+          user.permissions
+        );
+      }
+
+      return true;
+    });
+  }, [user?.role, user?.permissions]);
 
   // Loading state
   if (isLoading) {
@@ -411,7 +498,9 @@ export function AppSidebar({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => router.push("/admin/dashboard/user-profile")}
+                      onClick={() =>
+                        router.push("/admin/dashboard/user-profile")
+                      }
                       className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs mx-auto hover:bg-green-600 transition-colors cursor-pointer"
                       aria-label={`View profile for ${user.name}`}
                     >
