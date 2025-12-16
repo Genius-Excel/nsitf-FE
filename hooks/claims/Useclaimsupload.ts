@@ -17,13 +17,20 @@ interface ValidationError {
   value?: string;
 }
 
-interface UseClaimsUploadParams {
+interface UseClaimsUploadCallbacks {
   onSuccess?: (uploadedCount: number, region: string) => void;
   onError?: (error: string) => void;
 }
 
+interface UseClaimsUploadParams {
+  regionId: string;
+  branchId: string;
+  period: string;
+  sheet?: string;
+}
+
 interface UseClaimsUploadReturn {
-  uploadClaims: (file: File) => Promise<void>;
+  uploadClaims: (file: File, params: UseClaimsUploadParams) => Promise<void>;
   progress: UploadProgress;
   errors: ValidationError[];
   successCount: number;
@@ -51,7 +58,7 @@ interface UseClaimsUploadReturn {
  * ```
  */
 export const useClaimsUpload = (
-  params: UseClaimsUploadParams = {}
+  callbacks: UseClaimsUploadCallbacks = {}
 ): UseClaimsUploadReturn => {
   const [progress, setProgress] = useState<UploadProgress>({
     stage: "idle",
@@ -63,13 +70,24 @@ export const useClaimsUpload = (
   const [uploadedRegion, setUploadedRegion] = useState<string | null>(null);
 
   const uploadClaims = useCallback(
-    async (file: File) => {
+    async (file: File, params: UseClaimsUploadParams) => {
       if (!file) {
         setErrors([
           {
             row: 0,
             column: "System",
             message: "No file provided",
+          },
+        ]);
+        return;
+      }
+
+      if (!params.regionId || !params.branchId || !params.period) {
+        setErrors([
+          {
+            row: 0,
+            column: "System",
+            message: "Region, branch, and period are required",
           },
         ]);
         return;
@@ -90,11 +108,12 @@ export const useClaimsUpload = (
 
         const formData = new FormData();
         formData.append("file", file);
+        formData.append("region_id", params.regionId);
+        formData.append("branch_id", params.branchId);
+        formData.append("period", params.period);
+        formData.append("sheet", params.sheet || "CLAIMS");
 
-        const response = await http.postData(
-          formData,
-          "/api/claims/upload-claims-report"
-        );
+        const response = await http.postData(formData, "/api/claims/reports");
 
         if (!response?.data) {
           throw new Error("No response from server");
@@ -112,7 +131,7 @@ export const useClaimsUpload = (
         setSuccessCount(uploadData.uploaded_records);
         setUploadedRegion(uploadData.region);
 
-        params.onSuccess?.(uploadData.uploaded_records, uploadData.region);
+        callbacks.onSuccess?.(uploadData.uploaded_records, uploadData.region);
       } catch (err: any) {
         const errorMessage =
           err?.response?.data?.message ||
@@ -130,11 +149,11 @@ export const useClaimsUpload = (
           percentage: 100,
           message: "Upload failed",
         });
-        params.onError?.(errorMessage);
+        callbacks.onError?.(errorMessage);
         console.error("Error uploading claims:", err);
       }
     },
-    [params]
+    [callbacks]
   );
 
   const reset = useCallback(() => {

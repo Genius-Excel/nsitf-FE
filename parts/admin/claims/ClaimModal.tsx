@@ -85,14 +85,26 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
       normalizedRole
     );
 
-  // Check if user can review (Regional Officer only)
+  // Check if user can review (Regional Officer and Admin)
   const canReview =
     normalizedRole === "regional_manager" ||
-    normalizedRole === "regional officer";
+    normalizedRole === "regional officer" ||
+    normalizedRole === "admin" ||
+    normalizedRole === "manager";
 
   // Check if user can approve (Admin, HQ, HOD)
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
+
+  // Debug logging
+  console.log("ClaimModal Debug:", {
+    userRole,
+    normalizedRole,
+    canReview,
+    canApprove,
+    recordStatus: claimDetail?.audit?.recordStatus,
+    hasAudit: !!claimDetail?.audit,
+  });
 
   // Helper function to format currency
   const formatCurrency = (amount: number): string => {
@@ -219,7 +231,14 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
   const handleConfirmAction = async () => {
     if (!claimId || !confirmAction) return;
 
-    const success = await updateSingleClaim(claimId, confirmAction);
+    console.log("Updating claim:", { claimId, confirmAction });
+
+    const success = await updateSingleClaim(
+      claimId,
+      confirmAction === "reviewed" ? "reviewed" : "approved"
+    );
+
+    console.log("Update result:", success);
 
     if (success) {
       toast.success(
@@ -231,11 +250,14 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
       setShowConfirmDialog(false);
       setConfirmAction(null);
 
+      // Refresh both the claims list and the detail
       if (onRefresh) {
         onRefresh();
       }
 
-      onClose();
+      // Keep modal open but refetch detail to show updated status
+      // The parent should handle refetching via onRefresh, which will update claimDetail prop
+      // Don't close the modal so user can see the updated status
     } else {
       toast.error("Failed to update claim status");
     }
@@ -616,34 +638,101 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                         {claimDetail.type}
                       </p>
                     </div>
+                    {claimDetail.gender && (
+                      <div>
+                        <p className="text-xs text-gray-600 uppercase">
+                          Gender
+                        </p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {claimDetail.gender}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
+
+                {/* Audit Trail */}
+                {claimDetail.audit && (
+                  <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
+                    <h3 className="font-semibold text-gray-900 mb-4">
+                      Audit Trail
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-xs text-gray-600 uppercase">
+                          Record Status
+                        </p>
+                        <Badge
+                          className={`mt-1 ${
+                            claimDetail.audit.recordStatus === "approved"
+                              ? "bg-green-100 text-green-800"
+                              : claimDetail.audit.recordStatus === "reviewed"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {claimDetail.audit.recordStatus.toUpperCase()}
+                        </Badge>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 uppercase">
+                          Reviewed By
+                        </p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {claimDetail.audit.reviewedBy || "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 uppercase">
+                          Approved By
+                        </p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {claimDetail.audit.approvedBy || "—"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
 
           {/* Footer */}
           <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
-            {/* Admin Buttons: Edit (in header), Approve, Cancel */}
-            {normalizedRole === "admin" || normalizedRole === "manager" ? (
+            {/* Dynamic buttons based on record_status */}
+            {!isEditMode && (
               <>
-                {claimDetail && canApprove && (
-                  <Button
-                    onClick={handleApproveClick}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Approve
-                  </Button>
+                {/* Pending claims: Show Review button (Regional Officer or Admin can review) */}
+                {claimDetail?.audit?.recordStatus === "pending" &&
+                  (canReview || canApprove) && (
+                    <Button
+                      onClick={handleReviewedClick}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Review
+                    </Button>
+                  )}
+                {/* Reviewed claims: Show Approve button (only Admin can approve) */}
+                {claimDetail?.audit?.recordStatus === "reviewed" &&
+                  canApprove && (
+                    <Button
+                      onClick={handleApproveClick}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Approve
+                    </Button>
+                  )}
+                {/* Approved claims: Show approved badge */}
+                {claimDetail?.audit?.recordStatus === "approved" && (
+                  <Badge className="bg-green-100 text-green-800 px-4 py-2 text-sm">
+                    <CheckCircle className="w-4 h-4 mr-2 inline" />
+                    Approved
+                  </Badge>
                 )}
-                <Button onClick={onClose} variant="outline">
-                  Cancel
-                </Button>
-              </>
-            ) : (
-              // Regional Officer Buttons: Edit (in header), Review, Cancel
-              <>
-                {claimDetail && canReview && (
+                {/* Fallback buttons if audit not present */}
+                {!claimDetail?.audit && canReview && (
                   <Button
                     onClick={handleReviewedClick}
                     className="bg-blue-600 hover:bg-blue-700"
@@ -652,11 +741,20 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                     Review
                   </Button>
                 )}
-                <Button onClick={onClose} variant="outline">
-                  Cancel
-                </Button>
+                {!claimDetail?.audit && canApprove && !canReview && (
+                  <Button
+                    onClick={handleApproveClick}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve
+                  </Button>
+                )}
               </>
             )}
+            <Button onClick={onClose} variant="outline">
+              Cancel
+            </Button>
           </div>
         </div>
       </div>

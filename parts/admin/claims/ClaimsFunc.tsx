@@ -99,16 +99,33 @@ export default function ClaimsManagement() {
     Paid: "approved",
   };
 
+  // Memoize manage claims params to prevent infinite re-renders
+  // Don't send period filter on initial load (use period_from/period_to or leave open)
+  const manageClaimsParams = useMemo(
+    () => ({
+      page: 1,
+      record_status: filters.recordStatus || undefined,
+      region_id: apiParams.region_id || undefined,
+      // Only use period if period_from/period_to are not set
+      period:
+        !apiParams.period_from && !apiParams.period_to
+          ? undefined
+          : apiParams.period,
+      period_from: apiParams.period_from || undefined,
+      period_to: apiParams.period_to || undefined,
+    }),
+    [
+      filters.recordStatus,
+      apiParams.region_id,
+      apiParams.period,
+      apiParams.period_from,
+      apiParams.period_to,
+    ]
+  );
+
   // 1. Fetch claims from manage-claims endpoint (supports record_status filtering)
   const { claims, pagination, loading, error, refetch, setPage } =
-    useManageClaims({
-      page: 1,
-      record_status: statusFilter ? recordStatusMap[statusFilter] : undefined,
-      region_id: apiParams.region_id,
-      period: apiParams.period,
-      period_from: apiParams.period_from,
-      period_to: apiParams.period_to,
-    });
+    useManageClaims(manageClaimsParams);
 
   // 2. Fetch dashboard metrics separately for KPI cards
   const { metrics, categories, monthlyChart } = useClaimsDashboard({
@@ -277,6 +294,15 @@ export default function ClaimsManagement() {
     clearDetail();
   }, [clearDetail]);
 
+  const handleRefreshAfterUpdate = useCallback(() => {
+    // Refresh the claims list
+    refetch();
+    // If modal is open with a claim, refetch that claim's detail
+    if (selectedClaimId) {
+      fetchDetail(selectedClaimId);
+    }
+  }, [refetch, fetchDetail, selectedClaimId]);
+
   const handleResetFilters = useCallback(() => {
     setSearchTerm("");
     setStatusFilter("");
@@ -440,7 +466,8 @@ export default function ClaimsManagement() {
             showRegionFilter={true}
             showBranchFilter={true}
             showMonthYearFilter={true}
-            showDateRangeFilter={false}
+            showDateRangeFilter={true}
+            showRecordStatusFilter={true}
           />
 
           {/* Claims Table */}
@@ -462,12 +489,13 @@ export default function ClaimsManagement() {
 
       {/* Claim Detail Modal */}
       <ClaimDetailModal
+        key={claimDetail?.audit?.recordStatus || selectedClaimId}
         claimDetail={claimDetail}
         claimId={selectedClaimId || undefined}
         isOpen={isDetailModalOpen}
         onClose={handleCloseDetailModal}
         loading={detailLoading}
-        onRefresh={refetch}
+        onRefresh={handleRefreshAfterUpdate}
       />
 
       {/* Claims Upload Modal */}

@@ -77,27 +77,29 @@ export const useManageClaims = (
       setLoading(true);
       setError(null);
 
-      // Build query parameters
+      // Build query parameters - only add non-empty values
       const queryParams = new URLSearchParams();
       queryParams.append("page", String(currentPage));
       if (params.perPage) {
         queryParams.append("per_page", String(params.perPage));
       }
-      if (params.record_status) {
+      if (params.record_status && params.record_status !== "") {
         queryParams.append("record_status", params.record_status);
       }
-      if (params.region_id) {
+      if (params.region_id && params.region_id !== "") {
         queryParams.append("region_id", params.region_id);
       }
-      if (params.period) {
+      if (params.period && params.period !== "") {
         queryParams.append("period", params.period);
       }
-      if (params.period_from) {
+      if (params.period_from && params.period_from !== "") {
         queryParams.append("period_from", params.period_from);
       }
-      if (params.period_to) {
+      if (params.period_to && params.period_to !== "") {
         queryParams.append("period_to", params.period_to);
       }
+
+      console.log("Fetching claims with params:", queryParams.toString());
 
       const response = await http.getData(
         `/api/claims/manage-claims?${queryParams.toString()}`
@@ -124,6 +126,12 @@ export const useManageClaims = (
       // Transform claims using manage-claims record transformer
       const transformedClaims = resultsData.map((record: ManageClaimRecord) =>
         transformManageClaimRecord(record)
+      );
+
+      console.log(
+        "Fetched and transformed claims:",
+        transformedClaims.length,
+        "records"
       );
       setClaims(transformedClaims);
 

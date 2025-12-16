@@ -44,6 +44,7 @@ export function useAdvancedFilters({
     selectedYear: currentYear,
     dateFrom: undefined,
     dateTo: undefined,
+    recordStatus: "",
   });
 
   // Regions data
@@ -166,14 +167,6 @@ export function useAdvancedFilters({
   const apiParams = useMemo(() => {
     const params: Record<string, string> = {};
 
-    // Month and year (always included)
-    if (filters.selectedMonth) {
-      params.month = filters.selectedMonth;
-    }
-    if (filters.selectedYear) {
-      params.year = filters.selectedYear;
-    }
-
     // Region (optional)
     if (filters.selectedRegionId) {
       params.region_id = filters.selectedRegionId;
@@ -184,12 +177,23 @@ export function useAdvancedFilters({
       params.branch_id = filters.selectedBranchId;
     }
 
-    // Date range (if provided)
+    // Period handling: convert month/year to YYYY-MM format for claims API
+    if (filters.selectedMonth && filters.selectedYear) {
+      const monthPadded = String(filters.selectedMonth).padStart(2, "0");
+      params.period = `${filters.selectedYear}-${monthPadded}`;
+    }
+
+    // Date range (if provided) - use for period_from/period_to
     if (filters.dateFrom) {
-      params.date_from = filters.dateFrom;
+      params.period_from = filters.dateFrom;
     }
     if (filters.dateTo) {
-      params.date_to = filters.dateTo;
+      params.period_to = filters.dateTo;
+    }
+
+    // Record status (if provided)
+    if (filters.recordStatus) {
+      params.record_status = filters.recordStatus;
     }
 
     return params;
@@ -219,6 +223,7 @@ export function useAdvancedFilters({
       selectedYear: currentYear,
       dateFrom: undefined,
       dateTo: undefined,
+      recordStatus: "",
     });
   }, [userRole, userRegionId, currentMonth, currentYear]);
 

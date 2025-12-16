@@ -25,10 +25,13 @@ export interface FilterConfig {
   selectedBranchId: string;
 
   // Time filters
-  selectedMonth: string;  // 1-12
-  selectedYear: string;   // YYYY
-  dateFrom?: string;      // YYYY-MM-DD
-  dateTo?: string;        // YYYY-MM-DD
+  selectedMonth: string; // 1-12
+  selectedYear: string; // YYYY
+  dateFrom?: string; // YYYY-MM-DD
+  dateTo?: string; // YYYY-MM-DD
+
+  // Record status filter
+  recordStatus?: "pending" | "reviewed" | "approved" | "";
 }
 
 export interface Region {
@@ -69,6 +72,7 @@ interface AdvancedFilterPanelProps {
   showBranchFilter?: boolean;
   showMonthYearFilter?: boolean;
   showDateRangeFilter?: boolean;
+  showRecordStatusFilter?: boolean;
 }
 
 export function AdvancedFilterPanel({
@@ -85,6 +89,7 @@ export function AdvancedFilterPanel({
   showBranchFilter = true,
   showMonthYearFilter = true,
   showDateRangeFilter = false,
+  showRecordStatusFilter = false,
 }: AdvancedFilterPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -97,13 +102,13 @@ export function AdvancedFilterPanel({
       return regions;
     }
     // Regional officer: only show their region
-    return regions.filter(r => r.id === userRegionId);
+    return regions.filter((r) => r.id === userRegionId);
   }, [regions, isAdmin, userRegionId]);
 
   // Filter branches based on selected region
   const visibleBranches = useMemo(() => {
     if (!filters.selectedRegionId) return [];
-    return branches.filter(b => b.region_id === filters.selectedRegionId);
+    return branches.filter((b) => b.region_id === filters.selectedRegionId);
   }, [branches, filters.selectedRegionId]);
 
   // Generate months (1-12)
@@ -194,8 +199,20 @@ export function AdvancedFilterPanel({
     });
   };
 
+  const handleRecordStatusChange = (status: string) => {
+    onFilterChange({
+      ...filters,
+      recordStatus:
+        status === "all" ? "" : (status as "pending" | "reviewed" | "approved"),
+    });
+  };
+
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4" role="search" aria-label="Advanced filters">
+    <div
+      className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4"
+      role="search"
+      aria-label="Advanced filters"
+    >
       {/* Header */}
       <button
         type="button"
@@ -227,58 +244,28 @@ export function AdvancedFilterPanel({
 
       {/* Filter Content */}
       {isExpanded && (
-        <div id="filter-content" className="px-4 py-4 border-t border-gray-200 space-y-4">
-          {/* Month and Year Selection */}
-          {showMonthYearFilter && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="month-filter" className="block text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  Month
-                </label>
-                <Select value={filters.selectedMonth} onValueChange={handleMonthChange}>
-                  <SelectTrigger id="month-filter">
-                    <SelectValue placeholder="Select month" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label htmlFor="year-filter" className="block text-sm font-medium text-gray-700 mb-2">
-                  Year
-                </label>
-                <Select value={filters.selectedYear} onValueChange={handleYearChange}>
-                  <SelectTrigger id="year-filter">
-                    <SelectValue placeholder="Select year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((year) => (
-                      <SelectItem key={year.value} value={year.value}>
-                        {year.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-
+        <div
+          id="filter-content"
+          className="px-4 py-4 border-t border-gray-200 space-y-4"
+        >
           {/* Region Filter (Admin only or single region for Regional Officer) */}
           {showRegionFilter && visibleRegions.length > 0 && (
             <div>
-              <label htmlFor="region-filter" className="block text-sm font-medium text-gray-700 mb-2">
-                Region {!isAdmin && <span className="text-xs text-gray-500">(Your Region)</span>}
+              <label
+                htmlFor="region-filter"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Region{" "}
+                {!isAdmin && (
+                  <span className="text-xs text-gray-500">(Your Region)</span>
+                )}
               </label>
 
               {isAdmin ? (
-                <Select value={filters.selectedRegionId || "all"} onValueChange={handleRegionChange}>
+                <Select
+                  value={filters.selectedRegionId || "all"}
+                  onValueChange={handleRegionChange}
+                >
                   <SelectTrigger id="region-filter">
                     <SelectValue placeholder="All Regions" />
                   </SelectTrigger>
@@ -293,7 +280,8 @@ export function AdvancedFilterPanel({
                 </Select>
               ) : (
                 <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm font-medium text-gray-900">
-                  {visibleRegions[0]?.name} {visibleRegions[0]?.code && `(${visibleRegions[0].code})`}
+                  {visibleRegions[0]?.name}{" "}
+                  {visibleRegions[0]?.code && `(${visibleRegions[0].code})`}
                 </div>
               )}
             </div>
@@ -302,7 +290,10 @@ export function AdvancedFilterPanel({
           {/* Branch Filter */}
           {showBranchFilter && (
             <div>
-              <label htmlFor="branch-filter" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="branch-filter"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Branch
               </label>
               <Select
@@ -329,8 +320,64 @@ export function AdvancedFilterPanel({
                 </SelectContent>
               </Select>
               {visibleBranches.length === 0 && filters.selectedRegionId && (
-                <p className="text-xs text-gray-500 mt-1">No branches found for selected region</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  No branches found for selected region
+                </p>
               )}
+            </div>
+          )}
+
+          {/* Month and Year Selection */}
+          {showMonthYearFilter && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="month-filter"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  <Calendar className="w-4 h-4 inline mr-1" />
+                  Month
+                </label>
+                <Select
+                  value={filters.selectedMonth}
+                  onValueChange={handleMonthChange}
+                >
+                  <SelectTrigger id="month-filter">
+                    <SelectValue placeholder="Select month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="year-filter"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Year
+                </label>
+                <Select
+                  value={filters.selectedYear}
+                  onValueChange={handleYearChange}
+                >
+                  <SelectTrigger id="year-filter">
+                    <SelectValue placeholder="Select year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map((year) => (
+                      <SelectItem key={year.value} value={year.value}>
+                        {year.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
 
@@ -338,30 +385,64 @@ export function AdvancedFilterPanel({
           {showDateRangeFilter && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="date-from" className="block text-sm font-medium text-gray-700 mb-2">
-                  Date From
+                <label
+                  htmlFor="date-from"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Period From (YYYY-MM)
                 </label>
                 <input
                   id="date-from"
-                  type="date"
+                  type="month"
                   value={filters.dateFrom || ""}
                   onChange={(e) => handleDateFromChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="2025-01"
                 />
               </div>
 
               <div>
-                <label htmlFor="date-to" className="block text-sm font-medium text-gray-700 mb-2">
-                  Date To
+                <label
+                  htmlFor="date-to"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Period To (YYYY-MM)
                 </label>
                 <input
                   id="date-to"
-                  type="date"
+                  type="month"
                   value={filters.dateTo || ""}
                   onChange={(e) => handleDateToChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="2025-06"
                 />
               </div>
+            </div>
+          )}
+
+          {/* Record Status Filter */}
+          {showRecordStatusFilter && (
+            <div>
+              <label
+                htmlFor="status-filter"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Record Status
+              </label>
+              <Select
+                value={filters.recordStatus || "all"}
+                onValueChange={handleRecordStatusChange}
+              >
+                <SelectTrigger id="status-filter">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="reviewed">Reviewed</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           )}
 
