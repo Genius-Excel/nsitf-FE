@@ -180,14 +180,22 @@ export const useBulkClaimActions = (): UseBulkClaimActionsReturn => {
         setLoading(true);
         setError(null);
 
-        // The API expects an `action` field for single updates (same as bulk)
+        // Try sending record_status directly instead of action
         const actionPayload = {
-          action: recordStatus === "reviewed" ? "review" : "approve",
+          record_status: recordStatus,
         };
+
+        console.log("PATCH request:", {
+          url: `/api/claims/manage-claims/${claimId}`,
+          payload: actionPayload,
+        });
+
         const response = await http.patchDataJson(
           actionPayload,
           `/api/claims/manage-claims/${claimId}`
         );
+
+        console.log("PATCH response:", response);
 
         if (!response?.data) {
           throw new Error("Invalid response from server");

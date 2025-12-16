@@ -167,6 +167,12 @@ export interface ClaimDetail {
     class: string | null;
     paymentPeriod: string | null;
   };
+  audit?: {
+    recordStatus: "pending" | "reviewed" | "approved";
+    reviewedBy: string | null;
+    approvedBy: string | null;
+  };
+  gender?: string | null;
 }
 
 export interface DashboardMetrics {
@@ -314,6 +320,12 @@ export const transformManageRecordToDetail = (
     class: record.claim_class || null,
     paymentPeriod: record.period || null,
   },
+  audit: {
+    recordStatus: record.record_status,
+    reviewedBy: record.reviewed_by || null,
+    approvedBy: record.approved_by || null,
+  },
+  gender: record.gender || null,
 });
 
 /**
