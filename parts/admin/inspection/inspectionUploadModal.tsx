@@ -40,14 +40,22 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<any[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStage, setUploadStage] = useState<"idle" | "uploading" | "processing" | "complete">("idle");
+  const [uploadStage, setUploadStage] = useState<
+    "idle" | "uploading" | "processing" | "complete" | "error"
+  >("idle");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch regions and branches
   const { data: regions, loading: regionsLoading } = useRegions();
-  const { data: branches, loading: branchesLoading, fetchBranches, clearBranches } = useBranches();
+  const {
+    data: branches,
+    loading: branchesLoading,
+    fetchBranches,
+    clearBranches,
+  } = useBranches();
 
   // Get user info for role-based filtering
   const user = getUserFromStorage();
@@ -58,7 +66,8 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
   const managedBranchIds: string[] =
     (user as any)?.managed_branches ||
     (user as any)?.managed_branch_ids ||
-    (user as any)?.branch_ids || [];
+    (user as any)?.branch_ids ||
+    [];
 
   // Auto-select region for regional officers (but allow them to change it)
   useEffect(() => {
@@ -106,6 +115,7 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
 
   const handleUpload = async () => {
     if (!file || !selectedRegionId || !selectedBranchId || !period) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -126,32 +136,75 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
         });
       }, 200);
 
-      // TODO: Implement Inspection upload API call
-      // const result = await uploadFile(selectedRegionId, selectedBranchId, period, file);
+      // Create FormData and upload
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("region_id", selectedRegionId);
+      formData.append("branch_id", selectedBranchId);
+      formData.append("period", period);
+      formData.append("sheet", "INSPECTIONS");
 
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const HttpService = (await import("@/services/httpServices")).default;
+      const http = new HttpService();
+      const response = await http.postData(
+        formData,
+        "/api/inspection-ops/reports"
+      );
 
       clearInterval(progressInterval);
       setUploadProgress(95);
       setUploadStage("processing");
 
       // Simulate processing time
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       setUploadProgress(100);
       setUploadStage("complete");
       setUploadSuccess(true);
-      toast.success("Inspection data uploaded successfully!");
+
+      const uploadData = response?.data;
+
+      // Check if upload completed with errors
+      if (
+        uploadData?.status === "completed_with_errors" &&
+        uploadData?.error_report
+      ) {
+        const inspectionErrors =
+          uploadData.error_report?.INSPECTIONS?.errors || [];
+
+        setUploadStage("error");
+        setError("Upload completed with errors");
+        setErrorDetails(inspectionErrors);
+
+        toast.error("Upload failed. Please check the errors below.");
+        return;
+      }
+
+      const recordCount =
+        uploadData?.uploaded_records || uploadData?.total || 0;
+
+      toast.success(`Successfully uploaded ${recordCount} inspections!`);
 
       setTimeout(() => {
         handleClose();
         onUploadSuccess();
       }, 2000);
     } catch (err: any) {
-      const message = err?.response?.data?.message || err.message || "Failed to upload inspection data";
+      const message =
+        err?.response?.data?.message ||
+        err.message ||
+        "Failed to upload inspection data";
+
+      // Check if error response has error_report
+      const errorReport =
+        err?.response?.data?.error_report?.INSPECTIONS?.errors;
+      if (errorReport && errorReport.length > 0) {
+        setErrorDetails(errorReport);
+      }
+
       setError(message);
       toast.error(message);
-      setUploadStage("idle");
+      setUploadStage("error");
     } finally {
       setLoading(false);
     }
@@ -164,6 +217,7 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
     setFile(null);
     setUploadSuccess(false);
     setError(null);
+    setErrorDetails([]);
     setUploadProgress(0);
     setUploadStage("idle");
     onClose();
@@ -205,7 +259,10 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
           <div className="p-4 sm:p-6 space-y-6">
             {/* Region Selection - Always visible */}
             <div>
-              <label htmlFor="region-select" className="block text-sm font-semibold text-gray-900 mb-2">
+              <label
+                htmlFor="region-select"
+                className="block text-sm font-semibold text-gray-900 mb-2"
+              >
                 Select Region <span className="text-red-500">*</span>
               </label>
               <select
@@ -231,7 +288,10 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
             {/* Branch Selection */}
             {selectedRegionId && (
               <div>
-                <label htmlFor="branch-select" className="block text-sm font-semibold text-gray-900 mb-2">
+                <label
+                  htmlFor="branch-select"
+                  className="block text-sm font-semibold text-gray-900 mb-2"
+                >
                   Select Branch <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -255,7 +315,9 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
                   ))}
                 </select>
                 {branchesLoading && (
-                  <p className="text-xs text-gray-500 mt-1">Loading branches...</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Loading branches...
+                  </p>
                 )}
               </div>
             )}
@@ -263,7 +325,10 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
             {/* Period Selection */}
             {selectedBranchId && (
               <div>
-                <label htmlFor="period-input" className="block text-sm font-semibold text-gray-900 mb-2">
+                <label
+                  htmlFor="period-input"
+                  className="block text-sm font-semibold text-gray-900 mb-2"
+                >
                   Period <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -339,7 +404,9 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
                   <p className="text-sm font-medium text-gray-700 mb-1">
                     {file ? file.name : "Click to upload Excel file"}
                   </p>
-                  <p className="text-xs text-gray-500">Accepted formats: .xlsx, .xls</p>
+                  <p className="text-xs text-gray-500">
+                    Accepted formats: .xlsx, .xls
+                  </p>
                 </div>
               </div>
             )}
@@ -384,11 +451,52 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                  <div>
+                  <div className="flex-1">
                     <p className="font-semibold text-red-800 mb-1">
                       Upload failed:
                     </p>
                     <p className="text-sm text-red-700">{error}</p>
+
+                    {/* Display detailed errors */}
+                    {errorDetails && errorDetails.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        {errorDetails.map((err, index) => (
+                          <div
+                            key={index}
+                            className="bg-white border border-red-200 rounded p-3"
+                          >
+                            <p className="text-sm font-medium text-red-900 mb-1">
+                              {err.error === "missing_columns" &&
+                                "Missing Columns"}
+                              {err.error === "validation_error" &&
+                                "Validation Error"}
+                              {err.error &&
+                                err.error !== "missing_columns" &&
+                                err.error !== "validation_error" &&
+                                err.error}
+                            </p>
+                            <p className="text-xs text-red-700">
+                              {err.message}
+                            </p>
+                            {err.missing_columns &&
+                              err.missing_columns.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="text-xs font-medium text-red-800 mb-1">
+                                    Required columns:
+                                  </p>
+                                  <ul className="list-disc list-inside text-xs text-red-700 space-y-0.5">
+                                    {err.missing_columns.map(
+                                      (col: string, colIndex: number) => (
+                                        <li key={colIndex}>{col}</li>
+                                      )
+                                    )}
+                                  </ul>
+                                </div>
+                              )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

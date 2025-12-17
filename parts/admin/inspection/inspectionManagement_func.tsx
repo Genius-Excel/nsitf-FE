@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Upload } from "lucide-react";
+import React, { useState, useMemo, useCallback } from "react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -13,8 +13,6 @@ import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPa
 import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import ScheduleInspectionModal from "@/components/shedule-inspection";
 import ViewAllInspectionsModal from "@/components/view-all-inspection";
-import { getUserFromStorage } from "@/lib/auth";
-import { canManageInspection } from "@/lib/permissions";
 import {
   InspectionStatisticsCards,
   InspectionBarChart,
@@ -24,29 +22,26 @@ import {
 } from "./inspectionDesign";
 import { InspectionDetailModal } from "./inspectionModal";
 import { InspectionUploadModal } from "./inspectionUploadModal";
-import { useInspectionDashboard } from "@/hooks/inspection/useInspectionDashboard";
-import { useInspectionFilters } from "@/hooks/inspection/useInspectionFilters";
+import { useManageInspections } from "@/hooks/inspection/UsemanageInspections";
+import { useInspectionMetrics } from "@/hooks/inspection/UseinspectionMetrics";
+import { useSingleInspection } from "@/hooks/inspection/UsesingleInspection";
 import type {
   InspectionRecord,
   InspectionStatCard,
 } from "@/lib/types/inspection";
 
 export default function InspectionManagement() {
-  // ============= PERMISSIONS REMOVED =============
-  // All users can access upload and management features
-
   // ============= STATE =============
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isViewAllModalOpen, setIsViewAllModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [selectedInspection, setSelectedInspection] =
-    useState<InspectionRecord | null>(null);
+  const [selectedInspectionId, setSelectedInspectionId] = useState<
+    string | null
+  >(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [performanceThreshold, setPerformanceThreshold] = useState<number | undefined>(undefined);
-  const [periodFilter, setPeriodFilter] = useState("");
 
-  // ============= HOOKS =============
+  // ============= ADVANCED FILTERS =============
   const {
     filters,
     regions,
@@ -60,52 +55,177 @@ export default function InspectionManagement() {
     module: "inspection",
   });
 
-  const { data, loading, error } = useInspectionDashboard(apiParams);
-  const { filteredRecords, totalCount, filteredCount } = useInspectionFilters(
-    data?.inspectionSummary || [],
-    { searchTerm, performanceThreshold, periodFilter }
+  // ============= MEMOIZE PARAMS =============
+  const manageInspectionsParams = useMemo(
+    () => ({
+      page: 1,
+      branch_id: apiParams.branch_id || undefined,
+      region_id: apiParams.region_id || undefined,
+      record_status: filters.recordStatus || undefined,
+      period:
+        !apiParams.period_from && !apiParams.period_to
+          ? undefined
+          : apiParams.period,
+      period_from: apiParams.period_from || undefined,
+      period_to: apiParams.period_to || undefined,
+    }),
+    [
+      apiParams.branch_id,
+      apiParams.region_id,
+      filters.recordStatus,
+      apiParams.period,
+      apiParams.period_from,
+      apiParams.period_to,
+    ]
   );
 
-  // Debug logging
-  console.log("🔍 [InspectionManagement] Component state:", {
-    loading,
-    hasError: !!error,
-    error,
-    hasData: !!data,
-  });
+  // ============= API HOOKS =============
+  // 1. Fetch inspections from manage-inspections endpoint
+  const { inspections, pagination, loading, error, refetch, setPage } =
+    useManageInspections(manageInspectionsParams);
+
+  // 2. Fetch dashboard metrics (without filters - shows overall data)
+  const { metrics, monthlyChart } = useInspectionMetrics();
+
+  // 3. Fetch single inspection detail (for modal)
+  const {
+    data: inspectionDetail,
+    loading: detailLoading,
+    fetchDetail,
+    clearDetail,
+  } = useSingleInspection();
+
+  // ============= TRANSFORM FLAT DATA TO NESTED STRUCTURE FOR MODAL =============
+  const transformedInspectionDetail = useMemo(() => {
+    console.log("🔄 [Transform] inspectionDetail:", inspectionDetail);
+    console.log("🔄 [Transform] recordStatus:", inspectionDetail?.recordStatus);
+    console.log("🔄 [Transform] reviewedBy:", inspectionDetail?.reviewedBy);
+
+    if (!inspectionDetail) return null;
+
+    // Calculate recovery rate and demand notices percent
+    const recoveryRate =
+      inspectionDetail.debtEstablished > 0
+        ? (inspectionDetail.debtRecovered / inspectionDetail.debtEstablished) *
+          100
+        : 0;
+
+    const demandNoticesPercent =
+      inspectionDetail.inspectionsConducted > 0
+        ? (inspectionDetail.demandNotice /
+            inspectionDetail.inspectionsConducted) *
+          100
+        : 0;
+
+    const outstandingDebt =
+      inspectionDetail.debtEstablished - inspectionDetail.debtRecovered;
+
+    const averageDebtPerInspection =
+      inspectionDetail.inspectionsConducted > 0
+        ? inspectionDetail.debtEstablished /
+          inspectionDetail.inspectionsConducted
+        : 0;
+
+    return {
+      id: inspectionDetail.id,
+      branchInformation: {
+        branchName: inspectionDetail.branch,
+        region: inspectionDetail.region,
+        period: inspectionDetail.period,
+      },
+      performanceMetrics: {
+        performanceRate: inspectionDetail.performanceRate,
+        recoveryRate: Math.round(recoveryRate * 10) / 10,
+      },
+      inspectionActivity: {
+        inspectionsConducted: inspectionDetail.inspectionsConducted,
+        demandNoticesIssued: inspectionDetail.demandNotice,
+        demandNoticesPercent: Math.round(demandNoticesPercent * 10) / 10,
+      },
+      financialSummary: {
+        debtEstablished: inspectionDetail.debtEstablished,
+        debtRecovered: inspectionDetail.debtRecovered,
+        outstandingDebt: outstandingDebt,
+        averageDebtPerInspection: averageDebtPerInspection,
+      },
+      // Audit fields (nested like claims)
+      audit: {
+        recordStatus: inspectionDetail.recordStatus,
+        reviewedBy: inspectionDetail.reviewedBy,
+        approvedBy: inspectionDetail.approvedBy,
+      },
+    };
+  }, [inspectionDetail]);
+
+  // ============= CLIENT-SIDE FILTERING =============
+  const filteredInspections = useMemo(() => {
+    if (!searchTerm) return inspections;
+
+    const lowerSearch = searchTerm.toLowerCase();
+    return inspections.filter(
+      (inspection) =>
+        inspection.branch.toLowerCase().includes(lowerSearch) ||
+        inspection.region?.toLowerCase().includes(lowerSearch) ||
+        inspection.period.toLowerCase().includes(lowerSearch)
+    );
+  }, [inspections, searchTerm]);
 
   // ============= COMPUTED VALUES =============
-  const hasActiveFilters = searchTerm || performanceThreshold !== undefined || periodFilter;
+  const hasActiveFilters = searchTerm;
 
   // ============= HANDLERS =============
-  const handleViewInspection = (inspection: InspectionRecord) => {
-    setSelectedInspection(inspection);
-    setIsDetailModalOpen(true);
-  };
+  const handleViewInspection = useCallback(
+    (inspection: InspectionRecord) => {
+      console.log(
+        "🔍 [handleViewInspection] Opening modal for:",
+        inspection.id,
+        inspection
+      );
+      setSelectedInspectionId(inspection.id);
+      // Use list data directly since detail endpoint doesn't include audit fields
+      fetchDetail(inspection.id);
+      setIsDetailModalOpen(true);
+    },
+    [fetchDetail]
+  );
 
-  const handleCloseDetailModal = () => {
+  const handleCloseDetailModal = useCallback(() => {
     setIsDetailModalOpen(false);
-    setSelectedInspection(null);
-  };
+    setSelectedInspectionId(null);
+    clearDetail();
+  }, [clearDetail]);
 
-  const handleUploadClick = () => {
+  const handleRefreshAfterUpdate = useCallback(() => {
+    console.log("🔄 [handleRefreshAfterUpdate] Refreshing data...");
+    console.log(
+      "🔄 [handleRefreshAfterUpdate] Selected ID:",
+      selectedInspectionId
+    );
+    refetch();
+    if (selectedInspectionId) {
+      console.log(
+        "🔄 [handleRefreshAfterUpdate] Fetching detail for:",
+        selectedInspectionId
+      );
+      fetchDetail(selectedInspectionId);
+    }
+  }, [refetch, fetchDetail, selectedInspectionId]);
+
+  const handleUploadClick = useCallback(() => {
     setIsUploadModalOpen(true);
-  };
+  }, []);
 
-  const handleUploadSuccess = () => {
-    // Refresh dashboard after successful upload
-    window.location.reload();
-  };
+  const handleUploadSuccess = useCallback(() => {
+    refetch();
+    setIsUploadModalOpen(false);
+  }, [refetch]);
 
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setSearchTerm("");
-    setPerformanceThreshold(undefined);
-    setPeriodFilter("");
     resetFilters();
-  };
+  }, [resetFilters]);
 
-  const handleExport = () => {
-
+  const handleExport = useCallback(() => {
     const headers = [
       "Branch",
       "Inspections Conducted",
@@ -118,7 +238,7 @@ export default function InspectionManagement() {
 
     const csvContent = [
       headers.join(","),
-      ...filteredRecords.map((inspection) =>
+      ...filteredInspections.map((inspection) =>
         [
           `"${inspection.branch}"`,
           inspection.inspectionsConducted,
@@ -142,7 +262,74 @@ export default function InspectionManagement() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  };
+  }, [filteredInspections]);
+
+  // ============= PREPARE STATS =============
+  const stats: InspectionStatCard[] = useMemo(() => {
+    console.log("🔍 [InspectionManagement] Computing stats, metrics:", metrics);
+
+    if (!metrics) {
+      console.log(
+        "⚠️ [InspectionManagement] No metrics available, returning empty array"
+      );
+      return [];
+    }
+
+    const computedStats = [
+      {
+        title: "Total Inspection",
+        value: metrics.totalInspections,
+        bgColor: "#3b82f6",
+        icon: "notice",
+      },
+      {
+        title: "Cumulative Debt Established",
+        value: `₦${(metrics.totalDebtEstablished / 1_000_000).toFixed(1)}M`,
+        bgColor: "#f59e0b",
+        icon: "file-text",
+      },
+      {
+        title: "Demand Notice",
+        value: metrics.totalDemandNotice,
+        bgColor: "#22c55e",
+        icon: "alert-circle",
+      },
+      {
+        title: "Performance Rate",
+        value: `${metrics.performanceRate}%`,
+        bgColor: "#3b82f6",
+        icon: "trending-up",
+      },
+      {
+        title: "Cumulative Debt Recovered",
+        value: `₦${(metrics.totalDebtRecovered / 1_000_000).toFixed(1)}M`,
+        bgColor: "#16a34a",
+        icon: "naira-sign",
+      },
+    ];
+
+    console.log("✅ [InspectionManagement] Stats computed:", computedStats);
+    return computedStats;
+  }, [metrics]);
+
+  // ============= MONTHLY CHART DATA =============
+  const chartData = useMemo(() => {
+    if (!monthlyChart) return { data: [], scale: { max: 0, ticks: [] } };
+
+    const maxValue = Math.max(
+      ...monthlyChart.map((d) =>
+        Math.max(d.debtsEstablished || 0, d.debtsRecovered || 0)
+      )
+    );
+
+    return {
+      data: monthlyChart,
+      scale: {
+        max: maxValue,
+        ticks: Array.from({ length: 6 }, (_, i) => (maxValue / 5) * i),
+      },
+    };
+  }, [monthlyChart]);
 
   // ============= LOADING & ERROR STATES =============
   if (loading) {
@@ -153,52 +340,6 @@ export default function InspectionManagement() {
     return <ErrorState error={new Error(error)} />;
   }
 
-  if (!data) {
-    return <ErrorState error={new Error("No dashboard data available")} />;
-  }
-
-  // ============= PREPARE STATS =============
-  console.log("📊 [InspectionManagement] Preparing stats from data:", data.metricCards);
-
-  const stats: InspectionStatCard[] = [
-    {
-      title: "Total Inspection",
-      value: data.metricCards.totalInspections,
-      bgColor: "#3b82f6",
-      icon: "notice",
-    },
-    {
-      title: "Cumulative Debt Established",
-      value: `₦${(data.metricCards.totalDebtEstablished / 1_000_000).toFixed(
-        1
-      )}M`,
-      bgColor: "#f59e0b",
-      icon: "file-text",
-    },
-    {
-      title: "Demand Notice",
-      value: data.metricCards.totalDemandNotice,
-      bgColor: "#22c55e",
-      icon: "alert-circle",
-    },
-    {
-      title: "Performance Rate",
-      value: `${data.metricCards.performanceRate}%`,
-      bgColor: "#3b82f6",
-      icon: "trending-up",
-    },
-    {
-      title: "Cumulative Debt Recovered",
-      value: `₦${(data.metricCards.totalDebtRecovered / 1_000_000).toFixed(
-        1
-      )}M`,
-      bgColor: "#16a34a",
-      icon: "naira-sign",
-    },
-  ];
-
-  console.log("📊 [InspectionManagement] Stats array to render:", stats);
-
   // ============= RENDER =============
   return (
     <div className="space-y-10">
@@ -207,7 +348,7 @@ export default function InspectionManagement() {
         title="Inspection Management"
         description="Track and manage employer inspections, compliance letters, and debt recovery"
         action={
-          <PermissionGuard permission="manage_inspection" fallback={null}>
+          <PermissionGuard permission="manage_inspection" fallback={<></>}>
             <button
               type="button"
               onClick={() => setIsScheduleModalOpen(true)}
@@ -224,7 +365,7 @@ export default function InspectionManagement() {
       <InspectionStatisticsCards stats={stats} />
 
       {/* Bar Chart */}
-      <InspectionBarChart data={data.monthlyDebtsComparison} />
+      <InspectionBarChart data={chartData} />
 
       {/* Search and Filters */}
       <SearchAndFilters
@@ -240,49 +381,22 @@ export default function InspectionManagement() {
         filters={filters}
         onFilterChange={handleFilterChange}
         onReset={handleResetFilters}
-        totalEntries={totalCount}
-        filteredCount={filteredCount}
+        totalEntries={inspections.length}
+        filteredCount={filteredInspections.length}
         userRole={userRole}
         userRegionId={userRegionId}
         showRegionFilter={true}
         showBranchFilter={true}
-        showMonthYearFilter={true}
-        showDateRangeFilter={false}
+        showMonthYearFilter={false}
+        showDateRangeFilter={true}
       />
 
       {/* Inspections Table */}
       <InspectionsTable
-        inspections={filteredRecords}
+        inspections={filteredInspections}
         onView={handleViewInspection}
+        onRefresh={handleRefreshAfterUpdate}
       />
-
-      {/* Upcoming Inspections Card */}
-      <Card>
-        <CardHeader className="flex justify-between items-center flex-row">
-          <h2 className="text-xl font-semibold">Upcoming Inspections</h2>
-          <Button variant="outline" onClick={() => setIsViewAllModalOpen(true)}>
-            View All
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {data.upcomingInspections.length > 0 ? (
-            data.upcomingInspections
-              .slice(0, 4)
-              .map((inspection) => (
-                <UpcomingInspectionCard
-                  key={inspection.id}
-                  companyName={inspection.employer}
-                  date={inspection.date}
-                  inspectorName={inspection.inspector}
-                  location={inspection.location}
-                  status={inspection.status}
-                />
-              ))
-          ) : (
-            <p className="text-gray-500">No upcoming inspections</p>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Modals */}
       <ScheduleInspectionModal
@@ -293,13 +407,14 @@ export default function InspectionManagement() {
       <ViewAllInspectionsModal
         isOpen={isViewAllModalOpen}
         onClose={() => setIsViewAllModalOpen(false)}
-        inspections={data.upcomingInspections}
+        inspections={[]}
       />
 
       <InspectionDetailModal
-        inspection={selectedInspection}
+        inspection={transformedInspectionDetail}
         isOpen={isDetailModalOpen}
         onClose={handleCloseDetailModal}
+        onRefresh={handleRefreshAfterUpdate}
       />
 
       <InspectionUploadModal

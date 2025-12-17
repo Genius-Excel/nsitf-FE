@@ -23,7 +23,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
-import { useInspectionDetail } from "@/hooks/inspection/useInspectionDetail";
 import type { InspectionRecord } from "@/lib/types/inspection";
 import {
   formatInspectionCurrency,
@@ -32,25 +31,33 @@ import {
 } from "@/lib/types/inspection";
 import { getUserFromStorage, type UserRole } from "@/lib/auth";
 import { toast } from "sonner";
+import { useBulkInspectionActions } from "@/hooks/inspection/UsebulkInspectionActions";
 
 interface InspectionDetailModalProps {
-  inspection: InspectionRecord | null;
+  inspection: any | null;
   isOpen: boolean;
   onClose: () => void;
+  onRefresh?: () => void;
 }
 
 export const InspectionDetailModal: React.FC<InspectionDetailModalProps> = ({
   inspection,
   isOpen,
   onClose,
+  onRefresh,
 }) => {
-  // ============= FETCH DETAIL DATA =============
-  // This is the critical fix - actually fetch detail from API
+  // ============= USE PROP DATA =============
+  // Data is already fetched by parent component using UsesingleInspection hook
+  const detailData = inspection;
+
+  // ============= BULK ACTIONS HOOK =============
   const {
-    data: detailData,
-    loading,
-    error,
-  } = useInspectionDetail(inspection?.id);
+    updateSingleInspection,
+    updateInspectionDetails,
+    loading: apiLoading,
+  } = useBulkInspectionActions();
+  const loading = false;
+  const error = null;
 
   // State management
   const [userRole, setUserRole] = useState<UserRole | null>(null);
@@ -71,6 +78,8 @@ export const InspectionDetailModal: React.FC<InspectionDetailModalProps> = ({
   // Initialize edited data when modal opens
   useEffect(() => {
     if (isOpen && detailData) {
+      console.log("📊 [Modal] detailData updated:", detailData);
+      console.log("📊 [Modal] Audit status:", detailData?.audit?.recordStatus);
       setEditedData(detailData);
       setIsEditMode(false);
     }
@@ -142,7 +151,9 @@ Generated on: ${new Date().toLocaleString()}
     );
   const canReview =
     normalizedRole === "regional_manager" ||
-    normalizedRole === "regional officer";
+    normalizedRole === "regional officer" ||
+    normalizedRole === "admin" ||
+    normalizedRole === "manager";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
@@ -162,17 +173,53 @@ Generated on: ${new Date().toLocaleString()}
   };
 
   const handleSaveEdit = async () => {
+    if (!detailData?.id || !editedData) {
+      toast.error("Inspection ID or data not found");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // TODO: Call API to save edited data
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Build payload with snake_case field names for API
+      const payload: any = {};
 
-      toast.success("Inspection record updated successfully");
-      setIsEditMode(false);
-      // Optionally refresh data here
+      // Performance Metrics
+      if (editedData.performanceMetrics) {
+        payload.performance_rate =
+          editedData.performanceMetrics.performanceRate;
+      }
+
+      // Inspection Activity
+      if (editedData.inspectionActivity) {
+        payload.inspection_conducted =
+          editedData.inspectionActivity.inspectionsConducted;
+        payload.demand_notice =
+          editedData.inspectionActivity.demandNoticesIssued;
+      }
+
+      // Financial Summary
+      if (editedData.financialSummary) {
+        payload.cumulative_debt_established =
+          editedData.financialSummary.debtEstablished;
+      }
+
+      // Branch Information
+      if (editedData.branchInformation) {
+        payload.period = editedData.branchInformation.period;
+      }
+
+      const success = await updateInspectionDetails(detailData.id, payload);
+
+      if (success) {
+        toast.success("Inspection updated successfully");
+        setIsEditMode(false);
+        if (onRefresh) onRefresh();
+      } else {
+        toast.error("Failed to update inspection");
+      }
     } catch (error) {
-      toast.error("Failed to update inspection record");
-      console.error("Save error:", error);
+      toast.error("Failed to update inspection");
+      console.error("Error updating inspection:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -219,25 +266,37 @@ Generated on: ${new Date().toLocaleString()}
   };
 
   const handleConfirmAction = async () => {
-    setIsSubmitting(true);
-    try {
-      // TODO: Call API to update status
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    if (!detailData?.id || !confirmAction) return;
 
-      const message =
+    console.log("Updating inspection:", { id: detailData.id, confirmAction });
+
+    const success = await updateSingleInspection(
+      detailData.id,
+      confirmAction === "reviewed" ? "reviewed" : "approved"
+    );
+
+    console.log("Update result:", success);
+
+    if (success) {
+      toast.success(
         confirmAction === "reviewed"
-          ? "Inspection record marked as reviewed"
-          : "Inspection record approved successfully";
+          ? "Inspection marked as reviewed successfully"
+          : "Inspection approved successfully"
+      );
 
-      toast.success(message);
       setShowConfirmDialog(false);
-      onClose();
-    } catch (error) {
-      toast.error("Failed to update status");
-      console.error("Action error:", error);
-    } finally {
-      setIsSubmitting(false);
       setConfirmAction(null);
+
+      // Refresh both the inspections list and the detail
+      if (onRefresh) {
+        onRefresh();
+      }
+
+      // Keep modal open but refetch detail to show updated status
+      // The parent should handle refetching via onRefresh, which will update inspection prop
+      // Don't close the modal so user can see the updated status
+    } else {
+      toast.error("Failed to update inspection status");
     }
   };
 
@@ -348,10 +407,26 @@ Generated on: ${new Date().toLocaleString()}
                 <h2 className="text-xl font-bold text-gray-900">
                   Inspection Details
                 </h2>
-                <p className="text-sm text-gray-600">
-                  {displayData?.branchInformation?.branchName} -{" "}
-                  {displayData?.branchInformation?.period}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-gray-600">
+                    {displayData?.branchInformation?.branchName} -{" "}
+                    {displayData?.branchInformation?.period}
+                  </p>
+                  <Badge
+                    className={`text-xs ${
+                      detailData?.audit?.recordStatus?.toLowerCase() ===
+                      "pending"
+                        ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+                        : detailData?.audit?.recordStatus?.toLowerCase() ===
+                          "reviewed"
+                        ? "bg-blue-100 text-blue-800 border-blue-300"
+                        : "bg-green-100 text-green-800 border-green-300"
+                    }`}
+                  >
+                    {detailData?.audit?.recordStatus?.toUpperCase() ||
+                      "PENDING"}
+                  </Badge>
+                </div>
               </div>
             </div>
 
@@ -649,33 +724,109 @@ Generated on: ${new Date().toLocaleString()}
                 </div>
               </div>
             </div>
+
+            {/* Audit Trail */}
+            {detailData.audit && (
+              <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
+                <h3 className="font-semibold text-gray-900 mb-4">
+                  Audit Trail
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase">
+                      Record Status
+                    </p>
+                    <Badge
+                      className={`mt-1 ${
+                        detailData.audit.recordStatus === "approved"
+                          ? "bg-green-100 text-green-800"
+                          : detailData.audit.recordStatus === "reviewed"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {detailData.audit.recordStatus.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase">
+                      Reviewed By
+                    </p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {detailData.audit.reviewedBy || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase">
+                      Approved By
+                    </p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {detailData.audit.approvedBy || "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer */}
           <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
-            <Button type="button" onClick={onClose} variant="outline">
+            {/* Dynamic buttons based on record_status */}
+            {!isEditMode && (
+              <>
+                {/* Pending inspections: Show Review button (Regional Officer or Admin can review) */}
+                {detailData?.audit?.recordStatus === "pending" &&
+                  (canReview || canApprove) && (
+                    <Button
+                      onClick={handleReviewedClick}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Review
+                    </Button>
+                  )}
+                {/* Reviewed inspections: Show Approve button (only Admin can approve) */}
+                {detailData?.audit?.recordStatus === "reviewed" &&
+                  canApprove && (
+                    <Button
+                      onClick={handleApproveClick}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Approve
+                    </Button>
+                  )}
+                {/* Approved inspections: Show approved badge */}
+                {detailData?.audit?.recordStatus === "approved" && (
+                  <Badge className="bg-green-100 text-green-800 px-4 py-2 text-sm">
+                    <CheckCircle className="w-4 h-4 mr-2 inline" />
+                    Approved
+                  </Badge>
+                )}
+                {/* Fallback buttons if audit not present */}
+                {!detailData?.audit && canReview && (
+                  <Button
+                    onClick={handleReviewedClick}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Review
+                  </Button>
+                )}
+                {!detailData?.audit && canApprove && !canReview && (
+                  <Button
+                    onClick={handleApproveClick}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve
+                  </Button>
+                )}
+              </>
+            )}
+            <Button onClick={onClose} variant="outline">
               Cancel
             </Button>
-            {canReview && (
-              <Button
-                type="button"
-                onClick={handleReviewedClick}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Mark as Reviewed
-              </Button>
-            )}
-            {canApprove && (
-              <Button
-                type="button"
-                onClick={handleApproveClick}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Approve
-              </Button>
-            )}
           </div>
         </div>
       </div>
