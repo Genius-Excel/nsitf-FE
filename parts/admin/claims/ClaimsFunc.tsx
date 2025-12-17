@@ -129,14 +129,8 @@ export default function ClaimsManagement() {
   const { claims, pagination, loading, error, refetch, setPage } =
     useManageClaims(manageClaimsParams);
 
-  // 2. Fetch dashboard metrics separately for KPI cards
-  const { metrics, categories, monthlyChart } = useClaimsDashboard({
-    branchId: apiParams.branch_id,
-    regionId: apiParams.region_id,
-    period: apiParams.period,
-    periodFrom: apiParams.period_from,
-    periodTo: apiParams.period_to,
-  });
+  // 2. Fetch dashboard metrics separately for KPI cards (without filters - shows overall data)
+  const { metrics, categories, monthlyChart } = useClaimsDashboard();
 
   // 3. Client-side filtering (search term and type filter)
   const { filteredClaims } = useClaimsFilters({
