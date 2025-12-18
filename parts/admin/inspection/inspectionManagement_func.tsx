@@ -62,10 +62,7 @@ export default function InspectionManagement() {
       branch_id: apiParams.branch_id || undefined,
       region_id: apiParams.region_id || undefined,
       record_status: filters.recordStatus || undefined,
-      period:
-        !apiParams.period_from && !apiParams.period_to
-          ? undefined
-          : apiParams.period,
+      period: apiParams.period || undefined,
       period_from: apiParams.period_from || undefined,
       period_to: apiParams.period_to || undefined,
     }),
@@ -389,6 +386,7 @@ export default function InspectionManagement() {
         showBranchFilter={true}
         showMonthYearFilter={false}
         showDateRangeFilter={true}
+        showRecordStatusFilter={true}
       />
 
       {/* Inspections Table */}

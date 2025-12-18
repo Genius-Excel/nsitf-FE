@@ -8,7 +8,7 @@ interface ComplianceTableProps {
   entries: ComplianceEntry[];
   onViewDetails: (entry: ComplianceEntry) => void; // Accept full entry
   sortConfig: SortConfig | null;
- onSort: (field: SortField) => void;
+  onSort: (field: SortField) => void;
 }
 
 export const ComplianceTable: React.FC<ComplianceTableProps> = ({
@@ -104,7 +104,16 @@ export const ComplianceTable: React.FC<ComplianceTableProps> = ({
                 sortConfig={sortConfig}
                 onSort={onSort}
               />
-              <th className="px-3 sm:px-4 py-3 text-left text-sm font-medium text-gray-700" scope="col">
+              <th
+                className="px-3 sm:px-4 py-3 text-left text-sm font-medium text-gray-700"
+                scope="col"
+              >
+                Approval Status
+              </th>
+              <th
+                className="px-3 sm:px-4 py-3 text-left text-sm font-medium text-gray-700"
+                scope="col"
+              >
                 Actions
               </th>
             </tr>
@@ -112,8 +121,13 @@ export const ComplianceTable: React.FC<ComplianceTableProps> = ({
 
           <tbody>
             {entries.map((entry) => (
-              <tr key={entry.id} className="border-b hover:bg-gray-50 transition-colors">
-                <td className="px-3 sm:px-4 py-3 text-sm font-medium text-gray-900">{entry.region}</td>
+              <tr
+                key={entry.id}
+                className="border-b hover:bg-gray-50 transition-colors"
+              >
+                <td className="px-3 sm:px-4 py-3 text-sm font-medium text-gray-900">
+                  {entry.region}
+                </td>
                 <td className="px-3 sm:px-4 py-3 text-sm text-gray-700">
                   {entry.branch || <span className="text-gray-400">N/A</span>}
                 </td>
@@ -124,7 +138,11 @@ export const ComplianceTable: React.FC<ComplianceTableProps> = ({
                   {formatCurrency(entry.target)}
                 </td>
                 <td className="px-3 sm:px-4 py-3 text-sm text-right">
-                  <span className={`font-semibold ${getAchievementTextColor(entry.achievement)}`}>
+                  <span
+                    className={`font-semibold ${getAchievementTextColor(
+                      entry.achievement
+                    )}`}
+                  >
                     {entry.achievement.toFixed(1)}%
                   </span>
                 </td>
@@ -140,7 +158,22 @@ export const ComplianceTable: React.FC<ComplianceTableProps> = ({
                 <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
                   {formatCurrency(entry.certificateFees)}
                 </td>
-                <td className="px-3 sm:px-4 py-3 text-sm text-gray-700">{entry.period}</td>
+                <td className="px-3 sm:px-4 py-3 text-sm text-gray-700">
+                  {entry.period}
+                </td>
+                <td className="px-3 sm:px-4 py-3 text-sm">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      entry.recordStatus?.toLowerCase() === "approved"
+                        ? "bg-green-100 text-green-800"
+                        : entry.recordStatus?.toLowerCase() === "reviewed"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {entry.recordStatus || "Pending"}
+                  </span>
+                </td>
                 <td className="px-3 sm:px-4 py-3 text-sm">
                   <button
                     onClick={() => onViewDetails(entry)}

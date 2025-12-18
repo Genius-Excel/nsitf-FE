@@ -1,4 +1,3 @@
-
 export type UserRole =
   | "admin"
   | "manager"
@@ -10,25 +9,26 @@ export type UserRole =
   | "legal_officer"
   | "inspection_officer"
   | "branch_data_officer"
-  | "Branch Officer" // API returns this exact string
+  | "Branch Officer"; // API returns this exact string
 
 export interface User {
-  id?: string // For compatibility with mock data
-  user_id?: string // API returns user_id
-  email: string
-  name?: string // For compatibility with mock data
-  first_name?: string // API returns first_name
-  last_name?: string // API returns last_name
-  role: UserRole
-  region_id?: string // Region ID for regional officers
-  permissions?: string[] // Backend permissions like "can_upload_claims", "can_upload_hse", etc.
-  phone_number?: string
-  alternative_number?: string | null
-  profile_image?: string | null
-  email_verified?: boolean
-  is_active?: boolean
-  last_login?: string
-  date_joined?: string
+  id?: string; // For compatibility with mock data
+  user_id?: string; // API returns user_id
+  email: string;
+  name?: string; // For compatibility with mock data
+  first_name?: string; // API returns first_name
+  last_name?: string; // API returns last_name
+  username?: string; // Some APIs return username
+  role: UserRole;
+  region_id?: string; // Region ID for regional officers
+  permissions?: string[]; // Backend permissions like "can_upload_claims", "can_upload_hse", etc.
+  phone_number?: string;
+  alternative_number?: string | null;
+  profile_image?: string | null;
+  email_verified?: boolean;
+  is_active?: boolean;
+  last_login?: string;
+  date_joined?: string;
 }
 
 // Mock user database
@@ -60,33 +60,36 @@ const MOCK_USERS: Record<string, { password: string; user: User }> = {
       role: "branch_data_officer",
     },
   },
-}
+};
 
-export async function login(email: string, password: string): Promise<User | null> {
+export async function login(
+  email: string,
+  password: string
+): Promise<User | null> {
   // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500))
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
-  const userRecord = MOCK_USERS[email]
+  const userRecord = MOCK_USERS[email];
   if (userRecord && userRecord.password === password) {
-    return userRecord.user
+    return userRecord.user;
   }
-  return null
+  return null;
 }
 
 export function saveUserToStorage(user: User) {
   if (typeof window !== "undefined") {
-    localStorage.setItem("user", JSON.stringify(user))
+    localStorage.setItem("user", JSON.stringify(user));
   }
 }
 
 export function getUserFromStorage(): User | null {
   if (typeof window !== "undefined") {
-    const userStr = localStorage.getItem("user")
+    const userStr = localStorage.getItem("user");
     if (userStr) {
-      return JSON.parse(userStr)
+      return JSON.parse(userStr);
     }
   }
-  return null
+  return null;
 }
 
 export function clearUserFromStorage() {

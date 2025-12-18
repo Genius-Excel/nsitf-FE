@@ -7,6 +7,18 @@
 // - Transform functions to convert between them
 // ============================================================================
 
+export interface InspectionRecord {
+  id: string;
+  employer: string;
+  location: string;
+  date: string;
+  inspector: string;
+  status: string;
+  recordStatus?: "pending" | "reviewed" | "approved";
+  reviewedBy?: string | null;
+  approvedBy?: string | null;
+}
+
 // ============================================================================
 // API RESPONSE TYPES (snake_case - matches backend exactly)
 // ============================================================================
@@ -19,30 +31,36 @@ export interface InspectionDashboardAPI {
     total_debt_recovered: number;
     performance_rate: number;
   };
-  inspection_summary: {
-    id: string;
-    region?: string;
-    branch: string;
-    inspections_conducted: number;
-    debt_established: number;
-    debt_recovered: number;
-    performance_rate: number;
-    demand_notice: number;
-    period: string;
-  }[] | { data: any[] };
-  monthly_debts_comparison: {
-    month: string;
-    debts_established: number;
-    debts_recovered: number;
-  }[] | { data: any[]; scale?: any };
-  upcoming_inspections: {
-    id: string;
-    employer: string;
-    location: string;
-    date: string;
-    inspector: string;
-    status: string;
-  }[] | { data: any[] };
+  inspection_summary:
+    | {
+        id: string;
+        region?: string;
+        branch: string;
+        inspections_conducted: number;
+        debt_established: number;
+        debt_recovered: number;
+        performance_rate: number;
+        demand_notice: number;
+        period: string;
+      }[]
+    | { data: any[] };
+  monthly_debts_comparison:
+    | {
+        month: string;
+        debts_established: number;
+        debts_recovered: number;
+      }[]
+    | { data: any[]; scale?: any };
+  upcoming_inspections:
+    | {
+        id: string;
+        employer: string;
+        location: string;
+        date: string;
+        inspector: string;
+        status: string;
+      }[]
+    | { data: any[] };
 }
 
 export interface InspectionDetailAPI {
@@ -169,7 +187,8 @@ export function transformInspectionDashboardFromAPI(
   // Helper to extract array from either direct array or {data: array} structure
   const getArrayData = (input: any): any[] => {
     if (Array.isArray(input)) return input;
-    if (input && typeof input === 'object' && Array.isArray(input.data)) return input.data;
+    if (input && typeof input === "object" && Array.isArray(input.data))
+      return input.data;
     return [];
   };
 
@@ -180,8 +199,8 @@ export function transformInspectionDashboardFromAPI(
   // Extract scale from monthly_debts_comparison if it exists
   const monthlyDebtsScale =
     apiData.monthly_debts_comparison &&
-    typeof apiData.monthly_debts_comparison === 'object' &&
-    'scale' in apiData.monthly_debts_comparison
+    typeof apiData.monthly_debts_comparison === "object" &&
+    "scale" in apiData.monthly_debts_comparison
       ? apiData.monthly_debts_comparison.scale
       : undefined;
 

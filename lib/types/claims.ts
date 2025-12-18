@@ -12,6 +12,8 @@ export interface ClaimRecord {
   sector: string | null;
   class: string | null;
   payment_period: string | null;
+  gender?: string;
+  payment_month?: string;
 }
 
 // Manage-claims endpoint response type (different field names)
@@ -137,10 +139,19 @@ export interface Claim {
     | "Medical Refund"
     | "Disability"
     | "Death Claim"
-    | "Loss of Productivity";
+    | "Loss of Productivity"
+    | string;
   amountRequested: number;
   amountPaid: number;
-  status: "Paid" | "Pending" | "Rejected" | "Under Review";
+  status:
+    | "Paid"
+    | "Pending"
+    | "Rejected"
+    | "Under Review"
+    | "paid"
+    | "pending"
+    | "rejected"
+    | "under_review";
   dateProcessed: string;
   datePaid: string | null;
   sector: string | null;
@@ -258,15 +269,17 @@ export const transformClaimRecord = (record: ClaimRecord): Claim => ({
   claimId: record.claim_id,
   employer: record.employer,
   claimant: record.claimant,
+  gender: record.gender ?? null,
   type: normalizeClaimType(record.type),
   amountRequested: record.amount_requested,
   amountPaid: record.amount_paid,
-  status: capitalizeStatus(record.status),
+  status: capitalizeStatus(record.status) as any,
   dateProcessed: record.date_processed,
   datePaid: record.date_paid,
   sector: record.sector,
   class: record.class,
   date: record.payment_period,
+  payment_month: record.payment_month ?? null,
 });
 
 /**
@@ -280,17 +293,17 @@ export const transformManageClaimRecord = (
   claimId: record.ecs_number,
   employer: record.employer,
   claimant: record.beneficiary,
-  gender: record.gender || null,
+  gender: record.gender ?? null,
   type: normalizeClaimType(record.claim_type),
   amountRequested: record.amount_requested,
   amountPaid: record.amount_paid,
-  status: capitalizeStatus(record.claim_status),
+  status: capitalizeStatus(record.claim_status) as any,
   dateProcessed: record.date_processed,
   datePaid: record.date_paid,
   sector: record.sector,
   class: record.claim_class,
   date: record.period,
-  payment_month: record.payment_month || null,
+  payment_month: record.payment_month ?? null,
 });
 
 /**

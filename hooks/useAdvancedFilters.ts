@@ -40,10 +40,11 @@ export function useAdvancedFilters({
     selectedRegionId:
       userRole !== "admin" && userRole !== "manager" ? userRegionId || "" : "",
     selectedBranchId: "",
-    selectedMonth: currentMonth,
-    selectedYear: currentYear,
+    selectedMonth: "", // Empty defaults to current year
+    selectedYear: "", // Empty defaults to current year
     dateFrom: undefined,
     dateTo: undefined,
+    useRangeMode: false, // Default to single period mode
     recordStatus: "",
   });
 
@@ -177,18 +178,21 @@ export function useAdvancedFilters({
       params.branch_id = filters.selectedBranchId;
     }
 
-    // Period handling: convert month/year to YYYY-MM format for claims API
-    if (filters.selectedMonth && filters.selectedYear) {
-      const monthPadded = String(filters.selectedMonth).padStart(2, "0");
-      params.period = `${filters.selectedYear}-${monthPadded}`;
-    }
-
-    // Date range (if provided) - use for period_from/period_to
-    if (filters.dateFrom) {
-      params.period_from = filters.dateFrom;
-    }
-    if (filters.dateTo) {
-      params.period_to = filters.dateTo;
+    // Period handling: mutually exclusive based on mode
+    if (filters.useRangeMode) {
+      // Range mode: use period_from/period_to (both required)
+      if (filters.dateFrom && filters.dateTo) {
+        params.period_from = filters.dateFrom;
+        params.period_to = filters.dateTo;
+      }
+    } else {
+      // Single period mode: use period only if explicitly selected
+      if (filters.selectedMonth && filters.selectedYear) {
+        const monthPadded = String(filters.selectedMonth).padStart(2, "0");
+        params.period = `${filters.selectedYear}-${monthPadded}`;
+      }
+      // If no period selected, don't send any period params
+      // Backend will default to appropriate behavior (current year)
     }
 
     // Record status (if provided)
@@ -219,13 +223,14 @@ export function useAdvancedFilters({
           ? userRegionId || ""
           : "",
       selectedBranchId: "",
-      selectedMonth: currentMonth,
-      selectedYear: currentYear,
+      selectedMonth: "", // Empty defaults to current year
+      selectedYear: "", // Empty defaults to current year
       dateFrom: undefined,
       dateTo: undefined,
+      useRangeMode: false, // Reset to single period mode
       recordStatus: "",
     });
-  }, [userRole, userRegionId, currentMonth, currentYear]);
+  }, [userRole, userRegionId]);
 
   return {
     filters,

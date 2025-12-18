@@ -163,7 +163,10 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
       }
     } catch (err: any) {
       clearInterval(progressInterval);
+
+      // Extract error message from various possible locations
       const errorMessage =
+        err?.response?.data?.error ||
         err?.response?.data?.message ||
         err.message ||
         "Failed to upload legal data";
@@ -172,6 +175,9 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
       const errorReport = err?.response?.data?.error_report?.LEGAL?.errors;
       if (errorReport && errorReport.length > 0) {
         setErrorDetails(errorReport);
+      } else if (err?.response?.data?.error) {
+        // If there's a simple error string, create a single error detail
+        setErrorDetails([{ message: err.response.data.error }]);
       }
 
       setUploadStage("error");

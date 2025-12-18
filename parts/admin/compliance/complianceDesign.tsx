@@ -898,6 +898,8 @@ export const ComplianceUploadModal: React.FC<{
                     e.target.files?.[0] && setFile(e.target.files[0])
                   }
                   className="hidden"
+                  title="Upload File"
+                  aria-label="Upload File"
                   disabled={!selectedRegionId || isUploading}
                 />
                 <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />

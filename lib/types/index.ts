@@ -17,19 +17,30 @@ export interface Claim {
   claimId: string;
   employer: string;
   claimant: string;
+  gender?: string | null;
   type:
     | "Medical Refund"
     | "Disability"
     | "Death Claim"
-    | "Loss of Productivity";
+    | "Loss of Productivity"
+    | string;
   amountRequested: number;
   amountPaid: number;
-  status: "Paid" | "Pending" | "Under Review" | "Rejected";
+  status:
+    | "Paid"
+    | "Pending"
+    | "Under Review"
+    | "Rejected"
+    | "paid"
+    | "pending"
+    | "rejected"
+    | "under_review";
   dateProcessed: string;
   datePaid: string | null;
   sector: string | null;
   class: string | null;
   date: string | null;
+  payment_month?: string | null;
 }
 
 export interface InspectionRecord {

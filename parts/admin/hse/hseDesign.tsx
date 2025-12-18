@@ -385,8 +385,7 @@ export const HSEFormModal: React.FC<{
         <button
           type="button"
           onClick={onSave}
-          style={{ backgroundColor: "#00a63e" }}
-          className="px-4 py-2 text-sm text-white rounded-md hover:opacity-90 transition-opacity"
+          className="px-4 py-2 text-sm text-white rounded-md hover:opacity-90 transition-opacity bg-[#00a63e]"
         >
           {isEditing ? "Save Changes" : "Save Record"}
         </button>
@@ -516,8 +515,7 @@ export const ViewDetailsModal: React.FC<{
                   onApprove(activity);
                   onOpenChange(false);
                 }}
-                style={{ backgroundColor: "#00a63e" }}
-                className="px-4 py-2 text-sm text-white rounded-md hover:opacity-90 transition-opacity"
+                className="px-4 py-2 text-sm text-white rounded-md hover:opacity-90 transition-opacity bg-[#00a63e]"
               >
                 Approve
               </button>
@@ -1306,6 +1304,9 @@ export const RegionalOSHSummaryTable: React.FC<{
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Period
               </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                APPROVAL STATUS
+              </th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
@@ -1355,6 +1356,19 @@ export const RegionalOSHSummaryTable: React.FC<{
                 </td>
                 <td className="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">
                   {data.period}
+                </td>
+                <td className="px-4 py-4 text-sm">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      data.record_status?.toLowerCase() === "approved"
+                        ? "bg-green-100 text-green-800"
+                        : data.record_status?.toLowerCase() === "reviewed"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {data.record_status || "Pending"}
+                  </span>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="flex items-center justify-center gap-2">

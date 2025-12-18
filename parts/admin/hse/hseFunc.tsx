@@ -134,17 +134,20 @@ export default function HSEDashboardContent() {
       }
     }
 
-    // Filter by period range (dateFrom/dateTo converted to YYYY-MM format)
-    if (filters.dateFrom || filters.dateTo) {
+    // Filter by period (single period from dropdown OR range mode)
+    if (apiParams.period) {
+      // Single period filter (e.g., "2025-12")
+      filtered = filtered.filter(
+        (record) => record.period === apiParams.period
+      );
+    } else if (apiParams.period_from || apiParams.period_to) {
+      // Range filter
       filtered = filtered.filter((record) => {
         if (!record.period) return false;
-        // Convert dates to YYYY-MM format for comparison
-        const periodFrom = filters.dateFrom
-          ? filters.dateFrom.substring(0, 7)
-          : null;
-        const periodTo = filters.dateTo ? filters.dateTo.substring(0, 7) : null;
-        if (periodFrom && record.period < periodFrom) return false;
-        if (periodTo && record.period > periodTo) return false;
+        if (apiParams.period_from && record.period < apiParams.period_from)
+          return false;
+        if (apiParams.period_to && record.period > apiParams.period_to)
+          return false;
         return true;
       });
     }
@@ -394,6 +397,7 @@ export default function HSEDashboardContent() {
         showBranchFilter={true}
         showMonthYearFilter={false}
         showDateRangeFilter={true}
+        showRecordStatusFilter={true}
       />
 
       {/* Regional OSH Activities Summary */}

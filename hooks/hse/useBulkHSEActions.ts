@@ -123,13 +123,13 @@ export const useBulkHSEActions = (): BulkHSEActionsReturn => {
       setLoading(true);
       setError(null);
 
-      const response = await http.postData<BulkActionResponse>(
+      const response = (await http.postData(
         {
           ids: recordIds,
           action: "review",
         },
         "/api/hse-ops/manage-hse"
-      );
+      )) as unknown as BulkActionResponse;
 
       console.log("Bulk review response:", response);
 
@@ -175,13 +175,13 @@ export const useBulkHSEActions = (): BulkHSEActionsReturn => {
       setLoading(true);
       setError(null);
 
-      const response = await http.postData<BulkActionResponse>(
+      const response = (await http.postData(
         {
           ids: recordIds,
           action: "approve",
         },
         "/api/hse-ops/manage-hse"
-      );
+      )) as unknown as BulkActionResponse;
 
       console.log("Bulk approve response:", response);
 

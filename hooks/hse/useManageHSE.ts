@@ -75,7 +75,7 @@ export const useManageHSE = (
       // Build query parameters - only add non-empty values
       const queryParams = new URLSearchParams();
 
-      if (params.record_status && params.record_status !== "") {
+      if (params.record_status) {
         queryParams.append("record_status", params.record_status);
       }
       if (params.branch_id && params.branch_id !== "") {
