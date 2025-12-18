@@ -26,3 +26,6 @@ export { useReportUpload } from "./Usereportupload";
 
 // Modal state hook
 export { useModalState } from "./Usemodalstate";
+
+// Bulk actions hook
+export { useBulkComplianceActions } from "./useBulkComplianceActions";

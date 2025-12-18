@@ -45,6 +45,16 @@ export interface RegionalCompliancePerformance {
   };
 }
 
+export interface DashboardMetrics {
+  disabilityBeneficiaries?: number;
+  disabilityRSABenefit?: number;
+  total_actual_contributions?: Metric;
+  total_employers_registered?: Metric;
+  total_claims_paid?: Metric;
+  total_claims_beneficiaries?: Metric;
+  total_osh_activities?: Metric;
+}
+
 export interface DashboardSummaryResponse {
   message: string;
   data: {
@@ -54,13 +64,7 @@ export interface DashboardSummaryResponse {
       period: string;
       previous_period: string;
     };
-    metric_cards: {
-      total_actual_contributions: Metric;
-      total_employers_registered: Metric;
-      total_claims_paid: Metric;
-      total_claims_beneficiaries: Metric;
-      total_osh_activities: Metric;
-    };
+    metric_cards: DashboardMetrics;
     claims_distribution: ClaimsDistribution;
     monthly_performance_trend: MonthlyPerformanceTrend;
     regional_compliance_performance: RegionalCompliancePerformance;

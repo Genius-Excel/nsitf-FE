@@ -100,18 +100,14 @@ export default function ClaimsManagement() {
   };
 
   // Memoize manage claims params to prevent infinite re-renders
-  // Don't send period filter on initial load (use period_from/period_to or leave open)
+  // The hook now handles mutual exclusivity between period and period_from/period_to
   const manageClaimsParams = useMemo(
     () => ({
       page: 1,
       branch_id: apiParams.branch_id || undefined,
       region_id: apiParams.region_id || undefined,
       record_status: filters.recordStatus || undefined,
-      // Only use period if period_from/period_to are not set
-      period:
-        !apiParams.period_from && !apiParams.period_to
-          ? undefined
-          : apiParams.period,
+      period: apiParams.period || undefined,
       period_from: apiParams.period_from || undefined,
       period_to: apiParams.period_to || undefined,
     }),
@@ -210,8 +206,7 @@ export default function ClaimsManagement() {
       {
         title: "Disability RSA Benefit",
         description: "",
-        value:
-          metrics.disabilityRSABenefit || metrics.disabilityBeneficiaries || 0,
+        value: metrics.disabilityBeneficiaries || 0,
         change: `${mockChangePercent}% from last month`,
         icon: <BarChart3 />,
         bgColor: "#a855f7",
@@ -220,7 +215,7 @@ export default function ClaimsManagement() {
         title: "Disabilities Beneficiaries",
         description: "",
         value:
-          metrics.disabilitiesBeneficiaries ||
+          metrics.disabilityBeneficiaries ||
           metrics.retireeBenefitBeneficiaries ||
           0,
         change: `${mockChangePercent}% from last month`,
@@ -382,7 +377,7 @@ export default function ClaimsManagement() {
     return (
       <ErrorState
         title="Access Denied"
-        description="You don't have permission to view claims"
+        message="You don't have permission to view claims"
       />
     );
   }

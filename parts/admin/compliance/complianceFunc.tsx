@@ -22,10 +22,7 @@ import { canManageCompliance } from "@/lib/permissions";
 import type { ComplianceEntry } from "@/lib/types";
 
 // Components
-import {
-  DashboardCards,
-  ComplianceTable,
-} from "./complianceDesign";
+import { DashboardCards, ComplianceTable } from "./complianceDesign";
 import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPanel";
 import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import { AddRegionModal } from "./complianceAddRegionModal";
@@ -70,10 +67,11 @@ const ComplianceDashboard: React.FC = () => {
     if (user) {
       // Check backend permissions first
       if (user.permissions && Array.isArray(user.permissions)) {
-        const hasBackendPermission = user.permissions.some(p =>
-          p === "can_upload_compliance" ||
-          p === "can_create_compliance_record" ||
-          p === "can_edit_compliance_record"
+        const hasBackendPermission = user.permissions.some(
+          (p) =>
+            p === "can_upload_compliance" ||
+            p === "can_create_compliance_record" ||
+            p === "can_edit_compliance_record"
         );
         setCanManage(hasBackendPermission);
       } else {
@@ -99,13 +97,16 @@ const ComplianceDashboard: React.FC = () => {
 
   // ============== API FILTERS ==============
   // Convert advanced filter params to compliance API format
-  const apiFilters = useMemo(() => ({
-    period: apiParams.month && apiParams.year
-      ? `${apiParams.year}-${apiParams.month.padStart(2, '0')}`
-      : undefined,
-    region_id: apiParams.region_id || undefined,
-    branch_id: apiParams.branch_id || undefined,
-  }), [apiParams]);
+  const apiFilters = useMemo(
+    () => ({
+      period: apiParams.period || undefined,
+      period_from: apiParams.period_from || undefined,
+      period_to: apiParams.period_to || undefined,
+      region_id: apiParams.region_id || undefined,
+      branch_id: apiParams.branch_id || undefined,
+    }),
+    [apiParams]
+  );
 
   // ============== DATA FETCHING ==============
   // Single fetch - source of truth
@@ -127,7 +128,8 @@ const ComplianceDashboard: React.FC = () => {
   // ============== CLIENT-SIDE FILTERING ==============
   // Use backend-filtered data directly (already filtered by apiParams)
   // Backend returns regional_summary when no region filter, branch_summary when region is selected
-  const regionalSummary = dashboardData?.regional_summary ?? dashboardData?.branch_summary ?? [];
+  const regionalSummary =
+    dashboardData?.regional_summary ?? dashboardData?.branch_summary ?? [];
 
   // Additional client-side search filter (optional)
   const [searchTerm, setSearchTerm] = useState("");
@@ -136,9 +138,10 @@ const ComplianceDashboard: React.FC = () => {
     if (!searchTerm) return regionalSummary;
 
     const searchLower = searchTerm.toLowerCase();
-    return regionalSummary.filter((entry: any) =>
-      entry.region?.toLowerCase().includes(searchLower) ||
-      entry.branch?.toLowerCase().includes(searchLower)
+    return regionalSummary.filter(
+      (entry: any) =>
+        entry.region?.toLowerCase().includes(searchLower) ||
+        entry.branch?.toLowerCase().includes(searchLower)
     );
   }, [regionalSummary, searchTerm]);
 
@@ -218,7 +221,11 @@ const ComplianceDashboard: React.FC = () => {
     }
   };
 
-  const handleAddBranch = async (name: string, regionId: string, code?: string) => {
+  const handleAddBranch = async (
+    name: string,
+    regionId: string,
+    code?: string
+  ) => {
     if (!canManage) {
       toast.error("You don't have permission to create branches");
       return;
@@ -245,7 +252,6 @@ const ComplianceDashboard: React.FC = () => {
       }
     }
   };
-
 
   const handleCreateRegionClick = () => {
     if (!canManage) {
@@ -294,10 +300,11 @@ const ComplianceDashboard: React.FC = () => {
   const regionNames = regions?.map((r: any) => r.name) ?? [];
 
   // Map regions with IDs for ComplianceUploadModal
-  const mappedRegions = regions?.map((r: any) => ({
-    id: r.id,
-    name: r.name,
-  })) ?? [];
+  const mappedRegions =
+    regions?.map((r: any) => ({
+      id: r.id,
+      name: r.name,
+    })) ?? [];
 
   // ============== RENDER ==============
   return (
@@ -310,50 +317,50 @@ const ComplianceDashboard: React.FC = () => {
 
       {/* Dashboard Cards */}
       <DashboardCards
-          metrics={{
-            totalActualContributions:
-              dashboardData?.metric_cards.total_contributions ?? 0,
-            contributionsTarget: dashboardData?.metric_cards.total_target ?? 0,
-            performanceRate: dashboardData?.metric_cards.performance_rate ?? 0,
-            totalEmployers: dashboardData?.metric_cards.total_employers ?? 0,
-            totalEmployees: dashboardData?.metric_cards.total_employees ?? 0,
-          }}
+        metrics={{
+          totalActualContributions:
+            dashboardData?.metric_cards.total_contributions ?? 0,
+          contributionsTarget: dashboardData?.metric_cards.total_target ?? 0,
+          performanceRate: dashboardData?.metric_cards.performance_rate ?? 0,
+          totalEmployers: dashboardData?.metric_cards.total_employers ?? 0,
+          totalEmployees: dashboardData?.metric_cards.total_employees ?? 0,
+        }}
       />
 
       {/* Action Bar */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Search by region, branch, or period..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
+        {/* Search */}
+        <div className="flex-1 relative">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Search by region, branch, or period..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2 sm:gap-3">
-            <Button
-              onClick={handleCreateRegionClick}
-              className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
-            >
-              <Plus size={18} />
-              <span>Manage Region</span>
-            </Button>
-            <Button
-              onClick={() => branchModal.open()}
-              className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus size={18} />
-              <span>Manage Branches</span>
-            </Button>
-          </div>
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          <Button
+            onClick={handleCreateRegionClick}
+            className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
+          >
+            <Plus size={18} />
+            <span>Manage Region</span>
+          </Button>
+          <Button
+            onClick={() => branchModal.open()}
+            className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus size={18} />
+            <span>Manage Branches</span>
+          </Button>
+        </div>
       </div>
 
       {/* Advanced Filter Panel */}
@@ -371,30 +378,31 @@ const ComplianceDashboard: React.FC = () => {
         showBranchFilter={true}
         showMonthYearFilter={true}
         showDateRangeFilter={false}
+        showRecordStatusFilter={true}
       />
 
       {/* Main Table */}
       <ComplianceTable
-          entries={mappedEntries}
-          onViewDetails={handleViewDetails}
-          sortConfig={null}
-          onSort={() => {}} // Sorting can be added later if needed
+        entries={mappedEntries}
+        onViewDetails={handleViewDetails}
+        sortConfig={null}
+        onSort={() => {}} // Sorting can be added later if needed
       />
 
       {/* Bulk Upload Instructions */}
       <div className="p-4 sm:p-6 bg-blue-50 rounded-lg border border-blue-200">
-          <h3 className="font-medium text-gray-900 mb-2">
-            Bulk Upload Instructions
-          </h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Upload compliance data in bulk using Excel format. The server will
-            validate and process your data.
-          </p>
-          <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-            <li>Select a region before uploading</li>
-            <li>Provide the period (YYYY-MM format)</li>
-            <li>Upload Excel file with required sheets</li>
-            <li>Review validation errors if any</li>
+        <h3 className="font-medium text-gray-900 mb-2">
+          Bulk Upload Instructions
+        </h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Upload compliance data in bulk using Excel format. The server will
+          validate and process your data.
+        </p>
+        <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+          <li>Select a region before uploading</li>
+          <li>Provide the period (YYYY-MM format)</li>
+          <li>Upload Excel file with required sheets</li>
+          <li>Review validation errors if any</li>
         </ul>
       </div>
 

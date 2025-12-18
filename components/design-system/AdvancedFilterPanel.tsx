@@ -30,6 +30,9 @@ export interface FilterConfig {
   dateFrom?: string; // YYYY-MM-DD
   dateTo?: string; // YYYY-MM-DD
 
+  // Period mode toggle
+  useRangeMode?: boolean; // Toggle between single period (month/year) and date range
+
   // Record status filter
   recordStatus?: "pending" | "reviewed" | "approved" | "";
 }
@@ -92,6 +95,18 @@ export function AdvancedFilterPanel({
   showRecordStatusFilter = false,
 }: AdvancedFilterPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showRangePicker, setShowRangePicker] = useState(false);
+
+  // Local state for pending filter changes (not yet applied)
+  const [pendingFilters, setPendingFilters] = useState<FilterConfig>(filters);
+
+  // Sync pending filters with applied filters when filters prop changes
+  useEffect(() => {
+    setPendingFilters(filters);
+  }, [filters]);
+
+  // Determine if using range mode
+  const isRangeMode = pendingFilters.useRangeMode ?? false;
 
   // Determine if user is admin (can see all regions) - case-insensitive
   const normalizedRole = userRole?.toLowerCase();
@@ -108,9 +123,11 @@ export function AdvancedFilterPanel({
 
   // Filter branches based on selected region
   const visibleBranches = useMemo(() => {
-    if (!filters.selectedRegionId) return [];
-    return branches.filter((b) => b.region_id === filters.selectedRegionId);
-  }, [branches, filters.selectedRegionId]);
+    if (!pendingFilters.selectedRegionId) return [];
+    return branches.filter(
+      (b) => b.region_id === pendingFilters.selectedRegionId
+    );
+  }, [branches, pendingFilters.selectedRegionId]);
 
   // Generate months (1-12)
   const months = [
@@ -135,77 +152,143 @@ export function AdvancedFilterPanel({
     { value: String(currentYear - 1), label: String(currentYear - 1) },
   ];
 
-  // Set default month and year on mount
-  useEffect(() => {
-    const now = new Date();
-    const defaultMonth = String(now.getMonth() + 1);
-    const defaultYear = String(now.getFullYear());
-
-    if (!filters.selectedMonth || !filters.selectedYear) {
-      onFilterChange({
-        ...filters,
-        selectedMonth: filters.selectedMonth || defaultMonth,
-        selectedYear: filters.selectedYear || defaultYear,
-      });
-    }
-  }, []); // Only run on mount
-
   // Check if filters are active
   const hasActiveFilters =
     filters.selectedRegionId ||
     filters.selectedBranchId ||
     filters.dateFrom ||
-    filters.dateTo;
+    filters.dateTo ||
+    filters.recordStatus ||
+    (filters.selectedMonth && filters.selectedYear);
+
+  // Check if there are pending changes
+  const hasPendingChanges =
+    JSON.stringify(pendingFilters) !== JSON.stringify(filters);
+
+  // Apply filters handler
+  const handleApplyFilters = () => {
+    onFilterChange(pendingFilters);
+  };
+
+  // Clear filters handler
+  const handleClearFilters = () => {
+    setPendingFilters({
+      selectedRegionId: "",
+      selectedBranchId: "",
+      selectedMonth: "",
+      selectedYear: "",
+      dateFrom: undefined,
+      dateTo: undefined,
+      useRangeMode: false,
+      recordStatus: "",
+    });
+    onReset();
+  };
 
   const handleRegionChange = (regionId: string) => {
-    onFilterChange({
-      ...filters,
+    setPendingFilters({
+      ...pendingFilters,
       selectedRegionId: regionId === "all" ? "" : regionId,
       selectedBranchId: "", // Reset branch when region changes
     });
   };
 
   const handleBranchChange = (branchId: string) => {
-    onFilterChange({
-      ...filters,
+    setPendingFilters({
+      ...pendingFilters,
       selectedBranchId: branchId === "all" ? "" : branchId,
     });
   };
 
   const handleMonthChange = (month: string) => {
-    onFilterChange({
-      ...filters,
+    setPendingFilters({
+      ...pendingFilters,
       selectedMonth: month,
     });
   };
 
   const handleYearChange = (year: string) => {
-    onFilterChange({
-      ...filters,
+    setPendingFilters({
+      ...pendingFilters,
       selectedYear: year,
     });
   };
 
   const handleDateFromChange = (date: string) => {
-    onFilterChange({
-      ...filters,
+    setPendingFilters({
+      ...pendingFilters,
       dateFrom: date,
     });
   };
 
   const handleDateToChange = (date: string) => {
-    onFilterChange({
-      ...filters,
+    setPendingFilters({
+      ...pendingFilters,
       dateTo: date,
     });
   };
 
   const handleRecordStatusChange = (status: string) => {
-    onFilterChange({
-      ...filters,
+    setPendingFilters({
+      ...pendingFilters,
       recordStatus:
         status === "all" ? "" : (status as "pending" | "reviewed" | "approved"),
     });
+  };
+
+  const handleSelectPeriodOption = (value: string) => {
+    if (value === "select-range") {
+      // Open range picker modal
+      setShowRangePicker(true);
+    } else if (value === "current-year" || value === "clear") {
+      // Clear all period filters - defaults to current year
+      onFilterChange({
+        ...filters,
+        useRangeMode: false,
+        selectedMonth: "",
+        selectedYear: "",
+        dateFrom: undefined,
+        dateTo: undefined,
+      });
+    } else {
+      // Regular period selection (YYYY-MM format)
+      const [year, month] = value.split("-");
+      onFilterChange({
+        ...filters,
+        useRangeMode: false,
+        selectedMonth: month,
+        selectedYear: year,
+        dateFrom: undefined,
+        dateTo: undefined,
+      });
+    }
+  };
+
+  const handleApplyRange = () => {
+    // Validate both dates are set
+    if (!pendingFilters.dateFrom || !pendingFilters.dateTo) {
+      alert("Please select both start and end dates for the range.");
+      return;
+    }
+
+    // Apply range mode
+    setPendingFilters({
+      ...pendingFilters,
+      useRangeMode: true,
+      selectedMonth: "",
+      selectedYear: "",
+    });
+    setShowRangePicker(false);
+  };
+
+  const handleCancelRange = () => {
+    // Reset range values if canceling
+    setPendingFilters({
+      ...pendingFilters,
+      dateFrom: undefined,
+      dateTo: undefined,
+    });
+    setShowRangePicker(false);
   };
 
   return (
@@ -260,7 +343,7 @@ export function AdvancedFilterPanel({
               </label>
 
               <Select
-                value={filters.selectedRegionId || "all"}
+                value={pendingFilters.selectedRegionId || "all"}
                 onValueChange={handleRegionChange}
               >
                 <SelectTrigger id="region-filter">
@@ -323,95 +406,181 @@ export function AdvancedFilterPanel({
             </div>
           )}
 
-          {/* Month and Year Selection */}
-          {showMonthYearFilter && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="month-filter"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  Month
-                </label>
-                <Select
-                  value={filters.selectedMonth}
-                  onValueChange={handleMonthChange}
-                >
-                  <SelectTrigger id="month-filter">
-                    <SelectValue placeholder="Select month" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* Period Filtering Section */}
+          {(showMonthYearFilter || showDateRangeFilter) && (
+            <div>
+              <label
+                htmlFor="period-filter"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                <Calendar className="w-4 h-4 inline mr-1" />
+                Period
+              </label>
+              <Select
+                value={
+                  isRangeMode &&
+                  pendingFilters.dateFrom &&
+                  pendingFilters.dateTo
+                    ? `range:${pendingFilters.dateFrom}-${pendingFilters.dateTo}`
+                    : pendingFilters.selectedMonth &&
+                      pendingFilters.selectedYear
+                    ? `${pendingFilters.selectedYear}-${String(
+                        pendingFilters.selectedMonth
+                      ).padStart(2, "0")}`
+                    : "current-year"
+                }
+                onValueChange={handleSelectPeriodOption}
+              >
+                <SelectTrigger id="period-filter" className="w-full">
+                  <SelectValue placeholder="All Data (Current Year)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {/* First Option: Select Range */}
+                  <SelectItem
+                    value="select-range"
+                    className="font-medium text-green-600"
+                  >
+                    📅 Select Date Range...
+                  </SelectItem>
 
-              <div>
-                <label
-                  htmlFor="year-filter"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Year
-                </label>
-                <Select
-                  value={filters.selectedYear}
-                  onValueChange={handleYearChange}
-                >
-                  <SelectTrigger id="year-filter">
-                    <SelectValue placeholder="Select year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((year) => (
-                      <SelectItem key={year.value} value={year.value}>
-                        {year.label}
+                  {/* Current Range Display (if active) */}
+                  {isRangeMode &&
+                    pendingFilters.dateFrom &&
+                    pendingFilters.dateTo && (
+                      <SelectItem
+                        value={`range:${pendingFilters.dateFrom}-${pendingFilters.dateTo}`}
+                        className="bg-green-50 font-medium"
+                      >
+                        🎯 {pendingFilters.dateFrom} to {pendingFilters.dateTo}
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                    )}
+
+                  {/* Separator */}
+                  <SelectItem
+                    value="separator-1"
+                    disabled
+                    className="text-xs text-gray-400"
+                  >
+                    ────── Single Periods ──────
+                  </SelectItem>
+
+                  {/* Current Year Months */}
+                  {months.map((month) => {
+                    const currentYear = new Date().getFullYear();
+                    const value = `${currentYear}-${String(
+                      month.value
+                    ).padStart(2, "0")}`;
+                    return (
+                      <SelectItem key={value} value={value}>
+                        {month.label} {currentYear}
+                      </SelectItem>
+                    );
+                  })}
+
+                  {/* Previous Year Months */}
+                  {months.map((month) => {
+                    const previousYear = new Date().getFullYear() - 1;
+                    const value = `${previousYear}-${String(
+                      month.value
+                    ).padStart(2, "0")}`;
+                    return (
+                      <SelectItem key={value} value={value}>
+                        {month.label} {previousYear}
+                      </SelectItem>
+                    );
+                  })}
+
+                  {/* Clear Option */}
+                  <SelectItem value="clear" className="text-red-600">
+                    ✕ Clear Filter (Default to Current Year)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           )}
 
-          {/* Date Range Filter (Optional) */}
-          {showDateRangeFilter && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="date-from"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Period From (YYYY-MM)
-                </label>
-                <input
-                  id="date-from"
-                  type="month"
-                  value={filters.dateFrom || ""}
-                  onChange={(e) => handleDateFromChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="2025-01"
-                />
-              </div>
+          {/* Range Picker Modal */}
+          {showRangePicker && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+              <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Select Date Range
+                  </h3>
+                  <button
+                    onClick={handleCancelRange}
+                    className="text-gray-400 hover:text-gray-600"
+                    title="Close"
+                    aria-label="Close range picker"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
 
-              <div>
-                <label
-                  htmlFor="date-to"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Period To (YYYY-MM)
-                </label>
-                <input
-                  id="date-to"
-                  type="month"
-                  value={filters.dateTo || ""}
-                  onChange={(e) => handleDateToChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="2025-06"
-                />
+                {/* Current Period Display */}
+                {filters.selectedMonth && filters.selectedYear && (
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Current Period:</strong>{" "}
+                      {
+                        months.find((m) => m.value === filters.selectedMonth)
+                          ?.label
+                      }{" "}
+                      {filters.selectedYear}
+                    </p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label
+                      htmlFor="range-from"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      From Period *
+                    </label>
+                    <input
+                      id="range-from"
+                      type="month"
+                      value={pendingFilters.dateFrom || ""}
+                      onChange={(e) => handleDateFromChange(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="range-to"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      To Period *
+                    </label>
+                    <input
+                      id="range-to"
+                      type="month"
+                      value={pendingFilters.dateTo || ""}
+                      onChange={(e) => handleDateToChange(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    onClick={handleCancelRange}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleApplyRange}
+                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+                  >
+                    Apply Range
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -426,7 +595,7 @@ export function AdvancedFilterPanel({
                 Record Status
               </label>
               <Select
-                value={filters.recordStatus || "all"}
+                value={pendingFilters.recordStatus || "all"}
                 onValueChange={handleRecordStatusChange}
               >
                 <SelectTrigger id="status-filter">
@@ -442,20 +611,30 @@ export function AdvancedFilterPanel({
             </div>
           )}
 
-          {/* Clear Filters Button */}
-          {hasActiveFilters && (
-            <div className="pt-2 flex justify-end">
+          {/* Apply and Clear Filter Buttons */}
+          <div className="pt-2 flex justify-end gap-3">
+            {hasActiveFilters && (
               <button
                 type="button"
-                onClick={onReset}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                onClick={handleClearFilters}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
                 aria-label="Clear all filters"
               >
                 <X className="w-4 h-4" />
                 Clear Filters
               </button>
-            </div>
-          )}
+            )}
+            <button
+              type="button"
+              onClick={handleApplyFilters}
+              disabled={!hasPendingChanges}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              aria-label="Apply filters"
+            >
+              <Filter className="w-4 h-4" />
+              Apply Filters
+            </button>
+          </div>
         </div>
       )}
     </div>

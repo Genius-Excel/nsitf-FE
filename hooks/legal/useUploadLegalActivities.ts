@@ -65,6 +65,7 @@ export function useUploadLegalActivities(): UseUploadLegalActivitiesReturn {
     } catch (err: any) {
       console.error("Error uploading legal activities:", err);
       const errorMessage =
+        err.response?.data?.error ||
         err.response?.data?.message ||
         err.message ||
         "Failed to upload legal activities";

@@ -66,6 +66,8 @@ export const HSEFormModal: React.FC<{
                     onFormChange({ ...formData, recordType: e.target.value })
                   }
                   className="w-full border border-gray-300 text-sm rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  title="Record Type"
+                  aria-label="Record Type"
                 >
                   <option value="">Select a type</option>
                   <option value="letter issued">Letter Issued</option>
@@ -102,6 +104,8 @@ export const HSEFormModal: React.FC<{
                     onFormChange({ ...formData, dateLogged: e.target.value })
                   }
                   className="w-full border border-gray-300 text-sm rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  title="Date"
+                  aria-label="Date"
                 />
               </div>
 
@@ -116,6 +120,8 @@ export const HSEFormModal: React.FC<{
                     onFormChange({ ...formData, status: e.target.value })
                   }
                   className="w-full border border-gray-300 text-sm rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  title="Status"
+                  aria-label="Status"
                 >
                   <option value="">Select status</option>
                   <option value="Completed">Completed</option>
@@ -402,7 +408,7 @@ export const ViewDetailsModal: React.FC<{
                 <h2 className="text-xl font-bold text-gray-900">
                   HSE Activity Details
                 </h2>
-                {activity && (
+                {activity && displayData && (
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-gray-600">
                       {displayData.organization} - {displayData.date}
@@ -477,82 +483,100 @@ export const ViewDetailsModal: React.FC<{
 
           {/* Content */}
           <div className="p-6 space-y-6">
-            {/* Activity Information */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-4 h-4 text-gray-600" />
-                <h3 className="text-sm font-semibold text-gray-900 uppercase">
-                  Activity Information
-                </h3>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {renderField("Activity Type", displayData.type, "type", "text")}
-                {renderField(
-                  "Organization",
-                  displayData.organization,
-                  "organization",
-                  "text"
-                )}
-                {renderField("Date", displayData.date, "date", "date")}
-                {renderField("Status", displayData.status, "status", "text")}
-              </div>
-            </div>
-
-            {/* Details */}
-            {displayData.details && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileText className="w-4 h-4 text-gray-600" />
-                  <h3 className="text-sm font-semibold text-gray-900 uppercase">
-                    Details
-                  </h3>
+            {displayData && (
+              <>
+                {/* Activity Information */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <FileText className="w-4 h-4 text-gray-600" />
+                    <h3 className="text-sm font-semibold text-gray-900 uppercase">
+                      Activity Information
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {renderField(
+                      "Activity Type",
+                      displayData.type,
+                      "type",
+                      "text"
+                    )}
+                    {renderField(
+                      "Organization",
+                      displayData.organization,
+                      "organization",
+                      "text"
+                    )}
+                    {renderField("Date", displayData.date, "date", "date")}
+                    {renderField(
+                      "Status",
+                      displayData.status,
+                      "status",
+                      "text"
+                    )}
+                  </div>
                 </div>
-                {isEditMode ? (
-                  <textarea
-                    value={displayData.details}
-                    onChange={(e) =>
-                      handleFieldChange("details", e.target.value)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm min-h-[100px] resize-none"
-                  />
-                ) : (
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    {displayData.details}
-                  </p>
-                )}
-              </div>
-            )}
 
-            {/* Recommendations */}
-            {displayData.recommendations && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <CheckCircle className="w-4 h-4 text-gray-600" />
-                  <h3 className="text-sm font-semibold text-gray-900 uppercase">
-                    Recommendations/Actions
-                  </h3>
-                </div>
-                {isEditMode ? (
-                  <textarea
-                    value={displayData.recommendations}
-                    onChange={(e) =>
-                      handleFieldChange("recommendations", e.target.value)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm min-h-[100px] resize-none"
-                  />
-                ) : (
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    {displayData.recommendations}
-                  </p>
+                {/* Details */}
+                {displayData.details && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FileText className="w-4 h-4 text-gray-600" />
+                      <h3 className="text-sm font-semibold text-gray-900 uppercase">
+                        Details
+                      </h3>
+                    </div>
+                    {isEditMode ? (
+                      <textarea
+                        value={displayData.details}
+                        onChange={(e) =>
+                          handleFieldChange("details", e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm min-h-[100px] resize-none"
+                        title="Details"
+                        aria-label="Details"
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {displayData.details}
+                      </p>
+                    )}
+                  </div>
                 )}
-              </div>
+
+                {/* Recommendations */}
+                {displayData.recommendations && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <CheckCircle className="w-4 h-4 text-gray-600" />
+                      <h3 className="text-sm font-semibold text-gray-900 uppercase">
+                        Recommendations/Actions
+                      </h3>
+                    </div>
+                    {isEditMode ? (
+                      <textarea
+                        value={displayData.recommendations}
+                        onChange={(e) =>
+                          handleFieldChange("recommendations", e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm min-h-[100px] resize-none"
+                        title="Recommendations"
+                        aria-label="Recommendations"
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {displayData.recommendations}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
           {/* Footer */}
           <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
             {/* Dynamic buttons based on status */}
-            {!isEditMode && (
+            {displayData && !isEditMode && (
               <>
                 {/* Pending: Show Review button */}
                 {displayData.status?.toLowerCase() === "pending" &&

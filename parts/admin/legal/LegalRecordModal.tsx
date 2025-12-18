@@ -185,6 +185,8 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
               )
             }
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            title={label}
+            aria-label={label}
           />
         </div>
       );
@@ -276,6 +278,8 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
                 onClick={onClose}
                 disabled={isSubmitting}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Close"
+                aria-label="Close modal"
               >
                 <X className="w-5 h-5" />
               </button>

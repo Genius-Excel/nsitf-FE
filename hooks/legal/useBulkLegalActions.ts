@@ -111,13 +111,13 @@ export const useBulkLegalActions = (): UseBulkLegalActionsReturn => {
       setLoading(true);
       setError(null);
 
-      const response = await http.postData<BulkActionResponse>(
+      const response = (await http.postData(
         {
           ids: recordIds,
           action: "review",
         },
         "/api/legal-ops/manage-legal"
-      );
+      )) as unknown as BulkActionResponse;
 
       console.log("Bulk review response:", response);
 
@@ -161,13 +161,13 @@ export const useBulkLegalActions = (): UseBulkLegalActionsReturn => {
       setLoading(true);
       setError(null);
 
-      const response = await http.postData<BulkActionResponse>(
+      const response = (await http.postData(
         {
           ids: recordIds,
           action: "approve",
         },
         "/api/legal-ops/manage-legal"
-      );
+      )) as unknown as BulkActionResponse;
 
       console.log("Bulk approve response:", response);
 

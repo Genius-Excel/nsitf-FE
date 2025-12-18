@@ -154,30 +154,11 @@ export function ValuationForecastingDesign({
             <TabsContent value="claims" className="mt-4">
               <div className="w-full h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
+                  <BarChart
                     data={claimTrendProjections}
                     margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
+                    barGap={4}
                   >
-                    <defs>
-                      <linearGradient
-                        id="colorForecast"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="#ff5722"
-                          stopOpacity={0.4}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="#ff5722"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis
                       dataKey="period"
@@ -200,37 +181,21 @@ export function ValuationForecastingDesign({
                       verticalAlign="top"
                       height={36}
                     />
-                    <Area
-                      type="monotone"
-                      dataKey="upper"
-                      stroke="none"
-                      fill="#ffccbc"
-                      name="Upper Bound"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="lower"
-                      stroke="none"
-                      fill="#ffffff"
-                      name="Lower Bound"
-                    />
-                    <Line
-                      type="monotone"
+                    <Bar
                       dataKey="actual"
-                      stroke="#16a34a"
-                      strokeWidth={3}
-                      dot={{ r: 4 }}
+                      fill="#10b981"
+                      radius={[6, 6, 0, 0]}
+                      barSize={24}
                       name="Actual"
                     />
-                    <Line
-                      type="monotone"
+                    <Bar
                       dataKey="forecast"
-                      stroke="#ff5722"
-                      strokeWidth={4}
-                      strokeDasharray="5 5"
+                      fill="#60a5fa"
+                      radius={[6, 6, 0, 0]}
+                      barSize={24}
                       name="Forecast"
                     />
-                  </AreaChart>
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
               <div className="grid grid-cols-3 gap-4 mt-4">
@@ -543,7 +508,12 @@ export function ValuationForecastingDesign({
                     orientation="left"
                     stroke="#16a34a"
                     tick={{ fontSize: 12, fill: "#16a34a" }}
-                    label={{ value: "Claims", angle: -90, position: "insideLeft", style: { fill: "#16a34a" } }}
+                    label={{
+                      value: "Claims",
+                      angle: -90,
+                      position: "insideLeft",
+                      style: { fill: "#16a34a" },
+                    }}
                   />
                   <YAxis
                     yAxisId="right"
@@ -551,7 +521,12 @@ export function ValuationForecastingDesign({
                     stroke="#f59e0b"
                     tick={{ fontSize: 12, fill: "#f59e0b" }}
                     tickFormatter={formatYAxis}
-                    label={{ value: "Contributions", angle: 90, position: "insideRight", style: { fill: "#f59e0b" } }}
+                    label={{
+                      value: "Contributions",
+                      angle: 90,
+                      position: "insideRight",
+                      style: { fill: "#f59e0b" },
+                    }}
                   />
                   <Tooltip
                     cursor={{ fill: "#f9fafb" }}
@@ -561,8 +536,10 @@ export function ValuationForecastingDesign({
                       boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
                     }}
                     formatter={(value: any) => {
-                      if (typeof value === 'number') {
-                        return value >= 1000000 ? formatYAxis(value) : value.toLocaleString();
+                      if (typeof value === "number") {
+                        return value >= 1000000
+                          ? formatYAxis(value)
+                          : value.toLocaleString();
                       }
                       return value;
                     }}

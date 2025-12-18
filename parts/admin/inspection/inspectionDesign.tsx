@@ -399,6 +399,9 @@ export const InspectionsTable = React.memo<InspectionsTableProps>(
                   PERIOD
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  APPROVAL STATUS
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -466,6 +469,20 @@ export const InspectionsTable = React.memo<InspectionsTableProps>(
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">
                       {inspection.period || "N/A"}
+                    </td>
+                    <td className="px-4 py-4 text-sm">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          inspection.recordStatus?.toLowerCase() === "approved"
+                            ? "bg-green-100 text-green-800"
+                            : inspection.recordStatus?.toLowerCase() ===
+                              "reviewed"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {inspection.recordStatus || "Pending"}
+                      </span>
                     </td>
                     <td className="px-4 py-4 text-sm whitespace-nowrap">
                       <button

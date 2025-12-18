@@ -196,7 +196,10 @@ export default function LegalManagementDashboard() {
         return result;
       })();
 
-    // Date range filters (only apply if both are set to avoid default values)
+    // Period filters (single period OR range mode)
+    const matchesPeriod =
+      !apiParams.period || record.period === apiParams.period;
+
     const matchesPeriodFrom =
       !apiParams.period_from || record.period >= apiParams.period_from;
 
@@ -214,6 +217,7 @@ export default function LegalManagementDashboard() {
       matchesSearch &&
       matchesRegionFilter &&
       matchesBranchFilter &&
+      matchesPeriod &&
       matchesPeriodFrom &&
       matchesPeriodTo &&
       matchesRegion &&
@@ -225,6 +229,7 @@ export default function LegalManagementDashboard() {
         matchesSearch,
         matchesRegionFilter,
         matchesBranchFilter,
+        matchesPeriod,
         matchesPeriodFrom,
         matchesPeriodTo,
         matchesRegion,
@@ -433,6 +438,7 @@ export default function LegalManagementDashboard() {
         showBranchFilter={true}
         showMonthYearFilter={false}
         showDateRangeFilter={true}
+        showRecordStatusFilter={true}
       />
 
       {/* Legal Activities Table */}
@@ -491,9 +497,6 @@ export default function LegalManagementDashboard() {
                   BRANCH
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  STATUS
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   RECALCITANT EMPLOYERS
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -521,6 +524,9 @@ export default function LegalManagementDashboard() {
                   PERIOD
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  APPROVAL STATUS
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -543,19 +549,6 @@ export default function LegalManagementDashboard() {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {record.branch}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          record.recordStatus?.toLowerCase() === "approved"
-                            ? "bg-green-100 text-green-800"
-                            : record.recordStatus?.toLowerCase() === "reviewed"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {record.recordStatus || "Pending"}
-                      </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {record.recalcitrantEmployers.toLocaleString()}
@@ -583,6 +576,19 @@ export default function LegalManagementDashboard() {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {record.period}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          record.recordStatus?.toLowerCase() === "approved"
+                            ? "bg-green-100 text-green-800"
+                            : record.recordStatus?.toLowerCase() === "reviewed"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {record.recordStatus || "Pending"}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
                       <button

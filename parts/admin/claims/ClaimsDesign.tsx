@@ -116,14 +116,14 @@ export const ClaimsProcessingChart = React.memo<ClaimsProcessingChartProps>(
                 <Bar
                   dataKey="processed"
                   name="Claims Processed"
-                  fill="#22c55e"
+                  fill="#10b981"
                   radius={[4, 4, 0, 0]}
                   barSize={20}
                 />
                 <Bar
                   dataKey="target"
                   name="Target"
-                  fill="#3b82f6"
+                  fill="#60a5fa"
                   radius={[4, 4, 0, 0]}
                   barSize={20}
                 />
@@ -395,9 +395,6 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                   Amount PAID (₦)
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                  Status
-                </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
                   Date PROCESSED
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
@@ -408,6 +405,9 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
                   CLASS
+                </th>
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                  APPROVAL STATUS
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
                   Actions
@@ -473,15 +473,6 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                         )}
                       </div>
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
-                      <Badge
-                        className={`${getStatusBadgeColor(
-                          claim.status
-                        )} font-medium text-[10px]`}
-                      >
-                        {claim.status}
-                      </Badge>
-                    </td>
                     <td className="px-2 py-1.5 text-center text-xs text-gray-700 whitespace-nowrap">
                       {formatDate(claim.dateProcessed)}
                     </td>
@@ -503,6 +494,15 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                       <span className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-medium text-gray-900">
                         {claim.class || "—"}
                       </span>
+                    </td>
+                    <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
+                      <Badge
+                        className={`${getStatusBadgeColor(
+                          claim.status
+                        )} font-medium text-[10px]`}
+                      >
+                        {claim.status}
+                      </Badge>
                     </td>
                     <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
                       <button

@@ -11,19 +11,23 @@ import {
 import { ComplianceEntry } from "@/lib/types";
 import { formatCurrencyFull } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { getUserFromStorage, type UserRole } from "@/lib/auth";
 import { toast } from "sonner";
+import { useBulkComplianceActions } from "@/hooks/compliance";
 
 interface ComplianceDetailModalProps {
   entry: ComplianceEntry | null;
   isOpen: boolean;
   onClose: () => void;
+  onRefresh?: () => void;
 }
 
 export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   entry,
   isOpen,
   onClose,
+  onRefresh,
 }) => {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -37,6 +41,13 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedData, setEditedData] = useState<ComplianceEntry | null>(null);
+
+  // Use the bulk actions hook for single record updates
+  const {
+    updateSingleCompliance,
+    updateComplianceDetails,
+    loading: apiLoading,
+  } = useBulkComplianceActions();
 
   // Get user role
   useEffect(() => {
@@ -109,14 +120,21 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   };
 
   const handleSaveEdit = async () => {
+    if (!editedData || !entry?.id) return;
+
     setIsSubmitting(true);
     try {
-      // TODO: Call API to save edited data
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const success = await updateComplianceDetails(entry.id, editedData);
 
-      toast.success("Compliance record updated successfully");
-      setIsEditMode(false);
-      // Optionally refresh data here
+      if (success) {
+        toast.success("Compliance record updated successfully");
+        setIsEditMode(false);
+        if (onRefresh) {
+          onRefresh();
+        }
+      } else {
+        toast.error("Failed to update compliance record");
+      }
     } catch (error) {
       toast.error("Failed to update compliance record");
       console.error("Save error:", error);
@@ -166,25 +184,41 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   };
 
   const handleConfirmAction = async () => {
+    if (!entry?.id || !confirmAction) return;
+
     setIsSubmitting(true);
     try {
-      // TODO: Call API to update status
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const success = await updateSingleCompliance(
+        entry.id,
+        confirmAction === "reviewed" ? "reviewed" : "approved"
+      );
 
-      const message =
-        confirmAction === "reviewed"
-          ? "Compliance record marked as reviewed"
-          : "Compliance record approved successfully";
+      if (success) {
+        const message =
+          confirmAction === "reviewed"
+            ? "Compliance record marked as reviewed successfully"
+            : "Compliance record approved successfully";
 
-      toast.success(message);
-      setShowConfirmDialog(false);
-      onClose();
+        toast.success(message);
+        setShowConfirmDialog(false);
+        setConfirmAction(null);
+
+        if (onRefresh) {
+          onRefresh();
+        }
+
+        // Close modal after successful update
+        setTimeout(() => {
+          onClose();
+        }, 500);
+      } else {
+        toast.error("Failed to update status");
+      }
     } catch (error) {
       toast.error("Failed to update status");
       console.error("Action error:", error);
     } finally {
       setIsSubmitting(false);
-      setConfirmAction(null);
     }
   };
 
@@ -583,33 +617,114 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                 </div>
               </div>
             </section>
+
+            {/* Audit Trail */}
+            {displayData.recordStatus && (
+              <section
+                aria-labelledby="audit-heading"
+                className="bg-yellow-50 rounded-lg p-6 border border-yellow-200"
+              >
+                <h3
+                  id="audit-heading"
+                  className="font-semibold text-gray-900 mb-4"
+                >
+                  Audit Trail
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase">
+                      Record Status
+                    </p>
+                    <Badge
+                      className={`mt-1 ${
+                        displayData.recordStatus === "approved"
+                          ? "bg-green-100 text-green-800"
+                          : displayData.recordStatus === "reviewed"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {displayData.recordStatus.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase">
+                      Reviewed By
+                    </p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {displayData.reviewedBy || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase">
+                      Approved By
+                    </p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {displayData.approvedBy || "—"}
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
           </div>
 
           {/* Footer */}
           <div className="sticky bottom-0 bg-gray-50 border-t px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-end gap-3">
-            <Button type="button" onClick={onClose} variant="outline">
+            {/* Dynamic buttons based on recordStatus */}
+            {!isEditMode && (
+              <>
+                {/* Pending: Show Review button */}
+                {displayData.recordStatus === "pending" &&
+                  (canReview || canApprove) && (
+                    <Button
+                      onClick={handleReviewedClick}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Review
+                    </Button>
+                  )}
+                {/* Reviewed: Show Approve button (only Admin can approve) */}
+                {displayData.recordStatus === "reviewed" && canApprove && (
+                  <Button
+                    onClick={handleApproveClick}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve
+                  </Button>
+                )}
+                {/* Approved: Show approved badge */}
+                {displayData.recordStatus === "approved" && (
+                  <Badge className="bg-green-100 text-green-800 px-4 py-2 text-sm">
+                    <CheckCircle className="w-4 h-4 mr-2 inline" />
+                    Approved
+                  </Badge>
+                )}
+                {/* Fallback buttons if recordStatus not present */}
+                {!displayData.recordStatus && canReview && (
+                  <Button
+                    onClick={handleReviewedClick}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Review
+                  </Button>
+                )}
+                {!displayData.recordStatus && canApprove && !canReview && (
+                  <Button
+                    onClick={handleApproveClick}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve
+                  </Button>
+                )}
+              </>
+            )}
+            <Button onClick={onClose} variant="outline">
               Cancel
             </Button>
-            {canReview && (
-              <Button
-                type="button"
-                onClick={handleReviewedClick}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Mark as Reviewed
-              </Button>
-            )}
-            {canApprove && (
-              <Button
-                type="button"
-                onClick={handleApproveClick}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Approve
-              </Button>
-            )}
           </div>
         </div>
       </div>
