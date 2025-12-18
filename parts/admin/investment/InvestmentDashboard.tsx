@@ -20,36 +20,95 @@ import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
+import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPanel";
 import { InvestmentFilters } from "./InvestmentFilters";
 import { InvestmentCharts } from "./InvestmentCharts";
 import { InvestmentTable } from "./InvestmentTable";
 import { InvestmentUploadModal } from "./InvestmentUploadModal";
+import { InvestmentDetailModal } from "./InvestmentDetailModal";
 import { useInvestmentDashboard } from "@/hooks/investment/useInvestmentDashboard";
 import { useBulkInvestmentActions } from "@/hooks/investment/useBulkInvestmentActions";
+import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import { getUserFromStorage } from "@/lib/auth";
-import type { InvestmentFilterParams } from "@/lib/types/investment";
+import type {
+  InvestmentFilterParams,
+  InvestmentRecord,
+} from "@/lib/types/investment";
 
 export default function InvestmentDashboard() {
   // ============= STATE =============
-  const [filters, setFilters] = useState<InvestmentFilterParams>({
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
+    new Set()
+  );
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [selectedInvestment, setSelectedInvestment] =
+    useState<InvestmentRecord | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  // ============= FILTERS FOR METRICS & CHARTS =============
+  const [metricsFilters, setMetricsFilters] = useState<InvestmentFilterParams>({
     selectedMonth: undefined,
     selectedYear: undefined,
     periodFrom: undefined,
     periodTo: undefined,
     recordStatus: "",
   });
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
-    new Set()
-  );
-  const [userRole, setUserRole] = useState<string | null>(null);
+
+  // ============= ADVANCED FILTERS FOR TABLE =============
+  const {
+    filters: tableFilters,
+    regions,
+    branches,
+    apiParams,
+    userRole: filterUserRole,
+    userRegionId,
+    handleFilterChange: handleTableFilterChange,
+    resetFilters: resetTableFilters,
+  } = useAdvancedFilters({
+    module: "claims", // Use claims as it's supported, investment will work the same way
+  });
 
   // ============= HOOKS =============
+  // Use metrics filters for dashboard data (metrics and charts)
   const { data, metrics, chartData, records, loading, error, refetch } =
-    useInvestmentDashboard(filters);
+    useInvestmentDashboard(metricsFilters);
 
-  const { bulkReview, bulkApprove, loading: actionLoading } =
-    useBulkInvestmentActions();
+  // Map table filters to investment filters format for filtered records
+  const tableInvestmentFilters: InvestmentFilterParams = useMemo(
+    () => ({
+      selectedMonth: tableFilters.selectedMonth,
+      selectedYear: tableFilters.selectedYear,
+      periodFrom: tableFilters.dateFrom,
+      periodTo: tableFilters.dateTo,
+      recordStatus: tableFilters.recordStatus || "",
+      regionId: apiParams.region_id,
+      branchId: apiParams.branch_id,
+    }),
+    [
+      tableFilters.selectedMonth,
+      tableFilters.selectedYear,
+      tableFilters.dateFrom,
+      tableFilters.dateTo,
+      tableFilters.recordStatus,
+      apiParams.region_id,
+      apiParams.branch_id,
+    ]
+  );
+
+  // Fetch filtered records for table
+  const {
+    data: tableData,
+    records: filteredRecords,
+    loading: tableLoading,
+    refetch: refetchTable,
+  } = useInvestmentDashboard(tableInvestmentFilters);
+
+  const {
+    bulkReview,
+    bulkApprove,
+    loading: actionLoading,
+  } = useBulkInvestmentActions();
 
   // Get user role for permission checks
   useEffect(() => {
@@ -66,8 +125,8 @@ export default function InvestmentDashboard() {
     return normalizedRole === "admin" || normalizedRole === "manager";
   }, [userRole]);
 
-  const filteredCount = records.length;
-  const totalCount = data?.totalRecords || 0;
+  const filteredCount = filteredRecords.length;
+  const totalCount = tableData?.totalRecords || records.length;
 
   // Format change percentage
   const formatChange = (changePercent: number) => {
@@ -82,25 +141,39 @@ export default function InvestmentDashboard() {
   };
 
   // ============= HANDLERS =============
-  const handleFilterChange = (newFilters: InvestmentFilterParams) => {
-    setFilters(newFilters);
-    setSelectedRecords(new Set()); // Clear selection on filter change
+  const handleViewDetail = (investment: InvestmentRecord) => {
+    setSelectedInvestment(investment);
+    setIsDetailModalOpen(true);
   };
 
-  const handleResetFilters = () => {
-    setFilters({
+  const handleCloseDetail = () => {
+    setIsDetailModalOpen(false);
+    setSelectedInvestment(null);
+  };
+
+  const handleRefreshAfterUpdate = () => {
+    refetch();
+    refetchTable();
+  };
+
+  const handleUploadSuccess = () => {
+    setIsUploadModalOpen(false);
+    refetch();
+    refetchTable();
+  };
+
+  const handleMetricsFilterChange = (newFilters: InvestmentFilterParams) => {
+    setMetricsFilters(newFilters);
+  };
+
+  const handleResetMetricsFilters = () => {
+    setMetricsFilters({
       selectedMonth: undefined,
       selectedYear: undefined,
       periodFrom: undefined,
       periodTo: undefined,
       recordStatus: "",
     });
-    setSelectedRecords(new Set());
-  };
-
-  const handleUploadSuccess = () => {
-    setIsUploadModalOpen(false);
-    refetch();
   };
 
   const handleBulkReview = async () => {
@@ -109,6 +182,7 @@ export default function InvestmentDashboard() {
     if (success) {
       setSelectedRecords(new Set());
       refetch();
+      refetchTable();
     }
   };
 
@@ -118,14 +192,15 @@ export default function InvestmentDashboard() {
     if (success) {
       setSelectedRecords(new Set());
       refetch();
+      refetchTable();
     }
   };
 
   const handleSelectAll = () => {
-    if (selectedRecords.size === records.length) {
+    if (selectedRecords.size === filteredRecords.length) {
       setSelectedRecords(new Set());
     } else {
-      setSelectedRecords(new Set(records.map((r) => r.id)));
+      setSelectedRecords(new Set(filteredRecords.map((r) => r.id)));
     }
   };
 
@@ -171,10 +246,10 @@ export default function InvestmentDashboard() {
 
   // ============= PERIOD BADGE =============
   const getPeriodBadgeText = () => {
-    if (filters.periodFrom && filters.periodTo) {
-      return `Filtered Period: ${filters.periodFrom} - ${filters.periodTo}`;
+    if (metricsFilters.periodFrom && metricsFilters.periodTo) {
+      return `Filtered Period: ${metricsFilters.periodFrom} - ${metricsFilters.periodTo}`;
     }
-    if (filters.selectedMonth && filters.selectedYear) {
+    if (metricsFilters.selectedMonth && metricsFilters.selectedYear) {
       const months = [
         "Jan",
         "Feb",
@@ -189,8 +264,8 @@ export default function InvestmentDashboard() {
         "Nov",
         "Dec",
       ];
-      const monthLabel = months[parseInt(filters.selectedMonth) - 1];
-      return `Filtered Period: ${monthLabel} ${filters.selectedYear}`;
+      const monthLabel = months[parseInt(metricsFilters.selectedMonth) - 1];
+      return `Filtered Period: ${monthLabel} ${metricsFilters.selectedYear}`;
     }
     return null;
   };
@@ -226,13 +301,13 @@ export default function InvestmentDashboard() {
         )}
       </div>
 
-      {/* Filters */}
+      {/* Filters for Metrics & Charts */}
       <InvestmentFilters
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onReset={handleResetFilters}
-        totalEntries={totalCount}
-        filteredCount={filteredCount}
+        filters={metricsFilters}
+        onFilterChange={handleMetricsFilterChange}
+        onReset={handleResetMetricsFilters}
+        totalEntries={data?.totalRecords || 0}
+        filteredCount={records.length}
       />
 
       {/* Metrics Cards */}
@@ -249,9 +324,7 @@ export default function InvestmentDashboard() {
           />
           <MetricCard
             title="PUBLIC TREASURY FUNDED"
-            value={formatCurrency(
-              metrics.contributionsPublicTreasury.current
-            )}
+            value={formatCurrency(metrics.contributionsPublicTreasury.current)}
             change={formatChange(
               metrics.contributionsPublicTreasury.changePercent
             )}
@@ -271,9 +344,7 @@ export default function InvestmentDashboard() {
           />
           <MetricCard
             title="INFORMAL ECONOMY"
-            value={formatCurrency(
-              metrics.contributionsInformalEconomy.current
-            )}
+            value={formatCurrency(metrics.contributionsInformalEconomy.current)}
             change={formatChange(
               metrics.contributionsInformalEconomy.changePercent
             )}
@@ -300,14 +371,33 @@ export default function InvestmentDashboard() {
       {/* Charts */}
       <InvestmentCharts chartData={chartData} />
 
+      {/* Advanced Filters for Table */}
+      <AdvancedFilterPanel
+        regions={regions}
+        branches={branches}
+        filters={tableFilters}
+        onFilterChange={handleTableFilterChange}
+        onReset={resetTableFilters}
+        totalEntries={totalCount}
+        filteredCount={filteredCount}
+        userRole={filterUserRole}
+        userRegionId={userRegionId}
+        showRegionFilter={true}
+        showBranchFilter={true}
+        showMonthYearFilter={true}
+        showDateRangeFilter={true}
+        showRecordStatusFilter={true}
+      />
+
       {/* Records Table */}
       <InvestmentTable
-        records={records}
+        records={filteredRecords}
         selectedRecords={selectedRecords}
         onSelectAll={handleSelectAll}
         onSelectRecord={handleSelectRecord}
         onBulkReview={handleBulkReview}
         onBulkApprove={handleBulkApprove}
+        onViewDetail={handleViewDetail}
         isHQUser={isHQUser}
         actionLoading={actionLoading}
       />
@@ -320,6 +410,14 @@ export default function InvestmentDashboard() {
           onSuccess={handleUploadSuccess}
         />
       )}
+
+      {/* Detail Modal */}
+      <InvestmentDetailModal
+        investment={selectedInvestment}
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseDetail}
+        onRefresh={handleRefreshAfterUpdate}
+      />
     </div>
   );
 }

@@ -7,7 +7,10 @@
 import React, { useState } from "react";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StatusBadge, getStatusVariant } from "@/components/design-system/StatusBadge";
+import {
+  StatusBadge,
+  getStatusVariant,
+} from "@/components/design-system/StatusBadge";
 import type { InvestmentRecord } from "@/lib/types/investment";
 import {
   AlertDialog,
@@ -27,6 +30,7 @@ interface InvestmentTableProps {
   onSelectRecord: (recordId: string) => void;
   onBulkReview: () => void;
   onBulkApprove: () => void;
+  onViewDetail: (investment: InvestmentRecord) => void;
   isHQUser: boolean;
   actionLoading: boolean;
 }
@@ -38,12 +42,13 @@ export const InvestmentTable: React.FC<InvestmentTableProps> = ({
   onSelectRecord,
   onBulkReview,
   onBulkApprove,
+  onViewDetail,
   isHQUser,
   actionLoading,
 }) => {
-  const [confirmAction, setConfirmAction] = useState<"review" | "approve" | null>(null);
-  const [selectedRecordDetail, setSelectedRecordDetail] = useState<InvestmentRecord | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<
+    "review" | "approve" | null
+  >(null);
 
   // Format currency
   const formatCurrency = (value: number) => {
@@ -80,18 +85,22 @@ export const InvestmentTable: React.FC<InvestmentTableProps> = ({
     setConfirmAction(null);
   };
 
-  const allSelected = records.length > 0 && selectedRecords.size === records.length;
+  const allSelected =
+    records.length > 0 && selectedRecords.size === records.length;
 
   return (
     <>
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
         {/* Table Header with Bulk Actions */}
         <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-gray-900">Investment Records</h2>
+          <h2 className="text-sm font-bold text-gray-900">
+            Investment Records
+          </h2>
           {selectedRecords.size > 0 && isHQUser && (
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-600">
-                {selectedRecords.size} record{selectedRecords.size > 1 ? "s" : ""} selected
+                {selectedRecords.size} record
+                {selectedRecords.size > 1 ? "s" : ""} selected
               </span>
               <Button
                 variant="outline"
@@ -238,10 +247,7 @@ export const InvestmentTable: React.FC<InvestmentTableProps> = ({
                       </td>
                       <td className="px-2 py-1.5 text-center whitespace-nowrap">
                         <button
-                          onClick={() => {
-                            setSelectedRecordDetail(record);
-                            setIsDetailModalOpen(true);
-                          }}
+                          onClick={() => onViewDetail(record)}
                           className="inline-flex items-center justify-center p-1 text-gray-600 hover:text-green-600 transition-colors"
                           aria-label="View details"
                         >
@@ -275,10 +281,12 @@ export const InvestmentTable: React.FC<InvestmentTableProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Review</AlertDialogTitle>
             <AlertDialogDescription>
-              Mark {selectedRecords.size} record{selectedRecords.size > 1 ? "s" : ""} as reviewed?
+              Mark {selectedRecords.size} record
+              {selectedRecords.size > 1 ? "s" : ""} as reviewed?
               <br />
               <br />
-              This action will update the record status and notify relevant stakeholders.
+              This action will update the record status and notify relevant
+              stakeholders.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -299,10 +307,12 @@ export const InvestmentTable: React.FC<InvestmentTableProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Approval</AlertDialogTitle>
             <AlertDialogDescription>
-              Approve {selectedRecords.size} record{selectedRecords.size > 1 ? "s" : ""}?
+              Approve {selectedRecords.size} record
+              {selectedRecords.size > 1 ? "s" : ""}?
               <br />
               <br />
-              ⚠️ This action is final and cannot be reversed. Ensure all data is validated.
+              ⚠️ This action is final and cannot be reversed. Ensure all data is
+              validated.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
