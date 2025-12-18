@@ -201,7 +201,7 @@ export const DashboardCards: React.FC<{ metrics: DashboardMetrics }> = ({
       />
 
       <MetricCard
-        title="PERFORMANCE RATE"
+        title="PERFORMANCE RATE (Actual / Targeted Contributions)"
         value={`${metrics.performanceRate.toFixed(1)}%`}
         icon={<TrendingUp className="w-5 h-5" />}
         colorScheme="green"
@@ -295,136 +295,139 @@ export const ComplianceTable: React.FC<{
         <div className="inline-block min-w-full align-middle">
           <table className="min-w-full divide-y divide-gray-200" role="table">
             <thead className="bg-gray-50 border-b">
-            <tr>
-              <TableHeader
-                label="Region"
-                field="region"
-                sortConfig={sortConfig}
-                onSort={onSort}
-              />
-              <TableHeader
-                label="Branch"
-                field="branch"
-                sortConfig={sortConfig}
-                onSort={onSort}
-              />
-              <TableHeader
-                label="Actual Contributions Collected"
-                field="contributionCollected"
-                sortConfig={sortConfig}
-                onSort={onSort}
-                align="right"
-              />
-              <TableHeader
-                label="Contributions Target"
-                field="target"
-                sortConfig={sortConfig}
-                onSort={onSort}
-                align="right"
-              />
-              <TableHeader
-                label="Performance Rate"
-                field="achievement"
-                sortConfig={sortConfig}
-                onSort={onSort}
-                align="right"
-              />
-              <TableHeader
-                label="Employers Registered"
-                field="employersRegistered"
-                sortConfig={sortConfig}
-                onSort={onSort}
-                align="right"
-              />
-              <TableHeader
-                label="Employees Coverage"
-                field="employees"
-                sortConfig={sortConfig}
-                onSort={onSort}
-                align="right"
-              />
-              <TableHeader
-                label="Registration Fees"
-                field="registrationFees"
-                sortConfig={sortConfig}
-                onSort={onSort}
-                align="right"
-              />
-              <TableHeader
-                label="Certificate Fees"
-                field="certificateFees"
-                sortConfig={sortConfig}
-                onSort={onSort}
-                align="right"
-              />
-              <TableHeader
-                label="Period"
-                field="period"
-                sortConfig={sortConfig}
-                onSort={onSort}
-              />
-              <th
-                className="px-3 sm:px-4 py-3 text-left text-sm font-medium text-gray-700"
-                scope="col"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((entry) => (
-              <tr
-                key={entry.id}
-                className="border-b hover:bg-gray-50 transition-colors"
-              >
-                <td className="px-3 sm:px-4 py-3 text-sm font-medium text-gray-900">
-                  {entry.region}
-                </td>
-                <td className="px-3 sm:px-4 py-3 text-sm text-gray-700">
-                  {entry.branch || <span className="text-gray-400">N/A</span>}
-                </td>
-                <td className="px-3 sm:px-4 py-3 text-sm text-right font-medium text-gray-900">
-                  {formatCurrency(entry.contributionCollected)}
-                </td>
-                <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
-                  {formatCurrency(entry.target)}
-                </td>
-                <td className="px-3 sm:px-4 py-3 text-sm text-right">
-                  <span
-                    className={`font-semibold ${getAchievementTextColor(
-                      entry.achievement
-                    )}`}
-                  >
-                    {entry.achievement.toFixed(1)}%
-                  </span>
-                </td>
-                <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
-                  {entry.employersRegistered.toLocaleString()}
-                </td>
-                <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
-                  {entry.employees.toLocaleString()}
-                </td>
-                <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
-                  {formatCurrency(entry.registrationFees)}
-                </td>
-                <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
-                  {formatCurrency(entry.certificateFees)}
-                </td>
-                <td className="px-3 sm:px-4 py-3 text-sm text-gray-700">
-                  {entry.period}
-                </td>
-                <td className="px-3 sm:px-4 py-3 text-sm">
-                  <button
-                    onClick={() => onViewDetails(entry)}
-                    className="p-2 hover:bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
-                    aria-label={`View details for ${entry.region}`}
-                  >
-                    <Eye className="w-5 h-5 text-blue-600" aria-hidden="true" />
-                  </button>
-                </td>
+              <tr>
+                <TableHeader
+                  label="Region"
+                  field="region"
+                  sortConfig={sortConfig}
+                  onSort={onSort}
+                />
+                <TableHeader
+                  label="Branch"
+                  field="branch"
+                  sortConfig={sortConfig}
+                  onSort={onSort}
+                />
+                <TableHeader
+                  label="Actual Contributions Collected"
+                  field="contributionCollected"
+                  sortConfig={sortConfig}
+                  onSort={onSort}
+                  align="right"
+                />
+                <TableHeader
+                  label="Contributions Target"
+                  field="target"
+                  sortConfig={sortConfig}
+                  onSort={onSort}
+                  align="right"
+                />
+                <TableHeader
+                  label="Performance Rate"
+                  field="achievement"
+                  sortConfig={sortConfig}
+                  onSort={onSort}
+                  align="right"
+                />
+                <TableHeader
+                  label="Employers Registered"
+                  field="employersRegistered"
+                  sortConfig={sortConfig}
+                  onSort={onSort}
+                  align="right"
+                />
+                <TableHeader
+                  label="Employees Coverage"
+                  field="employees"
+                  sortConfig={sortConfig}
+                  onSort={onSort}
+                  align="right"
+                />
+                <TableHeader
+                  label="Registration Fees"
+                  field="registrationFees"
+                  sortConfig={sortConfig}
+                  onSort={onSort}
+                  align="right"
+                />
+                <TableHeader
+                  label="Certificate Fees"
+                  field="certificateFees"
+                  sortConfig={sortConfig}
+                  onSort={onSort}
+                  align="right"
+                />
+                <TableHeader
+                  label="Period"
+                  field="period"
+                  sortConfig={sortConfig}
+                  onSort={onSort}
+                />
+                <th
+                  className="px-3 sm:px-4 py-3 text-left text-sm font-medium text-gray-700"
+                  scope="col"
+                >
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
+            </thead>
+            <tbody>
+              {entries.map((entry) => (
+                <tr
+                  key={entry.id}
+                  className="border-b hover:bg-gray-50 transition-colors"
+                >
+                  <td className="px-3 sm:px-4 py-3 text-sm font-medium text-gray-900">
+                    {entry.region}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-sm text-gray-700">
+                    {entry.branch || <span className="text-gray-400">N/A</span>}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-sm text-right font-medium text-gray-900">
+                    {formatCurrency(entry.contributionCollected)}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
+                    {formatCurrency(entry.target)}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-sm text-right">
+                    <span
+                      className={`font-semibold ${getAchievementTextColor(
+                        entry.achievement
+                      )}`}
+                    >
+                      {entry.achievement.toFixed(1)}%
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
+                    {entry.employersRegistered.toLocaleString()}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
+                    {entry.employees.toLocaleString()}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
+                    {formatCurrency(entry.registrationFees)}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-sm text-right text-gray-700">
+                    {formatCurrency(entry.certificateFees)}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-sm text-gray-700">
+                    {entry.period}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-sm">
+                    <button
+                      onClick={() => onViewDetails(entry)}
+                      className="p-2 hover:bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
+                      aria-label={`View details for ${entry.region}`}
+                    >
+                      <Eye
+                        className="w-5 h-5 text-blue-600"
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       </div>
@@ -849,7 +852,8 @@ export const ComplianceUploadModal: React.FC<{
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <span className="text-sm text-blue-800">
-                    Download the template for {regions.find((r) => r.id === selectedRegionId)?.name}
+                    Download the template for{" "}
+                    {regions.find((r) => r.id === selectedRegionId)?.name}
                   </span>
                   <button
                     onClick={handleDownloadTemplate}
@@ -923,7 +927,8 @@ export const ComplianceUploadModal: React.FC<{
                   <div className="flex items-center gap-2 text-green-600 text-sm">
                     <CheckCircle className="w-4 h-4" />
                     <span>
-                      Processing complete! Uploaded {uploadResponse?.valid_rows || 0} records.
+                      Processing complete! Uploaded{" "}
+                      {uploadResponse?.valid_rows || 0} records.
                     </span>
                   </div>
                 )}
@@ -959,16 +964,30 @@ export const ComplianceUploadModal: React.FC<{
 
             {uploadResponse && uploadResponse.processing_summary && (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Processing Summary</h4>
+                <h4 className="font-semibold text-gray-900 mb-2">
+                  Processing Summary
+                </h4>
                 <div className="space-y-2 text-sm">
-                  {Object.entries(uploadResponse.processing_summary).map(([sheet, summary]: [string, any]) => (
-                    <div key={sheet} className="flex justify-between items-center">
-                      <span className="font-medium">{sheet}:</span>
-                      <span className={summary.rows_with_errors > 0 ? "text-red-600" : "text-green-600"}>
-                        {summary.valid_records_created} valid / {summary.rows_with_errors} errors
-                      </span>
-                    </div>
-                  ))}
+                  {Object.entries(uploadResponse.processing_summary).map(
+                    ([sheet, summary]: [string, any]) => (
+                      <div
+                        key={sheet}
+                        className="flex justify-between items-center"
+                      >
+                        <span className="font-medium">{sheet}:</span>
+                        <span
+                          className={
+                            summary.rows_with_errors > 0
+                              ? "text-red-600"
+                              : "text-green-600"
+                          }
+                        >
+                          {summary.valid_records_created} valid /{" "}
+                          {summary.rows_with_errors} errors
+                        </span>
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
             )}

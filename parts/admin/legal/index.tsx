@@ -227,16 +227,10 @@ export default function LegalManagementDashboard() {
           colorScheme="orange"
         />
         <MetricCard
-          title="CASES INSTITUTED IN COURT"
-          value={data.metricCards.casesInstituted}
-          icon={<Gavel className="w-5 h-5" />}
-          colorScheme="gray"
-        />
-        <MetricCard
-          title="ALTERNATE DISPUTE RESOLUTION (ADR)"
-          value={data.metricCards.adrCases}
-          icon={<Scale className="w-5 h-5" />}
-          colorScheme="purple"
+          title="TOTAL DEFAULTING EMPLOYERS"
+          value={data.metricCards.defaultingEmployers}
+          icon={<Users className="w-5 h-5" />}
+          colorScheme="blue"
         />
         <MetricCard
           title="TOTAL PLAN ISSUED"
@@ -245,18 +239,24 @@ export default function LegalManagementDashboard() {
           colorScheme="green"
         />
         <MetricCard
+          title="ALTERNATE DISPUTE RESOLUTION (ADR)"
+          value={data.metricCards.adrCases}
+          icon={<Scale className="w-5 h-5" />}
+          colorScheme="purple"
+        />
+        <MetricCard
+          title="CASES INSTITUTED IN COURT"
+          value={data.metricCards.casesInstituted}
+          icon={<Gavel className="w-5 h-5" />}
+          colorScheme="gray"
+        />
+        <MetricCard
           title="CASES WON"
           value={
             data.metricCards.casesWon || data.metricCards.sectorsCovered || 0
           }
           icon={<CheckCircle className="w-5 h-5" />}
           colorScheme="green"
-        />
-        <MetricCard
-          title="TOTAL DEFAULTING EMPLOYERS"
-          value={data.metricCards.defaultingEmployers}
-          icon={<Users className="w-5 h-5" />}
-          colorScheme="blue"
         />
       </MetricsGrid>
 

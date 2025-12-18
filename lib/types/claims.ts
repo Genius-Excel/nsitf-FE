@@ -146,6 +146,7 @@ export interface Claim {
   sector: string | null;
   class: string | null;
   date: string | null; // payment_period
+  payment_month?: string | null;
 }
 
 export interface ClaimDetail {
@@ -289,6 +290,7 @@ export const transformManageClaimRecord = (
   sector: record.sector,
   class: record.claim_class,
   date: record.period,
+  payment_month: record.payment_month || null,
 });
 
 /**

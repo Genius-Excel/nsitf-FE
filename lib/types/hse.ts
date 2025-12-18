@@ -1,3 +1,21 @@
+// API Response from /api/hse-ops/manage-hse endpoint
+export interface ManageHSERecordAPI {
+  id: string;
+  branch: string;
+  region: string;
+  total_actual_osh_activities: number;
+  target_osh_activities: number;
+  osh_enlightment: number;
+  osh_inspection_audit: number;
+  accident_investigation: number;
+  period: string; // YYYY-MM format
+  record_status: "pending" | "reviewed" | "approved";
+  reviewed_by: string | null;
+  approved_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface HSERecordAPI {
   id: string;
   record_type: string;
@@ -13,6 +31,18 @@ export interface HSERecordAPI {
   status: string;
   created_at: string;
   updated_at: string;
+}
+
+// API Response from /api/hse-ops/metrics endpoint
+export interface HSEMetricsAPI {
+  metric_cards: {
+    total_osh_activities: number;
+    total_target_activities: number;
+    performance_rate: number;
+    total_osh_enlightenment: number;
+    total_osh_inspection_audit: number;
+    total_accident_investigation: number;
+  };
 }
 
 export interface HSEDashboardMetricsAPI {
@@ -85,6 +115,11 @@ export interface RegionalSummary {
   oshInspectionAudit: number;
   accidentInvestigation: number;
   period: string;
+  record_status?: string;
+  reviewed_by?: string | null;
+  approved_by?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface HSEDashboardMetrics {
@@ -164,6 +199,38 @@ export function transformHSERecordFromAPI(apiRecord: HSERecordAPI): HSERecord {
 }
 
 /**
+ * Transform ManageHSERecordAPI to RegionalSummary (for table display)
+ */
+export function transformManageHSERecord(
+  apiRecord: ManageHSERecordAPI
+): RegionalSummary {
+  return {
+    id: apiRecord.id,
+    region: apiRecord.region,
+    branch: apiRecord.branch,
+    totalActualOSHActivities: apiRecord.total_actual_osh_activities,
+    targetOSHActivities: apiRecord.target_osh_activities,
+    performanceRate:
+      apiRecord.target_osh_activities > 0
+        ? Math.round(
+            (apiRecord.total_actual_osh_activities /
+              apiRecord.target_osh_activities) *
+              100
+          )
+        : 0,
+    oshEnlightenment: apiRecord.osh_enlightment,
+    oshInspectionAudit: apiRecord.osh_inspection_audit,
+    accidentInvestigation: apiRecord.accident_investigation,
+    period: apiRecord.period,
+    record_status: apiRecord.record_status,
+    reviewed_by: apiRecord.reviewed_by,
+    approved_by: apiRecord.approved_by,
+    created_at: apiRecord.created_at,
+    updated_at: apiRecord.updated_at,
+  };
+}
+
+/**
  * Transform UI form data to API payload
  * Converts camelCase to snake_case for API submission
  */
@@ -202,7 +269,8 @@ export function transformHSEDashboardFromAPI(
       asOf: apiData.filters.as_of,
     },
     metricCards: {
-      totalActualOSHActivities: apiData.metric_cards.total_actual_osh_activities,
+      totalActualOSHActivities:
+        apiData.metric_cards.total_actual_osh_activities,
       targetOSHActivities: apiData.metric_cards.target_osh_activities,
       performanceRate: apiData.metric_cards.performance_rate,
       oshEnlightenment: apiData.metric_cards.osh_enlightenment,

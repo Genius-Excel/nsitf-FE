@@ -1,21 +1,20 @@
 // ============================================================================
 // useHSEDashboard Hook
 // ============================================================================
-// Fetches HSE dashboard metrics including:
-// - Totals by record type
-// - Recent activities
-// - Monthly summary
-// - Safety compliance rates
+// Fetches HSE dashboard metrics and regional summary
 //
-// API Endpoint: GET /api/hse-ops/hse-dashboard-metrics
+// API Endpoints:
+// - GET /api/hse-ops/metrics (for metric cards)
+// - GET /api/hse-ops/manage-hse (for regional summary table)
 // ============================================================================
 
 import { useState, useEffect, useCallback } from "react";
 import HttpService from "@/services/httpServices";
 import {
-  HSEDashboardResponseAPI,
+  HSEMetricsAPI,
+  ManageHSERecordAPI,
   HSEDashboardMetrics,
-  transformHSEDashboardFromAPI,
+  transformManageHSERecord,
 } from "@/lib/types/hse";
 
 interface UseHSEDashboardReturn {
@@ -25,7 +24,9 @@ interface UseHSEDashboardReturn {
   refetch: () => Promise<void>;
 }
 
-export function useHSEDashboard(filters: Record<string, string> = {}): UseHSEDashboardReturn {
+export function useHSEDashboard(
+  filters: Record<string, string> = {}
+): UseHSEDashboardReturn {
   const [data, setData] = useState<HSEDashboardMetrics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,13 +39,47 @@ export function useHSEDashboard(filters: Record<string, string> = {}): UseHSEDas
       const httpService = new HttpService();
 
       // Build query string from filters
-      const queryParams = new URLSearchParams({ view: 'table', ...filters }).toString();
-      const url = `/api/hse-ops/dashboard?${queryParams}`;
+      const queryParams = new URLSearchParams(filters).toString();
 
-      const response = await httpService.getData(url);
+      // Fetch metrics and regional summary in parallel
+      const [metricsResponse, summaryResponse] = await Promise.all([
+        httpService.getData(
+          `/api/hse-ops/metrics${queryParams ? `?${queryParams}` : ""}`
+        ),
+        httpService.getData(
+          `/api/hse-ops/manage-hse${queryParams ? `?${queryParams}` : ""}`
+        ),
+      ]);
 
-      const apiData: HSEDashboardResponseAPI = response.data;
-      const transformedData = transformHSEDashboardFromAPI(apiData.data);
+      const metricsData: HSEMetricsAPI =
+        metricsResponse.data.data || metricsResponse.data;
+      const summaryData: ManageHSERecordAPI[] = Array.isArray(
+        summaryResponse.data
+      )
+        ? summaryResponse.data
+        : summaryResponse.data.data || [];
+
+      // Transform data to UI format
+      const transformedData: HSEDashboardMetrics = {
+        filters: {
+          regionId: filters.region_id || null,
+          period: filters.period || new Date().toISOString().slice(0, 7),
+          asOf: new Date().toISOString().split("T")[0],
+        },
+        metricCards: {
+          totalActualOSHActivities:
+            metricsData.metric_cards.total_osh_activities,
+          targetOSHActivities: metricsData.metric_cards.total_target_activities,
+          performanceRate: metricsData.metric_cards.performance_rate,
+          oshEnlightenment: metricsData.metric_cards.total_osh_enlightenment,
+          oshAudit: metricsData.metric_cards.total_osh_inspection_audit,
+          accidentInvestigation:
+            metricsData.metric_cards.total_accident_investigation,
+        },
+        regionalSummary: summaryData.map((record) =>
+          transformManageHSERecord(record)
+        ),
+      };
 
       setData(transformedData);
     } catch (err: any) {
