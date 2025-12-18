@@ -158,6 +158,7 @@ export interface Claim {
   class: string | null;
   date: string | null; // payment_period
   payment_month?: string | null;
+  record_status?: "pending" | "reviewed" | "approved"; // Approval status
 }
 
 export interface ClaimDetail {
@@ -286,25 +287,25 @@ export const transformClaimRecord = (record: ClaimRecord): Claim => ({
  * Transforms ManageClaimRecord to component Claim
  * Handles the different field naming from /manage-claims endpoint
  */
-export const transformManageClaimRecord = (
-  record: ManageClaimRecord
-): Claim => ({
-  id: record.id,
-  claimId: record.ecs_number,
-  employer: record.employer,
-  claimant: record.beneficiary,
-  gender: record.gender ?? null,
-  type: normalizeClaimType(record.claim_type),
-  amountRequested: record.amount_requested,
-  amountPaid: record.amount_paid,
-  status: capitalizeStatus(record.claim_status) as any,
-  dateProcessed: record.date_processed,
-  datePaid: record.date_paid,
-  sector: record.sector,
-  class: record.claim_class,
-  date: record.period,
-  payment_month: record.payment_month ?? null,
-});
+export const transformManageClaimRecord = (record: ManageClaimRecord): Claim =>
+  ({
+    id: record.id,
+    claimId: record.ecs_number,
+    employer: record.employer,
+    claimant: record.beneficiary,
+    gender: record.gender ?? null,
+    type: normalizeClaimType(record.claim_type),
+    amountRequested: record.amount_requested,
+    amountPaid: record.amount_paid,
+    status: capitalizeStatus(record.claim_status) as any,
+    dateProcessed: record.date_processed,
+    datePaid: record.date_paid,
+    sector: record.sector,
+    class: record.claim_class,
+    date: record.period,
+    payment_month: record.payment_month ?? null,
+    record_status: record.record_status, // Add approval status
+  } as any);
 
 /**
  * Build a ClaimDetail from a ManageClaimRecord when a dedicated detail

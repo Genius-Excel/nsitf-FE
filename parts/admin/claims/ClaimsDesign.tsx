@@ -395,6 +395,9 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                   Amount PAID (₦)
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                  STATUS
+                </th>
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
                   Date PROCESSED
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
@@ -407,7 +410,7 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                   CLASS
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                  APPROVAL STATUS
+                  RECORD STATUS
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
                   Actions
@@ -473,6 +476,15 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                         )}
                       </div>
                     </td>
+                    <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
+                      <Badge
+                        className={`${getStatusBadgeColor(
+                          claim.status
+                        )} font-medium text-[10px]`}
+                      >
+                        {claim.status}
+                      </Badge>
+                    </td>
                     <td className="px-2 py-1.5 text-center text-xs text-gray-700 whitespace-nowrap">
                       {formatDate(claim.dateProcessed)}
                     </td>
@@ -497,11 +509,15 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                     </td>
                     <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
                       <Badge
-                        className={`${getStatusBadgeColor(
-                          claim.status
-                        )} font-medium text-[10px]`}
+                        className={`${
+                          claim.record_status === "approved"
+                            ? "bg-green-100 text-green-800 border-green-200"
+                            : claim.record_status === "reviewed"
+                            ? "bg-blue-100 text-blue-800 border-blue-200"
+                            : "bg-yellow-100 text-yellow-800 border-yellow-200"
+                        } font-medium text-[10px] capitalize`}
                       >
-                        {claim.status}
+                        {claim.record_status || "pending"}
                       </Badge>
                     </td>
                     <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
