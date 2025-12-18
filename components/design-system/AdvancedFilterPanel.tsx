@@ -166,12 +166,16 @@ export function AdvancedFilterPanel({
     JSON.stringify(pendingFilters) !== JSON.stringify(filters);
 
   // Apply filters handler
-  const handleApplyFilters = () => {
+  const handleApplyFilters = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     onFilterChange(pendingFilters);
   };
 
   // Clear filters handler
-  const handleClearFilters = () => {
+  const handleClearFilters = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     setPendingFilters({
       selectedRegionId: "",
       selectedBranchId: "",
@@ -186,11 +190,16 @@ export function AdvancedFilterPanel({
   };
 
   const handleRegionChange = (regionId: string) => {
-    setPendingFilters({
+    const newRegionId = regionId === "all" ? "" : regionId;
+    const updatedFilters = {
       ...pendingFilters,
-      selectedRegionId: regionId === "all" ? "" : regionId,
+      selectedRegionId: newRegionId,
       selectedBranchId: "", // Reset branch when region changes
-    });
+    };
+    setPendingFilters(updatedFilters);
+
+    // Immediately apply region change to trigger branch fetching
+    onFilterChange(updatedFilters);
   };
 
   const handleBranchChange = (branchId: string) => {

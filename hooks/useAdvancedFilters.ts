@@ -70,12 +70,23 @@ export function useAdvancedFilters({
         return;
       }
 
+      console.log(
+        "Fetching regions from:",
+        `${API_BASE_URL}/api/admin/regions`
+      );
+      console.log("Using token:", token ? "Token present" : "No token");
+
       const response = await fetch(`${API_BASE_URL}/api/admin/regions`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+      }).catch((err) => {
+        console.error("Fetch error for regions:", err);
+        throw err;
       });
+
+      console.log("✅ Regions response received. Status:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -86,22 +97,41 @@ export function useAdvancedFilters({
       }
 
       const result = await response.json();
+      console.log("Regions API response:", result);
+
+      // Handle different response structures
+      let regionData: any[] = [];
+      if (Array.isArray(result)) {
+        regionData = result;
+      } else if (result.data && Array.isArray(result.data)) {
+        regionData = result.data;
+      } else if (result.regions && Array.isArray(result.regions)) {
+        regionData = result.regions;
+      }
+
+      console.log("Extracted region data:", regionData);
 
       // Map API response to Region format
-      const mappedRegions: Region[] = (result.data || result || []).map(
-        (r: any) => ({
-          id: r.id || r.region_id,
-          name: r.name || r.region_name,
-          code: r.code || r.region_code,
-        })
-      );
+      const mappedRegions: Region[] = regionData.map((r: any) => ({
+        id: r.id || r.region_id,
+        name: r.name || r.region_name,
+        code: r.code || r.region_code || "",
+      }));
 
+      console.log(`Mapped ${mappedRegions.length} regions:`, mappedRegions);
+      console.log("First region:", mappedRegions[0]);
       setRegions(mappedRegions);
+      console.log("✅ Regions successfully set in state");
     } catch (error) {
-      console.error("Failed to fetch regions:", error);
+      console.error("❌ Failed to fetch regions:", error);
+      if (error instanceof Error) {
+        console.error("Error message:", error.message);
+        console.error("Error stack:", error.stack);
+      }
       setRegions([]);
     } finally {
       setRegionsLoading(false);
+      console.log("Regions loading complete");
     }
   }, []);
 
@@ -117,30 +147,64 @@ export function useAdvancedFilters({
       const token = localStorage.getItem("access_token");
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/admin/branches?region_id=${regionId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      if (!token) {
+        console.warn("No access token found for fetching branches");
+        setBranches([]);
+        setBranchesLoading(false);
+        return;
+      }
 
-      if (!response.ok) throw new Error("Failed to fetch branches");
+      console.log("Fetching branches for region:", regionId);
+      const url = `${API_BASE_URL}/api/admin/branches?region_id=${regionId}`;
+      console.log("Branches API URL:", url);
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("Branches response status:", response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Branches API error:", errorData);
+        throw new Error(errorData.message || "Failed to fetch branches");
+      }
 
       const result = await response.json();
+      console.log("Branches API response:", result);
+
+      // Handle different response structures
+      let branchData: any[] = [];
+      if (Array.isArray(result)) {
+        branchData = result;
+      } else if (result.data && Array.isArray(result.data)) {
+        branchData = result.data;
+      } else if (result.branches && Array.isArray(result.branches)) {
+        branchData = result.branches;
+      }
+
+      console.log("Extracted branch data:", branchData);
 
       // Map API response to Branch format
-      const mappedBranches: Branch[] = (result.data || result || []).map(
-        (b: any) => ({
-          id: b.id || b.branch_id,
-          name: b.name || b.branch_name,
-          code: b.code || b.branch_code,
-          region_id: b.region_id || regionId,
-        })
-      );
+      const mappedBranches: Branch[] = branchData.map((b: any) => ({
+        id: b.id || b.branch_id,
+        name: b.name || b.branch_name,
+        code: b.code || b.branch_code || "",
+        region_id: b.region_id || regionId,
+      }));
 
+      console.log(
+        `Mapped ${mappedBranches.length} branches for region ${regionId}:`,
+        mappedBranches
+      );
+      if (mappedBranches.length === 0) {
+        console.warn(`No branches found for region ${regionId}`);
+      } else {
+        console.log("First branch:", mappedBranches[0]);
+      }
       setBranches(mappedBranches);
     } catch (error) {
       console.error("Failed to fetch branches:", error);
@@ -158,8 +222,13 @@ export function useAdvancedFilters({
   // Fetch branches when region changes
   useEffect(() => {
     if (filters.selectedRegionId) {
+      console.log(
+        "Region changed, fetching branches for:",
+        filters.selectedRegionId
+      );
       fetchBranches(filters.selectedRegionId);
     } else {
+      console.log("No region selected, clearing branches");
       setBranches([]);
     }
   }, [filters.selectedRegionId, fetchBranches]);
