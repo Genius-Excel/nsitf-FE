@@ -116,14 +116,14 @@ export const ClaimsProcessingChart = React.memo<ClaimsProcessingChartProps>(
                 <Bar
                   dataKey="processed"
                   name="Claims Processed"
-                  fill="#22c55e"
+                  fill="#10b981"
                   radius={[4, 4, 0, 0]}
                   barSize={20}
                 />
                 <Bar
                   dataKey="target"
                   name="Target"
-                  fill="#3b82f6"
+                  fill="#60a5fa"
                   radius={[4, 4, 0, 0]}
                   barSize={20}
                 />

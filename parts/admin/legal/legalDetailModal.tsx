@@ -220,28 +220,57 @@ Generated on: ${new Date().toLocaleString()}
     label: string,
     value: any,
     field: string,
-    type: "text" | "number" = "text"
+    type: "text" | "number" = "text",
+    editable: boolean = true
   ) => {
-    if (isEditMode && editedData) {
+    if (isEditMode && editedData && editable) {
       const fieldValue = field.includes(".")
         ? field.split(".").reduce((obj, key) => obj?.[key], editedData as any)
         : (editedData as any)[field];
+
+      // For number fields, only show value if it's greater than 0
+      let displayValue = "";
+      let placeholderText = "";
+
+      if (type === "number") {
+        // Only show the number if it's actually greater than 0
+        if (fieldValue > 0) {
+          displayValue = String(fieldValue);
+          placeholderText = `Enter ${label.toLowerCase()}`;
+        } else {
+          // Show "0" as grayed-out placeholder when value is 0
+          displayValue = "";
+          placeholderText = "0";
+        }
+      } else {
+        displayValue = fieldValue || "";
+        placeholderText = `Enter ${label.toLowerCase()}`;
+      }
 
       return (
         <div>
           <p className="text-xs text-gray-600 uppercase mb-1">{label}</p>
           <input
             id={field}
-            type={type}
-            value={fieldValue || ""}
-            onChange={(e) =>
-              handleFieldChange(
-                field,
-                type === "number" ? parseFloat(e.target.value) : e.target.value
-              )
-            }
-            placeholder={`Enter ${label.toLowerCase()}`}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+            type="text"
+            value={displayValue}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              if (type === "number") {
+                // Allow empty string or valid numbers only
+                if (newValue === "") {
+                  handleFieldChange(field, 0);
+                } else if (/^\d*\.?\d*$/.test(newValue)) {
+                  // Only update if it's a valid number format
+                  const parsed = parseFloat(newValue);
+                  handleFieldChange(field, isNaN(parsed) ? 0 : parsed);
+                }
+              } else {
+                handleFieldChange(field, newValue);
+              }
+            }}
+            placeholder={placeholderText}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-gray-400"
           />
         </div>
       );
@@ -395,19 +424,25 @@ Generated on: ${new Date().toLocaleString()}
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <p className="text-xs text-gray-600 uppercase">Region</p>
+                    <p className="text-xs text-gray-600 uppercase mb-1">
+                      Region
+                    </p>
                     <p className="text-sm font-medium text-gray-900">
                       {displayData?.region}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 uppercase">Branch</p>
+                    <p className="text-xs text-gray-600 uppercase mb-1">
+                      Branch
+                    </p>
                     <p className="text-sm font-medium text-gray-900">
                       {displayData?.branch}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 uppercase">Period</p>
+                    <p className="text-xs text-gray-600 uppercase mb-1">
+                      Period
+                    </p>
                     <p className="text-sm font-medium text-gray-900">
                       {formatLegalDate(displayData?.period)}
                     </p>
