@@ -41,6 +41,7 @@ export interface Claim {
   class: string | null;
   date: string | null;
   payment_month?: string | null;
+  record_status?: "pending" | "reviewed" | "approved"; // Approval status
 }
 
 export interface InspectionRecord {

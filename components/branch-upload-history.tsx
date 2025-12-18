@@ -1,60 +1,85 @@
 /**
  * Branch Upload History Component
- * 
+ *
  * Displays upload history with status badges and reviewer comments
  */
 
 "use client";
 
-import React, { useState } from 'react';
-import { History, FileText, Eye, Calendar, User, MessageSquare } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React, { useState } from "react";
+import {
+  History,
+  FileText,
+  Eye,
+  Calendar,
+  User,
+  MessageSquare,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { LoadingState } from '@/components/design-system/LoadingState';
-import { ErrorState } from '@/components/design-system/ErrorState';
-import { useUploadHistory, type UploadRecord } from '@/hooks/useBranchData';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { LoadingState } from "@/components/design-system/LoadingState";
+import { ErrorState } from "@/components/design-system/ErrorState";
+import { useUploadHistory, type UploadRecord } from "@/hooks/useBranchData";
+import { cn } from "@/lib/utils";
 
 // ============== STATUS BADGE COMPONENT ==============
 
 interface StatusBadgeProps {
-  status: UploadRecord['status'];
+  status: UploadRecord["status"];
 }
 
 function StatusBadge({ status }: StatusBadgeProps) {
-  const statusConfig = {
+  const statusConfig: Record<
+    string,
+    { label: string; variant: "secondary"; className: string }
+  > = {
     submitted: {
-      label: 'Submitted',
-      variant: 'secondary' as const,
-      className: 'bg-blue-100 text-blue-800 border-blue-200',
+      label: "Submitted",
+      variant: "secondary" as const,
+      className: "bg-blue-100 text-blue-800 border-blue-200",
     },
     under_review: {
-      label: 'Under Review',
-      variant: 'secondary' as const,
-      className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      label: "Under Review",
+      variant: "secondary" as const,
+      className: "bg-yellow-100 text-yellow-800 border-yellow-200",
     },
     approved: {
-      label: 'Approved',
-      variant: 'secondary' as const,
-      className: 'bg-green-100 text-green-800 border-green-200',
+      label: "Approved",
+      variant: "secondary" as const,
+      className: "bg-green-100 text-green-800 border-green-200",
     },
     rejected: {
-      label: 'Rejected',
-      variant: 'secondary' as const,
-      className: 'bg-red-100 text-red-800 border-red-200',
+      label: "Rejected",
+      variant: "secondary" as const,
+      className: "bg-red-100 text-red-800 border-red-200",
+    },
+    completed: {
+      label: "Completed",
+      variant: "secondary" as const,
+      className: "bg-green-100 text-green-800 border-green-200",
     },
   };
 
-  const config = statusConfig[status];
+  const config = statusConfig[status] || {
+    label: status || "Unknown",
+    variant: "secondary" as const,
+    className: "bg-gray-100 text-gray-800 border-gray-200",
+  };
 
   return (
     <Badge variant={config.variant} className={config.className}>
@@ -86,7 +111,7 @@ function CommentModal({ isOpen, onClose, record }: CommentModalProps) {
             Review feedback for {record.fileName} ({record.period})
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Review Info */}
           <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
@@ -96,19 +121,20 @@ function CommentModal({ isOpen, onClose, record }: CommentModalProps) {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-700">Reviewed By</p>
-              <p className="text-sm text-gray-600">{record.reviewedBy || 'N/A'}</p>
+              <p className="text-sm text-gray-600">
+                {record.reviewedBy || "N/A"}
+              </p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-700">Reviewed On</p>
               <p className="text-sm text-gray-600">
-                {record.reviewedAt 
-                  ? new Date(record.reviewedAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
+                {record.reviewedAt
+                  ? new Date(record.reviewedAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
                     })
-                  : 'N/A'
-                }
+                  : "N/A"}
               </p>
             </div>
           </div>
@@ -119,7 +145,7 @@ function CommentModal({ isOpen, onClose, record }: CommentModalProps) {
             <ScrollArea className="h-32">
               <div className="p-3 bg-white border rounded-md">
                 <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                  {record.reviewerComment || 'No comment provided.'}
+                  {record.reviewerComment || "No comment provided."}
                 </p>
               </div>
             </ScrollArea>
@@ -139,23 +165,23 @@ interface HistoryRowProps {
 
 function HistoryRow({ record, onViewComment }: HistoryRowProps) {
   const formatPeriod = (period: string) => {
-    const [year, month] = period.split('-');
+    const [year, month] = period.split("-");
     const date = new Date(parseInt(year), parseInt(month) - 1);
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
   const truncateComment = (comment: string | undefined, maxLength = 50) => {
-    if (!comment) return 'No comment';
+    if (!comment) return "No comment";
     if (comment.length <= maxLength) return comment;
-    return comment.substring(0, maxLength) + '...';
+    return comment.substring(0, maxLength) + "...";
   };
 
   return (
@@ -163,13 +189,17 @@ function HistoryRow({ record, onViewComment }: HistoryRowProps) {
       <td className="px-4 py-3">
         <div className="flex items-center space-x-2">
           <Calendar className="w-4 h-4 text-gray-400" />
-          <span className="font-medium text-gray-900">{formatPeriod(record.period)}</span>
+          <span className="font-medium text-gray-900">
+            {formatPeriod(record.period)}
+          </span>
         </div>
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center space-x-2">
           <FileText className="w-4 h-4 text-gray-400" />
-          <span className="text-gray-800 font-mono text-sm">{record.fileName}</span>
+          <span className="text-gray-800 font-mono text-sm">
+            {record.fileName}
+          </span>
         </div>
       </td>
       <td className="px-4 py-3">
@@ -205,9 +235,12 @@ function EmptyHistoryState() {
   return (
     <div className="text-center py-12">
       <History className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-      <h3 className="text-lg font-medium text-gray-900 mb-2">No Upload History</h3>
+      <h3 className="text-lg font-medium text-gray-900 mb-2">
+        No Upload History
+      </h3>
       <p className="text-gray-500 max-w-md mx-auto">
-        You haven't submitted any reports yet. Upload your first monthly report using the form above.
+        You haven't submitted any reports yet. Upload your first monthly report
+        using the form above.
       </p>
     </div>
   );
@@ -217,7 +250,9 @@ function EmptyHistoryState() {
 
 export function BranchUploadHistory() {
   const { history, loading, error, refetch } = useUploadHistory();
-  const [selectedRecord, setSelectedRecord] = useState<UploadRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<UploadRecord | null>(
+    null
+  );
 
   const handleViewComment = (record: UploadRecord) => {
     setSelectedRecord(record);
@@ -274,10 +309,11 @@ export function BranchUploadHistory() {
             <span>Upload History</span>
           </CardTitle>
           <CardDescription>
-            Track your submission status and reviewer feedback for all uploaded reports
+            Track your submission status and reviewer feedback for all uploaded
+            reports
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="p-0">
           {history.length === 0 ? (
             <EmptyHistoryState />
