@@ -4,13 +4,13 @@ import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Edit, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+  X,
+  Edit,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  FileText,
+} from "lucide-react";
 import { HSEActivity, HSEFormData } from "@/lib/types/hse";
 import { getActivityStatusColor } from "@/lib/utils";
 import { getUserFromStorage, type UserRole } from "@/lib/auth";
@@ -24,163 +24,192 @@ export const HSEFormModal: React.FC<{
   formData: HSEFormData;
   onFormChange: (data: HSEFormData) => void;
   isEditing: boolean;
-}> = ({ isOpen, onOpenChange, onSave, formData, onFormChange, isEditing }) => (
-  <Dialog open={isOpen} onOpenChange={onOpenChange}>
-    <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle className="text-lg font-semibold">
-          {isEditing ? "Edit HSE Record" : "Add New HSE Record"}
-        </DialogTitle>
-      </DialogHeader>
+}> = ({ isOpen, onOpenChange, onSave, formData, onFormChange, isEditing }) => {
+  if (!isOpen) return null;
 
-      <div className="space-y-4">
-        {/* Record Type */}
-        <div>
-          <label className="text-xs font-semibold text-gray-900">
-            Record Type <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={formData.recordType}
-            onChange={(e) =>
-              onFormChange({ ...formData, recordType: e.target.value })
-            }
-            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2"
-          >
-            <option value="">Select a type</option>
-            <option value="letter issued">Letter Issued</option>
-            <option value="inspection">Inspection</option>
-            <option value="incident report">Incident Report</option>
-            <option value="compliance notice">Compliance Notice</option>
-          </select>
-        </div>
+  return (
+    <>
+      {/* Modal Overlay */}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        onClick={() => onOpenChange(false)}
+      />
 
-        {/* Organization */}
-        <div>
-          <label className="text-xs font-semibold text-gray-900">
-            Employer/Organization <span className="text-red-500">*</span>
-          </label>
-          <input
-            placeholder="Enter employer name"
-            value={formData.employer}
-            onChange={(e) =>
-              onFormChange({ ...formData, employer: e.target.value })
-            }
-            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2"
-          />
-        </div>
+      {/* Modal Content */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
+          {/* Sticky Header */}
+          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">
+              {isEditing ? "Edit HSE Record" : "Add New HSE Record"}
+            </h2>
+            <button
+              onClick={() => onOpenChange(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
-        {/* Date */}
-        <div>
-          <label className="text-xs font-semibold text-gray-900">
-            Date <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="date"
-            value={formData.dateLogged}
-            onChange={(e) =>
-              onFormChange({ ...formData, dateLogged: e.target.value })
-            }
-            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2"
-          />
-        </div>
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="space-y-4">
+              {/* Record Type */}
+              <div>
+                <label className="text-xs font-semibold text-gray-900 block mb-1">
+                  Record Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.recordType}
+                  onChange={(e) =>
+                    onFormChange({ ...formData, recordType: e.target.value })
+                  }
+                  className="w-full border border-gray-300 text-sm rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="">Select a type</option>
+                  <option value="letter issued">Letter Issued</option>
+                  <option value="inspection">Inspection</option>
+                  <option value="incident report">Incident Report</option>
+                  <option value="compliance notice">Compliance Notice</option>
+                </select>
+              </div>
 
-        {/* Status */}
-        <div>
-          <label className="text-xs font-semibold text-gray-900">
-            Status <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={formData.status}
-            onChange={(e) =>
-              onFormChange({ ...formData, status: e.target.value })
-            }
-            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2"
-          >
-            <option value="">Select status</option>
-            <option value="Completed">Completed</option>
-            <option value="Under Investigation">Under Investigation</option>
-            <option value="Follow-up Required">Follow-up Required</option>
-          </select>
-        </div>
+              {/* Organization */}
+              <div>
+                <label className="text-xs font-semibold text-gray-900 block mb-1">
+                  Employer/Organization <span className="text-red-500">*</span>
+                </label>
+                <input
+                  placeholder="Enter employer name"
+                  value={formData.employer}
+                  onChange={(e) =>
+                    onFormChange({ ...formData, employer: e.target.value })
+                  }
+                  className="w-full border border-gray-300 text-sm rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
 
-        {/* Safety Compliance Rate */}
-        <div>
-          <label className="text-xs font-semibold text-gray-900">
-            Safety Compliance Rate (%)
-          </label>
-          <input
-            type="number"
-            min={0}
-            max={100}
-            placeholder="e.g. 95"
-            value={formData.safetyComplianceRate || ""}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (
-                val === "" ||
-                (/^\d{0,3}$/.test(val) && parseInt(val) <= 100)
-              ) {
-                onFormChange({ ...formData, safetyComplianceRate: val });
-              }
-            }}
-            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Optional. Enter a value between 0 and 100.
-          </p>
-        </div>
+              {/* Date */}
+              <div>
+                <label className="text-xs font-semibold text-gray-900 block mb-1">
+                  Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={formData.dateLogged}
+                  onChange={(e) =>
+                    onFormChange({ ...formData, dateLogged: e.target.value })
+                  }
+                  className="w-full border border-gray-300 text-sm rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
 
-        {/* Details */}
-        <div>
-          <label className="text-xs font-semibold text-gray-900">
-            Details <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            placeholder="Enter detailed description of the HSE activity or incident"
-            value={formData.details}
-            onChange={(e) =>
-              onFormChange({ ...formData, details: e.target.value })
-            }
-            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2 min-h-[80px] resize-none"
-          />
-        </div>
+              {/* Status */}
+              <div>
+                <label className="text-xs font-semibold text-gray-900 block mb-1">
+                  Status <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) =>
+                    onFormChange({ ...formData, status: e.target.value })
+                  }
+                  className="w-full border border-gray-300 text-sm rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="">Select status</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Under Investigation">
+                    Under Investigation
+                  </option>
+                  <option value="Follow-up Required">Follow-up Required</option>
+                </select>
+              </div>
 
-        {/* Recommendations */}
-        <div>
-          <label className="text-xs font-semibold text-gray-900">
-            Recommendations/Actions
-          </label>
-          <textarea
-            placeholder="Enter recommendations or corrective actions"
-            value={formData.recommendations}
-            onChange={(e) =>
-              onFormChange({ ...formData, recommendations: e.target.value })
-            }
-            className="mt-1 w-full border-gray-200 text-sm rounded-md p-2 min-h-[80px] resize-none"
-          />
+              {/* Safety Compliance Rate */}
+              <div>
+                <label className="text-xs font-semibold text-gray-900 block mb-1">
+                  Safety Compliance Rate (%)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  placeholder="e.g. 95"
+                  value={formData.safetyComplianceRate || ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (
+                      val === "" ||
+                      (/^\d{0,3}$/.test(val) && parseInt(val) <= 100)
+                    ) {
+                      onFormChange({ ...formData, safetyComplianceRate: val });
+                    }
+                  }}
+                  className="w-full border border-gray-300 text-sm rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Optional. Enter a value between 0 and 100.
+                </p>
+              </div>
+
+              {/* Details */}
+              <div>
+                <label className="text-xs font-semibold text-gray-900 block mb-1">
+                  Details <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  placeholder="Enter detailed description of the HSE activity or incident"
+                  value={formData.details}
+                  onChange={(e) =>
+                    onFormChange({ ...formData, details: e.target.value })
+                  }
+                  className="w-full border border-gray-300 text-sm rounded-md p-2 min-h-[80px] resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+
+              {/* Recommendations */}
+              <div>
+                <label className="text-xs font-semibold text-gray-900 block mb-1">
+                  Recommendations/Actions
+                </label>
+                <textarea
+                  placeholder="Enter recommendations or corrective actions"
+                  value={formData.recommendations}
+                  onChange={(e) =>
+                    onFormChange({
+                      ...formData,
+                      recommendations: e.target.value,
+                    })
+                  }
+                  className="w-full border border-gray-300 text-sm rounded-md p-2 min-h-[80px] resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Sticky Footer */}
+          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-2">
+            <Button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              variant="outline"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={onSave}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isEditing ? "Save Changes" : "Save Record"}
+            </Button>
+          </div>
         </div>
       </div>
-
-      <DialogFooter className="mt-6 flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => onOpenChange(false)}
-          className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={onSave}
-          className="px-4 py-2 text-sm text-white rounded-md"
-          style={{ backgroundColor: "#00a63e" }}
-        >
-          {isEditing ? "Save Changes" : "Save Record"}
-        </button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-);
+    </>
+  );
+};
 
 // ================= VIEW FULL DETAILS MODAL =================
 export const ViewDetailsModal: React.FC<{
@@ -188,61 +217,60 @@ export const ViewDetailsModal: React.FC<{
   onOpenChange: (open: boolean) => void;
   activity: HSEActivity | null;
 }> = ({ isOpen, onOpenChange, activity }) => {
-  // State management
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmAction, setConfirmAction] = useState<
     "reviewed" | "approve" | null
   >(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedData, setEditedData] = useState<HSEActivity | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get user role
   useEffect(() => {
     const user = getUserFromStorage();
     setUserRole(user?.role || null);
   }, []);
 
-  // Initialize edited data when modal opens
   useEffect(() => {
-    if (isOpen && activity) {
+    if (activity && isOpen) {
       setEditedData(activity);
       setIsEditMode(false);
     }
-  }, [isOpen, activity]);
+  }, [activity, isOpen]);
 
-  if (!activity) return null;
+  if (!isOpen) return null;
 
-  // Permission checks (case-insensitive)
+  // Check if user can edit (Regional Officer, Admin, HQ, HOD)
   const normalizedRole = userRole?.toLowerCase();
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
       normalizedRole
     );
+
+  // Check if user can review (Regional Officer and Admin)
   const canReview =
     normalizedRole === "regional_manager" ||
-    normalizedRole === "regional officer";
+    normalizedRole === "regional officer" ||
+    normalizedRole === "admin" ||
+    normalizedRole === "manager";
+
+  // Check if user can approve (Admin, HQ, HOD)
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
-  // Use edited data or original data
-  const displayData = editedData || activity;
-
-  // Handle edit mode
   const handleEdit = () => {
     setIsEditMode(true);
-    toast.info("You can now edit the HSE record");
   };
 
   const handleCancelEdit = () => {
-    setIsEditMode(false);
     setEditedData(activity);
-    toast.info("Changes discarded");
+    setIsEditMode(false);
   };
 
   const handleSaveEdit = async () => {
+    if (!editedData) return;
+
     setIsSubmitting(true);
     try {
       // TODO: Call API to save edited data
@@ -250,10 +278,9 @@ export const ViewDetailsModal: React.FC<{
 
       toast.success("HSE record updated successfully");
       setIsEditMode(false);
-      // Optionally refresh data here
     } catch (error) {
       toast.error("Failed to update HSE record");
-      console.error("Save error:", error);
+      console.error("Error updating HSE record:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -262,13 +289,12 @@ export const ViewDetailsModal: React.FC<{
   const handleFieldChange = (field: string, value: any) => {
     if (!editedData) return;
 
-    setEditedData((prev) => {
-      if (!prev) return prev;
-      return { ...prev, [field]: value };
+    setEditedData({
+      ...editedData,
+      [field]: value,
     });
   };
 
-  // Handle action buttons
   const handleReviewedClick = () => {
     setConfirmAction("reviewed");
     setShowConfirmDialog(true);
@@ -279,74 +305,65 @@ export const ViewDetailsModal: React.FC<{
     setShowConfirmDialog(true);
   };
 
-  const handleCancelConfirm = () => {
-    setShowConfirmDialog(false);
-    setConfirmAction(null);
-  };
-
   const handleConfirmAction = async () => {
+    if (!confirmAction) return;
+
     setIsSubmitting(true);
     try {
       // TODO: Call API to update status
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const message =
+      toast.success(
         confirmAction === "reviewed"
-          ? "HSE record marked as reviewed"
-          : "HSE record approved successfully";
+          ? "HSE record marked as reviewed successfully"
+          : "HSE record approved successfully"
+      );
 
-      toast.success(message);
       setShowConfirmDialog(false);
-      onOpenChange(false);
+      setConfirmAction(null);
+
+      // Keep modal open to show updated status
     } catch (error) {
-      toast.error("Failed to update status");
-      console.error("Action error:", error);
+      toast.error("Failed to update HSE record status");
+      console.error("Error:", error);
     } finally {
       setIsSubmitting(false);
-      setConfirmAction(null);
     }
   };
 
-  // Render field helper for inline editing
+  const handleCancelConfirm = () => {
+    setShowConfirmDialog(false);
+    setConfirmAction(null);
+  };
+
+  // Render editable field or display value
   const renderField = (
     label: string,
     value: any,
     field: string,
-    type: "text" | "textarea" = "text"
+    type: "text" | "number" | "date" = "text"
   ) => {
     if (isEditMode && editedData) {
       const fieldValue = (editedData as any)[field];
-
-      if (type === "textarea") {
-        return (
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">
-              {label}
-            </h3>
-            <textarea
-              id={field}
-              value={fieldValue || ""}
-              onChange={(e) => handleFieldChange(field, e.target.value)}
-              placeholder={`Enter ${label.toLowerCase()}`}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm min-h-[80px] resize-none"
-            />
-          </div>
-        );
-      }
 
       return (
         <div>
           <label
             htmlFor={field}
-            className="text-sm font-semibold text-gray-900 block mb-2"
+            className="text-xs text-gray-600 uppercase block mb-1"
           >
             {label}
           </label>
           <input
             id={field}
-            type="text"
+            type={type}
             value={fieldValue || ""}
-            onChange={(e) => handleFieldChange(field, e.target.value)}
+            onChange={(e) =>
+              handleFieldChange(
+                field,
+                type === "number" ? parseFloat(e.target.value) : e.target.value
+              )
+            }
             placeholder={`Enter ${label.toLowerCase()}`}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
           />
@@ -354,223 +371,226 @@ export const ViewDetailsModal: React.FC<{
       );
     }
 
-    return null; // Return null as the display is handled in the JSX below
+    return (
+      <div>
+        <p className="text-xs text-gray-600 uppercase">{label}</p>
+        <p className="text-sm font-medium text-gray-900">{value}</p>
+      </div>
+    );
   };
+
+  const displayData = editedData || activity;
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                {isEditMode ? (
-                  <div className="space-y-3">
-                    <div>
-                      <label
-                        htmlFor="type"
-                        className="text-sm font-semibold text-gray-900 block mb-1"
-                      >
-                        Activity Type
-                      </label>
-                      <input
-                        id="type"
-                        type="text"
-                        value={displayData.type || ""}
-                        onChange={(e) =>
-                          handleFieldChange("type", e.target.value)
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label
-                          htmlFor="organization"
-                          className="text-xs font-semibold text-gray-900 block mb-1"
-                        >
-                          Organization
-                        </label>
-                        <input
-                          id="organization"
-                          type="text"
-                          value={displayData.organization || ""}
-                          onChange={(e) =>
-                            handleFieldChange("organization", e.target.value)
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="date"
-                          className="text-xs font-semibold text-gray-900 block mb-1"
-                        >
-                          Date
-                        </label>
-                        <input
-                          id="date"
-                          type="date"
-                          value={displayData.date || ""}
-                          onChange={(e) =>
-                            handleFieldChange("date", e.target.value)
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <DialogTitle className="text-xl font-bold">
-                      {displayData.type}
-                    </DialogTitle>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {displayData.organization} • {displayData.date}
-                    </p>
-                  </>
-                )}
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+        onClick={() => onOpenChange(false)}
+      />
+
+      {/* Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          {/* Header */}
+          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <FileText className="w-5 h-5 text-orange-600" />
               </div>
-              <div className="flex items-center gap-2 ml-4">
-                {canEdit && !isEditMode && (
-                  <Button
-                    onClick={handleEdit}
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                  >
-                    <Edit className="w-4 h-4" />
-                    Edit
-                  </Button>
-                )}
-                {isEditMode && (
-                  <>
-                    <Button
-                      onClick={handleCancelEdit}
-                      variant="outline"
-                      size="sm"
-                      disabled={isSubmitting}
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  HSE Activity Details
+                </h2>
+                {activity && (
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-600">
+                      {displayData.organization} - {displayData.date}
+                    </p>
+                    <Badge
+                      className={`text-xs ${
+                        displayData.status?.toLowerCase() === "pending"
+                          ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+                          : displayData.status?.toLowerCase() === "reviewed"
+                          ? "bg-blue-100 text-blue-800 border-blue-300"
+                          : displayData.status?.toLowerCase() === "approved"
+                          ? "bg-green-100 text-green-800 border-green-300"
+                          : "bg-gray-100 text-gray-800 border-gray-300"
+                      }`}
                     >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleSaveEdit}
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        "Save"
-                      )}
-                    </Button>
-                  </>
-                )}
-                {!isEditMode && (
-                  <Badge
-                    className={`${getActivityStatusColor(
-                      displayData.status
-                    )} font-medium text-xs`}
-                  >
-                    {displayData.status}
-                  </Badge>
+                      {displayData.status}
+                    </Badge>
+                  </div>
                 )}
               </div>
             </div>
-          </DialogHeader>
 
-          <div className="space-y-6 mt-4">
+            <div className="flex items-center gap-2">
+              {activity && canEdit && !isEditMode && (
+                <Button
+                  onClick={handleEdit}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </Button>
+              )}
+              {isEditMode && (
+                <>
+                  <Button
+                    onClick={handleCancelEdit}
+                    variant="outline"
+                    size="sm"
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSaveEdit}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => onOpenChange(false)}
+                className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 space-y-6">
+            {/* Activity Information */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="w-4 h-4 text-gray-600" />
+                <h3 className="text-sm font-semibold text-gray-900 uppercase">
+                  Activity Information
+                </h3>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {renderField("Activity Type", displayData.type, "type", "text")}
+                {renderField(
+                  "Organization",
+                  displayData.organization,
+                  "organization",
+                  "text"
+                )}
+                {renderField("Date", displayData.date, "date", "date")}
+                {renderField("Status", displayData.status, "status", "text")}
+              </div>
+            </div>
+
+            {/* Details */}
             {displayData.details && (
-              <div>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="w-4 h-4 text-gray-600" />
+                  <h3 className="text-sm font-semibold text-gray-900 uppercase">
+                    Details
+                  </h3>
+                </div>
                 {isEditMode ? (
-                  <>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      Details:
-                    </h3>
-                    <textarea
-                      value={displayData.details}
-                      onChange={(e) =>
-                        handleFieldChange("details", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm min-h-[80px] resize-none"
-                    />
-                  </>
+                  <textarea
+                    value={displayData.details}
+                    onChange={(e) =>
+                      handleFieldChange("details", e.target.value)
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm min-h-[100px] resize-none"
+                  />
                 ) : (
-                  <>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      Details:
-                    </h3>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {displayData.details}
-                    </p>
-                  </>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    {displayData.details}
+                  </p>
                 )}
               </div>
             )}
+
+            {/* Recommendations */}
             {displayData.recommendations && (
-              <div>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle className="w-4 h-4 text-gray-600" />
+                  <h3 className="text-sm font-semibold text-gray-900 uppercase">
+                    Recommendations/Actions
+                  </h3>
+                </div>
                 {isEditMode ? (
-                  <>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      Recommendations/Actions:
-                    </h3>
-                    <textarea
-                      value={displayData.recommendations}
-                      onChange={(e) =>
-                        handleFieldChange("recommendations", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm min-h-[80px] resize-none"
-                    />
-                  </>
+                  <textarea
+                    value={displayData.recommendations}
+                    onChange={(e) =>
+                      handleFieldChange("recommendations", e.target.value)
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm min-h-[100px] resize-none"
+                  />
                 ) : (
-                  <>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      Recommendations/Actions:
-                    </h3>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {displayData.recommendations}
-                    </p>
-                  </>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    {displayData.recommendations}
+                  </p>
                 )}
               </div>
             )}
           </div>
 
-          <DialogFooter className="mt-6 flex justify-end gap-3">
-            <Button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              variant="outline"
-            >
+          {/* Footer */}
+          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+            {/* Dynamic buttons based on status */}
+            {!isEditMode && (
+              <>
+                {/* Pending: Show Review button */}
+                {displayData.status?.toLowerCase() === "pending" &&
+                  (canReview || canApprove) && (
+                    <Button
+                      onClick={handleReviewedClick}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Review
+                    </Button>
+                  )}
+                {/* Reviewed: Show Approve button */}
+                {displayData.status?.toLowerCase() === "reviewed" &&
+                  canApprove && (
+                    <Button
+                      onClick={handleApproveClick}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Approve
+                    </Button>
+                  )}
+                {/* Approved: Show approved badge */}
+                {displayData.status?.toLowerCase() === "approved" && (
+                  <Badge className="bg-green-100 text-green-800 px-4 py-2 text-sm">
+                    <CheckCircle className="w-4 h-4 mr-2 inline" />
+                    Approved
+                  </Badge>
+                )}
+              </>
+            )}
+            <Button onClick={() => onOpenChange(false)} variant="outline">
               Cancel
             </Button>
-            {canReview && (
-              <Button
-                type="button"
-                onClick={handleReviewedClick}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Mark as Reviewed
-              </Button>
-            )}
-            {canApprove && (
-              <Button
-                type="button"
-                onClick={handleApproveClick}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Approve
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      </div>
 
       {/* Confirmation Dialog */}
       {showConfirmDialog && (

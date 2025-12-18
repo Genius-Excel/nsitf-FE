@@ -40,13 +40,21 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
   const [file, setFile] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStage, setUploadStage] = useState<"idle" | "uploading" | "processing" | "complete">("idle");
+  const [uploadStage, setUploadStage] = useState<
+    "idle" | "uploading" | "processing" | "complete" | "error"
+  >("idle");
+  const [errorDetails, setErrorDetails] = useState<any[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch regions and branches
   const { data: regions, loading: regionsLoading } = useRegions();
-  const { data: branches, loading: branchesLoading, fetchBranches, clearBranches } = useBranches();
+  const {
+    data: branches,
+    loading: branchesLoading,
+    fetchBranches,
+    clearBranches,
+  } = useBranches();
 
   // Get user info for role-based filtering
   const user = getUserFromStorage();
@@ -58,7 +66,8 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
   const managedBranchIds: string[] =
     (user as any)?.managed_branches ||
     (user as any)?.managed_branch_ids ||
-    (user as any)?.branch_ids || [];
+    (user as any)?.branch_ids ||
+    [];
 
   const { uploadFile, loading, error, clearError } = useUploadLegalActivities();
 
@@ -115,6 +124,7 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
     }
 
     clearError();
+    setErrorDetails([]);
     setUploadProgress(0);
     setUploadStage("uploading");
 
@@ -129,27 +139,42 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
       });
     }, 200);
 
-    const result = await uploadFile(selectedRegionId, file);
+    try {
+      const result = await uploadFile(selectedRegionId, file);
+      clearInterval(progressInterval);
 
-    clearInterval(progressInterval);
+      if (result) {
+        setUploadProgress(95);
+        setUploadStage("processing");
 
-    if (result) {
-      setUploadProgress(95);
-      setUploadStage("processing");
+        // Simulate processing time
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Simulate processing time
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+        setUploadProgress(100);
+        setUploadStage("complete");
+        setUploadSuccess(true);
 
-      setUploadProgress(100);
-      setUploadStage("complete");
-      setUploadSuccess(true);
+        setTimeout(() => {
+          handleClose();
+          onUploadSuccess();
+        }, 2000);
+      } else {
+        setUploadStage("error");
+      }
+    } catch (err: any) {
+      clearInterval(progressInterval);
+      const errorMessage =
+        err?.response?.data?.message ||
+        err.message ||
+        "Failed to upload legal data";
 
-      setTimeout(() => {
-        handleClose();
-        onUploadSuccess();
-      }, 2000);
-    } else {
-      setUploadStage("idle");
+      // Extract detailed error report if available
+      const errorReport = err?.response?.data?.error_report?.LEGAL?.errors;
+      if (errorReport && errorReport.length > 0) {
+        setErrorDetails(errorReport);
+      }
+
+      setUploadStage("error");
     }
   };
 
@@ -161,6 +186,7 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
     setUploadSuccess(false);
     setUploadProgress(0);
     setUploadStage("idle");
+    setErrorDetails([]);
     clearError();
     onClose();
   };
@@ -199,7 +225,10 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
           <div className="p-4 sm:p-6 space-y-6">
             {/* Region Selection - Always visible */}
             <div>
-              <label htmlFor="region-select" className="block text-sm font-semibold text-gray-900 mb-2">
+              <label
+                htmlFor="region-select"
+                className="block text-sm font-semibold text-gray-900 mb-2"
+              >
                 Select Region <span className="text-red-500">*</span>
               </label>
               <select
@@ -225,7 +254,10 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
             {/* Branch Selection */}
             {selectedRegionId && (
               <div>
-                <label htmlFor="branch-select" className="block text-sm font-semibold text-gray-900 mb-2">
+                <label
+                  htmlFor="branch-select"
+                  className="block text-sm font-semibold text-gray-900 mb-2"
+                >
                   Select Branch <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -249,7 +281,9 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
                   ))}
                 </select>
                 {branchesLoading && (
-                  <p className="text-xs text-gray-500 mt-1">Loading branches...</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Loading branches...
+                  </p>
                 )}
               </div>
             )}
@@ -332,7 +366,9 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
                   <p className="text-sm font-medium text-gray-700 mb-1">
                     {file ? file.name : "Click to upload Excel file"}
                   </p>
-                  <p className="text-xs text-gray-500">Accepted formats: .xlsx, .xls</p>
+                  <p className="text-xs text-gray-500">
+                    Accepted formats: .xlsx, .xls
+                  </p>
                 </div>
               </div>
             )}
@@ -372,16 +408,64 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
               </div>
             )}
 
-            {/* Error Message */}
+            {/* Error Message with Details */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                  <div>
+                  <div className="flex-1">
                     <p className="font-semibold text-red-800 mb-1">
-                      Upload failed:
+                      Upload failed
                     </p>
-                    <p className="text-sm text-red-700">{error}</p>
+                    <p className="text-sm text-red-700 mb-2">{error}</p>
+
+                    {/* Detailed Error List */}
+                    {errorDetails.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        <p className="text-xs font-semibold text-red-800 uppercase">
+                          Validation Errors:
+                        </p>
+                        <div className="max-h-48 overflow-y-auto space-y-1.5 pr-2">
+                          {errorDetails.map((err: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="bg-white rounded p-2 border border-red-200"
+                            >
+                              <div className="flex items-start gap-2">
+                                <span className="text-xs font-mono text-red-600 mt-0.5">
+                                  #{idx + 1}
+                                </span>
+                                <div className="flex-1 text-xs">
+                                  {err.row && (
+                                    <p className="font-medium text-red-700">
+                                      Row {err.row}:
+                                    </p>
+                                  )}
+                                  {err.field && (
+                                    <p className="text-gray-600">
+                                      Field:{" "}
+                                      <span className="font-mono">
+                                        {err.field}
+                                      </span>
+                                    </p>
+                                  )}
+                                  <p className="text-red-600 mt-1">
+                                    {err.message || err.error}
+                                  </p>
+                                  {err.missing_columns &&
+                                    err.missing_columns.length > 0 && (
+                                      <p className="text-gray-600 mt-1">
+                                        Missing:{" "}
+                                        {err.missing_columns.join(", ")}
+                                      </p>
+                                    )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

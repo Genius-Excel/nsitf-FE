@@ -283,28 +283,28 @@ export default function InspectionManagement() {
         icon: "notice",
       },
       {
-        title: "Cumulative Debt Established",
-        value: `₦${(metrics.totalDebtEstablished / 1_000_000).toFixed(1)}M`,
-        bgColor: "#f59e0b",
-        icon: "file-text",
-      },
-      {
         title: "Demand Notice",
         value: metrics.totalDemandNotice,
         bgColor: "#22c55e",
         icon: "alert-circle",
       },
       {
-        title: "Performance Rate",
-        value: `${metrics.performanceRate}%`,
-        bgColor: "#3b82f6",
-        icon: "trending-up",
+        title: "Cumulative Debt Established",
+        value: `₦${(metrics.totalDebtEstablished / 1_000_000).toFixed(1)}M`,
+        bgColor: "#f59e0b",
+        icon: "file-text",
       },
       {
         title: "Cumulative Debt Recovered",
         value: `₦${(metrics.totalDebtRecovered / 1_000_000).toFixed(1)}M`,
         bgColor: "#16a34a",
         icon: "naira-sign",
+      },
+      {
+        title: "Performance Rate",
+        value: `${metrics.performanceRate}%`,
+        bgColor: "#3b82f6",
+        icon: "trending-up",
       },
     ];
 

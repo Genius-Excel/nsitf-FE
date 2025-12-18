@@ -410,10 +410,13 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                   CLASS
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                  PERIOD
+                  Actions
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                  Actions
+                  PAYMENT MONTH
+                </th>
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                  PERIOD
                 </th>
               </tr>
             </thead>
@@ -501,9 +504,6 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                         {claim.class || "—"}
                       </span>
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs text-gray-700 whitespace-nowrap">
-                      {claim.date || "—"}
-                    </td>
                     <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
                       <button
                         type="button"
@@ -514,6 +514,12 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </button>
+                    </td>
+                    <td className="px-2 py-1.5 text-center text-xs text-gray-700 whitespace-nowrap">
+                      {claim.payment_month || "—"}
+                    </td>
+                    <td className="px-2 py-1.5 text-center text-xs text-gray-700 whitespace-nowrap">
+                      {claim.date || "—"}
                     </td>
                   </tr>
                 );
