@@ -13,6 +13,7 @@ import {
   Calendar,
   MapPin,
   Building,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -358,6 +359,44 @@ export function BranchUploadForm({ onUploadSuccess }: BranchUploadFormProps) {
               )}
             />
           </div>
+
+          {/* Template Download */}
+          {formData.regionId && formData.branchId && formData.period && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="text-sm text-green-800">
+                  <p className="font-medium">
+                    Download template for selected branch
+                  </p>
+                  <p className="text-xs mt-1">
+                    {regions.find((r) => r.id === formData.regionId)?.name} →{" "}
+                    {branches.find((b) => b.id === formData.branchId)?.name} (
+                    {formData.period})
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const templatePath = "/templates/branch_template.xlsx";
+                    const branchName =
+                      branches.find((b) => b.id === formData.branchId)?.name ||
+                      "Branch";
+                    const fileName = `${branchName}_Template.xlsx`;
+                    const link = document.createElement("a");
+                    link.href = templatePath;
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Template
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* File Upload */}
           <div className="space-y-2">

@@ -11,6 +11,7 @@ import {
   FileSpreadsheet,
   CheckCircle,
   AlertCircle,
+  Download,
 } from "lucide-react";
 import {
   Dialog,
@@ -168,6 +169,54 @@ export const InvestmentUploadModal: React.FC<InvestmentUploadModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Period Selection */}
+          <div className="space-y-2">
+            <label
+              htmlFor="period"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Period (YYYY-MM)
+            </label>
+            <input
+              id="period"
+              type="month"
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+              disabled={uploading}
+            />
+          </div>
+
+          {/* Template Download */}
+          {period && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="text-sm text-green-800">
+                  <p className="font-medium">Download template for:</p>
+                  <p className="text-xs mt-1">Period: {period}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const templatePath = "/templates/investment_template.xlsx";
+                    const fileName = `Investment_Template_${period}.xlsx`;
+                    const link = document.createElement("a");
+                    link.href = templatePath;
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  disabled={uploading}
+                >
+                  <Download className="w-4 h-4" />
+                  Download Template
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* File Upload Area */}
           {!selectedFile ? (
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-green-400 transition-colors">
@@ -251,28 +300,6 @@ export const InvestmentUploadModal: React.FC<InvestmentUploadModalProps> = ({
               )}
             </div>
           )}
-
-          {/* Period Input */}
-          <div className="space-y-2">
-            <label
-              htmlFor="period"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Reporting Period (YYYY-MM) <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="period"
-              type="text"
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              placeholder="2025-02"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              disabled={uploading}
-            />
-            <p className="text-xs text-gray-500">
-              Enter the reporting period in YYYY-MM format (e.g., 2025-02)
-            </p>
-          </div>
 
           {/* Instructions */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
