@@ -90,24 +90,8 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
   }, [selectedRegionId, fetchBranches, clearBranches]);
 
   const handleDownloadTemplate = () => {
-    const templateData = [
-      {
-        Branch: "",
-        "Recalcitrant Employers": 0,
-        "Defaulting Employers": 0,
-        "ECS NO.": "",
-        "Plan Issued": 0,
-        ADR: 0,
-        "Cases Instituted": 0,
-        "Cases Won": 0,
-        Sectors: "",
-        "Activities Period": "",
-      },
-    ];
-
-    const ws = XLSX.utils.json_to_sheet(templateData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    // Download pre-made template file from public folder
+    const templatePath = "/templates/legal_template.xlsx";
 
     const selectedRegion = regions?.find((r) => r.id === selectedRegionId);
     const selectedBranch = branches?.find((b) => b.id === selectedBranchId);
@@ -116,7 +100,14 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
       : selectedRegion
       ? `${selectedRegion.name}_Legal_Activities_Template.xlsx`
       : "Legal_Activities_Template.xlsx";
-    XLSX.writeFile(wb, fileName);
+
+    // Create a link and trigger download
+    const link = document.createElement("a");
+    link.href = templatePath;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleUpload = async () => {

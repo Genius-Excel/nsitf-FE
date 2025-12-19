@@ -96,26 +96,8 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
   }, [selectedRegionId, fetchBranches, clearBranches]);
 
   const handleDownloadTemplate = () => {
-    const templateData = [
-      {
-        "Claim ID": "CLM-00001",
-        Employer: "Example Company Ltd",
-        Claimant: "John Doe",
-        Type: "Medical Refund",
-        "Amount Requested": 250000,
-        "Amount Paid": 200000,
-        Status: "Paid",
-        "Date Processed": "2024-01-15",
-        "Date Paid": "2024-01-20",
-        Sector: "Manufacturing",
-        Class: "Class A",
-        "Payment Period": "2024-01",
-      },
-    ];
-
-    const ws = XLSX.utils.json_to_sheet(templateData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    // Download pre-made template file from public folder
+    const templatePath = "/templates/claims_template.xlsx";
 
     const selectedRegion = regions?.find((r) => r.id === selectedRegionId);
     const selectedBranch = branches?.find((b) => b.id === selectedBranchId);
@@ -124,7 +106,14 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
       : selectedRegion
       ? `${selectedRegion.name}_Claims_Template.xlsx`
       : "Claims_Template.xlsx";
-    XLSX.writeFile(wb, fileName);
+
+    // Create a link and trigger download
+    const link = document.createElement("a");
+    link.href = templatePath;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleUpload = async () => {

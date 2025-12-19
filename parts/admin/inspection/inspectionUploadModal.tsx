@@ -88,21 +88,8 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
   }, [selectedRegionId, fetchBranches, clearBranches]);
 
   const handleDownloadTemplate = () => {
-    const templateData = [
-      {
-        Branch: "",
-        "Inspections Conducted": 0,
-        "Debt Established (₦)": 0,
-        "Debt Recovered (₦)": 0,
-        "Performance Rate (%)": 0,
-        "Demand Notice": 0,
-        Period: "",
-      },
-    ];
-
-    const ws = XLSX.utils.json_to_sheet(templateData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    // Download pre-made template file from public folder
+    const templatePath = "/templates/inspection_template.xlsx";
 
     const selectedRegion = regions?.find((r) => r.id === selectedRegionId);
     const selectedBranch = branches?.find((b) => b.id === selectedBranchId);
@@ -111,7 +98,14 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
       : selectedRegion
       ? `${selectedRegion.name}_Inspection_Template.xlsx`
       : "Inspection_Template.xlsx";
-    XLSX.writeFile(wb, fileName);
+
+    // Create a link and trigger download
+    const link = document.createElement("a");
+    link.href = templatePath;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleUpload = async () => {

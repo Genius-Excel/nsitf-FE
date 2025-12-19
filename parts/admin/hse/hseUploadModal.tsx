@@ -93,22 +93,8 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
   }, [selectedRegionId, fetchBranches, clearBranches]);
 
   const handleDownloadTemplate = () => {
-    const templateData = [
-      {
-        Branch: "",
-        "Total Actual OSH Activities": 0,
-        "Target OSH Activities": 0,
-        "Performance Rate (%)": 0,
-        "OSH Enlightenment & Awareness": 0,
-        "OSH Inspection & Audit": 0,
-        "Accident Investigation": 0,
-        "Activities Period": "",
-      },
-    ];
-
-    const ws = XLSX.utils.json_to_sheet(templateData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    // Download pre-made template file from public folder
+    const templatePath = "/templates/hse_template.xlsx";
 
     const selectedRegion = regions?.find((r) => r.id === selectedRegionId);
     const selectedBranch = branches?.find((b) => b.id === selectedBranchId);
@@ -117,7 +103,14 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
       : selectedRegion
       ? `${selectedRegion.name}_HSE_Activities_Template.xlsx`
       : "HSE_Activities_Template.xlsx";
-    XLSX.writeFile(wb, fileName);
+
+    // Create a link and trigger download
+    const link = document.createElement("a");
+    link.href = templatePath;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleUpload = async () => {

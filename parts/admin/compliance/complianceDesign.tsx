@@ -784,7 +784,20 @@ export const ComplianceUploadModal: React.FC<{
 
     const selectedRegion = regions.find((r) => r.id === selectedRegionId);
     const regionName = selectedRegion?.name || "Region";
-    XLSX.writeFile(wb, `${regionName}_Regional_Report_Template.xlsx`);
+
+    // Download pre-made template file from public folder instead
+    const templatePath = "/templates/compliance_template.xlsx";
+    const fileName = `${regionName}_Regional_Report_Template.xlsx`;
+
+    // Create a link and trigger download
+    const link = document.createElement("a");
+    link.href = templatePath;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Remove the XLSX generation code above and use static file instead
   };
 
   const handleClose = () => {
