@@ -1,26 +1,43 @@
 /**
  * Branch Data Upload Form
- * 
+ *
  * Simple, single-purpose form for branch data officers to upload monthly reports
  */
 
 "use client";
 
-import React, { useRef } from 'react';
-import { Upload, FileSpreadsheet, Calendar, MapPin, Building } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React, { useRef } from "react";
+import {
+  Upload,
+  FileSpreadsheet,
+  Calendar,
+  MapPin,
+  Building,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { useRegions, useBranches, useFileUpload, useUploadForm } from '@/hooks/useBranchData';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/select";
+import {
+  useRegions,
+  useBranches,
+  useFileUpload,
+  useUploadForm,
+} from "@/hooks/useBranchData";
+import { cn } from "@/lib/utils";
 
 // ============== MONTH PICKER COMPONENT ==============
 
@@ -38,12 +55,14 @@ function MonthPicker({ value, onChange, className }: MonthPickerProps) {
   const months = [];
   for (let i = 0; i < 12; i++) {
     const date = new Date(currentYear, currentMonth - i, 1);
-    const monthValue = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-    const monthLabel = date.toLocaleDateString('en-US', { 
-      month: 'long', 
-      year: 'numeric' 
+    const monthValue = `${date.getFullYear()}-${(date.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}`;
+    const monthLabel = date.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
     });
-    
+
     months.push({ value: monthValue, label: monthLabel });
   }
 
@@ -82,9 +101,9 @@ function FileUploadArea({ file, onFileChange, disabled }: FileUploadAreaProps) {
   const handleDrop = (event: React.DragEvent) => {
     event.preventDefault();
     if (disabled) return;
-    
+
     const droppedFile = event.dataTransfer.files?.[0];
-    if (droppedFile && droppedFile.name.toLowerCase().endsWith('.xlsx')) {
+    if (droppedFile && droppedFile.name.toLowerCase().endsWith(".xlsx")) {
       onFileChange(droppedFile);
     }
   };
@@ -104,7 +123,9 @@ function FileUploadArea({ file, onFileChange, disabled }: FileUploadAreaProps) {
       <div
         className={cn(
           "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
-          disabled ? "border-gray-200 bg-gray-50 cursor-not-allowed" : "border-gray-300 hover:border-green-400",
+          disabled
+            ? "border-gray-200 bg-gray-50 cursor-not-allowed"
+            : "border-gray-300 hover:border-green-400",
           file ? "border-green-400 bg-green-50" : ""
         )}
         onDrop={handleDrop}
@@ -118,8 +139,9 @@ function FileUploadArea({ file, onFileChange, disabled }: FileUploadAreaProps) {
           onChange={handleFileChange}
           className="hidden"
           disabled={disabled}
+          aria-label="Upload Excel file"
         />
-        
+
         <div className="space-y-3">
           {file ? (
             <>
@@ -146,7 +168,7 @@ function FileUploadArea({ file, onFileChange, disabled }: FileUploadAreaProps) {
           )}
         </div>
       </div>
-      
+
       {file && !disabled && (
         <Button
           type="button"
@@ -156,7 +178,7 @@ function FileUploadArea({ file, onFileChange, disabled }: FileUploadAreaProps) {
             e.stopPropagation();
             onFileChange(null);
             if (fileInputRef.current) {
-              fileInputRef.current.value = '';
+              fileInputRef.current.value = "";
             }
           }}
           className="w-full"
@@ -177,17 +199,17 @@ interface BranchUploadFormProps {
 export function BranchUploadForm({ onUploadSuccess }: BranchUploadFormProps) {
   // Form state (must be initialized first)
   const { formData, updateField, resetForm, isFormValid } = useUploadForm();
-  
+
   // Data fetching hooks
   const { regions, loading: regionsLoading } = useRegions();
   const { branches, loading: branchesLoading } = useBranches(formData.regionId);
-  
+
   // Upload functionality
   const { uploading, uploadFile } = useFileUpload();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isFormValid()) {
       // Show specific validation errors
       if (!formData.regionId) {
@@ -222,11 +244,11 @@ export function BranchUploadForm({ onUploadSuccess }: BranchUploadFormProps) {
           <span>Submit Monthly Report</span>
         </CardTitle>
         <CardDescription>
-          Upload one consolidated workbook containing all branch reports for the month.
-          All fields are required before submission.
+          Upload one consolidated workbook containing all branch reports for the
+          month. All fields are required before submission.
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Region and Branch Selection */}
@@ -240,13 +262,18 @@ export function BranchUploadForm({ onUploadSuccess }: BranchUploadFormProps) {
               </Label>
               <Select
                 value={formData.regionId}
-                onValueChange={(value) => updateField('regionId', value)}
+                onValueChange={(value) => updateField("regionId", value)}
                 disabled={isFormDisabled}
               >
-                <SelectTrigger id="region" className={cn(
-                  "transition-colors",
-                  !formData.regionId ? "border-gray-300" : "border-green-300 bg-green-50"
-                )}>
+                <SelectTrigger
+                  id="region"
+                  className={cn(
+                    "transition-colors",
+                    !formData.regionId
+                      ? "border-gray-300"
+                      : "border-green-300 bg-green-50"
+                  )}
+                >
                   <SelectValue placeholder="Select your region" />
                 </SelectTrigger>
                 <SelectContent>
@@ -271,19 +298,28 @@ export function BranchUploadForm({ onUploadSuccess }: BranchUploadFormProps) {
               </Label>
               <Select
                 value={formData.branchId}
-                onValueChange={(value) => updateField('branchId', value)}
-                disabled={isFormDisabled || !formData.regionId || branchesLoading}
+                onValueChange={(value) => updateField("branchId", value)}
+                disabled={
+                  isFormDisabled || !formData.regionId || branchesLoading
+                }
               >
-                <SelectTrigger id="branch" className={cn(
-                  "transition-colors",
-                  !formData.branchId ? "border-gray-300" : "border-green-300 bg-green-50"
-                )}>
-                  <SelectValue 
+                <SelectTrigger
+                  id="branch"
+                  className={cn(
+                    "transition-colors",
+                    !formData.branchId
+                      ? "border-gray-300"
+                      : "border-green-300 bg-green-50"
+                  )}
+                >
+                  <SelectValue
                     placeholder={
-                      !formData.regionId ? "Select region first" : 
-                      branchesLoading ? "Loading branches..." : 
-                      "Select your branch"
-                    } 
+                      !formData.regionId
+                        ? "Select region first"
+                        : branchesLoading
+                        ? "Loading branches..."
+                        : "Select your branch"
+                    }
                   />
                 </SelectTrigger>
                 <SelectContent>
@@ -294,9 +330,13 @@ export function BranchUploadForm({ onUploadSuccess }: BranchUploadFormProps) {
                   ))}
                 </SelectContent>
               </Select>
-              {formData.regionId && branches.length === 0 && !branchesLoading && (
-                <p className="text-xs text-orange-600">No branches found for this region</p>
-              )}
+              {formData.regionId &&
+                branches.length === 0 &&
+                !branchesLoading && (
+                  <p className="text-xs text-orange-600">
+                    No branches found for this region
+                  </p>
+                )}
             </div>
           </div>
 
@@ -309,10 +349,12 @@ export function BranchUploadForm({ onUploadSuccess }: BranchUploadFormProps) {
             </Label>
             <MonthPicker
               value={formData.period}
-              onChange={(value) => updateField('period', value)}
+              onChange={(value) => updateField("period", value)}
               className={cn(
                 "w-full md:w-64 transition-colors",
-                !formData.period ? "border-gray-300" : "border-green-300 bg-green-50"
+                !formData.period
+                  ? "border-gray-300"
+                  : "border-green-300 bg-green-50"
               )}
             />
           </div>
@@ -326,7 +368,7 @@ export function BranchUploadForm({ onUploadSuccess }: BranchUploadFormProps) {
             </Label>
             <FileUploadArea
               file={formData.file}
-              onFileChange={(file) => updateField('file', file)}
+              onFileChange={(file) => updateField("file", file)}
               disabled={isFormDisabled}
             />
             <p className="text-xs text-gray-500">

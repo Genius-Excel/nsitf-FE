@@ -215,6 +215,8 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
               onClick={handleClose}
               disabled={loading}
               className="p-2 hover:bg-gray-100 rounded-md"
+              aria-label="Close modal"
+              title="Close"
             >
               <X className="w-5 h-5" />
             </button>
