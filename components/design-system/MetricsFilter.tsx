@@ -38,18 +38,18 @@ export const MetricsFilter: React.FC<MetricsFilterProps> = ({
 
   // Generate months
   const months = [
-    { value: "1", label: "January" },
-    { value: "2", label: "February" },
-    { value: "3", label: "March" },
-    { value: "4", label: "April" },
-    { value: "5", label: "May" },
-    { value: "6", label: "June" },
-    { value: "7", label: "July" },
-    { value: "8", label: "August" },
-    { value: "9", label: "September" },
-    { value: "10", label: "October" },
-    { value: "11", label: "November" },
-    { value: "12", label: "December" },
+    { value: "January", label: "January" },
+    { value: "February", label: "February" },
+    { value: "March", label: "March" },
+    { value: "April", label: "April" },
+    { value: "May", label: "May" },
+    { value: "June", label: "June" },
+    { value: "July", label: "July" },
+    { value: "August", label: "August" },
+    { value: "September", label: "September" },
+    { value: "October", label: "October" },
+    { value: "November", label: "November" },
+    { value: "December", label: "December" },
   ];
 
   // Generate years (current year and previous 2 years)
@@ -146,6 +146,19 @@ export const MetricsFilter: React.FC<MetricsFilterProps> = ({
             <span className="text-sm text-gray-600">
               {filteredCount} of {totalEntries} entries
             </span>
+          )}
+          {hasActiveFilters && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onReset();
+              }}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              aria-label="Clear all filters"
+            >
+              <X className="w-3.5 h-3.5" />
+              Clear
+            </button>
           )}
           {isExpanded ? (
             <ChevronUp className="w-5 h-5 text-gray-400" />

@@ -406,7 +406,7 @@ export default function ClaimsManagement() {
 
   if (error) {
     return (
-      <div className="space-y-10 max-w-7xl mx-auto px-4">
+      <div className="p-6 space-y-6">
         <PageHeader
           title="Claims and Compensation View"
           description="Track and process employee compensation claims"
@@ -429,7 +429,7 @@ export default function ClaimsManagement() {
   // ==========================================
 
   return (
-    <div className="space-y-10 max-w-7xl mx-auto px-4">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <PageHeader
         title="Claims and Compensation View"

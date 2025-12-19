@@ -294,77 +294,250 @@ export const ComplianceTable: React.FC<{
       <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
         <div className="inline-block min-w-full align-middle">
           <table className="min-w-full divide-y divide-gray-200" role="table">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gray-50 border-b sticky top-0">
               <tr>
-                <TableHeader
-                  label="Region"
-                  field="region"
-                  sortConfig={sortConfig}
-                  onSort={onSort}
-                />
-                <TableHeader
-                  label="Branch"
-                  field="branch"
-                  sortConfig={sortConfig}
-                  onSort={onSort}
-                />
-                <TableHeader
-                  label="Actual Contributions Collected"
-                  field="contributionCollected"
-                  sortConfig={sortConfig}
-                  onSort={onSort}
-                  align="right"
-                />
-                <TableHeader
-                  label="Contributions Target"
-                  field="target"
-                  sortConfig={sortConfig}
-                  onSort={onSort}
-                  align="right"
-                />
-                <TableHeader
-                  label="Performance Rate"
-                  field="achievement"
-                  sortConfig={sortConfig}
-                  onSort={onSort}
-                  align="right"
-                />
-                <TableHeader
-                  label="Employers Registered"
-                  field="employersRegistered"
-                  sortConfig={sortConfig}
-                  onSort={onSort}
-                  align="right"
-                />
-                <TableHeader
-                  label="Employees Coverage"
-                  field="employees"
-                  sortConfig={sortConfig}
-                  onSort={onSort}
-                  align="right"
-                />
-                <TableHeader
-                  label="Registration Fees"
-                  field="registrationFees"
-                  sortConfig={sortConfig}
-                  onSort={onSort}
-                  align="right"
-                />
-                <TableHeader
-                  label="Certificate Fees"
-                  field="certificateFees"
-                  sortConfig={sortConfig}
-                  onSort={onSort}
-                  align="right"
-                />
-                <TableHeader
-                  label="Period"
-                  field="period"
-                  sortConfig={sortConfig}
-                  onSort={onSort}
-                />
                 <th
-                  className="px-3 sm:px-4 py-3 text-left text-sm font-medium text-gray-700"
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
+                  scope="col"
+                >
+                  <button
+                    onClick={() => onSort("region")}
+                    className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
+                    aria-label="Sort by Region"
+                  >
+                    <span>Region</span>
+                    {sortConfig?.field === "region" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-4 h-4" aria-hidden="true" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4" aria-hidden="true" />
+                      )
+                    ) : (
+                      <ArrowUpDown
+                        className="w-4 h-4 opacity-0 group-hover:opacity-50"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                </th>
+                <th
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
+                  scope="col"
+                >
+                  <button
+                    onClick={() => onSort("branch")}
+                    className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
+                    aria-label="Sort by Branch"
+                  >
+                    <span>Branch</span>
+                    {sortConfig?.field === "branch" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-4 h-4" aria-hidden="true" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4" aria-hidden="true" />
+                      )
+                    ) : (
+                      <ArrowUpDown
+                        className="w-4 h-4 opacity-0 group-hover:opacity-50"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                </th>
+                <th
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
+                  scope="col"
+                >
+                  <button
+                    onClick={() => onSort("contributionCollected")}
+                    className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
+                    aria-label="Sort by Actual Contributions Collected"
+                  >
+                    <span>Actual Contributions Collected</span>
+                    {sortConfig?.field === "contributionCollected" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-4 h-4" aria-hidden="true" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4" aria-hidden="true" />
+                      )
+                    ) : (
+                      <ArrowUpDown
+                        className="w-4 h-4 opacity-0 group-hover:opacity-50"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                </th>
+                <th
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
+                  scope="col"
+                >
+                  <button
+                    onClick={() => onSort("target")}
+                    className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
+                    aria-label="Sort by Contributions Target"
+                  >
+                    <span>Contributions Target</span>
+                    {sortConfig?.field === "target" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-4 h-4" aria-hidden="true" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4" aria-hidden="true" />
+                      )
+                    ) : (
+                      <ArrowUpDown
+                        className="w-4 h-4 opacity-0 group-hover:opacity-50"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                </th>
+                <th
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
+                  scope="col"
+                >
+                  <button
+                    onClick={() => onSort("achievement")}
+                    className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
+                    aria-label="Sort by Performance Rate"
+                  >
+                    <span>Performance Rate</span>
+                    {sortConfig?.field === "achievement" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-4 h-4" aria-hidden="true" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4" aria-hidden="true" />
+                      )
+                    ) : (
+                      <ArrowUpDown
+                        className="w-4 h-4 opacity-0 group-hover:opacity-50"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                </th>
+                <th
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
+                  scope="col"
+                >
+                  <button
+                    onClick={() => onSort("employersRegistered")}
+                    className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
+                    aria-label="Sort by Employers Registered"
+                  >
+                    <span>Employers Registered</span>
+                    {sortConfig?.field === "employersRegistered" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-4 h-4" aria-hidden="true" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4" aria-hidden="true" />
+                      )
+                    ) : (
+                      <ArrowUpDown
+                        className="w-4 h-4 opacity-0 group-hover:opacity-50"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                </th>
+                <th
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
+                  scope="col"
+                >
+                  <button
+                    onClick={() => onSort("employees")}
+                    className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
+                    aria-label="Sort by Employees Coverage"
+                  >
+                    <span>Employees Coverage</span>
+                    {sortConfig?.field === "employees" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-4 h-4" aria-hidden="true" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4" aria-hidden="true" />
+                      )
+                    ) : (
+                      <ArrowUpDown
+                        className="w-4 h-4 opacity-0 group-hover:opacity-50"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                </th>
+                <th
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
+                  scope="col"
+                >
+                  <button
+                    onClick={() => onSort("registrationFees")}
+                    className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
+                    aria-label="Sort by Registration Fees"
+                  >
+                    <span>Registration Fees</span>
+                    {sortConfig?.field === "registrationFees" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-4 h-4" aria-hidden="true" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4" aria-hidden="true" />
+                      )
+                    ) : (
+                      <ArrowUpDown
+                        className="w-4 h-4 opacity-0 group-hover:opacity-50"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                </th>
+                <th
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
+                  scope="col"
+                >
+                  <button
+                    onClick={() => onSort("certificateFees")}
+                    className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
+                    aria-label="Sort by Certificate Fees"
+                  >
+                    <span>Certificate Fees</span>
+                    {sortConfig?.field === "certificateFees" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-4 h-4" aria-hidden="true" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4" aria-hidden="true" />
+                      )
+                    ) : (
+                      <ArrowUpDown
+                        className="w-4 h-4 opacity-0 group-hover:opacity-50"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                </th>
+                <th
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
+                  scope="col"
+                >
+                  <button
+                    onClick={() => onSort("period")}
+                    className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
+                    aria-label="Sort by Period"
+                  >
+                    <span>Period</span>
+                    {sortConfig?.field === "period" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-4 h-4" aria-hidden="true" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4" aria-hidden="true" />
+                      )
+                    ) : (
+                      <ArrowUpDown
+                        className="w-4 h-4 opacity-0 group-hover:opacity-50"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                </th>
+                <th
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
                   scope="col"
                 >
                   Actions
