@@ -12,6 +12,7 @@ import { RegionChartBarMultiple } from "./region-chartbar-multiple";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
 import { InvestmentFilters } from "@/parts/admin/investment/InvestmentFilters";
 import { PageHeader } from "@/components/design-system/PageHeader";
+import type { InvestmentFilterParams } from "@/lib/types/investment";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 
@@ -43,14 +44,14 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
 
   // Metrics filters state (using Investment-style filters without record status)
-  const [metricsFilters, setMetricsFilters] = useState({
-    selectedMonth: undefined as string | undefined,
-    selectedYear: undefined as string | undefined,
-    periodFrom: undefined as string | undefined,
-    periodTo: undefined as string | undefined,
+  const [metricsFilters, setMetricsFilters] = useState<InvestmentFilterParams>({
+    selectedMonth: undefined,
+    selectedYear: undefined,
+    periodFrom: undefined,
+    periodTo: undefined,
   });
 
-  const handleMetricsFilterChange = (newFilters: typeof metricsFilters) => {
+  const handleMetricsFilterChange = (newFilters: InvestmentFilterParams) => {
     setMetricsFilters(newFilters);
   };
 
@@ -93,7 +94,7 @@ export default function DashboardPage() {
     return (
       <ErrorState
         title="Access Denied"
-        description="You don't have permission to view the dashboard"
+        message="You don't have permission to view the dashboard"
       />
     );
   }
