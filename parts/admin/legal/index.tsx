@@ -506,10 +506,10 @@ export default function LegalManagementDashboard() {
           </div>
         )}
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+          <table className="w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0">
               <tr>
-                <th className="px-2 py-1.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   <input
                     type="checkbox"
                     checked={
@@ -521,43 +521,43 @@ export default function LegalManagementDashboard() {
                     aria-label="Select all activities"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   Region
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   BRANCH
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   RECALCITANT EMPLOYERS
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   DEFAULTING EMPLOYERS
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   ECS NO.
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   PLAN ISSUED
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   ALTERNATE DISPUTE RESOLUTION (ADR)
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   CASES INSTITUTED IN COURT
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   CASES WON
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   SECTOR
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   PERIOD
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   APPROVAL STATUS
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   Actions
                 </th>
               </tr>

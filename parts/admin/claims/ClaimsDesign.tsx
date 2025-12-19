@@ -364,7 +364,7 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
           <table className="w-full divide-y divide-border">
             <thead className="bg-muted border-b border-border sticky top-0">
               <tr>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   <input
                     type="checkbox"
                     checked={selectedClaims.size === claims.length}
@@ -373,52 +373,52 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                     aria-label="Select all claims"
                   />
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   ECS NO.
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   Employer
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   BENEFICIARY
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   Type
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   Gender
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   Amount REQUESTED (₦)
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   Amount PAID (₦)
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   STATUS
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   Date PROCESSED
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   DATE PAID
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   SECTOR
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   CLASS
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   APPROVAL STATUS
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   ACTIONS
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   PAYMENT MONTH
                 </th>
-                <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   PERIOD
                 </th>
               </tr>
@@ -435,7 +435,7 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                     key={claim.id}
                     className="hover:bg-muted/50 transition-colors"
                   >
-                    <td className="px-2 py-1.5 text-center whitespace-nowrap">
+                    <td className="px-1 py-1 text-center whitespace-nowrap">
                       <input
                         type="checkbox"
                         checked={selectedClaims.has(claim.id)}
@@ -444,27 +444,27 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                         aria-label={`Select claim ${claim.claimId}`}
                       />
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs font-medium text-gray-900 whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] font-medium text-gray-900 whitespace-nowrap">
                       {claim.claimId}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs text-gray-700 whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] text-gray-700 whitespace-nowrap">
                       {claim.employer}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs text-gray-700 whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] text-gray-700 whitespace-nowrap">
                       {claim.claimant}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] whitespace-nowrap">
                       <span className={getTypeTextColor(claim.type)}>
                         {claim.type}
                       </span>
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] whitespace-nowrap">
                       {claim.gender || "—"}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs font-semibold text-gray-900 whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] font-semibold text-gray-900 whitespace-nowrap">
                       {formatCurrency(claim.amountRequested)}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] whitespace-nowrap">
                       <div className="flex flex-col items-center">
                         <span className="font-semibold text-green-600">
                           {formatCurrency(claim.amountPaid)}
@@ -476,7 +476,7 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                         )}
                       </div>
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] whitespace-nowrap">
                       <Badge
                         className={`${getStatusBadgeColor(
                           claim.status
@@ -485,10 +485,10 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                         {claim.status}
                       </Badge>
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs text-gray-700 whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] text-gray-700 whitespace-nowrap">
                       {formatDate(claim.dateProcessed)}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] whitespace-nowrap">
                       <span
                         className={
                           claim.datePaid
@@ -499,15 +499,15 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                         {formatDate(claim.datePaid)}
                       </span>
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs text-gray-700 whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] text-gray-700 whitespace-nowrap">
                       {claim.sector || "—"}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] whitespace-nowrap">
                       <span className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-medium text-gray-900">
                         {claim.class || "—"}
                       </span>
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] whitespace-nowrap">
                       <Badge
                         className={`${
                           claim.record_status === "approved"
@@ -520,7 +520,7 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                         {claim.record_status || "pending"}
                       </Badge>
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] whitespace-nowrap">
                       <button
                         type="button"
                         onClick={() => onView?.(claim)}
@@ -531,10 +531,10 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                         <Eye className="w-3.5 h-3.5" />
                       </button>
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs text-gray-700 whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] text-gray-700 whitespace-nowrap">
                       {claim.payment_month || "—"}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs text-gray-700 whitespace-nowrap">
+                    <td className="px-1 py-1 text-center text-[11px] text-gray-700 whitespace-nowrap">
                       {claim.date || "—"}
                     </td>
                   </tr>

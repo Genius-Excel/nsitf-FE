@@ -146,40 +146,40 @@ export const InvestmentTable: React.FC<InvestmentTableProps> = ({
                     />
                   </th>
                 )}
-                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-left whitespace-nowrap">
+                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center break-words">
                   MONTH
                 </th>
-                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
+                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center break-words">
                   CONTRIBUTIONS COLLECTED PRIVATE SECTOR
                 </th>
-                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
+                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center break-words">
                   CONTRIBUTIONS COLLECTED PUBLIC (TREASURY)
                 </th>
-                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
+                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center break-words">
                   CONTRIBUTIONS COLLECTED PUBLIC (NON-TREASURY)
                 </th>
-                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
+                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center break-words">
                   CONTRIBUTIONS COLLECTED (INFORMAL ECONOMY)
                 </th>
-                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
+                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center break-words">
                   RENTAL FEES
                 </th>
-                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
+                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center break-words">
                   ECS REGISTRATION FEES
                 </th>
-                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
+                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center break-words">
                   ECS CERTIFICATE FEES
                 </th>
-                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
+                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center break-words">
                   DEBT RECOVERED
                 </th>
-                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center whitespace-nowrap">
+                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center break-words">
                   PERIOD
                 </th>
-                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center whitespace-nowrap">
+                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center break-words">
                   APPROVAL STATUS
                 </th>
-                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center whitespace-nowrap">
+                <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center break-words">
                   ACTIONS
                 </th>
               </tr>

@@ -35,79 +35,81 @@ export const UsersTable: React.FC<{
   onDeleteClick: (userId: string) => void;
 }> = ({ users, onEdit, onDeleteClick }) => (
   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-    <table className="w-full">
-      <thead className="bg-white border-b border-gray-200">
-        <tr>
-          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
-            Name
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
-            Email
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
-            Role
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
-            Status
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
-            Date Added
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
-            Actions
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-200">
-        {users.map((user) => (
-          <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-            <td className="px-6 py-4 text-sm font-medium text-gray-900">
-              {user.first_name} {user.last_name}
-            </td>
-            <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-            <td className="px-6 py-4 text-sm">
-              <Badge
-                className={`${getRoleBadgeColor(
-                  capitalizeRole(user.role)
-                )} font-medium text-xs`}
-              >
-                {capitalizeRole(user.role)}
-              </Badge>
-            </td>
-            <td className="px-6 py-4 text-sm">
-              <Badge
-                className={
-                  user.account_status === "active"
-                    ? "bg-green-100 text-green-700 font-medium text-xs"
-                    : "bg-gray-100 text-gray-700 font-medium text-xs"
-                }
-              >
-                {user.account_status}
-              </Badge>
-            </td>
-            <td className="px-6 py-4 text-sm text-gray-600">
-              {user.created_at}
-            </td>
-            <td className="px-6 py-4 text-sm flex gap-2">
-              <Button
-                onClick={() => onEdit(user)}
-                variant={"outline"}
-                className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
-              >
-                <Edit2 className="w-4 h-4" />
-              </Button>
-              <Button
-                onClick={() => onDeleteClick(user.id)}
-                variant={"outline"}
-                className="p-2 hover:bg-red-50 rounded-md transition-colors text-red-600 hover:text-red-900"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </td>
+    <div className="overflow-x-auto">
+      <table className="w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50 sticky top-0">
+          <tr>
+            <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
+              Name
+            </th>
+            <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
+              Email
+            </th>
+            <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
+              Role
+            </th>
+            <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
+              Status
+            </th>
+            <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
+              Date Added
+            </th>
+            <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
+              Actions
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {users.map((user) => (
+            <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+              <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                {user.first_name} {user.last_name}
+              </td>
+              <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
+              <td className="px-6 py-4 text-sm">
+                <Badge
+                  className={`${getRoleBadgeColor(
+                    capitalizeRole(user.role)
+                  )} font-medium text-xs`}
+                >
+                  {capitalizeRole(user.role)}
+                </Badge>
+              </td>
+              <td className="px-6 py-4 text-sm">
+                <Badge
+                  className={
+                    user.account_status === "active"
+                      ? "bg-green-100 text-green-700 font-medium text-xs"
+                      : "bg-gray-100 text-gray-700 font-medium text-xs"
+                  }
+                >
+                  {user.account_status}
+                </Badge>
+              </td>
+              <td className="px-6 py-4 text-sm text-gray-600">
+                {user.created_at}
+              </td>
+              <td className="px-6 py-4 text-sm flex gap-2">
+                <Button
+                  onClick={() => onEdit(user)}
+                  variant={"outline"}
+                  className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={() => onDeleteClick(user.id)}
+                  variant={"outline"}
+                  className="p-2 hover:bg-red-50 rounded-md transition-colors text-red-600 hover:text-red-900"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   </div>
 );
 

@@ -39,8 +39,8 @@ export const ComplianceTable: React.FC<{
           No Data Found
         </h3>
         <p className="text-sm text-gray-500 max-w-md mb-4">
-          It looks like there are no records matching your search or filters. Try
-          adjusting your search term or clearing filters.
+          It looks like there are no records matching your search or filters.
+          Try adjusting your search term or clearing filters.
         </p>
         {onClearFilters && (
           <Button
@@ -54,8 +54,8 @@ export const ComplianceTable: React.FC<{
       </div>
     ) : (
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-100">
+        <table className="w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
             <tr>
               {[
                 "Region",
@@ -68,7 +68,7 @@ export const ComplianceTable: React.FC<{
               ].map((header) => (
                 <th
                   key={header}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
                 >
                   {header}
                 </th>
@@ -117,7 +117,13 @@ export const ComplianceSearchAndFilter: React.FC<{
   filterRegion: string;
   onRegionFilterChange: (value: string) => void;
   regions?: Region[]; // Regions from backend
-}> = ({ searchTerm, onSearchChange, filterRegion, onRegionFilterChange, regions = [] }) => (
+}> = ({
+  searchTerm,
+  onSearchChange,
+  filterRegion,
+  onRegionFilterChange,
+  regions = [],
+}) => (
   <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6 flex gap-3 items-center">
     <div className="flex-1 relative">
       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />

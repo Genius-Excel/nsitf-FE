@@ -286,7 +286,7 @@ export default function InvestmentDashboard() {
       {/* Page Header */}
       <div className="mb-6">
         <PageHeader
-          title="Investment and Treasury Management (ITM)"
+          title="Investment and Treasury Management (ITM) View"
           description="Monitor contribution collections and treasury activities"
           action={
             isHQUser ? (
