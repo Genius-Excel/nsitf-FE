@@ -1,10 +1,10 @@
 // ============================================================================
-// Investment Filters Component
+// Metrics Filter Component
 // ============================================================================
-// Filter panel for Investment & Treasury Management module
+// Generic filter panel for metrics across all modules
 // ============================================================================
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Filter, X, ChevronUp, ChevronDown } from "lucide-react";
 import {
   Select,
@@ -13,24 +13,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { InvestmentFilterParams } from "@/lib/types/investment";
 
-interface InvestmentFiltersProps {
-  filters: InvestmentFilterParams;
-  onFilterChange: (filters: InvestmentFilterParams) => void;
+interface MetricsFilterProps {
+  filters: {
+    selectedMonth?: string;
+    selectedYear?: string;
+    periodFrom?: string;
+    periodTo?: string;
+  };
+  onFilterChange: (filters: any) => void;
   onReset: () => void;
-  totalEntries: number;
-  filteredCount: number;
-  hideRecordStatus?: boolean;
+  totalEntries?: number;
+  filteredCount?: number;
 }
 
-export const InvestmentFilters: React.FC<InvestmentFiltersProps> = ({
+export const MetricsFilter: React.FC<MetricsFilterProps> = ({
   filters,
   onFilterChange,
   onReset,
   totalEntries,
   filteredCount,
-  hideRecordStatus = false,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -81,8 +83,7 @@ export const InvestmentFilters: React.FC<InvestmentFiltersProps> = ({
     filters.selectedMonth ||
     filters.selectedYear ||
     filters.periodFrom ||
-    filters.periodTo ||
-    filters.recordStatus;
+    filters.periodTo;
 
   // Active filter chips
   const activeFilterChips = [];
@@ -117,41 +118,35 @@ export const InvestmentFilters: React.FC<InvestmentFiltersProps> = ({
         }),
     });
   }
-  if (filters.recordStatus) {
-    activeFilterChips.push({
-      label:
-        filters.recordStatus.charAt(0).toUpperCase() +
-        filters.recordStatus.slice(1),
-      onRemove: () => onFilterChange({ ...filters, recordStatus: "" }),
-    });
-  }
 
   return (
     <div
-      className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4"
+      className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6"
       role="search"
-      aria-label="Filter investment records"
+      aria-label="Filter metrics"
     >
       {/* Filter Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-inset rounded-t-lg"
-        aria-expanded={isExpanded}
-        aria-controls="filter-content"
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-t-lg"
+        aria-expanded={isExpanded ? "true" : "false"}
+        aria-controls="metrics-filter-content"
       >
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5 text-gray-600" />
-          <span className="font-medium text-gray-900">Filters</span>
+          <span className="font-medium text-gray-900">Metrics Filters</span>
           {hasActiveFilters && (
-            <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+            <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
               Active
             </span>
           )}
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600">
-            {filteredCount} of {totalEntries} entries
-          </span>
+          {totalEntries !== undefined && filteredCount !== undefined && (
+            <span className="text-sm text-gray-600">
+              {filteredCount} of {totalEntries} entries
+            </span>
+          )}
           {isExpanded ? (
             <ChevronUp className="w-5 h-5 text-gray-400" />
           ) : (
@@ -163,11 +158,11 @@ export const InvestmentFilters: React.FC<InvestmentFiltersProps> = ({
       {/* Filter Content */}
       {isExpanded && (
         <div
-          id="filter-content"
+          id="metrics-filter-content"
           className="px-4 py-4 border-t border-gray-200 space-y-4"
         >
           {/* Filter Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Single Period Selector */}
             <div className="space-y-2">
               <label className="text-xs font-medium text-gray-700 block">
@@ -269,33 +264,6 @@ export const InvestmentFilters: React.FC<InvestmentFiltersProps> = ({
                 </Select>
               </div>
             </div>
-
-            {/* Record Status Filter */}
-            {!hideRecordStatus && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-gray-700 block">
-                  Record Status
-                </label>
-                <Select
-                  value={filters.recordStatus}
-                  onValueChange={(value) =>
-                    onFilterChange({
-                      ...filters,
-                      recordStatus: value as any,
-                    })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All Statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="reviewed">Reviewed</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
           </div>
 
           {/* Active Filters Chips */}
@@ -308,7 +276,7 @@ export const InvestmentFilters: React.FC<InvestmentFiltersProps> = ({
                 <button
                   key={index}
                   onClick={chip.onRemove}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full hover:bg-green-100 transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full hover:bg-blue-100 transition-colors"
                 >
                   {chip.label}
                   <X className="w-3 h-3" />
@@ -322,7 +290,7 @@ export const InvestmentFilters: React.FC<InvestmentFiltersProps> = ({
             <div className="pt-2 flex justify-end">
               <button
                 onClick={onReset}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                 aria-label="Clear all filters"
               >
                 <X className="w-4 h-4" />

@@ -5,7 +5,13 @@
 // ============================================================================
 
 import React, { useState } from "react";
-import { Upload, X, FileSpreadsheet, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  Upload,
+  X,
+  FileSpreadsheet,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,9 +36,19 @@ export const InvestmentUploadModal: React.FC<InvestmentUploadModalProps> = ({
   onSuccess,
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [period, setPeriod] = useState<string>(() => {
+    // Default to current month-year in YYYY-MM format
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
+  });
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState<"idle" | "success" | "error">("idle");
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,13 +90,21 @@ export const InvestmentUploadModal: React.FC<InvestmentUploadModalProps> = ({
       return;
     }
 
+    if (!period) {
+      toast.error("Please select a period (YYYY-MM format)");
+      return;
+    }
+
+    // Validate period format
+    const periodRegex = /^\d{4}-\d{2}$/;
+    if (!periodRegex.test(period)) {
+      toast.error("Period must be in YYYY-MM format (e.g., 2025-02)");
+      return;
+    }
+
     try {
       setUploading(true);
       setUploadProgress(10);
-
-      // Get current period (default to current month-year)
-      const now = new Date();
-      const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
       setUploadProgress(30);
 
@@ -93,14 +117,19 @@ export const InvestmentUploadModal: React.FC<InvestmentUploadModalProps> = ({
 
       if (response.success) {
         setUploadStatus("success");
-        toast.success(`Successfully uploaded ${response.recordCount} records`);
+        toast.success(
+          response.message || "Successfully uploaded investment records"
+        );
         setTimeout(() => {
           onSuccess();
           handleClose();
         }, 1500);
       } else {
         setUploadStatus("error");
-        setErrorMessage("Upload failed. Please try again.");
+        const errorMsg = response.error_report
+          ? JSON.stringify(response.error_report)
+          : "Upload failed. Please try again.";
+        setErrorMessage(errorMsg);
         toast.error("Upload failed");
       }
     } catch (error: any) {
@@ -213,7 +242,9 @@ export const InvestmentUploadModal: React.FC<InvestmentUploadModalProps> = ({
                   <div>
                     <p className="text-sm font-medium">Upload failed</p>
                     {errorMessage && (
-                      <p className="text-xs text-red-500 mt-1">{errorMessage}</p>
+                      <p className="text-xs text-red-500 mt-1">
+                        {errorMessage}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -221,10 +252,32 @@ export const InvestmentUploadModal: React.FC<InvestmentUploadModalProps> = ({
             </div>
           )}
 
+          {/* Period Input */}
+          <div className="space-y-2">
+            <label
+              htmlFor="period"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Reporting Period (YYYY-MM) <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="period"
+              type="text"
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              placeholder="2025-02"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              disabled={uploading}
+            />
+            <p className="text-xs text-gray-500">
+              Enter the reporting period in YYYY-MM format (e.g., 2025-02)
+            </p>
+          </div>
+
           {/* Instructions */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-xs font-medium text-blue-900 mb-1">
-              File Requirements:
+              Upload Instructions:
             </p>
             <ul className="text-xs text-blue-700 space-y-1 list-disc list-inside">
               <li>Excel or CSV format with correct column headers</li>
@@ -232,7 +285,8 @@ export const InvestmentUploadModal: React.FC<InvestmentUploadModalProps> = ({
                 Required columns: Month, Private Sector, Public Treasury, etc.
               </li>
               <li>Numeric values only (no currency symbols)</li>
-              <li>One row per month</li>
+              <li>Period must be in YYYY-MM format (e.g., 2025-02)</li>
+              <li>Sheet type is automatically set to INVESTMENTS</li>
             </ul>
           </div>
 
@@ -247,7 +301,9 @@ export const InvestmentUploadModal: React.FC<InvestmentUploadModalProps> = ({
             </Button>
             <Button
               onClick={handleUpload}
-              disabled={!selectedFile || uploading || uploadStatus === "success"}
+              disabled={
+                !selectedFile || uploading || uploadStatus === "success"
+              }
               className="bg-green-600 hover:bg-green-700"
             >
               {uploading ? "Uploading..." : "Upload"}

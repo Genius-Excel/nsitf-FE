@@ -29,6 +29,7 @@ import { AddRegionModal } from "./complianceAddRegionModal";
 import { ManageBranchesModal } from "./complianceManageBranchesModal";
 import { ComplianceDetailModal } from "./complianceDetailModal";
 import { PageHeader } from "@/components/design-system/PageHeader";
+import { MetricsFilter } from "@/components/design-system/MetricsFilter";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -133,6 +134,27 @@ const ComplianceDashboard: React.FC = () => {
 
   // Additional client-side search filter (optional)
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Metrics filters state
+  const [metricsFilters, setMetricsFilters] = useState({
+    selectedMonth: undefined as string | undefined,
+    selectedYear: undefined as string | undefined,
+    periodFrom: undefined as string | undefined,
+    periodTo: undefined as string | undefined,
+  });
+
+  const handleMetricsFilterChange = (newFilters: typeof metricsFilters) => {
+    setMetricsFilters(newFilters);
+  };
+
+  const handleResetMetricsFilters = () => {
+    setMetricsFilters({
+      selectedMonth: undefined,
+      selectedYear: undefined,
+      periodFrom: undefined,
+      periodTo: undefined,
+    });
+  };
 
   const filteredSummary = useMemo(() => {
     if (!searchTerm) return regionalSummary;
@@ -313,6 +335,13 @@ const ComplianceDashboard: React.FC = () => {
       <PageHeader
         title="Compliance View"
         description="Track contributions, targets, and employer registration across regions"
+      />
+
+      {/* Metrics Filters */}
+      <MetricsFilter
+        filters={metricsFilters}
+        onFilterChange={handleMetricsFilterChange}
+        onReset={handleResetMetricsFilters}
       />
 
       {/* Dashboard Cards */}

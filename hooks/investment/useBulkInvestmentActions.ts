@@ -25,15 +25,37 @@ export function useBulkInvestmentActions(): UseBulkInvestmentActionsReturn {
       setLoading(true);
       const response = await bulkReviewInvestmentRecords({ recordIds });
 
-      if (response.success) {
+      // Check if there are any errors
+      if (response.data.errors.length > 0) {
+        // Show errors
+        response.data.errors.forEach((err) => {
+          toast.error(`Record ${err.id}: ${err.error}`);
+        });
+
+        // Also show success for updated records if any
+        if (response.data.updated.length > 0) {
+          toast.success(
+            `${response.data.updated.length} record${
+              response.data.updated.length > 1 ? "s" : ""
+            } marked as reviewed`
+          );
+        }
+
+        return response.data.updated.length > 0;
+      }
+
+      // All successful
+      if (response.data.updated.length > 0) {
         toast.success(
-          `${response.updatedCount} record${response.updatedCount > 1 ? "s" : ""} marked as reviewed`
+          `${response.data.updated.length} record${
+            response.data.updated.length > 1 ? "s" : ""
+          } marked as reviewed`
         );
         return true;
-      } else {
-        toast.error("Failed to review records");
-        return false;
       }
+
+      toast.error("No records were updated");
+      return false;
     } catch (error) {
       console.error("Error reviewing records:", error);
       toast.error("An error occurred while reviewing records");
@@ -48,15 +70,37 @@ export function useBulkInvestmentActions(): UseBulkInvestmentActionsReturn {
       setLoading(true);
       const response = await bulkApproveInvestmentRecords({ recordIds });
 
-      if (response.success) {
+      // Check if there are any errors
+      if (response.data.errors.length > 0) {
+        // Show errors
+        response.data.errors.forEach((err) => {
+          toast.error(`Record ${err.id}: ${err.error}`);
+        });
+
+        // Also show success for updated records if any
+        if (response.data.updated.length > 0) {
+          toast.success(
+            `${response.data.updated.length} record${
+              response.data.updated.length > 1 ? "s" : ""
+            } approved successfully`
+          );
+        }
+
+        return response.data.updated.length > 0;
+      }
+
+      // All successful
+      if (response.data.updated.length > 0) {
         toast.success(
-          `${response.updatedCount} record${response.updatedCount > 1 ? "s" : ""} approved successfully`
+          `${response.data.updated.length} record${
+            response.data.updated.length > 1 ? "s" : ""
+          } approved successfully`
         );
         return true;
-      } else {
-        toast.error("Failed to approve records");
-        return false;
       }
+
+      toast.error("No records were updated");
+      return false;
     } catch (error) {
       console.error("Error approving records:", error);
       toast.error("An error occurred while approving records");

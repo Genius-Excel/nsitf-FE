@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { RiskAnalysisDesign } from "./riskAnalysisDesign";
 import { useRiskAnalysis } from "@/hooks/risk/useGetRiskAnalysis";
+import { useRegions } from "@/hooks/compliance/Useregions";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 
@@ -10,6 +11,9 @@ export function RiskAnalysisFunc() {
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [selectedRiskType, setSelectedRiskType] = useState("all");
   const [timeHorizon, setTimeHorizon] = useState("1y");
+
+  // Fetch regions from API
+  const { data: regions, loading: regionsLoading } = useRegions();
 
   // Fetch risk analysis data from API
   const {
@@ -31,8 +35,8 @@ export function RiskAnalysisFunc() {
     });
   };
 
-  // Loading state
-  if (loading) {
+  // Loading state - only show if risk data is loading, not regions
+  if (loading && !riskData) {
     return <LoadingState message="Loading Risk Analysis data..." />;
   }
 
@@ -52,6 +56,7 @@ export function RiskAnalysisFunc() {
       trendlineData={riskData.trendlineData}
       regionalRiskData={riskData.regionalData}
       riskEntities={riskData.topRiskEntities}
+      regions={regions || []}
       selectedRegion={selectedRegion}
       selectedRiskType={selectedRiskType}
       timeHorizon={timeHorizon}

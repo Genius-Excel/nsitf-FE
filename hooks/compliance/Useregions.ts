@@ -45,6 +45,7 @@ export const useRegions = () => {
       }
 
       const apiData = response.data as RegionsResponse;
+      console.log("useRegions: Regions fetched successfully", apiData.data);
       setData(apiData.data);
     } catch (err: any) {
       const message =

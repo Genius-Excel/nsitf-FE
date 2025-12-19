@@ -26,54 +26,51 @@ export interface InvestmentRecord {
   branch?: string;
 }
 
-export interface InvestmentMetrics {
-  contributionsPrivateSector: {
-    current: number;
-    previous: number;
-    change: number;
-    changePercent: number;
-  };
-  contributionsPublicTreasury: {
-    current: number;
-    previous: number;
-    change: number;
-    changePercent: number;
-  };
-  contributionsPublicNonTreasury: {
-    current: number;
-    previous: number;
-    change: number;
-    changePercent: number;
-  };
-  contributionsInformalEconomy: {
-    current: number;
-    previous: number;
-    change: number;
-    changePercent: number;
-  };
-  rentalFees: {
-    current: number;
-    previous: number;
-    change: number;
-    changePercent: number;
-  };
-  debtRecovered: {
-    current: number;
-    previous: number;
-    change: number;
-    changePercent: number;
-  };
+export interface MetricCard {
+  value: number;
+  change_percent: number;
+  trend: "up" | "down" | "stable";
 }
 
-export interface InvestmentChartData {
+export interface InvestmentMetrics {
+  private_sector: MetricCard;
+  public_treasury_funded: MetricCard;
+  public_non_treasury_funded: MetricCard;
+  informal_economy: MetricCard;
+  rental_fees: MetricCard;
+  debt_recovered: MetricCard;
+  total_contributions: MetricCard;
+}
+
+export interface MonthlyContributionData {
   month: string;
-  privateSector: number;
-  publicTreasury: number;
-  publicNonTreasury: number;
-  informalEconomy: number;
-  rentalFees: number;
-  debtRecovered: number;
-  totalContributions: number;
+  private_sector: number;
+  public_treasury: number;
+  public_non_treasury: number;
+  informal_economy: number;
+  rental_fees: number;
+}
+
+export interface DebtRecoveryData {
+  month: string;
+  total_contributions: number;
+  total_debt_recovered: number;
+  debt_percent_of_contrib: number;
+}
+
+export interface ChartScale {
+  max: number;
+  ticks: number[];
+}
+
+export interface MonthlyContributionTrend {
+  data: MonthlyContributionData[];
+  scale: ChartScale;
+}
+
+export interface DebtRecoveryPerformance {
+  data: DebtRecoveryData[];
+  scale: ChartScale;
 }
 
 export interface InvestmentFilterParams {
@@ -86,10 +83,24 @@ export interface InvestmentFilterParams {
   branchId?: string;
 }
 
+export interface InvestmentMetricsResponse {
+  filters: {
+    period: string | null;
+    previous_period: string | null;
+    month: string | null;
+    period_from: string | null;
+    period_to: string | null;
+  };
+  metric_cards: InvestmentMetrics;
+  monthly_contribution_trend: MonthlyContributionTrend;
+  debt_recovery_performance: DebtRecoveryPerformance;
+}
+
 export interface InvestmentDashboardData {
   metrics: InvestmentMetrics;
   records: InvestmentRecord[];
-  chartData: InvestmentChartData[];
+  monthlyContributionTrend: MonthlyContributionTrend;
+  debtRecoveryPerformance: DebtRecoveryPerformance;
   totalRecords: number;
   filteredRecords: number;
 }
@@ -106,7 +117,13 @@ export interface BulkActionPayload {
 }
 
 export interface BulkActionResponse {
-  success: boolean;
-  updatedCount: number;
   message: string;
+  data: {
+    updated: string[];
+    missing: string[];
+    errors: Array<{
+      id: string;
+      error: string;
+    }>;
+  };
 }
