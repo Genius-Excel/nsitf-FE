@@ -361,7 +361,7 @@ export default function InspectionManagement() {
 
   // ============= RENDER =============
   return (
-    <div className="space-y-10">
+    <div className="w-full space-y-10">
       {/* Header */}
       <PageHeader
         title="Inspection Management"

@@ -36,18 +36,18 @@ export const InvestmentFilters: React.FC<InvestmentFiltersProps> = ({
 
   // Generate months
   const months = [
-    { value: "1", label: "January" },
-    { value: "2", label: "February" },
-    { value: "3", label: "March" },
-    { value: "4", label: "April" },
-    { value: "5", label: "May" },
-    { value: "6", label: "June" },
-    { value: "7", label: "July" },
-    { value: "8", label: "August" },
-    { value: "9", label: "September" },
-    { value: "10", label: "October" },
-    { value: "11", label: "November" },
-    { value: "12", label: "December" },
+    { value: "January", label: "January" },
+    { value: "February", label: "February" },
+    { value: "March", label: "March" },
+    { value: "April", label: "April" },
+    { value: "May", label: "May" },
+    { value: "June", label: "June" },
+    { value: "July", label: "July" },
+    { value: "August", label: "August" },
+    { value: "September", label: "September" },
+    { value: "October", label: "October" },
+    { value: "November", label: "November" },
+    { value: "December", label: "December" },
   ];
 
   // Generate years (current year and previous 2 years)
@@ -81,8 +81,7 @@ export const InvestmentFilters: React.FC<InvestmentFiltersProps> = ({
     filters.selectedMonth ||
     filters.selectedYear ||
     filters.periodFrom ||
-    filters.periodTo ||
-    filters.recordStatus;
+    filters.periodTo;
 
   // Active filter chips
   const activeFilterChips = [];
@@ -117,18 +116,9 @@ export const InvestmentFilters: React.FC<InvestmentFiltersProps> = ({
         }),
     });
   }
-  if (filters.recordStatus) {
-    activeFilterChips.push({
-      label:
-        filters.recordStatus.charAt(0).toUpperCase() +
-        filters.recordStatus.slice(1),
-      onRemove: () => onFilterChange({ ...filters, recordStatus: "" }),
-    });
-  }
-
   return (
     <div
-      className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4"
+      className="w-full bg-white border border-gray-200 rounded-lg shadow-sm mb-4"
       role="search"
       aria-label="Filter investment records"
     >
@@ -167,7 +157,7 @@ export const InvestmentFilters: React.FC<InvestmentFiltersProps> = ({
           className="px-4 py-4 border-t border-gray-200 space-y-4"
         >
           {/* Filter Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
             {/* Single Period Selector */}
             <div className="space-y-2">
               <label className="text-xs font-medium text-gray-700 block">
@@ -269,33 +259,6 @@ export const InvestmentFilters: React.FC<InvestmentFiltersProps> = ({
                 </Select>
               </div>
             </div>
-
-            {/* Record Status Filter */}
-            {!hideRecordStatus && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-gray-700 block">
-                  Record Status
-                </label>
-                <Select
-                  value={filters.recordStatus}
-                  onValueChange={(value) =>
-                    onFilterChange({
-                      ...filters,
-                      recordStatus: value as any,
-                    })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All Statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="reviewed">Reviewed</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
           </div>
 
           {/* Active Filters Chips */}
