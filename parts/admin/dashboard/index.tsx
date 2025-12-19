@@ -10,9 +10,9 @@ import { DashboardLineChart } from "./line-chart";
 import { ClaimsPieChart } from "./claims-chart";
 import { RegionChartBarMultiple } from "./region-chartbar-multiple";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
-import { InvestmentFilters } from "@/parts/admin/investment/InvestmentFilters";
+import { MetricsFilter } from "@/components/design-system/MetricsFilter";
 import { PageHeader } from "@/components/design-system/PageHeader";
-import type { InvestmentFilterParams } from "@/lib/types/investment";
+
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 
@@ -43,15 +43,15 @@ const COLOR_SCHEMES: Array<"green" | "blue" | "purple" | "orange" | "gray"> = [
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
 
-  // Metrics filters state (using Investment-style filters without record status)
-  const [metricsFilters, setMetricsFilters] = useState<InvestmentFilterParams>({
+  // Metrics filters state
+  const [metricsFilters, setMetricsFilters] = useState({
     selectedMonth: undefined,
     selectedYear: undefined,
     periodFrom: undefined,
     periodTo: undefined,
   });
 
-  const handleMetricsFilterChange = (newFilters: InvestmentFilterParams) => {
+  const handleMetricsFilterChange = (newFilters: typeof metricsFilters) => {
     setMetricsFilters(newFilters);
   };
 
@@ -110,7 +110,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="w-full space-y-10">
       {/* Header */}
       <PageHeader
         title="APRD Dashboard View for Super User"
@@ -120,13 +120,10 @@ export default function DashboardPage() {
       />
 
       {/* Metrics Filters */}
-      <InvestmentFilters
+      <MetricsFilter
         filters={metricsFilters}
         onFilterChange={handleMetricsFilterChange}
         onReset={handleResetMetricsFilters}
-        totalEntries={0}
-        filteredCount={0}
-        hideRecordStatus={true}
       />
 
       {/* Metric Cards */}

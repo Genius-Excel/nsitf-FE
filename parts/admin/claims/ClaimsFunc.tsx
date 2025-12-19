@@ -446,8 +446,8 @@ export default function ClaimsManagement() {
       {/* Loading State */}
       {loading && !claims.length ? (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-          <p className="mt-4 text-gray-600">Loading claims data...</p>
+          <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600 text-sm">Loading claims data...</p>
         </div>
       ) : (
         <>

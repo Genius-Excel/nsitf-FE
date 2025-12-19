@@ -102,7 +102,7 @@ export default function UsersRolesManagement() {
     let roleId = user.role;
 
     // If the user.role is a name string (not a UUID), find the matching role ID
-    if (roles && roleId && !roleId.includes('-')) {
+    if (roles && roleId && !roleId.includes("-")) {
       // It's likely a role name, find the role ID
       const matchingRole = roles.find(
         (r) => r.name.toLowerCase() === roleId.toLowerCase()
@@ -160,7 +160,7 @@ export default function UsersRolesManagement() {
   const router = useRouter();
 
   const handleManagePermissions = () => {
-    router.push('/admin/dashboard/permissions');
+    router.push("/admin/dashboard/permissions");
   };
 
   // ============== RENDER ==============
@@ -225,7 +225,7 @@ export default function UsersRolesManagement() {
         {/* Loading State */}
         {loading && (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
+            <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
 

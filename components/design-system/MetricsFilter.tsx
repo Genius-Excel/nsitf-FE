@@ -121,7 +121,7 @@ export const MetricsFilter: React.FC<MetricsFilterProps> = ({
 
   return (
     <div
-      className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6"
+      className="w-full bg-white border border-gray-200 rounded-lg shadow-sm mb-6"
       role="search"
       aria-label="Filter metrics"
     >
@@ -175,7 +175,7 @@ export const MetricsFilter: React.FC<MetricsFilterProps> = ({
           className="px-4 py-4 border-t border-gray-200 space-y-4"
         >
           {/* Filter Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
             {/* Single Period Selector */}
             <div className="space-y-2">
               <label className="text-xs font-medium text-gray-700 block">
