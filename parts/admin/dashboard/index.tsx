@@ -6,7 +6,6 @@ import { getUserFromStorage, User } from "@/lib/auth";
 import { useDashboardSummary } from "@/hooks/useDashboardSummary";
 import { useMetricCards } from "@/hooks/Usedashboardcharts";
 import { useCheckPermission } from "@/hooks/useCheckPermission";
-import { useRegions } from "@/hooks/compliance/Useregions";
 import { DashboardLineChart } from "./line-chart";
 import { ClaimsPieChart } from "./claims-chart";
 import { RegionChartBarMultiple } from "./region-chartbar-multiple";
@@ -15,14 +14,6 @@ import { InvestmentFilters } from "@/parts/admin/investment/InvestmentFilters";
 import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
-import { Card } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 /**
  * REFACTORED DASHBOARD:
@@ -50,10 +41,6 @@ const COLOR_SCHEMES: Array<"green" | "blue" | "purple" | "orange" | "gray"> = [
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
-  const [selectedRegion, setSelectedRegion] = useState("all");
-
-  // Fetch regions from API
-  const { data: regions, loading: regionsLoading } = useRegions();
 
   // Metrics filters state (using Investment-style filters without record status)
   const [metricsFilters, setMetricsFilters] = useState({
@@ -130,26 +117,6 @@ export default function DashboardPage() {
           filters ? `${filters.region_name} • ${filters.period}` : undefined
         }
       />
-
-      {/* Region Filter */}
-      <Card className="p-4">
-        <div className="flex-1 min-w-[200px] max-w-[300px]">
-          <label className="block mb-2 text-sm font-medium">Region</label>
-          <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select region" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Regions</SelectItem>
-              {regions?.map((region) => (
-                <SelectItem key={region.id} value={region.id}>
-                  {region.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </Card>
 
       {/* Metrics Filters */}
       <InvestmentFilters
