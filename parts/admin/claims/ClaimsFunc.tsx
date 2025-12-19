@@ -13,6 +13,7 @@ import { ClaimDetailModal } from "./ClaimModal";
 import { ClaimsUploadModal } from "./ClaimsUploadModal";
 import { StatCard } from "@/lib/types";
 import { PageHeader } from "@/components/design-system/PageHeader";
+import { MetricsFilter } from "@/components/design-system/MetricsFilter";
 import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPanel";
 import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import {
@@ -81,6 +82,27 @@ export default function ClaimsManagement() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
+
+  // Metrics filters state
+  const [metricsFilters, setMetricsFilters] = useState({
+    selectedMonth: undefined as string | undefined,
+    selectedYear: undefined as string | undefined,
+    periodFrom: undefined as string | undefined,
+    periodTo: undefined as string | undefined,
+  });
+
+  const handleMetricsFilterChange = (newFilters: typeof metricsFilters) => {
+    setMetricsFilters(newFilters);
+  };
+
+  const handleResetMetricsFilters = () => {
+    setMetricsFilters({
+      selectedMonth: undefined,
+      selectedYear: undefined,
+      periodFrom: undefined,
+      periodTo: undefined,
+    });
+  };
 
   // ==========================================
   // PERMISSIONS REMOVED
@@ -412,6 +434,13 @@ export default function ClaimsManagement() {
       <PageHeader
         title="Claims and Compensation View"
         description="Track and process employee compensation claims"
+      />
+
+      {/* Metrics Filters */}
+      <MetricsFilter
+        filters={metricsFilters}
+        onFilterChange={handleMetricsFilterChange}
+        onReset={handleResetMetricsFilters}
       />
 
       {/* Loading State */}

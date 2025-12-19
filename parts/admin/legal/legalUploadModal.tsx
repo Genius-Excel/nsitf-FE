@@ -58,8 +58,9 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
 
   // Get user info for role-based filtering
   const user = getUserFromStorage();
-  const isAdmin = user?.role === "admin" || user?.role === "manager";
   const userRegionId = user?.region_id;
+  const userRole = user?.role?.toLowerCase();
+  const isRegionalOfficer = userRole !== "admin" && userRole !== "manager";
 
   // If backend provides a list of branches the regional manager heads,
   // prefer that list to restrict branch choices.
@@ -71,12 +72,12 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
 
   const { uploadFile, loading, error, clearError } = useUploadLegalActivities();
 
-  // Auto-select region for regional officers (but allow them to change it)
+  // Auto-select region for regional officers (they cannot change it)
   useEffect(() => {
-    if (!isAdmin && userRegionId && !selectedRegionId) {
+    if (isRegionalOfficer && userRegionId) {
       setSelectedRegionId(userRegionId);
     }
-  }, [isAdmin, userRegionId, selectedRegionId]);
+  }, [isRegionalOfficer, userRegionId]);
 
   // Fetch branches when region is selected
   useEffect(() => {
@@ -229,33 +230,37 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
           </div>
 
           <div className="p-4 sm:p-6 space-y-6">
-            {/* Region Selection - Always visible */}
-            <div>
-              <label
-                htmlFor="region-select"
-                className="block text-sm font-semibold text-gray-900 mb-2"
-              >
-                Select Region <span className="text-red-500">*</span>
-              </label>
-              <select
-                id="region-select"
-                value={selectedRegionId}
-                onChange={(e) => setSelectedRegionId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={loading || regionsLoading}
-                aria-label="Select region"
-              >
-                <option value="">Choose a region</option>
-                {regions?.map((region) => (
-                  <option key={region.id} value={region.id}>
-                    {region.name}
-                  </option>
-                ))}
-              </select>
-              {regionsLoading && (
-                <p className="text-xs text-gray-500 mt-1">Loading regions...</p>
-              )}
-            </div>
+            {/* Region Selection - Only visible for admin/manager */}
+            {!isRegionalOfficer && (
+              <div>
+                <label
+                  htmlFor="region-select"
+                  className="block text-sm font-semibold text-gray-900 mb-2"
+                >
+                  Select Region <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="region-select"
+                  value={selectedRegionId}
+                  onChange={(e) => setSelectedRegionId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={loading || regionsLoading}
+                  aria-label="Select region"
+                >
+                  <option value="">Choose a region</option>
+                  {regions?.map((region) => (
+                    <option key={region.id} value={region.id}>
+                      {region.name}
+                    </option>
+                  ))}
+                </select>
+                {regionsLoading && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Loading regions...
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Branch Selection */}
             {selectedRegionId && (

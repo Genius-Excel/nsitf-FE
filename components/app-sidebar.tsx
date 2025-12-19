@@ -80,17 +80,7 @@ const navigationItems: NavigationItem[] = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    // Remove `regional_manager` so regional officers don't see the generic admin dashboard link
-    roles: [
-      "admin",
-      "manager",
-      "user",
-      "claims_officer",
-      "compliance_officer",
-      "hse_officer",
-      "legal_officer",
-      "inspection_officer",
-    ] as Role[],
+    roles: ["admin", "manager"] as Role[],
     permission: "view_dashboard", // Requires view_dashboard permission
   },
   {

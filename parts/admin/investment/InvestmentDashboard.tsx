@@ -52,7 +52,7 @@ export default function InvestmentDashboard() {
     selectedYear: undefined,
     periodFrom: undefined,
     periodTo: undefined,
-    recordStatus: "",
+    recordStatus: undefined,
   });
 
   // ============= ADVANCED FILTERS FOR TABLE =============
@@ -71,8 +71,16 @@ export default function InvestmentDashboard() {
 
   // ============= HOOKS =============
   // Use metrics filters for dashboard data (metrics and charts)
-  const { data, metrics, chartData, records, loading, error, refetch } =
-    useInvestmentDashboard(metricsFilters);
+  const {
+    data,
+    metrics,
+    monthlyContributionTrend,
+    debtRecoveryPerformance,
+    records,
+    loading,
+    error,
+    refetch,
+  } = useInvestmentDashboard(metricsFilters);
 
   // Map table filters to investment filters format for filtered records
   const tableInvestmentFilters: InvestmentFilterParams = useMemo(
@@ -81,7 +89,7 @@ export default function InvestmentDashboard() {
       selectedYear: tableFilters.selectedYear,
       periodFrom: tableFilters.dateFrom,
       periodTo: tableFilters.dateTo,
-      recordStatus: tableFilters.recordStatus || "",
+      recordStatus: tableFilters.recordStatus || undefined,
       regionId: apiParams.region_id,
       branchId: apiParams.branch_id,
     }),
@@ -172,7 +180,7 @@ export default function InvestmentDashboard() {
       selectedYear: undefined,
       periodFrom: undefined,
       periodTo: undefined,
-      recordStatus: "",
+      recordStatus: undefined,
     });
   };
 
@@ -287,7 +295,7 @@ export default function InvestmentDashboard() {
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
                 <Upload className="w-4 h-4 mr-2" />
-                Upload Data
+                Upload Investment Data
               </Button>
             ) : undefined
           }
@@ -315,53 +323,45 @@ export default function InvestmentDashboard() {
         <MetricsGrid columns={6}>
           <MetricCard
             title="PRIVATE SECTOR"
-            value={formatCurrency(metrics.contributionsPrivateSector.current)}
-            change={formatChange(
-              metrics.contributionsPrivateSector.changePercent
-            )}
+            value={formatCurrency(metrics.private_sector.value)}
+            change={formatChange(metrics.private_sector.change_percent)}
             icon={<Building />}
             colorScheme="green"
           />
           <MetricCard
             title="PUBLIC TREASURY FUNDED"
-            value={formatCurrency(metrics.contributionsPublicTreasury.current)}
-            change={formatChange(
-              metrics.contributionsPublicTreasury.changePercent
-            )}
+            value={formatCurrency(metrics.public_treasury_funded.value)}
+            change={formatChange(metrics.public_treasury_funded.change_percent)}
             icon={<Landmark />}
             colorScheme="blue"
           />
           <MetricCard
             title="PUBLIC NON-TREASURY"
-            value={formatCurrency(
-              metrics.contributionsPublicNonTreasury.current
-            )}
+            value={formatCurrency(metrics.public_non_treasury_funded.value)}
             change={formatChange(
-              metrics.contributionsPublicNonTreasury.changePercent
+              metrics.public_non_treasury_funded.change_percent
             )}
             icon={<Users />}
             colorScheme="purple"
           />
           <MetricCard
             title="INFORMAL ECONOMY"
-            value={formatCurrency(metrics.contributionsInformalEconomy.current)}
-            change={formatChange(
-              metrics.contributionsInformalEconomy.changePercent
-            )}
+            value={formatCurrency(metrics.informal_economy.value)}
+            change={formatChange(metrics.informal_economy.change_percent)}
             icon={<Users />}
             colorScheme="orange"
           />
           <MetricCard
             title="RENTAL FEES"
-            value={formatCurrency(metrics.rentalFees.current)}
-            change={formatChange(metrics.rentalFees.changePercent)}
+            value={formatCurrency(metrics.rental_fees.value)}
+            change={formatChange(metrics.rental_fees.change_percent)}
             icon={<Home />}
             colorScheme="gray"
           />
           <MetricCard
             title="DEBT RECOVERED"
-            value={formatCurrency(metrics.debtRecovered.current)}
-            change={formatChange(metrics.debtRecovered.changePercent)}
+            value={formatCurrency(metrics.debt_recovered.value)}
+            change={formatChange(metrics.debt_recovered.change_percent)}
             icon={<TrendingUp />}
             colorScheme="green"
           />
@@ -369,7 +369,10 @@ export default function InvestmentDashboard() {
       )}
 
       {/* Charts */}
-      <InvestmentCharts chartData={chartData} />
+      <InvestmentCharts
+        monthlyContributionTrend={monthlyContributionTrend}
+        debtRecoveryPerformance={debtRecoveryPerformance}
+      />
 
       {/* Advanced Filters for Table */}
       <AdvancedFilterPanel

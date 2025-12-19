@@ -682,6 +682,12 @@ export const ComplianceUploadModal: React.FC<{
   const [isDragging, setIsDragging] = useState(false);
   const [errors, setErrors] = useState<any[]>([]);
 
+  // Get user info for role-based filtering
+  const user = getUserFromStorage();
+  const userRegionId = user?.region_id;
+  const userRole = user?.role?.toLowerCase();
+  const isRegionalOfficer = userRole !== "admin" && userRole !== "manager";
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Use the upload hook
@@ -697,6 +703,13 @@ export const ComplianceUploadModal: React.FC<{
         setErrors([{ message: error }]);
       },
     });
+
+  // Auto-select region for regional officers (they cannot change it)
+  useEffect(() => {
+    if (isRegionalOfficer && userRegionId) {
+      setSelectedRegionId(userRegionId);
+    }
+  }, [isRegionalOfficer, userRegionId]);
 
   useEffect(() => {
     if (isOpen) {
@@ -811,25 +824,28 @@ export const ComplianceUploadModal: React.FC<{
           </div>
 
           <div className="p-4 sm:p-6 space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Select Region <span className="text-red-500">*</span>
-              </label>
-              <select
-                aria-label="Select region"
-                value={selectedRegionId}
-                onChange={(e) => setSelectedRegionId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                disabled={isUploading}
-              >
-                <option value="">Choose a region</option>
-                {regions.map((region) => (
-                  <option key={region.id} value={region.id}>
-                    {region.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Region Selection - Only visible for admin/manager */}
+            {!isRegionalOfficer && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Select Region <span className="text-red-500">*</span>
+                </label>
+                <select
+                  aria-label="Select region"
+                  value={selectedRegionId}
+                  onChange={(e) => setSelectedRegionId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  disabled={isUploading}
+                >
+                  <option value="">Choose a region</option>
+                  {regions.map((region) => (
+                    <option key={region.id} value={region.id}>
+                      {region.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">

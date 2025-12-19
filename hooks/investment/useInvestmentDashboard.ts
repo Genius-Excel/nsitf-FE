@@ -10,14 +10,16 @@ import type {
   InvestmentDashboardData,
   InvestmentFilterParams,
   InvestmentMetrics,
-  InvestmentChartData,
+  MonthlyContributionTrend,
+  DebtRecoveryPerformance,
   InvestmentRecord,
 } from "@/lib/types/investment";
 
 interface UseInvestmentDashboardReturn {
   data: InvestmentDashboardData | null;
   metrics: InvestmentMetrics | null;
-  chartData: InvestmentChartData[];
+  monthlyContributionTrend: MonthlyContributionTrend | null;
+  debtRecoveryPerformance: DebtRecoveryPerformance | null;
   records: InvestmentRecord[];
   loading: boolean;
   error: Error | null;
@@ -35,7 +37,10 @@ export function useInvestmentDashboard(
     try {
       setLoading(true);
       setError(null);
+      console.log("Fetching investment dashboard with filters:", filters);
       const dashboardData = await getInvestmentDashboard(filters);
+      console.log("Investment dashboard data received:", dashboardData);
+      console.log("Records count:", dashboardData?.records?.length || 0);
       setData(dashboardData);
     } catch (err) {
       setError(err as Error);
@@ -58,13 +63,21 @@ export function useInvestmentDashboard(
   ]);
 
   const metrics = useMemo(() => data?.metrics || null, [data]);
-  const chartData = useMemo(() => data?.chartData || [], [data]);
+  const monthlyContributionTrend = useMemo(
+    () => data?.monthlyContributionTrend || null,
+    [data]
+  );
+  const debtRecoveryPerformance = useMemo(
+    () => data?.debtRecoveryPerformance || null,
+    [data]
+  );
   const records = useMemo(() => data?.records || [], [data]);
 
   return {
     data,
     metrics,
-    chartData,
+    monthlyContributionTrend,
+    debtRecoveryPerformance,
     records,
     loading,
     error,

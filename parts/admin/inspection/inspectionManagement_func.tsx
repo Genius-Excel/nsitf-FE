@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PermissionGuard } from "@/components/permission-guard";
 import { PageHeader } from "@/components/design-system/PageHeader";
+import { MetricsFilter } from "@/components/design-system/MetricsFilter";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPanel";
@@ -40,6 +41,27 @@ export default function InspectionManagement() {
   >(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Metrics filters state
+  const [metricsFilters, setMetricsFilters] = useState({
+    selectedMonth: undefined as string | undefined,
+    selectedYear: undefined as string | undefined,
+    periodFrom: undefined as string | undefined,
+    periodTo: undefined as string | undefined,
+  });
+
+  const handleMetricsFilterChange = (newFilters: typeof metricsFilters) => {
+    setMetricsFilters(newFilters);
+  };
+
+  const handleResetMetricsFilters = () => {
+    setMetricsFilters({
+      selectedMonth: undefined,
+      selectedYear: undefined,
+      periodFrom: undefined,
+      periodTo: undefined,
+    });
+  };
 
   // ============= ADVANCED FILTERS =============
   const {
@@ -356,6 +378,13 @@ export default function InspectionManagement() {
             </button>
           </PermissionGuard>
         }
+      />
+
+      {/* Metrics Filters */}
+      <MetricsFilter
+        filters={metricsFilters}
+        onFilterChange={handleMetricsFilterChange}
+        onReset={handleResetMetricsFilters}
       />
 
       {/* Statistics Cards */}

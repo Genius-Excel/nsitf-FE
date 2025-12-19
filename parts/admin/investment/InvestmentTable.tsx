@@ -147,40 +147,40 @@ export const InvestmentTable: React.FC<InvestmentTableProps> = ({
                   </th>
                 )}
                 <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-left whitespace-nowrap">
-                  Month
+                  MONTH
                 </th>
                 <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
-                  Private Sector
+                  CONTRIBUTIONS COLLECTED PRIVATE SECTOR
                 </th>
                 <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
-                  Public (Treasury)
+                  CONTRIBUTIONS COLLECTED PUBLIC (TREASURY)
                 </th>
                 <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
-                  Public (Non-Treasury)
+                  CONTRIBUTIONS COLLECTED PUBLIC (NON-TREASURY)
                 </th>
                 <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
-                  Informal Economy
+                  CONTRIBUTIONS COLLECTED (INFORMAL ECONOMY)
                 </th>
                 <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
-                  Rental Fees
+                  RENTAL FEES
                 </th>
                 <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
-                  ECS Reg. Fees
+                  ECS REGISTRATION FEES
                 </th>
                 <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
-                  ECS Cert. Fees
+                  ECS CERTIFICATE FEES
                 </th>
                 <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-right whitespace-nowrap">
-                  Debt Recovered
+                  DEBT RECOVERED
                 </th>
                 <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center whitespace-nowrap">
-                  Period
+                  PERIOD
                 </th>
                 <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center whitespace-nowrap">
-                  Status
+                  APPROVAL STATUS
                 </th>
                 <th className="px-2 py-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-wide text-center whitespace-nowrap">
-                  Actions
+                  ACTIONS
                 </th>
               </tr>
             </thead>

@@ -6,13 +6,23 @@ import { getUserFromStorage, User } from "@/lib/auth";
 import { useDashboardSummary } from "@/hooks/useDashboardSummary";
 import { useMetricCards } from "@/hooks/Usedashboardcharts";
 import { useCheckPermission } from "@/hooks/useCheckPermission";
+import { useRegions } from "@/hooks/compliance/Useregions";
 import { DashboardLineChart } from "./line-chart";
 import { ClaimsPieChart } from "./claims-chart";
 import { RegionChartBarMultiple } from "./region-chartbar-multiple";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
+import { InvestmentFilters } from "@/parts/admin/investment/InvestmentFilters";
 import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
+import { Card } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /**
  * REFACTORED DASHBOARD:
@@ -40,12 +50,35 @@ const COLOR_SCHEMES: Array<"green" | "blue" | "purple" | "orange" | "gray"> = [
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState("all");
+
+  // Fetch regions from API
+  const { data: regions, loading: regionsLoading } = useRegions();
+
+  // Metrics filters state (using Investment-style filters without record status)
+  const [metricsFilters, setMetricsFilters] = useState({
+    selectedMonth: undefined as string | undefined,
+    selectedYear: undefined as string | undefined,
+    periodFrom: undefined as string | undefined,
+    periodTo: undefined as string | undefined,
+  });
+
+  const handleMetricsFilterChange = (newFilters: typeof metricsFilters) => {
+    setMetricsFilters(newFilters);
+  };
+
+  const handleResetMetricsFilters = () => {
+    setMetricsFilters({
+      selectedMonth: undefined,
+      selectedYear: undefined,
+      periodFrom: undefined,
+      periodTo: undefined,
+    });
+  };
 
   // Check permissions for dashboard access
-  const {
-    canView,
-    loading: permissionLoading,
-  } = useCheckPermission("dashboard");
+  const { canView, loading: permissionLoading } =
+    useCheckPermission("dashboard");
 
   // SINGLE FETCH for all dashboard data
   const {
@@ -78,8 +111,8 @@ export default function DashboardPage() {
     );
   }
 
-  // Data loading state
-  if (loading) {
+  // Data loading state - only show on initial load
+  if (loading && !dashboardData) {
     return <LoadingState message="Loading dashboard data..." />;
   }
 
@@ -96,6 +129,36 @@ export default function DashboardPage() {
         description={
           filters ? `${filters.region_name} • ${filters.period}` : undefined
         }
+      />
+
+      {/* Region Filter */}
+      <Card className="p-4">
+        <div className="flex-1 min-w-[200px] max-w-[300px]">
+          <label className="block mb-2 text-sm font-medium">Region</label>
+          <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select region" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Regions</SelectItem>
+              {regions?.map((region) => (
+                <SelectItem key={region.id} value={region.id}>
+                  {region.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
+
+      {/* Metrics Filters */}
+      <InvestmentFilters
+        filters={metricsFilters}
+        onFilterChange={handleMetricsFilterChange}
+        onReset={handleResetMetricsFilters}
+        totalEntries={0}
+        filteredCount={0}
+        hideRecordStatus={true}
       />
 
       {/* Metric Cards */}

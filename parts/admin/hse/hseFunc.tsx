@@ -11,6 +11,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/design-system/PageHeader";
+import { MetricsFilter } from "@/components/design-system/MetricsFilter";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 import { SearchBar } from "@/components/design-system/SearchBar";
@@ -53,6 +54,27 @@ export default function HSEDashboardContent() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+  // Metrics filters state
+  const [metricsFilters, setMetricsFilters] = useState({
+    selectedMonth: undefined as string | undefined,
+    selectedYear: undefined as string | undefined,
+    periodFrom: undefined as string | undefined,
+    periodTo: undefined as string | undefined,
+  });
+
+  const handleMetricsFilterChange = (newFilters: typeof metricsFilters) => {
+    setMetricsFilters(newFilters);
+  };
+
+  const handleResetMetricsFilters = () => {
+    setMetricsFilters({
+      selectedMonth: undefined,
+      selectedYear: undefined,
+      periodFrom: undefined,
+      periodTo: undefined,
+    });
+  };
   const [selectedRecord, setSelectedRecord] = useState<HSERecord | null>(null);
   const [selectedRegionalRecord, setSelectedRegionalRecord] =
     useState<any>(null);
@@ -365,6 +387,13 @@ export default function HSEDashboardContent() {
       <PageHeader
         title="HSE Management Dashboard"
         description="Health, Safety, and Environment monitoring and compliance tracking"
+      />
+
+      {/* Metrics Filters */}
+      <MetricsFilter
+        filters={metricsFilters}
+        onFilterChange={handleMetricsFilterChange}
+        onReset={handleResetMetricsFilters}
       />
 
       {/* Statistics Cards */}

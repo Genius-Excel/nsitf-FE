@@ -28,6 +28,7 @@ import { ErrorState } from "@/components/design-system/ErrorState";
 import { SearchBar } from "@/components/design-system/SearchBar";
 import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPanel";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
+import { MetricsFilter } from "@/components/design-system/MetricsFilter";
 import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import { LegalRecordModal } from "./LegalRecordModal";
 import { LegalUploadModal } from "./legalUploadModal";
@@ -64,6 +65,27 @@ export default function LegalManagementDashboard() {
   );
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ============= METRICS FILTERS =============
+  const [metricsFilters, setMetricsFilters] = useState({
+    selectedMonth: undefined as string | undefined,
+    selectedYear: undefined as string | undefined,
+    periodFrom: undefined as string | undefined,
+    periodTo: undefined as string | undefined,
+  });
+
+  const handleMetricsFilterChange = (newFilters: typeof metricsFilters) => {
+    setMetricsFilters(newFilters);
+  };
+
+  const handleResetMetricsFilters = () => {
+    setMetricsFilters({
+      selectedMonth: undefined,
+      selectedYear: undefined,
+      periodFrom: undefined,
+      periodTo: undefined,
+    });
+  };
 
   // ============= HOOKS =============
   const {
@@ -369,6 +391,15 @@ export default function LegalManagementDashboard() {
       <PageHeader
         title="Legal Activities View"
         description={`Showing ${filteredCount} of ${totalCount} records`}
+      />
+
+      {/* Metrics Filters */}
+      <MetricsFilter
+        filters={metricsFilters}
+        onFilterChange={handleMetricsFilterChange}
+        onReset={handleResetMetricsFilters}
+        totalEntries={totalCount}
+        filteredCount={filteredCount}
       />
 
       {/* Dashboard Metrics */}

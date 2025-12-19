@@ -410,10 +410,10 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                   CLASS
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                  RECORD STATUS
+                  APPROVAL STATUS
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                  Actions
+                  ACTIONS
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap">
                   PAYMENT MONTH

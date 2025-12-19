@@ -48,6 +48,7 @@ interface RiskAnalysisDesignProps {
   trendlineData: TrendlineData[];
   regionalRiskData: RegionalRiskData[];
   riskEntities: RiskEntity[];
+  regions: Array<{ id: string; name: string }>;
   selectedRegion: string;
   selectedRiskType: string;
   timeHorizon: string;
@@ -62,6 +63,7 @@ export function RiskAnalysisDesign({
   trendlineData,
   regionalRiskData,
   riskEntities,
+  regions,
   selectedRegion,
   selectedRiskType,
   timeHorizon,
@@ -157,10 +159,11 @@ export function RiskAnalysisDesign({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Regions</SelectItem>
-                <SelectItem value="lagos">Lagos</SelectItem>
-                <SelectItem value="abuja">Abuja</SelectItem>
-                <SelectItem value="kano">Kano</SelectItem>
-                <SelectItem value="portharcourt">Port Harcourt</SelectItem>
+                {regions.map((region) => (
+                  <SelectItem key={region.id} value={region.id}>
+                    {region.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

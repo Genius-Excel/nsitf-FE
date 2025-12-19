@@ -18,10 +18,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { ChartCard } from "@/components/design-system/ChartCard";
-import type { InvestmentChartData } from "@/lib/types/investment";
+import type {
+  MonthlyContributionTrend,
+  DebtRecoveryPerformance,
+} from "@/lib/types/investment";
 
 interface InvestmentChartsProps {
-  chartData: InvestmentChartData[];
+  monthlyContributionTrend: MonthlyContributionTrend | null;
+  debtRecoveryPerformance: DebtRecoveryPerformance | null;
 }
 
 // ============================================================================
@@ -50,9 +54,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 // ============================================================================
 // Monthly Contributions Trend Chart (Line Chart)
 // ============================================================================
-export const ContributionsTrendChart: React.FC<InvestmentChartsProps> = ({
-  chartData,
-}) => {
+const ContributionsTrendChart: React.FC<{
+  data: MonthlyContributionTrend;
+}> = ({ data }) => {
   return (
     <ChartCard
       title="Monthly Contribution Trends"
@@ -61,28 +65,23 @@ export const ContributionsTrendChart: React.FC<InvestmentChartsProps> = ({
     >
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
-          data={chartData}
+          data={data.data}
           margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis
-            dataKey="month"
-            tick={{ fontSize: 11 }}
-            stroke="#6b7280"
-          />
+          <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#6b7280" />
           <YAxis
             tick={{ fontSize: 11 }}
             stroke="#6b7280"
+            domain={[0, data.scale.max]}
+            ticks={data.scale.ticks}
             tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend
-            wrapperStyle={{ fontSize: "11px" }}
-            iconType="line"
-          />
+          <Legend wrapperStyle={{ fontSize: "11px" }} iconType="line" />
           <Line
             type="monotone"
-            dataKey="privateSector"
+            dataKey="private_sector"
             stroke="#16a34a"
             strokeWidth={2}
             name="Private Sector"
@@ -91,7 +90,7 @@ export const ContributionsTrendChart: React.FC<InvestmentChartsProps> = ({
           />
           <Line
             type="monotone"
-            dataKey="publicTreasury"
+            dataKey="public_treasury"
             stroke="#2563eb"
             strokeWidth={2}
             name="Public Treasury"
@@ -100,7 +99,7 @@ export const ContributionsTrendChart: React.FC<InvestmentChartsProps> = ({
           />
           <Line
             type="monotone"
-            dataKey="publicNonTreasury"
+            dataKey="public_non_treasury"
             stroke="#9333ea"
             strokeWidth={2}
             name="Public Non-Treasury"
@@ -109,7 +108,7 @@ export const ContributionsTrendChart: React.FC<InvestmentChartsProps> = ({
           />
           <Line
             type="monotone"
-            dataKey="informalEconomy"
+            dataKey="informal_economy"
             stroke="#ea580c"
             strokeWidth={2}
             name="Informal Economy"
@@ -118,7 +117,7 @@ export const ContributionsTrendChart: React.FC<InvestmentChartsProps> = ({
           />
           <Line
             type="monotone"
-            dataKey="rentalFees"
+            dataKey="rental_fees"
             stroke="#6b7280"
             strokeWidth={2}
             name="Rental Fees"
@@ -134,9 +133,9 @@ export const ContributionsTrendChart: React.FC<InvestmentChartsProps> = ({
 // ============================================================================
 // Debt Recovery vs Contributions Chart (Bar Chart)
 // ============================================================================
-export const DebtRecoveryChart: React.FC<InvestmentChartsProps> = ({
-  chartData,
-}) => {
+const DebtRecoveryChart: React.FC<{
+  data: DebtRecoveryPerformance;
+}> = ({ data }) => {
   return (
     <ChartCard
       title="Debt Recovery Performance"
@@ -145,33 +144,28 @@ export const DebtRecoveryChart: React.FC<InvestmentChartsProps> = ({
     >
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={chartData}
+          data={data.data}
           margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis
-            dataKey="month"
-            tick={{ fontSize: 11 }}
-            stroke="#6b7280"
-          />
+          <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#6b7280" />
           <YAxis
             tick={{ fontSize: 11 }}
             stroke="#6b7280"
+            domain={[0, data.scale.max]}
+            ticks={data.scale.ticks}
             tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend
-            wrapperStyle={{ fontSize: "11px" }}
-            iconType="rect"
-          />
+          <Legend wrapperStyle={{ fontSize: "11px" }} iconType="rect" />
           <Bar
-            dataKey="totalContributions"
+            dataKey="total_contributions"
             fill="#16a34a"
             name="Total Contributions"
             radius={[4, 4, 0, 0]}
           />
           <Bar
-            dataKey="debtRecovered"
+            dataKey="total_debt_recovered"
             fill="#ea580c"
             name="Debt Recovered"
             radius={[4, 4, 0, 0]}
@@ -186,9 +180,14 @@ export const DebtRecoveryChart: React.FC<InvestmentChartsProps> = ({
 // Main Charts Container
 // ============================================================================
 export const InvestmentCharts: React.FC<InvestmentChartsProps> = ({
-  chartData,
+  monthlyContributionTrend,
+  debtRecoveryPerformance,
 }) => {
-  if (!chartData || chartData.length === 0) {
+  if (
+    !monthlyContributionTrend ||
+    !debtRecoveryPerformance ||
+    monthlyContributionTrend.data.length === 0
+  ) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <ChartCard
@@ -252,8 +251,8 @@ export const InvestmentCharts: React.FC<InvestmentChartsProps> = ({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-      <ContributionsTrendChart chartData={chartData} />
-      <DebtRecoveryChart chartData={chartData} />
+      <ContributionsTrendChart data={monthlyContributionTrend} />
+      <DebtRecoveryChart data={debtRecoveryPerformance} />
     </div>
   );
 };
