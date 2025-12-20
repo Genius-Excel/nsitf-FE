@@ -7,14 +7,17 @@ export interface RegionalSummary {
   region: string;
   region_id: string;
   branch: string | null;
-  collected: number;
-  target: number;
+  actual_contributions_collected: number;
+  contributions_target: number;
   performance_rate: number;
-  employers: number;
-  employees: number;
+  employers_registered: number;
+  employees_covered: number;
   registration_fees: number;
   certificate_fees: number;
   period: string;
+  record_status?: string;
+  reviewed_by?: string | null;
+  approved_by?: string | null;
 }
 
 export interface ComplianceMetrics {
@@ -69,21 +72,78 @@ export const useComplianceDashboard = (filters?: ComplianceFilters) => {
       const params = new URLSearchParams();
       if (filters?.period) params.append("period", filters.period);
       if (filters?.region_id) params.append("region_id", filters.region_id);
-      if (filters?.branch) params.append("branch", filters.branch);
+      if (filters?.branch) params.append("branch_id", filters.branch);
 
       const queryString = params.toString();
-      const url = `/api/dashboard/compliance${
+      const url = `/api/contributions/manage-contributions${
         queryString ? `?${queryString}` : ""
       }`;
 
       const response = await http.getData(url);
 
-      // API returns flat structure directly
+      // API returns { message, data: [...] } structure
+      // We need to transform it to match the expected dashboard structure
       if (!response?.data) {
         throw new Error("Invalid API response structure");
       }
 
-      setData(response.data as ComplianceDashboardResponse);
+      // If response.data is an array (from /api/contributions/manage-contributions)
+      // we need to structure it properly
+      const records = Array.isArray(response.data)
+        ? response.data
+        : response.data.data;
+
+      // Create a dashboard response structure
+      const dashboardResponse: ComplianceDashboardResponse = {
+        message: response.data.message || "Data retrieved",
+        filters: {
+          period: filters?.period || "",
+          as_of: new Date().toISOString(),
+          region_id: filters?.region_id,
+          region_name: "",
+        },
+        metric_cards: {
+          total_contributions: 0,
+          total_target: 0,
+          performance_rate: 0,
+          total_employers: 0,
+          total_employees: 0,
+        },
+        regional_summary: records,
+      };
+
+      // Calculate metrics from records if available
+      if (records && Array.isArray(records)) {
+        dashboardResponse.metric_cards = {
+          total_contributions: records.reduce(
+            (sum, r) => sum + (r.actual_contributions_collected || 0),
+            0
+          ),
+          total_target: records.reduce(
+            (sum, r) => sum + (r.contributions_target || 0),
+            0
+          ),
+          performance_rate: 0,
+          total_employers: records.reduce(
+            (sum, r) => sum + (r.employers_registered || 0),
+            0
+          ),
+          total_employees: records.reduce(
+            (sum, r) => sum + (r.employees_covered || 0),
+            0
+          ),
+        };
+
+        // Calculate performance rate
+        if (dashboardResponse.metric_cards.total_target > 0) {
+          dashboardResponse.metric_cards.performance_rate =
+            (dashboardResponse.metric_cards.total_contributions /
+              dashboardResponse.metric_cards.total_target) *
+            100;
+        }
+      }
+
+      setData(dashboardResponse);
     } catch (err: any) {
       const message =
         err?.response?.data?.message ||

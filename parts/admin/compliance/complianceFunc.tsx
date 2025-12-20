@@ -41,14 +41,17 @@ const mapToComplianceEntry = (summary: RegionalSummary): ComplianceEntry => ({
   id: summary.region_id,
   region: summary.region,
   branch: summary.branch || "",
-  contributionCollected: summary.collected,
-  target: summary.target,
+  contributionCollected: summary.actual_contributions_collected,
+  target: summary.contributions_target,
   achievement: summary.performance_rate,
-  employersRegistered: summary.employers,
-  employees: summary.employees,
+  employersRegistered: summary.employers_registered,
+  employees: summary.employees_covered,
   registrationFees: summary.registration_fees,
   certificateFees: summary.certificate_fees,
   period: summary.period,
+  recordStatus: summary.record_status,
+  reviewedBy: summary.reviewed_by,
+  approvedBy: summary.approved_by,
 });
 
 /**
@@ -376,11 +379,11 @@ const ComplianceDashboard: React.FC = () => {
       <DashboardCards
         metrics={{
           totalActualContributions:
-            dashboardData?.metric_cards.total_contributions ?? 0,
-          contributionsTarget: dashboardData?.metric_cards.total_target ?? 0,
-          performanceRate: dashboardData?.metric_cards.performance_rate ?? 0,
-          totalEmployers: dashboardData?.metric_cards.total_employers ?? 0,
-          totalEmployees: dashboardData?.metric_cards.total_employees ?? 0,
+            dashboardData?.metric_cards?.total_contributions ?? 0,
+          contributionsTarget: dashboardData?.metric_cards?.total_target ?? 0,
+          performanceRate: dashboardData?.metric_cards?.performance_rate ?? 0,
+          totalEmployers: dashboardData?.metric_cards?.total_employers ?? 0,
+          totalEmployees: dashboardData?.metric_cards?.total_employees ?? 0,
         }}
       />
 
