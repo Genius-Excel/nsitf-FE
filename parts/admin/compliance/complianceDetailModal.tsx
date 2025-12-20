@@ -100,7 +100,8 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
     );
   const canReview =
     normalizedRole === "regional_manager" ||
-    normalizedRole === "regional officer";
+    normalizedRole === "regional officer" ||
+    normalizedRole === "admin";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 

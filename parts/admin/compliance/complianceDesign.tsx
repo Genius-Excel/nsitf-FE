@@ -42,7 +42,7 @@ import {
   generateId,
 } from "@/lib/utils";
 import { REQUIRED_COLUMNS, COLUMN_TYPES } from "@/lib/Constants";
-import { useReportUpload } from "@/hooks/compliance";
+import { useReportUpload, useBulkComplianceActions } from "@/hooks/compliance";
 import { getUserFromStorage, type UserRole } from "@/lib/auth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -274,7 +274,93 @@ export const ComplianceTable: React.FC<{
   onViewDetails: (entry: ComplianceEntry) => void;
   sortConfig: SortConfig | null;
   onSort: (field: SortField) => void;
-}> = ({ entries, onViewDetails, sortConfig, onSort }) => {
+  onRefresh?: () => void;
+}> = ({ entries, onViewDetails, sortConfig, onSort, onRefresh }) => {
+  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
+    new Set()
+  );
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+
+  // Import the bulk actions hook
+  const { bulkReview, bulkApprove, loading } = useBulkComplianceActions();
+
+  // Get user role
+  useEffect(() => {
+    const user = getUserFromStorage();
+    setUserRole(user?.role || null);
+  }, []);
+
+  // Permission checks
+  const normalizedRole = userRole?.toLowerCase();
+  const canReview =
+    normalizedRole === "regional_manager" ||
+    normalizedRole === "regional officer" ||
+    normalizedRole === "admin";
+  const canApprove =
+    normalizedRole && ["admin", "manager"].includes(normalizedRole);
+
+  // Select/deselect all
+  const handleSelectAll = () => {
+    if (selectedRecords.size === entries.length) {
+      setSelectedRecords(new Set());
+    } else {
+      setSelectedRecords(new Set(entries.map((c) => c.id)));
+    }
+  };
+
+  // Select/deselect individual record
+  const handleSelectRecord = (recordId: string) => {
+    const newSelected = new Set(selectedRecords);
+    if (newSelected.has(recordId)) {
+      newSelected.delete(recordId);
+    } else {
+      newSelected.add(recordId);
+    }
+    setSelectedRecords(newSelected);
+  };
+
+  // Bulk review handler
+  const handleBulkReview = async () => {
+    if (selectedRecords.size === 0) {
+      toast.error("Please select at least one record");
+      return;
+    }
+
+    const recordIds = Array.from(selectedRecords);
+    const success = await bulkReview(recordIds);
+
+    if (success) {
+      toast.success(`${recordIds.length} record(s) marked as reviewed`);
+      setSelectedRecords(new Set());
+      if (onRefresh) {
+        onRefresh();
+      }
+    } else {
+      toast.error("Failed to review records");
+    }
+  };
+
+  // Bulk approve handler
+  const handleBulkApprove = async () => {
+    if (selectedRecords.size === 0) {
+      toast.error("Please select at least one record");
+      return;
+    }
+
+    const recordIds = Array.from(selectedRecords);
+    const success = await bulkApprove(recordIds);
+
+    if (success) {
+      toast.success(`${recordIds.length} record(s) approved successfully`);
+      setSelectedRecords(new Set());
+      if (onRefresh) {
+        onRefresh();
+      }
+    } else {
+      toast.error("Failed to approve records");
+    }
+  };
+
   if (entries.length === 0) {
     return (
       <div
@@ -291,11 +377,55 @@ export const ComplianceTable: React.FC<{
 
   return (
     <div className="bg-white rounded-lg border shadow-sm">
+      {/* Bulk Action Buttons */}
+      {selectedRecords.size > 0 && (
+        <div className="p-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+          <span className="text-sm text-gray-600">
+            {selectedRecords.size} record(s) selected
+          </span>
+          <div className="flex gap-2">
+            {canReview && (
+              <Button
+                onClick={handleBulkReview}
+                disabled={loading}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <FileCheck className="w-4 h-4 mr-2" />
+                {loading ? "Processing..." : "Mark as Reviewed"}
+              </Button>
+            )}
+            {canApprove && (
+              <Button
+                onClick={handleBulkApprove}
+                disabled={loading}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {loading ? "Processing..." : "Approve Selected"}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
       <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
         <div className="inline-block min-w-full align-middle">
           <table className="min-w-full divide-y divide-gray-200" role="table">
             <thead className="bg-gray-50 border-b sticky top-0">
               <tr>
+                <th
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
+                  scope="col"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedRecords.size === entries.length}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    aria-label="Select all records"
+                  />
+                </th>
                 <th
                   className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
                   scope="col"
@@ -550,6 +680,15 @@ export const ComplianceTable: React.FC<{
                   key={entry.id}
                   className="border-b hover:bg-gray-50 transition-colors"
                 >
+                  <td className="px-2 py-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedRecords.has(entry.id)}
+                      onChange={() => handleSelectRecord(entry.id)}
+                      className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      aria-label={`Select ${entry.region}`}
+                    />
+                  </td>
                   <td className="px-3 sm:px-4 py-3 text-sm font-medium text-gray-900">
                     {entry.region}
                   </td>
