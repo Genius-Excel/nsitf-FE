@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 // Hooks
@@ -28,9 +28,11 @@ import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import { AddRegionModal } from "./complianceAddRegionModal";
 import { ManageBranchesModal } from "./complianceManageBranchesModal";
 import { ComplianceDetailModal } from "./complianceDetailModal";
+import { ComplianceUploadModal } from "./ComplianceUploadModal";
 import { PageHeader } from "@/components/design-system/PageHeader";
 import { MetricsFilter } from "@/components/design-system/MetricsFilter";
 import { Button } from "@/components/ui/button";
+import { PermissionButton } from "@/components/permission-button";
 
 /**
  * Map API response (RegionalSummary) to component format (ComplianceEntry)
@@ -211,6 +213,7 @@ const ComplianceDashboard: React.FC = () => {
   const addModal = useModalState(false);
   const branchModal = useModalState(false);
   const detailModal = useModalState(false);
+  const uploadModal = useModalState(false);
 
   const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
 
@@ -288,6 +291,20 @@ const ComplianceDashboard: React.FC = () => {
     detailModal.open();
   };
 
+  const handleOpenUpload = () => {
+    if (!canManage) {
+      toast.error("You don't have permission to upload compliance data");
+      return;
+    }
+    uploadModal.open();
+  };
+
+  const handleUploadSuccess = () => {
+    refetchDashboard();
+    refetchRegions();
+    uploadModal.close();
+  };
+
   // ============== LOADING STATE ==============
   if (dashboardLoading || regionsLoading) {
     return (
@@ -335,6 +352,17 @@ const ComplianceDashboard: React.FC = () => {
       <PageHeader
         title="Compliance View"
         description="Track contributions, targets, and employer registration across regions"
+        action={
+          <PermissionButton
+            onClick={handleOpenUpload}
+            hasPermission={canManage}
+            permissionMessage="You don't have permission to upload compliance data"
+            className="bg-green-600 hover:bg-green-700"
+          >
+            <Upload size={18} />
+            <span>Upload Regional Data</span>
+          </PermissionButton>
+        }
       />
 
       {/* Metrics Filters */}
@@ -384,7 +412,8 @@ const ComplianceDashboard: React.FC = () => {
           </Button>
           <Button
             onClick={() => branchModal.open()}
-            className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700"
+            variant="outline"
+            className="flex-1 sm:flex-none border-green-600 text-green-600 hover:bg-green-50"
           >
             <Plus size={18} />
             <span>Manage Branches</span>
@@ -416,6 +445,7 @@ const ComplianceDashboard: React.FC = () => {
         onViewDetails={handleViewDetails}
         sortConfig={null}
         onSort={() => {}} // Sorting can be added later if needed
+        onRefresh={refetchDashboard}
       />
 
       {/* Bulk Upload Instructions */}
@@ -468,6 +498,13 @@ const ComplianceDashboard: React.FC = () => {
           detailModal.close();
           setSelectedEntry(null);
         }}
+        onRefresh={refetchDashboard}
+      />
+
+      <ComplianceUploadModal
+        isOpen={uploadModal.isOpen}
+        onClose={uploadModal.close}
+        onUploadSuccess={handleUploadSuccess}
       />
     </div>
   );
