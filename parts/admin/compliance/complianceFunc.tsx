@@ -38,7 +38,7 @@ import { PermissionButton } from "@/components/permission-button";
  * Map API response (RegionalSummary) to component format (ComplianceEntry)
  */
 const mapToComplianceEntry = (summary: RegionalSummary): ComplianceEntry => ({
-  id: summary.region_id,
+  id: summary.id, // Use the compliance record ID, not region_id
   region: summary.region,
   branch: summary.branch || "",
   contributionCollected: summary.actual_contributions_collected,
@@ -52,6 +52,8 @@ const mapToComplianceEntry = (summary: RegionalSummary): ComplianceEntry => ({
   recordStatus: summary.record_status,
   reviewedBy: summary.reviewed_by,
   approvedBy: summary.approved_by,
+  createdAt: summary.created_at || new Date().toISOString(),
+  updatedAt: summary.updated_at || new Date().toISOString(),
 });
 
 /**

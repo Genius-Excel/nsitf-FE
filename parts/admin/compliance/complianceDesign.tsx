@@ -670,6 +670,12 @@ export const ComplianceTable: React.FC<{
                   className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
                   scope="col"
                 >
+                  Approval Status
+                </th>
+                <th
+                  className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words"
+                  scope="col"
+                >
                   Actions
                 </th>
               </tr>
@@ -724,6 +730,19 @@ export const ComplianceTable: React.FC<{
                   </td>
                   <td className="px-3 sm:px-4 py-3 text-sm text-gray-700">
                     {entry.period}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 text-sm">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        entry.recordStatus?.toLowerCase() === "approved"
+                          ? "bg-green-100 text-green-800"
+                          : entry.recordStatus?.toLowerCase() === "reviewed"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {entry.recordStatus || "Pending"}
+                    </span>
                   </td>
                   <td className="px-3 sm:px-4 py-3 text-sm">
                     <button

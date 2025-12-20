@@ -189,10 +189,8 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      const success = await updateSingleCompliance(
-        entry.id,
-        confirmAction === "reviewed" ? "reviewed" : "approved"
-      );
+      const newStatus = confirmAction === "reviewed" ? "reviewed" : "approved";
+      const success = await updateSingleCompliance(entry.id, newStatus);
 
       if (success) {
         const message =
@@ -204,14 +202,24 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
         setShowConfirmDialog(false);
         setConfirmAction(null);
 
+        // Update the local state to reflect the new status
+        if (editedData) {
+          setEditedData({
+            ...editedData,
+            recordStatus: newStatus,
+          });
+        }
+
         if (onRefresh) {
           onRefresh();
         }
 
-        // Close modal after successful update
-        setTimeout(() => {
-          onClose();
-        }, 500);
+        // Only close modal after approval, keep it open after review
+        if (confirmAction === "approve") {
+          setTimeout(() => {
+            onClose();
+          }, 500);
+        }
       } else {
         toast.error("Failed to update status");
       }

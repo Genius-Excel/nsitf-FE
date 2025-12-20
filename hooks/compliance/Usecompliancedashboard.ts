@@ -4,6 +4,7 @@ import HttpService from "@/services/httpServices";
 // ============= TYPES =============
 
 export interface RegionalSummary {
+  id: string; // Compliance record ID
   region: string;
   region_id: string;
   branch: string | null;
@@ -18,6 +19,8 @@ export interface RegionalSummary {
   record_status?: string;
   reviewed_by?: string | null;
   approved_by?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ComplianceMetrics {
