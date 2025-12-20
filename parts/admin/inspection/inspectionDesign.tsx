@@ -381,19 +381,19 @@ export const InspectionsTable = React.memo<InspectionsTableProps>(
                   BRANCH
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  Inspection conducted
+                  INSPECTIONS CONDUCTED
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  CUMULATIVE Debt established (₦)
+                  DEBT ESTABLISHED (₦)
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  CUMULATIVE Debt recovered (₦)
+                  DEBT RECOVERED (₦)
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  Performance rate (%) (D/E)
+                  PERFORMANCE RATE (%)
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  DEMAND NOTICE
+                  DEMAND NOTICES ISSUED
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   PERIOD

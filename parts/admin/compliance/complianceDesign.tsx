@@ -481,9 +481,9 @@ export const ComplianceTable: React.FC<{
                   <button
                     onClick={() => onSort("contributionCollected")}
                     className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
-                    aria-label="Sort by Actual Contributions Collected"
+                    aria-label="Sort by Collected"
                   >
-                    <span>Actual Contributions Collected</span>
+                    <span>Collected</span>
                     {sortConfig?.field === "contributionCollected" ? (
                       sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4" aria-hidden="true" />
@@ -505,9 +505,9 @@ export const ComplianceTable: React.FC<{
                   <button
                     onClick={() => onSort("target")}
                     className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
-                    aria-label="Sort by Contributions Target"
+                    aria-label="Sort by Target"
                   >
-                    <span>Contributions Target</span>
+                    <span>Target</span>
                     {sortConfig?.field === "target" ? (
                       sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4" aria-hidden="true" />
@@ -553,9 +553,9 @@ export const ComplianceTable: React.FC<{
                   <button
                     onClick={() => onSort("employersRegistered")}
                     className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
-                    aria-label="Sort by Employers Registered"
+                    aria-label="Sort by Total Employers"
                   >
-                    <span>Employers Registered</span>
+                    <span>Total Employers</span>
                     {sortConfig?.field === "employersRegistered" ? (
                       sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4" aria-hidden="true" />
@@ -577,9 +577,9 @@ export const ComplianceTable: React.FC<{
                   <button
                     onClick={() => onSort("employees")}
                     className="flex items-center gap-2 text-[10px] font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:underline group"
-                    aria-label="Sort by Employees Coverage"
+                    aria-label="Sort by Total Employees"
                   >
-                    <span>Employees Coverage</span>
+                    <span>Total Employees</span>
                     {sortConfig?.field === "employees" ? (
                       sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4" aria-hidden="true" />

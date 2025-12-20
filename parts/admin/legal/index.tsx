@@ -528,25 +528,25 @@ export default function LegalManagementDashboard() {
                   BRANCH
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  RECALCITANT EMPLOYERS
+                  RECALCITRANT EMPLOYERS
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   DEFAULTING EMPLOYERS
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  ECS NO.
+                  ECS NUMBER
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   PLAN ISSUED
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  ALTERNATE DISPUTE RESOLUTION (ADR)
+                  ALTERNATE DISPUTE RESOLUTION
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   CASES INSTITUTED IN COURT
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  CASES WON
+                  CASES WON IN COURT
                 </th>
                 <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   SECTOR
