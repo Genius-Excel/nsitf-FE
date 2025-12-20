@@ -137,11 +137,14 @@ export const ComplianceUploadModal: React.FC<ComplianceUploadModalProps> = ({
       formData.append("region_id", selectedRegionId);
       formData.append("branch_id", selectedBranchId);
       formData.append("period", period);
-      formData.append("sheet", "COLLECTION");
+      formData.append("sheet", "CONTRIBUTIONS");
 
       const HttpService = (await import("@/services/httpServices")).default;
       const http = new HttpService();
-      const response = await http.postData(formData, "/api/compliance/reports");
+      const response = await http.postData(
+        formData,
+        "/api/contributions/reports"
+      );
 
       clearInterval(progressInterval);
       setUploadProgress(95);
@@ -161,12 +164,12 @@ export const ComplianceUploadModal: React.FC<ComplianceUploadModalProps> = ({
         uploadData?.status === "completed_with_errors" &&
         uploadData?.error_report
       ) {
-        const collectionErrors =
-          uploadData.error_report?.COLLECTION?.errors || [];
+        const contributionsErrors =
+          uploadData.error_report?.CONTRIBUTIONS?.errors || [];
 
         setUploadStage("error");
         setError("Upload completed with errors");
-        setErrorDetails(collectionErrors);
+        setErrorDetails(contributionsErrors);
 
         toast.error("Upload failed. Please check the errors below.");
         return;
@@ -188,7 +191,8 @@ export const ComplianceUploadModal: React.FC<ComplianceUploadModalProps> = ({
         "Failed to upload compliance data";
 
       // Check if error response has error_report
-      const errorReport = err?.response?.data?.error_report?.COLLECTION?.errors;
+      const errorReport =
+        err?.response?.data?.error_report?.CONTRIBUTIONS?.errors;
       if (errorReport && errorReport.length > 0) {
         setErrorDetails(errorReport);
       }

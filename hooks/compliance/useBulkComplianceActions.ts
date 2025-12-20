@@ -28,8 +28,8 @@ interface UseBulkComplianceActionsReturn {
  * Hook for bulk compliance record actions (review, approve)
  *
  * API Endpoints:
- * - POST /api/compliance/manage-compliance - Bulk actions
- * - PATCH /api/compliance/manage-compliance/:id - Single update
+ * - POST /api/contributions/manage-contributions - Bulk actions
+ * - PATCH /api/contributions/manage-contributions/:id - Single update
  *
  * @example
  * ```tsx
@@ -49,7 +49,7 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
 
   /**
    * Bulk review compliance records
-   * POST /api/compliance/manage-compliance
+   * POST /api/contributions/manage-contributions
    * Body: { ids: string[], action: "review" }
    */
   const bulkReview = useCallback(
@@ -68,7 +68,7 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
             ids: recordIds,
             action: "review",
           },
-          "/api/compliance/manage-compliance"
+          "/api/contributions/manage-contributions"
         )) as unknown as BulkActionResponse;
 
         if (!response?.data) {
@@ -105,7 +105,7 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
 
   /**
    * Bulk approve compliance records
-   * POST /api/compliance/manage-compliance
+   * POST /api/contributions/manage-contributions
    * Body: { ids: string[], action: "approve" }
    */
   const bulkApprove = useCallback(
@@ -124,7 +124,7 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
             ids: recordIds,
             action: "approve",
           },
-          "/api/compliance/manage-compliance"
+          "/api/contributions/manage-contributions"
         )) as unknown as BulkActionResponse;
 
         if (!response?.data) {
@@ -161,7 +161,7 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
 
   /**
    * Update single compliance record (review or approve)
-   * PATCH /api/compliance/manage-compliance/:id
+   * PATCH /api/contributions/manage-contributions/:id
    * Body: { record_status: "reviewed" | "approved" }
    */
   const updateSingleCompliance = useCallback(
@@ -183,13 +183,13 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
         };
 
         console.log("🔍 [useBulkComplianceActions] PATCH request:", {
-          url: `/api/compliance/manage-compliance/${recordId}`,
+          url: `/api/contributions/manage-contributions/${recordId}`,
           payload,
         });
 
         const response = await http.patchDataJson(
           payload,
-          `/api/compliance/manage-compliance/${recordId}`
+          `/api/contributions/manage-contributions/${recordId}`
         );
 
         console.log("🔍 [useBulkComplianceActions] PATCH response:", response);
@@ -224,7 +224,7 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
 
   /**
    * Update compliance record details
-   * PATCH /api/compliance/manage-compliance/:id
+   * PATCH /api/contributions/manage-contributions/:id
    * Body: any (depends on what fields you want to update)
    */
   const updateComplianceDetails = useCallback(
@@ -239,13 +239,13 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
         setError(null);
 
         console.log("🔍 [useBulkComplianceActions] Update details PATCH:", {
-          url: `/api/compliance/manage-compliance/${recordId}`,
+          url: `/api/contributions/manage-contributions/${recordId}`,
           payload,
         });
 
         const response = await http.patchDataJson(
           payload,
-          `/api/compliance/manage-compliance/${recordId}`
+          `/api/contributions/manage-contributions/${recordId}`
         );
 
         console.log(

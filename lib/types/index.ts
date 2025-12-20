@@ -202,6 +202,9 @@ export interface ComplianceEntry {
   registrationFees: number;
   certificateFees: number;
   period: string;
+  recordStatus?: "pending" | "reviewed" | "approved";
+  reviewedBy?: string | null;
+  approvedBy?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
