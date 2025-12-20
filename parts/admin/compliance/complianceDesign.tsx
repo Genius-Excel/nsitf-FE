@@ -290,6 +290,18 @@ export const ComplianceTable: React.FC<{
     setUserRole(user?.role || null);
   }, []);
 
+  // Clear selected records when entries change (after refresh)
+  useEffect(() => {
+    // Validate selected records still exist after data refresh
+    const currentEntryIds = new Set(entries.map((e) => e.id));
+    const validSelected = Array.from(selectedRecords).filter((id) =>
+      currentEntryIds.has(id)
+    );
+    if (validSelected.length !== selectedRecords.size) {
+      setSelectedRecords(new Set(validSelected));
+    }
+  }, [entries]);
+
   // Permission checks
   const normalizedRole = userRole?.toLowerCase();
   const canReview =
@@ -330,11 +342,12 @@ export const ComplianceTable: React.FC<{
     const success = await bulkReview(recordIds);
 
     if (success) {
-      toast.success(`${recordIds.length} record(s) marked as reviewed`);
       setSelectedRecords(new Set());
+      // Refresh data immediately to show updated status
       if (onRefresh) {
-        onRefresh();
+        await onRefresh();
       }
+      toast.success(`${recordIds.length} record(s) marked as reviewed`);
     } else {
       toast.error("Failed to review records");
     }
@@ -351,11 +364,12 @@ export const ComplianceTable: React.FC<{
     const success = await bulkApprove(recordIds);
 
     if (success) {
-      toast.success(`${recordIds.length} record(s) approved successfully`);
       setSelectedRecords(new Set());
+      // Refresh data immediately to show updated status
       if (onRefresh) {
-        onRefresh();
+        await onRefresh();
       }
+      toast.success(`${recordIds.length} record(s) approved successfully`);
     } else {
       toast.error("Failed to approve records");
     }
@@ -1078,45 +1092,10 @@ export const ComplianceUploadModal: React.FC<{
   };
 
   const handleDownloadTemplate = () => {
-    // Create multi-sheet template matching API requirements
-    const wb = XLSX.utils.book_new();
-
-    // COLLECTION sheet
-    const collectionData = [
-      {
-        BRANCH: "",
-        "CONTRIBUTION COLLECTED": "",
-        TARGET: "",
-        "EMPLOYERS REGISTERED": "",
-        EMPLOYEES: "",
-        "PERFORMANCE RATE": "",
-        "REGISTRATION FEES": "",
-        "CERTIFICATE FEES": "",
-        PERIOD: period || "",
-      },
-    ];
-    const wsCollection = XLSX.utils.json_to_sheet(collectionData);
-    XLSX.utils.book_append_sheet(wb, wsCollection, "COLLECTION");
-
-    // CLAIMS sheet
-    const claimsData = [{ BRANCH: "", "CLAIMS DATA": "" }];
-    const wsClaims = XLSX.utils.json_to_sheet(claimsData);
-    XLSX.utils.book_append_sheet(wb, wsClaims, "CLAIMS");
-
-    // INSPECTION sheet
-    const inspectionData = [{ BRANCH: "", "INSPECTION DATA": "" }];
-    const wsInspection = XLSX.utils.json_to_sheet(inspectionData);
-    XLSX.utils.book_append_sheet(wb, wsInspection, "INSPECTION");
-
-    // HSE sheet
-    const hseData = [{ BRANCH: "", "HSE DATA": "" }];
-    const wsHSE = XLSX.utils.json_to_sheet(hseData);
-    XLSX.utils.book_append_sheet(wb, wsHSE, "HSE");
-
     const selectedRegion = regions.find((r) => r.id === selectedRegionId);
     const regionName = selectedRegion?.name || "Region";
 
-    // Download pre-made template file from public folder instead
+    // Download pre-made template file from public folder
     const templatePath = "/templates/compliance_template.xlsx";
     const fileName = `${regionName}_Regional_Report_Template.xlsx`;
 
@@ -1128,7 +1107,7 @@ export const ComplianceUploadModal: React.FC<{
     link.click();
     document.body.removeChild(link);
 
-    // Remove the XLSX generation code above and use static file instead
+    toast.success(`Template downloaded: ${fileName}`);
   };
 
   const handleClose = () => {
@@ -1154,7 +1133,7 @@ export const ComplianceUploadModal: React.FC<{
             <div className="flex items-center gap-3">
               <FileSpreadsheet className="w-6 h-6 text-green-600" />
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-                Upload Compliance Data
+                Upload Contributions Data
               </h2>
             </div>
             <button
