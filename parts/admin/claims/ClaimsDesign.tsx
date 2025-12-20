@@ -374,19 +374,19 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                   />
                 </th>
                 <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  ECS NO.
+                  ECS NUMBER
                 </th>
                 <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  Employer
+                  EMPLOYER
                 </th>
                 <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   BENEFICIARY
                 </th>
                 <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  Type
+                  TYPE
                 </th>
                 <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  Gender
+                  GENDER
                 </th>
                 <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   Amount REQUESTED (₦)
@@ -398,7 +398,7 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                   STATUS
                 </th>
                 <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
-                  Date PROCESSED
+                  DATE PROCESSED
                 </th>
                 <th className="px-1 py-1 text-center text-[9px] font-medium text-gray-600 uppercase tracking-wide break-words">
                   DATE PAID
