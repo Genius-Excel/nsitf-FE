@@ -72,16 +72,35 @@ export const InspectionUploadModal: React.FC<InspectionUploadModalProps> = ({
 
   // Auto-select region for regional officers (they cannot change it)
   useEffect(() => {
+    console.log("🔍 [InspectionUploadModal] Auto-select region effect:", {
+      isRegionalOfficer,
+      userRegionId,
+      currentSelectedRegionId: selectedRegionId,
+    });
     if (isRegionalOfficer && userRegionId) {
+      console.log(
+        "✅ [InspectionUploadModal] Auto-selecting region:",
+        userRegionId
+      );
       setSelectedRegionId(userRegionId);
     }
   }, [isRegionalOfficer, userRegionId]);
 
   // Fetch branches when region is selected
   useEffect(() => {
+    console.log("🔍 [InspectionUploadModal] Fetch branches effect:", {
+      selectedRegionId,
+    });
     if (selectedRegionId) {
+      console.log(
+        "🔍 [InspectionUploadModal] Fetching branches for region:",
+        selectedRegionId
+      );
       fetchBranches(selectedRegionId);
     } else {
+      console.log(
+        "⚠️ [InspectionUploadModal] No region selected, clearing branches"
+      );
       clearBranches();
       setSelectedBranchId("");
     }

@@ -25,10 +25,45 @@ export function useAdvancedFilters({
   module,
   onFiltersChange,
 }: UseAdvancedFiltersProps) {
-  // Get current user
-  const user = getUserFromStorage();
+  // Get current user - use state to make it reactive
+  const [user, setUser] = useState(getUserFromStorage());
   const userRole = user?.role;
-  const userRegionId = user?.region_id; // Assuming backend provides this
+  const userRegionId = user?.region_id;
+
+  // Update user when it changes in localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUser(getUserFromStorage());
+    };
+
+    // Listen for storage changes
+    window.addEventListener("storage", handleStorageChange);
+
+    // Also check on mount in case user was just logged in
+    const currentUser = getUserFromStorage();
+    if (currentUser && JSON.stringify(currentUser) !== JSON.stringify(user)) {
+      setUser(currentUser);
+    }
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
+  // Debug: Log user data
+  useEffect(() => {
+    // Also check what's in localStorage directly
+    const storedUser = localStorage.getItem("user");
+    console.log("🔍 [useAdvancedFilters] localStorage 'user':", storedUser);
+
+    console.log("🔍 [useAdvancedFilters] User data:", {
+      fullUser: user,
+      userRole,
+      userRegionId,
+      hasRegionId: user?.region_id !== undefined,
+      userKeys: user ? Object.keys(user) : [],
+    });
+  }, [user, userRole, userRegionId]);
 
   // Current month/year as default
   const now = new Date();
@@ -219,16 +254,45 @@ export function useAdvancedFilters({
     fetchRegions();
   }, [fetchRegions]);
 
+  // Auto-select region for non-admin users when userRegionId becomes available
+  useEffect(() => {
+    const normalizedRole = userRole?.toLowerCase();
+    const isNonAdmin =
+      normalizedRole !== "admin" && normalizedRole !== "manager";
+
+    console.log("🔍 [useAdvancedFilters] Auto-select check:", {
+      userRole,
+      normalizedRole,
+      isNonAdmin,
+      userRegionId,
+      currentSelectedRegionId: filters.selectedRegionId,
+      shouldAutoSelect: isNonAdmin && userRegionId && !filters.selectedRegionId,
+    });
+
+    if (isNonAdmin && userRegionId && !filters.selectedRegionId) {
+      console.log(
+        "✅ [useAdvancedFilters] Auto-selecting region for regional officer:",
+        userRegionId
+      );
+      setFilters((prev) => ({
+        ...prev,
+        selectedRegionId: userRegionId,
+      }));
+    }
+  }, [userRole, userRegionId, filters.selectedRegionId]);
+
   // Fetch branches when region changes
   useEffect(() => {
     if (filters.selectedRegionId) {
       console.log(
-        "Region changed, fetching branches for:",
+        "🔍 [useAdvancedFilters] Region changed, fetching branches for:",
         filters.selectedRegionId
       );
       fetchBranches(filters.selectedRegionId);
     } else {
-      console.log("No region selected, clearing branches");
+      console.log(
+        "⚠️ [useAdvancedFilters] No region selected, clearing branches"
+      );
       setBranches([]);
     }
   }, [filters.selectedRegionId, fetchBranches]);

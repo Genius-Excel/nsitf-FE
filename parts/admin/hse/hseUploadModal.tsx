@@ -77,16 +77,30 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
 
   // Auto-select region for regional officers (they cannot change it)
   useEffect(() => {
+    console.log("🔍 [HSEUploadModal] Auto-select region effect:", {
+      isRegionalOfficer,
+      userRegionId,
+      currentSelectedRegionId: selectedRegionId,
+    });
     if (isRegionalOfficer && userRegionId) {
+      console.log("✅ [HSEUploadModal] Auto-selecting region:", userRegionId);
       setSelectedRegionId(userRegionId);
     }
   }, [isRegionalOfficer, userRegionId]);
 
   // Fetch branches when region is selected
   useEffect(() => {
+    console.log("🔍 [HSEUploadModal] Fetch branches effect:", {
+      selectedRegionId,
+    });
     if (selectedRegionId) {
+      console.log(
+        "🔍 [HSEUploadModal] Fetching branches for region:",
+        selectedRegionId
+      );
       fetchBranches(selectedRegionId);
     } else {
+      console.log("⚠️ [HSEUploadModal] No region selected, clearing branches");
       clearBranches();
       setSelectedBranchId("");
     }

@@ -46,6 +46,7 @@ import { useReportUpload, useBulkComplianceActions } from "@/hooks/compliance";
 import { getUserFromStorage, type UserRole } from "@/lib/auth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useBranches } from "@/hooks/users";
 
 // ============= NOTIFICATION COMPONENT =============
 
@@ -1022,6 +1023,7 @@ export const ComplianceUploadModal: React.FC<{
   regions: Region[];
 }> = ({ isOpen, onClose, onUploadSuccess, regions }) => {
   const [selectedRegionId, setSelectedRegionId] = useState<string>("");
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("");
   const [period, setPeriod] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -1034,6 +1036,14 @@ export const ComplianceUploadModal: React.FC<{
   const isRegionalOfficer = userRole !== "admin" && userRole !== "manager";
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch branches for the selected region
+  const {
+    data: branches,
+    loading: branchesLoading,
+    fetchBranches,
+    clearBranches,
+  } = useBranches();
 
   // Use the upload hook
   const { uploadReport, progress, uploadResponse, isUploading, reset } =
@@ -1052,9 +1062,50 @@ export const ComplianceUploadModal: React.FC<{
   // Auto-select region for regional officers (they cannot change it)
   useEffect(() => {
     if (isRegionalOfficer && userRegionId) {
+      console.log(
+        "🔍 [ComplianceUploadModal] Auto-selecting region for regional officer:",
+        userRegionId
+      );
       setSelectedRegionId(userRegionId);
     }
   }, [isRegionalOfficer, userRegionId]);
+
+  // Fetch branches when region is selected
+  useEffect(() => {
+    if (selectedRegionId) {
+      console.log(
+        "🔍 [ComplianceUploadModal] Fetching branches for region:",
+        selectedRegionId
+      );
+      fetchBranches(selectedRegionId);
+    } else {
+      clearBranches();
+      setSelectedBranchId("");
+    }
+  }, [selectedRegionId, fetchBranches, clearBranches]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("🔍 [ComplianceUploadModal] State:", {
+      isOpen,
+      userRole,
+      userRegionId,
+      isRegionalOfficer,
+      selectedRegionId,
+      regionsCount: regions?.length || 0,
+      branchesCount: branches?.length || 0,
+      branchesLoading,
+    });
+  }, [
+    isOpen,
+    userRole,
+    userRegionId,
+    isRegionalOfficer,
+    selectedRegionId,
+    regions,
+    branches,
+    branchesLoading,
+  ]);
 
   useEffect(() => {
     if (isOpen) {
@@ -1112,9 +1163,11 @@ export const ComplianceUploadModal: React.FC<{
 
   const handleClose = () => {
     setSelectedRegionId("");
+    setSelectedBranchId("");
     setPeriod("");
     setFile(null);
     setErrors([]);
+    clearBranches();
     reset();
     onClose();
   };
@@ -1147,8 +1200,8 @@ export const ComplianceUploadModal: React.FC<{
           </div>
 
           <div className="p-4 sm:p-6 space-y-6">
-            {/* Region Selection - Only visible for admin/manager */}
-            {!isRegionalOfficer && (
+            {/* Region Selection/Display */}
+            {!isRegionalOfficer ? (
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
                   Select Region <span className="text-red-500">*</span>
@@ -1167,6 +1220,49 @@ export const ComplianceUploadModal: React.FC<{
                     </option>
                   ))}
                 </select>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Region
+                </label>
+                <div className="w-full px-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-700">
+                  {regions.find((r) => r.id === selectedRegionId)?.name ||
+                    (user as any)?.organization?.name ||
+                    "Your Region"}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Your assigned region (auto-selected)
+                </p>
+              </div>
+            )}
+
+            {/* Branch Selection - Shows when region is selected */}
+            {selectedRegionId && branches && branches.length > 0 && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Select Branch{" "}
+                  <span className="text-gray-500">(Optional)</span>
+                </label>
+                <select
+                  aria-label="Select branch"
+                  value={selectedBranchId}
+                  onChange={(e) => setSelectedBranchId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  disabled={isUploading || branchesLoading}
+                >
+                  <option value="">-- All Branches --</option>
+                  {branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+                {branchesLoading && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Loading branches...
+                  </p>
+                )}
               </div>
             )}
 
