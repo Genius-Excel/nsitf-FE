@@ -73,6 +73,10 @@ export const ComplianceUploadModal: React.FC<ComplianceUploadModalProps> = ({
   // Auto-select region for regional officers (they cannot change it)
   useEffect(() => {
     if (isRegionalOfficer && userRegionId) {
+      console.log(
+        "🔍 [ComplianceUploadModal] Auto-selecting region for regional officer:",
+        userRegionId
+      );
       setSelectedRegionId(userRegionId);
     }
   }, [isRegionalOfficer, userRegionId]);
@@ -80,12 +84,38 @@ export const ComplianceUploadModal: React.FC<ComplianceUploadModalProps> = ({
   // Fetch branches when region is selected
   useEffect(() => {
     if (selectedRegionId) {
+      console.log(
+        "🔍 [ComplianceUploadModal] Fetching branches for region:",
+        selectedRegionId
+      );
       fetchBranches(selectedRegionId);
     } else {
       clearBranches();
       setSelectedBranchId("");
     }
   }, [selectedRegionId, fetchBranches, clearBranches]);
+
+  // Debug logging
+  useEffect(() => {
+    if (isOpen) {
+      console.log("🔍 [ComplianceUploadModal] Modal opened. State:", {
+        userRole,
+        userRegionId,
+        isRegionalOfficer,
+        selectedRegionId,
+        regionsCount: regions?.length || 0,
+        branchesCount: branches?.length || 0,
+      });
+    }
+  }, [
+    isOpen,
+    userRole,
+    userRegionId,
+    isRegionalOfficer,
+    selectedRegionId,
+    regions,
+    branches,
+  ]);
 
   const handleDownloadTemplate = () => {
     // Download pre-made template file from public folder
@@ -252,8 +282,8 @@ export const ComplianceUploadModal: React.FC<ComplianceUploadModalProps> = ({
           </div>
 
           <div className="p-4 sm:p-6 space-y-6">
-            {/* Region Selection - Only visible for admin/manager */}
-            {!isRegionalOfficer && (
+            {/* Region Selection/Display */}
+            {!isRegionalOfficer ? (
               <div>
                 <label
                   htmlFor="region-select"
@@ -281,6 +311,20 @@ export const ComplianceUploadModal: React.FC<ComplianceUploadModalProps> = ({
                     Loading regions...
                   </p>
                 )}
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Region
+                </label>
+                <div className="w-full px-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-700">
+                  {selectedRegion?.name ||
+                    (user as any)?.organization?.name ||
+                    "Your Region"}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Your assigned region (auto-selected)
+                </p>
               </div>
             )}
 

@@ -46,6 +46,7 @@ import { useReportUpload, useBulkComplianceActions } from "@/hooks/compliance";
 import { getUserFromStorage, type UserRole } from "@/lib/auth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useBranches } from "@/hooks/users";
 
 // ============= NOTIFICATION COMPONENT =============
 
@@ -290,6 +291,18 @@ export const ComplianceTable: React.FC<{
     setUserRole(user?.role || null);
   }, []);
 
+  // Clear selected records when entries change (after refresh)
+  useEffect(() => {
+    // Validate selected records still exist after data refresh
+    const currentEntryIds = new Set(entries.map((e) => e.id));
+    const validSelected = Array.from(selectedRecords).filter((id) =>
+      currentEntryIds.has(id)
+    );
+    if (validSelected.length !== selectedRecords.size) {
+      setSelectedRecords(new Set(validSelected));
+    }
+  }, [entries]);
+
   // Permission checks
   const normalizedRole = userRole?.toLowerCase();
   const canReview =
@@ -330,11 +343,12 @@ export const ComplianceTable: React.FC<{
     const success = await bulkReview(recordIds);
 
     if (success) {
-      toast.success(`${recordIds.length} record(s) marked as reviewed`);
       setSelectedRecords(new Set());
+      // Refresh data immediately to show updated status
       if (onRefresh) {
-        onRefresh();
+        await onRefresh();
       }
+      toast.success(`${recordIds.length} record(s) marked as reviewed`);
     } else {
       toast.error("Failed to review records");
     }
@@ -351,11 +365,12 @@ export const ComplianceTable: React.FC<{
     const success = await bulkApprove(recordIds);
 
     if (success) {
-      toast.success(`${recordIds.length} record(s) approved successfully`);
       setSelectedRecords(new Set());
+      // Refresh data immediately to show updated status
       if (onRefresh) {
-        onRefresh();
+        await onRefresh();
       }
+      toast.success(`${recordIds.length} record(s) approved successfully`);
     } else {
       toast.error("Failed to approve records");
     }
@@ -1008,6 +1023,7 @@ export const ComplianceUploadModal: React.FC<{
   regions: Region[];
 }> = ({ isOpen, onClose, onUploadSuccess, regions }) => {
   const [selectedRegionId, setSelectedRegionId] = useState<string>("");
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("");
   const [period, setPeriod] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -1020,6 +1036,14 @@ export const ComplianceUploadModal: React.FC<{
   const isRegionalOfficer = userRole !== "admin" && userRole !== "manager";
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch branches for the selected region
+  const {
+    data: branches,
+    loading: branchesLoading,
+    fetchBranches,
+    clearBranches,
+  } = useBranches();
 
   // Use the upload hook
   const { uploadReport, progress, uploadResponse, isUploading, reset } =
@@ -1038,9 +1062,50 @@ export const ComplianceUploadModal: React.FC<{
   // Auto-select region for regional officers (they cannot change it)
   useEffect(() => {
     if (isRegionalOfficer && userRegionId) {
+      console.log(
+        "🔍 [ComplianceUploadModal] Auto-selecting region for regional officer:",
+        userRegionId
+      );
       setSelectedRegionId(userRegionId);
     }
   }, [isRegionalOfficer, userRegionId]);
+
+  // Fetch branches when region is selected
+  useEffect(() => {
+    if (selectedRegionId) {
+      console.log(
+        "🔍 [ComplianceUploadModal] Fetching branches for region:",
+        selectedRegionId
+      );
+      fetchBranches(selectedRegionId);
+    } else {
+      clearBranches();
+      setSelectedBranchId("");
+    }
+  }, [selectedRegionId, fetchBranches, clearBranches]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("🔍 [ComplianceUploadModal] State:", {
+      isOpen,
+      userRole,
+      userRegionId,
+      isRegionalOfficer,
+      selectedRegionId,
+      regionsCount: regions?.length || 0,
+      branchesCount: branches?.length || 0,
+      branchesLoading,
+    });
+  }, [
+    isOpen,
+    userRole,
+    userRegionId,
+    isRegionalOfficer,
+    selectedRegionId,
+    regions,
+    branches,
+    branchesLoading,
+  ]);
 
   useEffect(() => {
     if (isOpen) {
@@ -1078,45 +1143,10 @@ export const ComplianceUploadModal: React.FC<{
   };
 
   const handleDownloadTemplate = () => {
-    // Create multi-sheet template matching API requirements
-    const wb = XLSX.utils.book_new();
-
-    // COLLECTION sheet
-    const collectionData = [
-      {
-        BRANCH: "",
-        "CONTRIBUTION COLLECTED": "",
-        TARGET: "",
-        "EMPLOYERS REGISTERED": "",
-        EMPLOYEES: "",
-        "PERFORMANCE RATE": "",
-        "REGISTRATION FEES": "",
-        "CERTIFICATE FEES": "",
-        PERIOD: period || "",
-      },
-    ];
-    const wsCollection = XLSX.utils.json_to_sheet(collectionData);
-    XLSX.utils.book_append_sheet(wb, wsCollection, "COLLECTION");
-
-    // CLAIMS sheet
-    const claimsData = [{ BRANCH: "", "CLAIMS DATA": "" }];
-    const wsClaims = XLSX.utils.json_to_sheet(claimsData);
-    XLSX.utils.book_append_sheet(wb, wsClaims, "CLAIMS");
-
-    // INSPECTION sheet
-    const inspectionData = [{ BRANCH: "", "INSPECTION DATA": "" }];
-    const wsInspection = XLSX.utils.json_to_sheet(inspectionData);
-    XLSX.utils.book_append_sheet(wb, wsInspection, "INSPECTION");
-
-    // HSE sheet
-    const hseData = [{ BRANCH: "", "HSE DATA": "" }];
-    const wsHSE = XLSX.utils.json_to_sheet(hseData);
-    XLSX.utils.book_append_sheet(wb, wsHSE, "HSE");
-
     const selectedRegion = regions.find((r) => r.id === selectedRegionId);
     const regionName = selectedRegion?.name || "Region";
 
-    // Download pre-made template file from public folder instead
+    // Download pre-made template file from public folder
     const templatePath = "/templates/compliance_template.xlsx";
     const fileName = `${regionName}_Regional_Report_Template.xlsx`;
 
@@ -1128,14 +1158,16 @@ export const ComplianceUploadModal: React.FC<{
     link.click();
     document.body.removeChild(link);
 
-    // Remove the XLSX generation code above and use static file instead
+    toast.success(`Template downloaded: ${fileName}`);
   };
 
   const handleClose = () => {
     setSelectedRegionId("");
+    setSelectedBranchId("");
     setPeriod("");
     setFile(null);
     setErrors([]);
+    clearBranches();
     reset();
     onClose();
   };
@@ -1154,7 +1186,7 @@ export const ComplianceUploadModal: React.FC<{
             <div className="flex items-center gap-3">
               <FileSpreadsheet className="w-6 h-6 text-green-600" />
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-                Upload Compliance Data
+                Upload Contributions Data
               </h2>
             </div>
             <button
@@ -1168,8 +1200,8 @@ export const ComplianceUploadModal: React.FC<{
           </div>
 
           <div className="p-4 sm:p-6 space-y-6">
-            {/* Region Selection - Only visible for admin/manager */}
-            {!isRegionalOfficer && (
+            {/* Region Selection/Display */}
+            {!isRegionalOfficer ? (
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
                   Select Region <span className="text-red-500">*</span>
@@ -1188,6 +1220,49 @@ export const ComplianceUploadModal: React.FC<{
                     </option>
                   ))}
                 </select>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Region
+                </label>
+                <div className="w-full px-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-700">
+                  {regions.find((r) => r.id === selectedRegionId)?.name ||
+                    (user as any)?.organization?.name ||
+                    "Your Region"}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Your assigned region (auto-selected)
+                </p>
+              </div>
+            )}
+
+            {/* Branch Selection - Shows when region is selected */}
+            {selectedRegionId && branches && branches.length > 0 && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Select Branch{" "}
+                  <span className="text-gray-500">(Optional)</span>
+                </label>
+                <select
+                  aria-label="Select branch"
+                  value={selectedBranchId}
+                  onChange={(e) => setSelectedBranchId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  disabled={isUploading || branchesLoading}
+                >
+                  <option value="">-- All Branches --</option>
+                  {branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+                {branchesLoading && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Loading branches...
+                  </p>
+                )}
               </div>
             )}
 

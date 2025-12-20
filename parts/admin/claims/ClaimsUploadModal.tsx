@@ -72,24 +72,35 @@ export const ClaimsUploadModal: React.FC<ClaimsUploadModalProps> = ({
 
   // Auto-select region for regional officers (they cannot change it)
   useEffect(() => {
-    console.log("Auto-select region effect:", {
+    console.log("🔍 [ClaimsUploadModal] Auto-select region effect:", {
       isRegionalOfficer,
       userRegionId,
+      currentSelectedRegionId: selectedRegionId,
     });
     if (isRegionalOfficer && userRegionId) {
-      console.log("Auto-selecting region:", userRegionId);
+      console.log(
+        "✅ [ClaimsUploadModal] Auto-selecting region:",
+        userRegionId
+      );
       setSelectedRegionId(userRegionId);
     }
   }, [isRegionalOfficer, userRegionId]);
 
   // Fetch branches when region is selected
   useEffect(() => {
-    console.log("Fetch branches effect:", { selectedRegionId });
+    console.log("🔍 [ClaimsUploadModal] Fetch branches effect:", {
+      selectedRegionId,
+    });
     if (selectedRegionId) {
-      console.log("Fetching branches for region:", selectedRegionId);
+      console.log(
+        "🔍 [ClaimsUploadModal] Fetching branches for region:",
+        selectedRegionId
+      );
       fetchBranches(selectedRegionId);
     } else {
-      console.log("No region selected, clearing branches");
+      console.log(
+        "⚠️ [ClaimsUploadModal] No region selected, clearing branches"
+      );
       clearBranches();
       setSelectedBranchId("");
     }

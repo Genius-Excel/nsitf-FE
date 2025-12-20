@@ -1007,35 +1007,58 @@ export const RegionalRecordViewModal: React.FC<{
           </div>
 
           <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
-            {!isEditMode &&
-              displayData.record_status?.toLowerCase() === "pending" &&
-              canReview && (
-                <Button
-                  onClick={handleReviewedClick}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Review
-                </Button>
-              )}
-            {!isEditMode &&
-              displayData.record_status?.toLowerCase() === "reviewed" &&
-              canApprove && (
-                <Button
-                  onClick={handleApproveClick}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Approve
-                </Button>
-              )}
-            {!isEditMode &&
-              displayData.record_status?.toLowerCase() === "approved" && (
-                <Badge className="bg-green-100 text-green-800 border-green-300">
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  Approved
-                </Badge>
-              )}
+            {!isEditMode && (
+              <>
+                {/* Pending: Show Review button */}
+                {displayData.record_status?.toLowerCase() === "pending" &&
+                  (canReview || canApprove) && (
+                    <Button
+                      onClick={handleReviewedClick}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Review
+                    </Button>
+                  )}
+                {/* Reviewed: Show Approve button (only Admin can approve) */}
+                {displayData.record_status?.toLowerCase() === "reviewed" &&
+                  canApprove && (
+                    <Button
+                      onClick={handleApproveClick}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Approve
+                    </Button>
+                  )}
+                {/* Approved: Show approved badge */}
+                {displayData.record_status?.toLowerCase() === "approved" && (
+                  <Badge className="bg-green-100 text-green-800 border-green-300 px-4 py-2 text-sm">
+                    <CheckCircle className="w-4 h-4 mr-2 inline" />
+                    Approved
+                  </Badge>
+                )}
+                {/* Fallback buttons if recordStatus not present */}
+                {!displayData.record_status && canReview && (
+                  <Button
+                    onClick={handleReviewedClick}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Review
+                  </Button>
+                )}
+                {!displayData.record_status && canApprove && !canReview && (
+                  <Button
+                    onClick={handleApproveClick}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve
+                  </Button>
+                )}
+              </>
+            )}
             <Button onClick={() => onOpenChange(false)} variant="outline">
               Cancel
             </Button>
@@ -1381,15 +1404,17 @@ export const RegionalOSHSummaryTable: React.FC<{
                         <Eye className="w-4 h-4" />
                       </button>
                     )}
-                    {onReview && canReview && (
-                      <button
-                        onClick={() => onReview(data.id)}
-                        className="text-orange-600 hover:text-orange-800 transition-colors"
-                        title="Review"
-                      >
-                        <FileCheck className="w-4 h-4" />
-                      </button>
-                    )}
+                    {onReview &&
+                      canReview &&
+                      normalizedRole !== "regional officer" && (
+                        <button
+                          onClick={() => onReview(data.id)}
+                          className="text-orange-600 hover:text-orange-800 transition-colors"
+                          title="Review"
+                        >
+                          <FileCheck className="w-4 h-4" />
+                        </button>
+                      )}
                   </div>
                 </td>
               </tr>

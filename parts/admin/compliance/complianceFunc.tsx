@@ -49,8 +49,10 @@ const mapToComplianceEntry = (summary: RegionalSummary): ComplianceEntry => ({
   registrationFees: summary.registration_fees,
   certificateFees: summary.certificate_fees,
   period: summary.period,
-  recordStatus: (["pending", "reviewed", "approved"].includes(summary.record_status as string) 
-    ? summary.record_status 
+  recordStatus: (["pending", "reviewed", "approved"].includes(
+    summary.record_status as string
+  )
+    ? summary.record_status
     : undefined) as "pending" | "reviewed" | "approved" | undefined,
   reviewedBy: summary.reviewed_by,
   approvedBy: summary.approved_by,
