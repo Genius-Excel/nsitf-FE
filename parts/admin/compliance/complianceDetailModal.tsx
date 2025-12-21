@@ -121,24 +121,96 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   };
 
   const handleSaveEdit = async () => {
-    if (!editedData || !entry?.id) return;
+    if (!editedData || !entry?.id) {
+      console.error("❌ [ComplianceDetailModal] Cannot save: missing data", {
+        hasEditedData: !!editedData,
+        hasEntryId: !!entry?.id,
+      });
+      toast.error("Cannot save: missing record data");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      const success = await updateComplianceDetails(entry.id, editedData);
+      // Only send editable fields to the API
+      const payload = {
+        contributionCollected: editedData.contributionCollected,
+        target: editedData.target,
+        achievement: editedData.achievement,
+        employersRegistered: editedData.employersRegistered,
+        employees: editedData.employees,
+        registrationFees: editedData.registrationFees,
+        certificateFees: editedData.certificateFees,
+        period: editedData.period,
+      };
+
+      console.log("🔍 [ComplianceDetailModal] Saving edits:", {
+        recordId: entry.id,
+        originalData: entry,
+        editedData,
+        payload,
+      });
+
+      const success = await updateComplianceDetails(entry.id, payload);
+
+      console.log("🔍 [ComplianceDetailModal] Save result:", success);
 
       if (success) {
         toast.success("Compliance record updated successfully");
+
+        // Update the local entry data with the edited values
+        // This ensures the modal shows the updated data immediately
+        if (entry) {
+          const updatedFields = {
+            contributionCollected: editedData.contributionCollected,
+            target: editedData.target,
+            achievement: editedData.achievement,
+            employersRegistered: editedData.employersRegistered,
+            employees: editedData.employees,
+            registrationFees: editedData.registrationFees,
+            certificateFees: editedData.certificateFees,
+            period: editedData.period,
+          };
+
+          console.log(
+            "📝 [ComplianceDetailModal] Updating modal with saved values:",
+            updatedFields
+          );
+          Object.assign(entry, updatedFields);
+
+          // Also update editedData to reflect the new state
+          setEditedData({ ...entry });
+        }
+
         setIsEditMode(false);
+
+        // Refresh the dashboard list in background (don't await)
+        // This updates the table, but the modal keeps showing the saved values
         if (onRefresh) {
-          onRefresh();
+          console.log(
+            "🔄 [ComplianceDetailModal] Refreshing dashboard list..."
+          );
+          onRefresh().catch((err: any) => {
+            console.error("❌ Failed to refresh dashboard:", err);
+          });
         }
       } else {
+        console.error(
+          "❌ [ComplianceDetailModal] Update failed: success=false"
+        );
         toast.error("Failed to update compliance record");
       }
-    } catch (error) {
-      toast.error("Failed to update compliance record");
-      console.error("Save error:", error);
+    } catch (error: any) {
+      console.error("❌ [ComplianceDetailModal] Save error:", {
+        error,
+        message: error?.message,
+        response: error?.response,
+      });
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to update compliance record"
+      );
     } finally {
       setIsSubmitting(false);
     }

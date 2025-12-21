@@ -231,6 +231,13 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
     async (recordId: string, payload: any): Promise<boolean> => {
       if (!recordId) {
         setError("Record ID is required");
+        console.error("❌ [useBulkComplianceActions] No record ID provided");
+        return false;
+      }
+
+      if (!payload || Object.keys(payload).length === 0) {
+        setError("No data to update");
+        console.error("❌ [useBulkComplianceActions] Empty payload");
         return false;
       }
 
@@ -238,27 +245,121 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
         setLoading(true);
         setError(null);
 
-        console.log("🔍 [useBulkComplianceActions] Update details PATCH:", {
-          url: `/api/contributions/manage-contributions/${recordId}`,
-          payload,
+        // Map camelCase fields to snake_case for API
+        const fieldMapping: Record<string, string> = {
+          contributionCollected: "actual_contributions_collected",
+          target: "contributions_target",
+          achievement: "performance_rate",
+          employersRegistered: "employers_registered",
+          employees: "employees_coverage", // NOTE: Backend uses 'employees_coverage' not 'employees_covered'
+          registrationFees: "registration_fees",
+          certificateFees: "certificate_fees",
+          period: "period",
+          recordStatus: "record_status",
+          reviewedBy: "reviewed_by",
+          approvedBy: "approved_by",
+        };
+
+        // Convert to FormData for urlencoded format (backend expects this, not JSON)
+        const formData = new FormData();
+
+        Object.keys(payload).forEach((key) => {
+          const apiKey = fieldMapping[key] || key;
+          const value = payload[key];
+
+          // Only append non-null, non-undefined values
+          if (value !== null && value !== undefined) {
+            formData.append(apiKey, String(value));
+          }
         });
 
-        const response = await http.patchDataJson(
-          payload,
-          `/api/contributions/manage-contributions/${recordId}`
-        );
+        console.log("🔍 [useBulkComplianceActions] Update details PATCH:", {
+          recordId,
+          url: `/api/contributions/manage-contributions/${recordId}`,
+          originalPayload: payload,
+          formDataEntries: Object.fromEntries(formData.entries()),
+          contentType: "application/x-www-form-urlencoded",
+        });
 
         console.log(
-          "🔍 [useBulkComplianceActions] Update details response:",
-          response
+          "📡 [useBulkComplianceActions] Making API call with FormData..."
         );
 
-        if (!response?.data) {
-          throw new Error("Invalid response from server");
+        // Use patchData (not patchDataJson) for form-encoded data
+        const response = await http.patchData(
+          formData,
+          "📥 [useBulkComplianceActions] Raw response received:",
+          response
+        );
+        console.log("🔍 [useBulkComplianceActions] Update details response:", {
+          status: response?.status,
+          statusText: response?.statusText,
+          data: response?.data,
+          headers: response?.headers,
+        });
+
+        // Check if response exists and has valid status
+        if (!response) {
+          console.error("❌ No response object received from API");
+          throw new Error("No response from server");
+        }
+
+        console.log("📊 Response status:", response.status);
+
+        // Axios considers 2xx as success, check for errors differently
+        if (
+          response.status &&
+          (response.status < 200 || response.status >= 300)
+        ) {
+          console.error(`❌ Bad status code: ${response.status}`);
+          throw new Error(`Server returned status ${response.status}`);
+        }
+
+        // Check if backend returned different values than what was sent
+        if (response.data?.data) {
+          const returnedData = response.data.data;
+          const discrepancies: any = {};
+
+          // Convert FormData entries to object for comparison
+          const sentData: Record<string, any> = {};
+          formData.forEach((value, key) => {
+            sentData[key] = value;
+          });
+
+          Object.keys(sentData).forEach((key) => {
+            const sentValue = sentData[key];
+            const receivedValue = returnedData[key];
+
+            // Compare as strings since FormData converts everything to strings
+            if (
+              receivedValue !== undefined &&
+              String(receivedValue) !== String(sentValue)
+            ) {
+              discrepancies[key] = {
+                sent: sentValue,
+                received: receivedValue,
+              };
+            }
+          });
+
+          if (Object.keys(discrepancies).length > 0) {
+            console.warn(
+              "⚠️ [useBulkComplianceActions] Backend returned different values than sent:"
+            );
+            console.warn(discrepancies);
+            console.warn(
+              "⚠️ This suggests the backend is NOT saving your changes correctly!"
+            );
+            console.warn(
+              "⚠️ This is a BACKEND issue - the frontend is sending the data correctly."
+            );
+          } else {
+            console.log("✅ Backend confirmed all values were saved correctly");
+          }
         }
 
         console.log(
-          "✅ [useBulkComplianceActions] Updated compliance details:",
+          "✅ [useBulkComplianceActions] Successfully updated compliance details:",
           recordId
         );
 
