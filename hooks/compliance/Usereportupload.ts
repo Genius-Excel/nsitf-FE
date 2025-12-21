@@ -61,9 +61,7 @@ export const useReportUpload = (options?: UploadOptions) => {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("region_id", regionId);
-        // Convert period from "YYYY-MM" to integer "YYYYMM"
-        const periodInt = period.replace("-", "");
-        formData.append("period", periodInt);
+        formData.append("period", period);
 
         // Simulate upload progress
         const uploadInterval = setInterval(() => {
