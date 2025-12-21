@@ -288,6 +288,10 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
         // Use patchData (not patchDataJson) for form-encoded data
         const response = await http.patchData(
           formData,
+          `/api/contributions/manage-contributions/${recordId}`
+        );
+
+        console.log(
           "📥 [useBulkComplianceActions] Raw response received:",
           response
         );

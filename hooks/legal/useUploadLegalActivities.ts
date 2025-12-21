@@ -49,7 +49,7 @@ export function useUploadLegalActivities(): UseUploadLegalActivitiesReturn {
       const httpService = new HttpService();
       const response = await httpService.postFormData(
         formData,
-        "/api/legal-ops/upload-legal-activities"
+        "/api/legal-ops/reports"
       );
 
       const apiResponse: LegalUploadResponseAPI = response.data;
