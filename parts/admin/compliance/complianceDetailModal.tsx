@@ -91,6 +91,9 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   const shortfall = entry.target - entry.contributionCollected;
   const isTargetMet = entry.contributionCollected >= entry.target;
 
+  // Use edited data or original data
+  const displayData = editedData || entry;
+
   // Permission checks (case-insensitive)
   const normalizedRole = userRole?.toLowerCase();
   const isApproved = displayData.recordStatus?.toLowerCase() === "approved";
@@ -106,9 +109,6 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
     normalizedRole === "admin";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
-
-  // Use edited data or original data
-  const displayData = editedData || entry;
 
   // Handle edit mode
   const handleEdit = () => {

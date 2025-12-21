@@ -244,6 +244,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
     console.log("Update result:", success);
 
     if (success) {
+      const newStatus = confirmAction === "reviewed" ? "reviewed" : "approved";
       toast.success(
         confirmAction === "reviewed"
           ? "Claim marked as reviewed successfully"
@@ -253,14 +254,23 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
       setShowConfirmDialog(false);
       setConfirmAction(null);
 
+      // Update the local state to reflect the new status
+      if (editedData && editedData.audit) {
+        setEditedData({
+          ...editedData,
+          audit: {
+            ...editedData.audit,
+            recordStatus: newStatus,
+          },
+        });
+      }
+
       // Refresh both the claims list and the detail
       if (onRefresh) {
         onRefresh();
       }
 
-      // Keep modal open but refetch detail to show updated status
-      // The parent should handle refetching via onRefresh, which will update claimDetail prop
-      // Don't close the modal so user can see the updated status
+      // Keep modal open so user can see the updated status
     } else {
       toast.error("Failed to update claim status");
     }

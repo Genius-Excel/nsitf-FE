@@ -246,13 +246,15 @@ export const ViewDetailsModal: React.FC<{
 
   if (!isOpen) return null;
 
-  // Check if user can edit (Regional Officer, Admin, HQ, HOD)
+  // Check if user can edit (Regional Officer, Admin, HQ, HOD) - but not if approved
   const normalizedRole = userRole?.toLowerCase();
+  const isApproved = activity?.status?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
       normalizedRole
-    );
+    ) &&
+    !isApproved;
 
   // Check if user can review (Regional Officer and Admin)
   const canReview =

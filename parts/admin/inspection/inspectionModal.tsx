@@ -186,30 +186,28 @@ Generated on: ${new Date().toLocaleString()}
       // Build payload with snake_case field names for API
       const payload: any = {};
 
-      // Performance Metrics
-      if (editedData.performanceMetrics) {
-        payload.performance_rate =
-          editedData.performanceMetrics.performanceRate;
-      }
+      // Performance Metrics - performance_rate is calculated, don't send it
 
-      // Inspection Activity
+      // Inspection Activity (use exact API field names)
       if (editedData.inspectionActivity) {
-        payload.inspection_conducted =
+        payload.inspections_conducted =
           editedData.inspectionActivity.inspectionsConducted;
-        payload.demand_notice =
+        payload.demand_notices_issued =
           editedData.inspectionActivity.demandNoticesIssued;
       }
 
-      // Financial Summary
+      // Financial Summary (use exact API field names)
       if (editedData.financialSummary) {
-        payload.cumulative_debt_established =
-          editedData.financialSummary.debtEstablished;
+        payload.debt_established = editedData.financialSummary.debtEstablished;
+        payload.debt_recovered = editedData.financialSummary.debtRecovered;
       }
 
-      // Branch Information
-      if (editedData.branchInformation) {
+      // Branch Information - keep period as string "YYYY-MM"
+      if (editedData.branchInformation?.period) {
         payload.period = editedData.branchInformation.period;
       }
+
+      console.log("💾 [inspectionModal] Final payload:", payload);
 
       const success = await updateInspectionDetails(detailData.id, payload);
 
@@ -281,6 +279,7 @@ Generated on: ${new Date().toLocaleString()}
     console.log("Update result:", success);
 
     if (success) {
+      const newStatus = confirmAction === "reviewed" ? "reviewed" : "approved";
       toast.success(
         confirmAction === "reviewed"
           ? "Inspection marked as reviewed successfully"
@@ -290,14 +289,23 @@ Generated on: ${new Date().toLocaleString()}
       setShowConfirmDialog(false);
       setConfirmAction(null);
 
+      // Update the local state to reflect the new status
+      if (editedData && editedData.audit) {
+        setEditedData({
+          ...editedData,
+          audit: {
+            ...editedData.audit,
+            recordStatus: newStatus,
+          },
+        });
+      }
+
       // Refresh both the inspections list and the detail
       if (onRefresh) {
         onRefresh();
       }
 
-      // Keep modal open but refetch detail to show updated status
-      // The parent should handle refetching via onRefresh, which will update inspection prop
-      // Don't close the modal so user can see the updated status
+      // Keep modal open so user can see the updated status
     } else {
       toast.error("Failed to update inspection status");
     }
@@ -526,7 +534,7 @@ Generated on: ${new Date().toLocaleString()}
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs text-gray-600 uppercase">
-                      Performance Rate
+                      PERFORMANCE RATE (%)
                     </p>
                     <Badge
                       className={`${getInspectionPerformanceBadge(
@@ -565,8 +573,9 @@ Generated on: ${new Date().toLocaleString()}
                     )
                   ) : (
                     <>
+                      {" "}
                       <p className="text-xs text-gray-600 uppercase mb-1">
-                        Inspections Conducted
+                        INSPECTIONS CONDUCTED
                       </p>
                       <p className="text-3xl font-bold text-blue-700">
                         {detailData.inspectionActivity.inspectionsConducted.toLocaleString()}
@@ -586,7 +595,7 @@ Generated on: ${new Date().toLocaleString()}
                   ) : (
                     <>
                       <p className="text-xs text-gray-600 uppercase mb-1">
-                        Demand Notices Issued
+                        DEMAND NOTICES ISSUED
                       </p>
                       <p className="text-3xl font-bold text-blue-700">
                         {detailData.inspectionActivity.demandNoticesIssued.toLocaleString()}
@@ -635,7 +644,7 @@ Generated on: ${new Date().toLocaleString()}
                   ) : (
                     <>
                       <p className="text-xs text-gray-600 uppercase mb-1">
-                        Debt Established
+                        DEBT ESTABLISHED (₦)
                       </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {formatInspectionCurrency(
@@ -657,7 +666,7 @@ Generated on: ${new Date().toLocaleString()}
                   ) : (
                     <>
                       <p className="text-xs text-gray-600 uppercase mb-1">
-                        Debt Recovered
+                        DEBT RECOVERED (₦)
                       </p>
                       <p className="text-2xl font-bold text-green-700">
                         {formatInspectionCurrency(
@@ -675,7 +684,7 @@ Generated on: ${new Date().toLocaleString()}
                   {/* Outstanding Debt is always non-editable (calculated field) */}
                   <>
                     <p className="text-xs text-gray-600 uppercase mb-1">
-                      Outstanding Debt
+                      OUTSTANDING DEBT (₦)
                     </p>
                     <p
                       className={`text-2xl font-bold ${
