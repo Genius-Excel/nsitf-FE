@@ -124,7 +124,12 @@ export const SearchAndFilter: React.FC<{
   onSearchChange: (value: string) => void;
   filterRole: string;
   onFilterChange: (value: string) => void;
-  roles?: Array<{ id: string; name: string; description: string }>;
+  roles?: Array<{
+    id: string;
+    name: string;
+    roleName: string;
+    description: string;
+  }>;
 }> = ({
   searchTerm,
   onSearchChange,
@@ -150,7 +155,7 @@ export const SearchAndFilter: React.FC<{
         <SelectContent>
           <SelectItem value="All Roles">All Roles</SelectItem>
           {roles.map((role) => (
-            <SelectItem key={role.id} value={role.id}>
+            <SelectItem key={role.id} value={role.roleName}>
               {capitalizeRole(role.name)}
             </SelectItem>
           ))}
@@ -161,7 +166,12 @@ export const SearchAndFilter: React.FC<{
 );
 
 export const RolePermissionsOverview: React.FC<{
-  roles?: Array<{ id: string; name: string; description: string }>;
+  roles?: Array<{
+    id: string;
+    name: string;
+    roleName: string;
+    description: string;
+  }>;
 }> = ({ roles = [] }) => (
   <div className="mt-8">
     <h2 className="text-lg font-semibold text-gray-900 mb-4">
