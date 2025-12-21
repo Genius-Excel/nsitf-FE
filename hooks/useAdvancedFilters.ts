@@ -315,6 +315,7 @@ export function useAdvancedFilters({
     if (filters.useRangeMode) {
       // Range mode: use period_from/period_to (both required)
       if (filters.dateFrom && filters.dateTo) {
+        // Keep "YYYY-MM" format as per API spec
         params.period_from = filters.dateFrom;
         params.period_to = filters.dateTo;
       }
@@ -322,6 +323,7 @@ export function useAdvancedFilters({
       // Single period mode: use period only if explicitly selected
       if (filters.selectedMonth && filters.selectedYear) {
         const monthPadded = String(filters.selectedMonth).padStart(2, "0");
+        // Keep "YYYY-MM" format as per API spec
         params.period = `${filters.selectedYear}-${monthPadded}`;
       }
       // If no period selected, don't send any period params

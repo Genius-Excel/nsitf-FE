@@ -107,21 +107,23 @@ Generated on: ${new Date().toLocaleString()}
     URL.revokeObjectURL(url);
   };
 
+  // Use edited data or original data
+  const displayData = editedData || detailData;
+
   // Permission checks (case-insensitive)
   const normalizedRole = userRole?.toLowerCase();
+  const isApproved = displayData?.recordStatus?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
       normalizedRole
-    );
+    ) &&
+    !isApproved;
   const canReview =
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
-
-  // Use edited data or original data
-  const displayData = editedData || detailData;
 
   // Handle edit mode
   const handleEdit = () => {
