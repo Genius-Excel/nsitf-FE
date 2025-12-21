@@ -18,10 +18,11 @@ import {
   AlertCircle,
 } from "lucide-react";
 import * as XLSX from "xlsx";
-import { useUploadLegalActivities } from "@/hooks/legal/useUploadLegalActivities";
 import { useRegions } from "@/hooks/compliance/Useregions";
 import { useBranches } from "@/hooks/users";
 import { getUserFromStorage } from "@/lib/auth";
+import { toast } from "sonner";
+import HttpService from "@/services/httpServices";
 
 interface LegalUploadModalProps {
   isOpen: boolean;
@@ -39,6 +40,8 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
   const [period, setPeriod] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStage, setUploadStage] = useState<
     "idle" | "uploading" | "processing" | "complete" | "error"
@@ -69,8 +72,6 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
     (user as any)?.managed_branch_ids ||
     (user as any)?.branch_ids ||
     [];
-
-  const { uploadFile, loading, error, clearError } = useUploadLegalActivities();
 
   // Auto-select region for regional officers (they cannot change it)
   useEffect(() => {
@@ -127,50 +128,89 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
   };
 
   const handleUpload = async () => {
-    if (!file || !selectedRegionId) {
+    if (!file || !selectedRegionId || !selectedBranchId || !period) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
-    clearError();
-    setErrorDetails([]);
+    setLoading(true);
+    setError(null);
     setUploadProgress(0);
     setUploadStage("uploading");
 
-    // Simulate upload progress
-    const progressInterval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(progressInterval);
-          return 90;
-        }
-        return prev + 10;
-      });
-    }, 200);
-
     try {
-      const result = await uploadFile(selectedRegionId, file);
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
+      // Upload Legal file via API
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("region_id", selectedRegionId);
+      formData.append("branch_id", selectedBranchId);
+      formData.append("period", period);
+      formData.append("sheet", "LEGAL");
+
+      console.log("📤 [LegalUploadModal] Uploading with FormData:", {
+        region_id: selectedRegionId,
+        branch_id: selectedBranchId,
+        period,
+        sheet: "LEGAL",
+        fileName: file.name,
+      });
+
+      const httpService = new HttpService();
+      const response = await httpService.postFormData(
+        formData,
+        "/api/legal-ops/reports"
+      );
+
       clearInterval(progressInterval);
+      setUploadProgress(95);
+      setUploadStage("processing");
 
-      if (result) {
-        setUploadProgress(95);
-        setUploadStage("processing");
+      // Brief processing delay
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-        // Simulate processing time
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      const uploadData = response?.data;
+
+      console.log("✅ [LegalUploadModal] Upload response:", uploadData);
+
+      // Check if upload completed with errors BEFORE marking as successful
+      if (
+        uploadData?.status === "completed_with_errors" &&
+        uploadData?.error_report
+      ) {
+        const legalErrors = uploadData.error_report?.LEGAL?.errors || [];
 
         setUploadProgress(100);
-        setUploadStage("complete");
-        setUploadSuccess(true);
-
-        setTimeout(() => {
-          handleClose();
-          onUploadSuccess();
-        }, 2000);
-      } else {
         setUploadStage("error");
+        setError("Upload completed with errors");
+        setErrorDetails(legalErrors);
+
+        toast.error("Upload failed. Please check the errors below.");
+        return;
       }
+
+      // Only mark as successful if no errors
+      setUploadProgress(100);
+      setUploadStage("complete");
+      setUploadSuccess(true);
+      toast.success(uploadData?.message || "Legal data uploaded successfully!");
+
+      setTimeout(() => {
+        handleClose();
+        onUploadSuccess();
+      }, 2000);
     } catch (err: any) {
-      clearInterval(progressInterval);
+      console.error("❌ [LegalUploadModal] Upload error:", err);
 
       // Extract error message from various possible locations
       const errorMessage =
@@ -188,7 +228,11 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
         setErrorDetails([{ message: err.response.data.error }]);
       }
 
+      setError(errorMessage);
       setUploadStage("error");
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -201,7 +245,8 @@ export const LegalUploadModal: React.FC<LegalUploadModalProps> = ({
     setUploadProgress(0);
     setUploadStage("idle");
     setErrorDetails([]);
-    clearError();
+    setError(null);
+    setLoading(false);
     onClose();
   };
 
