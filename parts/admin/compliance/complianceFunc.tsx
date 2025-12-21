@@ -73,6 +73,8 @@ const mapToComplianceEntry = (summary: RegionalSummary): ComplianceEntry => ({
 const ComplianceDashboard: React.FC = () => {
   // ============== PERMISSIONS ==============
   const [canManage, setCanManage] = useState(false);
+  const [canManageRegion, setCanManageRegion] = useState(false);
+  const [canManageBranches, setCanManageBranches] = useState(false);
 
   useEffect(() => {
     const user = getUserFromStorage();
@@ -90,6 +92,20 @@ const ComplianceDashboard: React.FC = () => {
         // Fallback to role-based permissions
         setCanManage(canManageCompliance(user.role));
       }
+
+      // Only admin and manager can manage regions
+      const normalizedRole = user.role?.toLowerCase();
+      setCanManageRegion(
+        normalizedRole === "admin" || normalizedRole === "manager"
+      );
+
+      // Admin, manager, regional_manager, and regional_officer can manage branches
+      setCanManageBranches(
+        normalizedRole === "admin" ||
+          normalizedRole === "manager" ||
+          normalizedRole === "regional_manager" ||
+          normalizedRole === "regional_officer"
+      );
     }
   }, []);
 
@@ -432,25 +448,26 @@ const ComplianceDashboard: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2 sm:gap-3">
-          {/* Only show region/branch management for users with permission */}
-          {canManage && (
-            <>
-              <Button
-                onClick={handleCreateRegionClick}
-                className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
-              >
-                <Plus size={18} />
-                <span>Manage Region</span>
-              </Button>
-              <Button
-                onClick={() => branchModal.open()}
-                variant="outline"
-                className="flex-1 sm:flex-none border-green-600 text-green-600 hover:bg-green-50"
-              >
-                <Plus size={18} />
-                <span>Manage Branches</span>
-              </Button>
-            </>
+          {/* Only admin and manager can manage regions */}
+          {canManageRegion && (
+            <Button
+              onClick={handleCreateRegionClick}
+              className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
+            >
+              <Plus size={18} />
+              <span>Manage Region</span>
+            </Button>
+          )}
+          {/* Admin, manager, and regional users can manage branches */}
+          {canManageBranches && (
+            <Button
+              onClick={() => branchModal.open()}
+              variant="outline"
+              className="flex-1 sm:flex-none border-green-600 text-green-600 hover:bg-green-50"
+            >
+              <Plus size={18} />
+              <span>Manage Branches</span>
+            </Button>
           )}
         </div>
       </div>
