@@ -110,9 +110,9 @@ export const useClaimsUpload = (
         formData.append("file", file);
         formData.append("region_id", params.regionId);
         formData.append("branch_id", params.branchId);
-        // Convert period from "YYYY-MM" to integer "YYYYMM"
-        const periodInt = params.period.replace("-", "");
-        formData.append("period", periodInt);
+        // // Convert period from "YYYY-MM" to integer "YYYYMM"
+        // const periodInt = params.period.replace("-", "");
+        formData.append("period", params.period);
         formData.append("sheet", params.sheet || "CLAIMS");
 
         const response = await http.postData(formData, "/api/claims/reports");
