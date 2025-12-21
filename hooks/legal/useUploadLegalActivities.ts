@@ -76,9 +76,7 @@ export function useUploadLegalActivities(): UseUploadLegalActivitiesReturn {
       const formData = new FormData();
       formData.append("branch_id", branchId.trim());
       formData.append("region_id", regionId.trim());
-      // Convert period from "YYYY-MM" to integer "YYYYMM"
-      const periodInt = period.replace("-", "");
-      formData.append("period", periodInt);
+      formData.append("period", period);
       formData.append("sheet", "LEGAL");
       formData.append("file", file);
 
