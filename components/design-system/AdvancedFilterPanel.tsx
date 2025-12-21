@@ -11,6 +11,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { Filter, X, ChevronUp, ChevronDown, Calendar } from "lucide-react";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -276,7 +277,7 @@ export function AdvancedFilterPanel({
   const handleApplyRange = () => {
     // Validate both dates are set
     if (!pendingFilters.dateFrom || !pendingFilters.dateTo) {
-      alert("Please select both start and end dates for the range.");
+      toast.error("Please select both start and end dates for the range.");
       return;
     }
 

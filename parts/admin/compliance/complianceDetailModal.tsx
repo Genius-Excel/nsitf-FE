@@ -93,11 +93,13 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
 
   // Permission checks (case-insensitive)
   const normalizedRole = userRole?.toLowerCase();
+  const isApproved = displayData.recordStatus?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
       normalizedRole
-    );
+    ) &&
+    !isApproved; // Disable editing for approved records
   const canReview =
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer" ||
@@ -556,27 +558,19 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                       : "bg-orange-50 border-orange-200"
                   } p-4 rounded-lg border`}
                 >
-                  {isEditMode ? (
-                    renderField(
-                      "Performance Rate",
-                      displayData.achievement.toFixed(1),
-                      "achievement",
-                      "number"
-                    )
-                  ) : (
-                    <>
-                      <p className="text-xs text-gray-600 uppercase mb-1">
-                        Performance Rate
-                      </p>
-                      <p
-                        className={`text-xl sm:text-2xl font-bold ${
-                          isTargetMet ? "text-green-700" : "text-orange-700"
-                        }`}
-                      >
-                        {displayData.achievement.toFixed(1)}%
-                      </p>
-                    </>
-                  )}
+                  {/* Achievement/Performance Rate is always non-editable (calculated field) */}
+                  <>
+                    <p className="text-xs text-gray-600 uppercase mb-1">
+                      Performance Rate
+                    </p>
+                    <p
+                      className={`text-xl sm:text-2xl font-bold ${
+                        isTargetMet ? "text-green-700" : "text-orange-700"
+                      }`}
+                    >
+                      {displayData.achievement.toFixed(1)}%
+                    </p>
+                  </>
                 </div>
               </div>
             </section>

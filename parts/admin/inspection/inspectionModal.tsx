@@ -144,11 +144,14 @@ Generated on: ${new Date().toLocaleString()}
 
   // Permission checks (case-insensitive)
   const normalizedRole = userRole?.toLowerCase();
+  const isApproved =
+    detailData?.audit?.recordStatus?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
       normalizedRole
-    );
+    ) &&
+    !isApproved; // Disable editing for approved records
   const canReview =
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer" ||
@@ -669,58 +672,42 @@ Generated on: ${new Date().toLocaleString()}
                 </div>
 
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  {isEditMode ? (
-                    renderField(
-                      "Outstanding Debt",
-                      displayData?.financialSummary?.outstandingDebt,
-                      "financialSummary.outstandingDebt",
-                      "number"
-                    )
-                  ) : (
-                    <>
-                      <p className="text-xs text-gray-600 uppercase mb-1">
-                        Outstanding Debt
-                      </p>
-                      <p
-                        className={`text-2xl font-bold ${
-                          detailData.financialSummary.outstandingDebt < 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {formatInspectionCurrency(
-                          detailData.financialSummary.outstandingDebt
-                        )}
-                      </p>
-                      {detailData.financialSummary.outstandingDebt < 0 && (
-                        <p className="text-xs text-green-600 mt-1">
-                          Over-recovered
-                        </p>
+                  {/* Outstanding Debt is always non-editable (calculated field) */}
+                  <>
+                    <p className="text-xs text-gray-600 uppercase mb-1">
+                      Outstanding Debt
+                    </p>
+                    <p
+                      className={`text-2xl font-bold ${
+                        detailData.financialSummary.outstandingDebt < 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {formatInspectionCurrency(
+                        detailData.financialSummary.outstandingDebt
                       )}
-                    </>
-                  )}
+                    </p>
+                    {detailData.financialSummary.outstandingDebt < 0 && (
+                      <p className="text-xs text-green-600 mt-1">
+                        Over-recovered
+                      </p>
+                    )}
+                  </>
                 </div>
 
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  {isEditMode ? (
-                    renderField(
-                      "Average per Inspection",
-                      displayData?.financialSummary?.averageDebtPerInspection,
-                      "financialSummary.averageDebtPerInspection",
-                      "number"
-                    )
-                  ) : (
-                    <>
-                      <p className="text-xs text-gray-600 uppercase mb-1">
-                        Average per Inspection
-                      </p>
-                      <p className="text-xl font-bold text-gray-900">
-                        {formatInspectionCurrency(
-                          detailData.financialSummary.averageDebtPerInspection
-                        )}
-                      </p>
-                    </>
-                  )}
+                  {/* Average per Inspection is always non-editable (calculated field) */}
+                  <>
+                    <p className="text-xs text-gray-600 uppercase mb-1">
+                      Average per Inspection
+                    </p>
+                    <p className="text-xl font-bold text-gray-900">
+                      {formatInspectionCurrency(
+                        detailData.financialSummary.averageDebtPerInspection
+                      )}
+                    </p>
+                  </>
                 </div>
               </div>
             </div>

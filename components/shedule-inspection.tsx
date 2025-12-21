@@ -35,7 +35,7 @@ export default function ScheduleInspectionModal({
       scheduleForm.date &&
       scheduleForm.inspector
     ) {
-      alert(
+      toast.success(
         `Inspection scheduled for ${scheduleForm.employer} on ${scheduleForm.date}`
       );
       setScheduleForm({
@@ -47,7 +47,7 @@ export default function ScheduleInspectionModal({
       });
       onClose();
     } else {
-      alert("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
     }
   };
 
@@ -156,11 +156,7 @@ export default function ScheduleInspectionModal({
         </div>
 
         <DialogFooter className="mt-6">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="text-sm"
-          >
+          <Button variant="outline" onClick={onClose} className="text-sm">
             Cancel
           </Button>
           <button

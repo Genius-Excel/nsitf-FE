@@ -35,6 +35,12 @@ export const MetricsFilter: React.FC<MetricsFilterProps> = ({
   filteredCount,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [pendingFilters, setPendingFilters] = useState(filters);
+
+  // Update pending filters when parent filters change
+  React.useEffect(() => {
+    setPendingFilters(filters);
+  }, [filters]);
 
   // Generate months
   const months = [
@@ -183,10 +189,10 @@ export const MetricsFilter: React.FC<MetricsFilterProps> = ({
               </label>
               <div className="flex gap-2">
                 <Select
-                  value={filters.selectedMonth}
+                  value={pendingFilters.selectedMonth}
                   onValueChange={(value) =>
-                    onFilterChange({
-                      ...filters,
+                    setPendingFilters({
+                      ...pendingFilters,
                       selectedMonth: value,
                     })
                   }
@@ -204,10 +210,10 @@ export const MetricsFilter: React.FC<MetricsFilterProps> = ({
                 </Select>
 
                 <Select
-                  value={filters.selectedYear}
+                  value={pendingFilters.selectedYear}
                   onValueChange={(value) =>
-                    onFilterChange({
-                      ...filters,
+                    setPendingFilters({
+                      ...pendingFilters,
                       selectedYear: value,
                     })
                   }
@@ -233,10 +239,10 @@ export const MetricsFilter: React.FC<MetricsFilterProps> = ({
               </label>
               <div className="flex gap-2 items-center">
                 <Select
-                  value={filters.periodFrom}
+                  value={pendingFilters.periodFrom}
                   onValueChange={(value) =>
-                    onFilterChange({
-                      ...filters,
+                    setPendingFilters({
+                      ...pendingFilters,
                       periodFrom: value,
                     })
                   }
@@ -256,10 +262,10 @@ export const MetricsFilter: React.FC<MetricsFilterProps> = ({
                 <span className="text-gray-500 text-sm">to</span>
 
                 <Select
-                  value={filters.periodTo}
+                  value={pendingFilters.periodTo}
                   onValueChange={(value) =>
-                    onFilterChange({
-                      ...filters,
+                    setPendingFilters({
+                      ...pendingFilters,
                       periodTo: value,
                     })
                   }
@@ -298,9 +304,17 @@ export const MetricsFilter: React.FC<MetricsFilterProps> = ({
             </div>
           )}
 
-          {/* Clear Filters Button */}
-          {hasActiveFilters && (
-            <div className="pt-2 flex justify-end">
+          {/* Action Buttons */}
+          <div className="pt-2 flex justify-end gap-2">
+            <button
+              onClick={() => {
+                onFilterChange(pendingFilters);
+              }}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+            >
+              Apply Filters
+            </button>
+            {hasActiveFilters && (
               <button
                 onClick={onReset}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
@@ -309,8 +323,8 @@ export const MetricsFilter: React.FC<MetricsFilterProps> = ({
                 <X className="w-4 h-4" />
                 Clear Filters
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>

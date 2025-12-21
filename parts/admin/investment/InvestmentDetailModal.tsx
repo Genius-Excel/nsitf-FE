@@ -120,11 +120,13 @@ export const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
 
   // Permission checks
   const normalizedRole = userRole?.toLowerCase();
+  const isApproved = investment?.recordStatus?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
       normalizedRole
-    );
+    ) &&
+    !isApproved; // Disable editing for approved records
   const canReview =
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer" ||
