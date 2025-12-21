@@ -12,7 +12,7 @@ export interface Role {
 // API returns this structure
 interface RoleApiResponse {
   role_id: string;
-  role_name: string;
+  display_name: string;
   description?: string;
 }
 
@@ -46,7 +46,7 @@ export const useRoles = () => {
       // Helper function to transform API response to our format
       const transformRole = (apiRole: RoleApiResponse): Role => ({
         id: apiRole.role_id,
-        name: apiRole.role_name,
+        name: apiRole.display_name,
         description: apiRole.description || "",
       });
 
@@ -82,9 +82,7 @@ export const useRoles = () => {
       throw new Error("Invalid API response structure");
     } catch (err: any) {
       const message =
-        err?.response?.data?.message ||
-        err.message ||
-        "Failed to fetch roles";
+        err?.response?.data?.message || err.message || "Failed to fetch roles";
       console.error("Roles fetch error:", err);
       console.error("Error response:", err?.response);
       setError(message);
