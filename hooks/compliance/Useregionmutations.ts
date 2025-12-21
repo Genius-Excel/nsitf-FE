@@ -83,7 +83,9 @@ export const useRegionMutations = (options?: MutationOptions) => {
         formData.append("code", data.code);
         formData.append("description", data.description);
         formData.append("target_amount", data.target_amount.toString());
-        formData.append("period", data.period);
+        // Convert period from "YYYY-MM" to integer "YYYYMM"
+        const periodInt = data.period.replace("-", "");
+        formData.append("period", periodInt);
 
         const response = await http.putData(
           formData,

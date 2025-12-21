@@ -405,7 +405,9 @@ export function useFileUpload() {
         uploadFormData.append("file", formData.file);
         uploadFormData.append("region_id", formData.regionId);
         uploadFormData.append("branch_id", formData.branchId);
-        uploadFormData.append("period", formData.period);
+        // Convert period from "YYYY-MM" to integer "YYYYMM"
+        const periodInt = formData.period.replace("-", "");
+        uploadFormData.append("period", periodInt);
 
         const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 

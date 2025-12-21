@@ -6,9 +6,9 @@
 
 "use client";
 
-import React, { useState } from 'react';
-import { Check, X, AlertTriangle, User, Save, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from "react";
+import { Check, X, AlertTriangle, User, Save, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,20 +26,20 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from "@/components/ui/alert-dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   type UserWithPermissions,
   type PermissionItem,
   type PermissionDiff,
   canRemovePermission,
   canAssignPermission,
-} from '@/lib/types/permissions';
-import { getUserFromStorage } from '@/lib/auth';
-import { cn } from '@/lib/utils';
+} from "@/lib/types/permissions";
+import { getUserFromStorage } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 
 // ============== HELPER FUNCTIONS ==============
 
@@ -48,10 +48,10 @@ import { cn } from '@/lib/utils';
  * Example: "can_upload_branch_data" -> "Can upload branch data"
  */
 function formatPermissionName(name: string): string {
-  if (!name) return '';
+  if (!name) return "";
 
   // Remove underscores and replace with spaces
-  const withSpaces = name.replace(/_/g, ' ');
+  const withSpaces = name.replace(/_/g, " ");
 
   // Capitalize first letter only
   return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
@@ -71,7 +71,11 @@ interface PermissionCategorySectionProps {
   permissionDiff: PermissionDiff;
   userRole: string;
   onTogglePermission: (permission: PermissionItem) => void;
-  onToggleCategory: (category: { id: string; name: string; permissions: PermissionItem[] }) => void;
+  onToggleCategory: (category: {
+    id: string;
+    name: string;
+    permissions: PermissionItem[];
+  }) => void;
 }
 
 function PermissionCategorySection({
@@ -86,7 +90,9 @@ function PermissionCategorySection({
   const currentUser = getUserFromStorage();
 
   // Check if all permissions in category are selected
-  const selectedCount = category.permissions.filter(p => editedPermissions.some(ep => ep.id === p.id)).length;
+  const selectedCount = category.permissions.filter((p) =>
+    editedPermissions.some((ep) => ep.id === p.id)
+  ).length;
   const totalCount = category.permissions.length;
   const isAllSelected = totalCount > 0 && selectedCount === totalCount;
   const isPartiallySelected = selectedCount > 0 && selectedCount < totalCount;
@@ -99,12 +105,20 @@ function PermissionCategorySection({
             <Checkbox
               checked={isAllSelected}
               onCheckedChange={() => onToggleCategory(category)}
-              className={isPartiallySelected ? "data-[state=indeterminate]:bg-primary" : ""}
+              className={
+                isPartiallySelected
+                  ? "data-[state=indeterminate]:bg-primary"
+                  : ""
+              }
               aria-label={`Select all ${category.name} permissions`}
             />
             <div>
-              <CardTitle className="text-base font-medium">{category.name}</CardTitle>
-              <p className="text-sm text-gray-500 mt-1">{category.description}</p>
+              <CardTitle className="text-base font-medium">
+                {category.name}
+              </CardTitle>
+              <p className="text-sm text-gray-500 mt-1">
+                {category.description}
+              </p>
             </div>
           </div>
           <Badge variant="outline" className="text-xs">
@@ -115,12 +129,24 @@ function PermissionCategorySection({
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {category.permissions.map((permission) => {
-            const isSelected = editedPermissions.some(ep => ep.id === permission.id);
+            const isSelected = editedPermissions.some(
+              (ep) => ep.id === permission.id
+            );
             const isAdded = permissionDiff.added.includes(permission.id);
             const isRemoved = permissionDiff.removed.includes(permission.id);
-            const isRoleDefault = roleDefaultPermissionNames.includes(permission.name);
-            const canRemove = canRemovePermission(userRole, permission, currentUser || { role: 'user', permissions: [] });
-            const canAssign = canAssignPermission(userRole, permission, currentUser?.role || 'user');
+            const isRoleDefault = roleDefaultPermissionNames.includes(
+              permission.name
+            );
+            const canRemove = canRemovePermission(
+              userRole,
+              permission,
+              currentUser || { role: "user", permissions: [] }
+            );
+            const canAssign = canAssignPermission(
+              userRole,
+              permission,
+              currentUser?.role || "user"
+            );
 
             const isDisabled = isSelected ? !canRemove : !canAssign;
 
@@ -141,26 +167,40 @@ function PermissionCategorySection({
               >
                 <Checkbox
                   checked={isSelected}
-                  onCheckedChange={() => !isDisabled && onTogglePermission(permission)}
+                  onCheckedChange={() =>
+                    !isDisabled && onTogglePermission(permission)
+                  }
                   disabled={isDisabled}
                   aria-label={`Toggle ${permission.name} permission`}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className={cn(
-                      "font-medium text-sm",
-                      isSelected ? (isRoleDefault ? "text-blue-800" : "text-green-800") : "text-gray-700"
-                    )}>
+                    <p
+                      className={cn(
+                        "font-medium text-sm",
+                        isSelected
+                          ? isRoleDefault
+                            ? "text-blue-800"
+                            : "text-green-800"
+                          : "text-gray-700"
+                      )}
+                    >
                       {permission.description}
                     </p>
                     <div className="flex items-center space-x-1 ml-2">
                       {isRoleDefault && (
-                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
+                        <Badge
+                          variant="secondary"
+                          className="text-xs bg-blue-100 text-blue-800 border-blue-200"
+                        >
                           Role Default
                         </Badge>
                       )}
                       {isAdded && (
-                        <Badge variant="default" className="text-xs bg-green-600">
+                        <Badge
+                          variant="default"
+                          className="text-xs bg-green-600"
+                        >
                           <Check className="w-3 h-3 mr-1" />
                           Adding
                         </Badge>
@@ -173,7 +213,9 @@ function PermissionCategorySection({
                       )}
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{formatPermissionName(permission.name)}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formatPermissionName(permission.name)}
+                  </p>
                 </div>
               </div>
             );
@@ -211,15 +253,21 @@ function useToggleCategory(
   editedPermissions: PermissionItem[],
   onTogglePermission: (permission: PermissionItem) => void
 ) {
-  return (category: { id: string; name: string; permissions: PermissionItem[] }) => {
-    const selectedCount = category.permissions.filter(p =>
-      editedPermissions.some(ep => ep.id === p.id)
+  return (category: {
+    id: string;
+    name: string;
+    permissions: PermissionItem[];
+  }) => {
+    const selectedCount = category.permissions.filter((p) =>
+      editedPermissions.some((ep) => ep.id === p.id)
     ).length;
     const isAllSelected = selectedCount === category.permissions.length;
 
     // If all selected, deselect all; otherwise select all
-    category.permissions.forEach(permission => {
-      const isSelected = editedPermissions.some(ep => ep.id === permission.id);
+    category.permissions.forEach((permission) => {
+      const isSelected = editedPermissions.some(
+        (ep) => ep.id === permission.id
+      );
       if (isAllSelected && isSelected) {
         onTogglePermission(permission); // Deselect
       } else if (!isAllSelected && !isSelected) {
@@ -245,7 +293,10 @@ export function PermissionEditor({
   onReset,
 }: PermissionEditorProps) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const handleToggleCategory = useToggleCategory(editedPermissions, onTogglePermission);
+  const handleToggleCategory = useToggleCategory(
+    editedPermissions,
+    onTogglePermission
+  );
 
   if (!user) return null;
 
@@ -270,9 +321,18 @@ export function PermissionEditor({
   // Handle dialog close with unsaved changes check
   const handleClose = () => {
     if (hasChanges && !isSaving) {
-      if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
-        onClose();
-      }
+      // Use toast with confirmation action
+      toast.warning("You have unsaved changes", {
+        description: "Are you sure you want to close without saving?",
+        action: {
+          label: "Close",
+          onClick: () => onClose(),
+        },
+        cancel: {
+          label: "Stay",
+          onClick: () => {},
+        },
+      });
     } else {
       onClose();
     }
@@ -296,9 +356,13 @@ export function PermissionEditor({
               </div>
             </DialogTitle>
             <DialogDescription>
-              Assign or remove permissions for this user. Changes will not be saved until you click "Save Changes".
+              Assign or remove permissions for this user. Changes will not be
+              saved until you click "Save Changes".
               <br />
-              <span className="text-blue-600 font-medium">Permissions marked as "Role Default"</span> are inherited from the user's role.
+              <span className="text-blue-600 font-medium">
+                Permissions marked as "Role Default"
+              </span>{" "}
+              are inherited from the user's role.
             </DialogDescription>
           </DialogHeader>
 
@@ -372,16 +436,14 @@ export function PermissionEditor({
               <span>Confirm Permission Removal</span>
             </AlertDialogTitle>
             <AlertDialogDescription>
-              You are about to remove {permissionDiff.removed.length} permission{permissionDiff.removed.length !== 1 ? 's' : ''} from {user.name}.
-              This action may limit their access to certain features.
-
-              Are you sure you want to continue?
+              You are about to remove {permissionDiff.removed.length} permission
+              {permissionDiff.removed.length !== 1 ? "s" : ""} from {user.name}.
+              This action may limit their access to certain features. Are you
+              sure you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSaving}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={isSaving}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmedSave}
               disabled={isSaving}
@@ -393,7 +455,7 @@ export function PermissionEditor({
                   Updating...
                 </>
               ) : (
-                'Confirm Removal'
+                "Confirm Removal"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -412,11 +412,13 @@ export const ViewDetailsModal: React.FC<{
   }, []);
 
   const normalizedRole = userRole?.toLowerCase();
+  const isApproved = activity?.status?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
     ["admin", "manager", "regional_manager", "regional officer"].includes(
       normalizedRole
-    );
+    ) &&
+    !isApproved; // Disable editing for approved records
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 

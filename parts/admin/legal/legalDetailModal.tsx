@@ -236,12 +236,11 @@ Generated on: ${new Date().toLocaleString()}
         // Only show the number if it's actually greater than 0
         if (fieldValue > 0) {
           displayValue = String(fieldValue);
-          placeholderText = `Enter ${label.toLowerCase()}`;
         } else {
-          // Show "0" as grayed-out placeholder when value is 0
           displayValue = "";
-          placeholderText = "0";
         }
+        // Always show meaningful placeholder for numbers
+        placeholderText = `Enter ${label.toLowerCase()}`;
       } else {
         displayValue = fieldValue || "";
         placeholderText = `Enter ${label.toLowerCase()}`;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { mockUsers } from "@/lib/Constants";
+import { toast } from "sonner";
 import {
   DeleteConfirmationDialog,
   RolePermissionsOverview,
@@ -89,7 +90,7 @@ export default function UsersRolesManagement() {
 
   const handleSaveUser = async () => {
     if (!formData.first_name || !formData.email || !formData.role) {
-      alert("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -110,7 +111,7 @@ export default function UsersRolesManagement() {
               : user
           )
         );
-        alert("User updated successfully");
+        toast.success("User updated successfully");
       } else {
         // CREATE NEW USER (Mock implementation)
         const newUser: User = {
@@ -122,13 +123,13 @@ export default function UsersRolesManagement() {
           date_added: new Date().toISOString().split("T")[0],
         };
         setUsers([...users, newUser]);
-        alert("User created successfully");
+        toast.success("User created successfully");
       }
 
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error saving user:", error);
-      alert("Failed to save user. Please try again.");
+      toast.error("Failed to save user. Please try again.");
     }
   };
 
@@ -146,10 +147,10 @@ export default function UsersRolesManagement() {
     try {
       // Mock deletion (remove user from state)
       setUsers(users.filter((user) => user.id !== userToDelete.id));
-      alert("User deleted successfully");
+      toast.success("User deleted successfully");
     } catch (error) {
       console.error("Error deleting user:", error);
-      alert("Failed to delete user. Please try again.");
+      toast.error("Failed to delete user. Please try again.");
     }
 
     setIsDeleteDialogOpen(false);

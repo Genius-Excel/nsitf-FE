@@ -244,15 +244,25 @@ const ComplianceDashboard: React.FC = () => {
       toast.error("You don't have permission to delete regions");
       return;
     }
-    if (
-      window.confirm(`Delete region '${regionName}'? This cannot be undone.`)
-    ) {
-      try {
-        await deleteRegion(regionId, regionName);
-      } catch (err) {
-        // Error handled in mutation hook
-      }
-    }
+
+    // Use toast with custom action for confirmation
+    toast.error(`Delete region '${regionName}'?`, {
+      description: "This action cannot be undone.",
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            await deleteRegion(regionId, regionName);
+          } catch (err) {
+            // Error handled in mutation hook
+          }
+        },
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {},
+      },
+    });
   };
 
   const handleAddBranch = async (
@@ -276,15 +286,25 @@ const ComplianceDashboard: React.FC = () => {
       toast.error("You don't have permission to delete branches");
       return;
     }
-    if (
-      window.confirm(`Delete branch '${branchName}'? This cannot be undone.`)
-    ) {
-      try {
-        await deleteBranch(branchId, branchName);
-      } catch (err) {
-        // Error handled in mutation hook
-      }
-    }
+
+    // Use toast with custom action for confirmation
+    toast.error(`Delete branch '${branchName}'?`, {
+      description: "This action cannot be undone.",
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            await deleteBranch(branchId, branchName);
+          } catch (err) {
+            // Error handled in mutation hook
+          }
+        },
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {},
+      },
+    });
   };
 
   const handleCreateRegionClick = () => {
@@ -412,21 +432,26 @@ const ComplianceDashboard: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2 sm:gap-3">
-          <Button
-            onClick={handleCreateRegionClick}
-            className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
-          >
-            <Plus size={18} />
-            <span>Manage Region</span>
-          </Button>
-          <Button
-            onClick={() => branchModal.open()}
-            variant="outline"
-            className="flex-1 sm:flex-none border-green-600 text-green-600 hover:bg-green-50"
-          >
-            <Plus size={18} />
-            <span>Manage Branches</span>
-          </Button>
+          {/* Only show region/branch management for users with permission */}
+          {canManage && (
+            <>
+              <Button
+                onClick={handleCreateRegionClick}
+                className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
+              >
+                <Plus size={18} />
+                <span>Manage Region</span>
+              </Button>
+              <Button
+                onClick={() => branchModal.open()}
+                variant="outline"
+                className="flex-1 sm:flex-none border-green-600 text-green-600 hover:bg-green-50"
+              >
+                <Plus size={18} />
+                <span>Manage Branches</span>
+              </Button>
+            </>
+          )}
         </div>
       </div>
 

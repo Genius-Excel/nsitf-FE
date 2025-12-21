@@ -79,11 +79,14 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
 
   // Check if user can edit (Regional Officer, Admin, HQ, HOD)
   const normalizedRole = userRole?.toLowerCase();
+  const isApproved =
+    claimDetail?.audit?.recordStatus?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
       normalizedRole
-    );
+    ) &&
+    !isApproved; // Disable editing for approved records
 
   // Check if user can review (Regional Officer and Admin)
   const canReview =
