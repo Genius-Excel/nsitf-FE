@@ -6,12 +6,14 @@ import HttpService from "@/services/httpServices";
 export interface Role {
   id: string;
   name: string;
+  roleName: string;
   description?: string;
 }
 
 // API returns this structure
 interface RoleApiResponse {
   role_id: string;
+  role_name: string;
   display_name: string;
   description?: string;
 }
@@ -47,6 +49,7 @@ export const useRoles = () => {
       const transformRole = (apiRole: RoleApiResponse): Role => ({
         id: apiRole.role_id,
         name: apiRole.display_name,
+        roleName: apiRole.role_name,
         description: apiRole.description || "",
       });
 
