@@ -17,6 +17,12 @@ interface MonthlyDebtsData {
   debtsRecovered: number;
 }
 
+interface UseInspectionMetricsParams {
+  period?: string; // Format: YYYY-MM
+  period_from?: string; // Format: YYYY-MM
+  period_to?: string; // Format: YYYY-MM
+}
+
 interface UseInspectionMetricsReturn {
   metrics: InspectionMetrics | null;
   monthlyChart: MonthlyDebtsData[] | null;
@@ -26,10 +32,12 @@ interface UseInspectionMetricsReturn {
 }
 
 /**
- * Fetches inspection metrics (KPI cards and charts) without filters
- * Always shows overall data regardless of table filters
+ * Fetches inspection metrics (KPI cards and charts) with optional period filters
+ * Controlled by MetricsFilter component
  */
-export const useInspectionMetrics = (): UseInspectionMetricsReturn => {
+export const useInspectionMetrics = (
+  params?: UseInspectionMetricsParams
+): UseInspectionMetricsReturn => {
   const [metrics, setMetrics] = useState<InspectionMetrics | null>(null);
   const [monthlyChart, setMonthlyChart] = useState<MonthlyDebtsData[] | null>(
     null
@@ -42,7 +50,16 @@ export const useInspectionMetrics = (): UseInspectionMetricsReturn => {
       setLoading(true);
       setError(null);
 
-      const url = `/api/inspection-ops/metrics`;
+      // Build query string from params
+      const queryParams = new URLSearchParams();
+      if (params?.period) queryParams.append("period", params.period);
+      if (params?.period_from)
+        queryParams.append("period_from", params.period_from);
+      if (params?.period_to) queryParams.append("period_to", params.period_to);
+
+      const url = `/api/inspection-ops/metrics${
+        queryParams.toString() ? `?${queryParams.toString()}` : ""
+      }`;
       const response = await http.getData(url);
 
       console.log("🔍 [useInspectionMetrics] API Response:", response);
@@ -99,7 +116,7 @@ export const useInspectionMetrics = (): UseInspectionMetricsReturn => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [params]);
 
   useEffect(() => {
     fetchMetrics();

@@ -84,7 +84,7 @@ export default function ClaimsManagement() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
 
-  // Metrics filters state
+  // ============= METRICS FILTERS STATE =============
   const [metricsFilters, setMetricsFilters] = useState({
     selectedMonth: undefined as string | undefined,
     selectedYear: undefined as string | undefined,
@@ -106,11 +106,6 @@ export default function ClaimsManagement() {
   };
 
   // ==========================================
-  // PERMISSIONS REMOVED
-  // ==========================================
-  // All users can access upload and management features
-
-  // ==========================================
   // API HOOKS
   // ==========================================
 
@@ -122,14 +117,53 @@ export default function ClaimsManagement() {
     Paid: "approved",
   };
 
-  // Memoize manage claims params to prevent infinite re-renders
-  // The hook now handles mutual exclusivity between period and period_from/period_to
-  const manageClaimsParams = useMemo(
+  // ============= API FILTERS =============
+  // Metrics API params (for top cards)
+  const metricsApiParams = useMemo(() => {
+    const params: any = {};
+
+    if (metricsFilters.selectedMonth && metricsFilters.selectedYear) {
+      const monthIndex =
+        [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ].indexOf(metricsFilters.selectedMonth) + 1;
+      const monthStr = monthIndex.toString().padStart(2, "0");
+      params.period = `${metricsFilters.selectedYear}-${monthStr}`;
+    }
+
+    if (metricsFilters.periodFrom) {
+      params.period_from = metricsFilters.periodFrom;
+    }
+    if (metricsFilters.periodTo) {
+      params.period_to = metricsFilters.periodTo;
+    }
+
+    return params;
+  }, [metricsFilters]);
+
+  // Table API params (for data table)
+  const tableApiParams = useMemo(
     () => ({
       page: 1,
       branch_id: apiParams.branch_id || undefined,
       region_id: apiParams.region_id || undefined,
-      record_status: filters.recordStatus || undefined,
+      record_status:
+        (apiParams.record_status as
+          | "pending"
+          | "reviewed"
+          | "approved"
+          | undefined) || undefined,
       period: apiParams.period || undefined,
       period_from: apiParams.period_from || undefined,
       period_to: apiParams.period_to || undefined,
@@ -137,19 +171,24 @@ export default function ClaimsManagement() {
     [
       apiParams.branch_id,
       apiParams.region_id,
-      filters.recordStatus,
+      apiParams.record_status,
       apiParams.period,
       apiParams.period_from,
       apiParams.period_to,
     ]
   );
 
-  // 1. Fetch claims from manage-claims endpoint (supports record_status filtering)
-  const { claims, pagination, loading, error, refetch, setPage } =
-    useManageClaims(manageClaimsParams);
+  // 1. Fetch claims metrics (controlled by MetricsFilter)
+  const {
+    metrics,
+    categories,
+    monthlyChart,
+    refetch: refetchMetrics,
+  } = useClaimsDashboard(metricsApiParams);
 
-  // 2. Fetch dashboard metrics separately for KPI cards (without filters - shows overall data)
-  const { metrics, categories, monthlyChart } = useClaimsDashboard();
+  // 2. Fetch claims from manage-claims endpoint (controlled by AdvancedFilterPanel)
+  const { claims, pagination, loading, error, refetch, setPage } =
+    useManageClaims(tableApiParams);
 
   // 3. Client-side filtering (search term and type filter)
   const { filteredClaims } = useClaimsFilters({

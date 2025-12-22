@@ -25,7 +25,9 @@ interface UseInspectionDashboardReturn {
   refetch: () => Promise<void>;
 }
 
-export function useInspectionDashboard(filters: Record<string, string> = {}): UseInspectionDashboardReturn {
+export function useInspectionDashboard(
+  filters: Record<string, string> = {}
+): UseInspectionDashboardReturn {
   const [data, setData] = useState<InspectionDashboard | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,10 +41,20 @@ export function useInspectionDashboard(filters: Record<string, string> = {}): Us
 
       const httpService = new HttpService();
 
-      // Build query string from filters
-      const queryParams = new URLSearchParams(filters).toString();
-      const url = queryParams
-        ? `/api/inspection-ops/inspections/dashboard?${queryParams}`
+      // Build query string from filters - only include defined values
+      const queryParams = new URLSearchParams();
+      if (filters.period) queryParams.append("period", filters.period);
+      if (filters.period_from)
+        queryParams.append("period_from", filters.period_from);
+      if (filters.period_to) queryParams.append("period_to", filters.period_to);
+      if (filters.region_id) queryParams.append("region_id", filters.region_id);
+      if (filters.branch_id) queryParams.append("branch_id", filters.branch_id);
+      if (filters.record_status)
+        queryParams.append("record_status", filters.record_status);
+
+      const queryString = queryParams.toString();
+      const url = queryString
+        ? `/api/inspection-ops/inspections/dashboard?${queryString}`
         : "/api/inspection-ops/inspections/dashboard";
 
       const response = await httpService.getData(url);
@@ -76,11 +88,15 @@ export function useInspectionDashboard(filters: Record<string, string> = {}): Us
       console.error("❌ [Inspection Dashboard] Error response:", err.response);
       console.error("❌ [Inspection Dashboard] Error message:", err.message);
 
-      const errorMessage = err.response?.data?.message ||
-          err.message ||
-          "Failed to load inspection dashboard";
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to load inspection dashboard";
 
-      console.error("❌ [Inspection Dashboard] Setting error state:", errorMessage);
+      console.error(
+        "❌ [Inspection Dashboard] Setting error state:",
+        errorMessage
+      );
       setError(errorMessage);
       setData(null);
     } finally {

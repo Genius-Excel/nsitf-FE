@@ -102,20 +102,81 @@ export default function LegalManagementDashboard() {
     module: "legal",
   });
 
-  // Fetch ALL records without filters to show complete metrics
+  // ============= API FILTERS =============
+  // Metrics API params (for top cards)
+  const metricsApiParams = useMemo(() => {
+    const params: any = {};
+
+    if (metricsFilters.selectedMonth && metricsFilters.selectedYear) {
+      const monthIndex =
+        [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ].indexOf(metricsFilters.selectedMonth) + 1;
+      const monthStr = monthIndex.toString().padStart(2, "0");
+      params.period = `${metricsFilters.selectedYear}-${monthStr}`;
+    }
+
+    if (metricsFilters.periodFrom) {
+      params.period_from = metricsFilters.periodFrom;
+    }
+    if (metricsFilters.periodTo) {
+      params.period_to = metricsFilters.periodTo;
+    }
+
+    return params;
+  }, [metricsFilters]);
+
+  // Table API params (for data table)
+  const tableApiParams = useMemo(
+    () => ({
+      regionId: apiParams.region_id || undefined,
+      branchId: apiParams.branch_id || undefined,
+      period: apiParams.period || undefined,
+      periodFrom: apiParams.period_from || undefined,
+      periodTo: apiParams.period_to || undefined,
+      recordStatus: apiParams.record_status || undefined,
+    }),
+    [apiParams]
+  );
+
+  // Fetch metrics data (controlled by MetricsFilter)
+  const {
+    records: metricsRecords,
+    loading: metricsLoading,
+    refetch: refetchMetrics,
+  } = useManageLegal({
+    ...metricsApiParams,
+    regionId: metricsApiParams.region_id,
+    branchId: metricsApiParams.branch_id,
+    periodFrom: metricsApiParams.period_from,
+    periodTo: metricsApiParams.period_to,
+  });
+
+  // Fetch table data (controlled by AdvancedFilterPanel)
   const {
     records: allRecords,
-    loading,
+    loading: tableLoading,
     error,
-    refetch,
-  } = useManageLegal({
-    // Don't pass any filters - get all records
-    regionId: undefined,
-    branchId: undefined,
-    period: undefined,
-    periodFrom: undefined,
-    periodTo: undefined,
-  });
+    refetch: refetchTable,
+  } = useManageLegal(tableApiParams);
+
+  // Combined states
+  const loading = metricsLoading || tableLoading;
+  const refetch = () => {
+    refetchMetrics();
+    refetchTable();
+  };
 
   // Debug logging
   useEffect(() => {
@@ -132,29 +193,29 @@ export default function LegalManagementDashboard() {
     loading: bulkLoading,
   } = useBulkLegalActions();
 
-  // Calculate metrics from ALL records (not filtered) so metrics aren't affected by filters
+  // Calculate metrics from metricsRecords (controlled by MetricsFilter)
   const metrics = useMemo(
     () => ({
-      recalcitrantEmployers: allRecords.reduce(
+      recalcitrantEmployers: metricsRecords.reduce(
         (sum, r) => sum + r.recalcitrantEmployers,
         0
       ),
-      defaultingEmployers: allRecords.reduce(
+      defaultingEmployers: metricsRecords.reduce(
         (sum, r) => sum + r.defaultingEmployers,
         0
       ),
-      planIssued: allRecords.reduce((sum, r) => sum + r.planIssued, 0),
-      adrCases: allRecords.reduce(
+      planIssued: metricsRecords.reduce((sum, r) => sum + r.planIssued, 0),
+      adrCases: metricsRecords.reduce(
         (sum, r) => sum + r.alternateDisputeResolution,
         0
       ),
-      casesInstituted: allRecords.reduce(
+      casesInstituted: metricsRecords.reduce(
         (sum, r) => sum + r.casesInstitutedInCourt,
         0
       ),
-      casesWon: allRecords.reduce((sum, r) => sum + r.casesWon, 0),
+      casesWon: metricsRecords.reduce((sum, r) => sum + r.casesWon, 0),
     }),
-    [allRecords]
+    [metricsRecords]
   );
 
   // Sync selectedRecord when data refreshes

@@ -38,16 +38,26 @@ export function useHSEDashboard(
 
       const httpService = new HttpService();
 
-      // Build query string from filters
-      const queryParams = new URLSearchParams(filters).toString();
+      // Build query string from filters - only include defined values
+      const queryParams = new URLSearchParams();
+      if (filters.period) queryParams.append("period", filters.period);
+      if (filters.period_from)
+        queryParams.append("period_from", filters.period_from);
+      if (filters.period_to) queryParams.append("period_to", filters.period_to);
+      if (filters.region_id) queryParams.append("region_id", filters.region_id);
+      if (filters.branch_id) queryParams.append("branch_id", filters.branch_id);
+      if (filters.record_status)
+        queryParams.append("record_status", filters.record_status);
+
+      const queryString = queryParams.toString();
 
       // Fetch metrics and regional summary in parallel
       const [metricsResponse, summaryResponse] = await Promise.all([
         httpService.getData(
-          `/api/hse-ops/metrics${queryParams ? `?${queryParams}` : ""}`
+          `/api/hse-ops/metrics${queryString ? `?${queryString}` : ""}`
         ),
         httpService.getData(
-          `/api/hse-ops/manage-hse${queryParams ? `?${queryParams}` : ""}`
+          `/api/hse-ops/manage-hse${queryString ? `?${queryString}` : ""}`
         ),
       ]);
 
