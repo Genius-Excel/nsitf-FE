@@ -6,6 +6,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -16,13 +18,30 @@ export async function GET(request: NextRequest) {
     // Generate mock records
     const allRecords = Array.from({ length: 50 }, (_, i) => ({
       id: `${i + 1}`,
-      month: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][i % 12],
+      month: [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ][i % 12],
       region: ["Lagos", "Abuja", "Port Harcourt", "Kano", "Kaduna"][i % 5],
       branch: `Branch ${i + 1}`,
-      contributionsPrivateSector: Math.floor(Math.random() * 50000000) + 20000000,
-      contributionsPublicTreasury: Math.floor(Math.random() * 35000000) + 15000000,
-      contributionsPublicNonTreasury: Math.floor(Math.random() * 30000000) + 10000000,
-      contributionsInformalEconomy: Math.floor(Math.random() * 20000000) + 5000000,
+      contributionsPrivateSector:
+        Math.floor(Math.random() * 50000000) + 20000000,
+      contributionsPublicTreasury:
+        Math.floor(Math.random() * 35000000) + 15000000,
+      contributionsPublicNonTreasury:
+        Math.floor(Math.random() * 30000000) + 10000000,
+      contributionsInformalEconomy:
+        Math.floor(Math.random() * 20000000) + 5000000,
       rentalFees: Math.floor(Math.random() * 10000000) + 3000000,
       ecsRegistrationFees: Math.floor(Math.random() * 5000000) + 1000000,
       ecsCertificateFees: Math.floor(Math.random() * 4000000) + 800000,
