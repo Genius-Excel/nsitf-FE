@@ -111,18 +111,45 @@ export function AdvancedFilterPanel({
   // Determine if using range mode
   const isRangeMode = pendingFilters.useRangeMode ?? false;
 
-  // Determine if user is admin (can see all regions) - case-insensitive
-  const normalizedRole = userRole?.toLowerCase();
-  const isAdmin = normalizedRole === "admin" || normalizedRole === "manager";
+  // Admin, Manager, and specialized officers get full filter access
+  // Regional officers/managers are locked to their region
+  const normalizedRole = userRole?.toLowerCase().trim().replace(/\s+/g, "_");
+  const isAdmin =
+    normalizedRole === "admin" ||
+    normalizedRole === "manager" ||
+    normalizedRole === "legal_officer" ||
+    normalizedRole === "hse_officer" ||
+    normalizedRole === "compliance_officer" ||
+    normalizedRole === "claims_officer" ||
+    normalizedRole === "actuary" ||
+    normalizedRole === "inspection_officer" ||
+    normalizedRole === "inspector_officer";
 
   // Filter regions based on user role
   const visibleRegions = useMemo(() => {
+    console.log("🔍 [AdvancedFilterPanel] Filtering regions:", {
+      totalRegions: regions.length,
+      isAdmin,
+      userRole,
+      normalizedRole,
+      userRegionId,
+    });
+
     if (isAdmin) {
+      console.log(
+        "✅ [AdvancedFilterPanel] Admin user - showing all regions:",
+        regions.length
+      );
       return regions;
     }
-    // Regional officer: only show their region
-    return regions.filter((r) => r.id === userRegionId);
-  }, [regions, isAdmin, userRegionId]);
+    // Regional users: only show their region
+    const filtered = regions.filter((r) => r.id === userRegionId);
+    console.log(
+      "🔍 [AdvancedFilterPanel] Regional user - filtered regions:",
+      filtered.length
+    );
+    return filtered;
+  }, [regions, isAdmin, userRegionId, userRole, normalizedRole]);
 
   // Filter branches based on selected region
   const visibleBranches = useMemo(() => {
@@ -347,8 +374,8 @@ export function AdvancedFilterPanel({
           id="filter-content"
           className="px-4 py-4 border-t border-gray-200 space-y-4"
         >
-          {/* Region Filter - Only show for Admin */}
-          {showRegionFilter && isAdmin && (
+          {/* Region Filter */}
+          {showRegionFilter && (
             <div>
               <label
                 htmlFor="region-filter"
@@ -365,9 +392,9 @@ export function AdvancedFilterPanel({
                   <SelectValue placeholder="All Regions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Regions</SelectItem>
+                  {isAdmin && <SelectItem value="all">All Regions</SelectItem>}
                   {visibleRegions.length === 0 && (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="no-regions" disabled>
                       No regions available
                     </SelectItem>
                   )}
