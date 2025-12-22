@@ -65,6 +65,7 @@ export default function ClaimsManagement() {
     userRegionId,
     handleFilterChange,
     resetFilters,
+    fetchBranchesForRegion,
   } = useAdvancedFilters({
     module: "claims",
   });
@@ -482,6 +483,7 @@ export default function ClaimsManagement() {
             filters={filters}
             onFilterChange={handleFilterChange}
             onReset={resetFilters}
+            onRegionChange={fetchBranchesForRegion}
             totalEntries={claims.length}
             filteredCount={filteredClaims.length}
             userRole={userRole}

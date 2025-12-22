@@ -380,5 +380,6 @@ export function useAdvancedFilters({
     resetFilters,
     refetchRegions: fetchRegions,
     refetchBranches: () => fetchBranches(filters.selectedRegionId),
+    fetchBranchesForRegion: fetchBranches, // Allow fetching branches for any region
   };
 }

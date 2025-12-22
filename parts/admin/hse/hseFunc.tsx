@@ -101,6 +101,7 @@ export default function HSEDashboardContent() {
     userRegionId,
     handleFilterChange,
     resetFilters,
+    fetchBranchesForRegion,
   } = useAdvancedFilters({
     module: "hse",
   });
@@ -418,6 +419,7 @@ export default function HSEDashboardContent() {
         filters={filters}
         onFilterChange={handleFilterChange}
         onReset={handleResetFilters}
+        onRegionChange={fetchBranchesForRegion}
         totalEntries={totalCount}
         filteredCount={filteredCount}
         userRole={userRole}
