@@ -59,13 +59,17 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
 
   if (!isOpen || !record) return null;
 
+  const displayData = editedData || record;
+
   // Permission checks
   const normalizedRole = userRole?.toLowerCase();
+  const isApproved = displayData?.recordStatus?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
       normalizedRole
-    );
+    ) &&
+    !isApproved; // Disable editing for approved records
   const canReview =
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer" ||
@@ -73,8 +77,6 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
     normalizedRole === "manager";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
-
-  const displayData = editedData || record;
 
   const handleEdit = () => {
     setIsEditMode(true);

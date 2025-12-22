@@ -568,13 +568,17 @@ export const RegionalRecordViewModal: React.FC<{
 
   if (!isOpen || !record) return null;
 
+  const displayData = editedData || record;
+
   // Permission checks (case-insensitive)
   const normalizedRole = userRole?.toLowerCase();
+  const isApproved = displayData?.record_status?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
       normalizedRole
-    );
+    ) &&
+    !isApproved; // Disable editing for approved records
   const canReview =
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer" ||
@@ -582,8 +586,6 @@ export const RegionalRecordViewModal: React.FC<{
     normalizedRole === "manager";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
-
-  const displayData = editedData || record;
 
   const handleEdit = () => {
     setIsEditMode(true);

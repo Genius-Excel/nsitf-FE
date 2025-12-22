@@ -254,7 +254,7 @@ export const ViewDetailsModal: React.FC<{
     ["regional_manager", "regional officer", "admin", "manager"].includes(
       normalizedRole
     ) &&
-    !isApproved;
+    !isApproved; // Disable editing for approved records
 
   // Check if user can review (Regional Officer and Admin)
   const canReview =

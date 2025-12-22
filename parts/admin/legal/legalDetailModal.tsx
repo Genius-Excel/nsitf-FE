@@ -113,6 +113,14 @@ Generated on: ${new Date().toLocaleString()}
   // Permission checks (case-insensitive)
   const normalizedRole = userRole?.toLowerCase();
   const isApproved = displayData?.recordStatus?.toLowerCase() === "approved";
+
+  console.log("🔍 [Legal Modal] Edit check:", {
+    recordStatus: displayData?.recordStatus,
+    recordStatusLower: displayData?.recordStatus?.toLowerCase(),
+    isApproved,
+    normalizedRole,
+  });
+
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
