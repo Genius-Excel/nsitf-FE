@@ -21,6 +21,25 @@ interface UseAdvancedFiltersProps {
   onFiltersChange?: (params: Record<string, string>) => void;
 }
 
+// Helper to check if user can see all regions
+// Admin, Manager, and specialized officers (legal, hse, compliance, claims, inspection) get full region access
+// Regional officers and regional managers are locked to their region
+const isHQRole = (role: string | undefined) => {
+  if (!role) return true; // Default to full access if role is undefined
+  const normalized = role.toLowerCase().trim().replace(/\s+/g, "_");
+  return (
+    normalized === "admin" ||
+    normalized === "manager" ||
+    normalized === "legal_officer" ||
+    normalized === "hse_officer" ||
+    normalized === "compliance_officer" ||
+    normalized === "claims_officer" ||
+    normalized === "actuary" ||
+    normalized === "inspection_officer" ||
+    normalized === "inspector_officer"
+  );
+};
+
 export function useAdvancedFilters({
   module,
   onFiltersChange,
@@ -70,10 +89,35 @@ export function useAdvancedFilters({
   const currentMonth = String(now.getMonth() + 1);
   const currentYear = String(now.getFullYear());
 
+  // Determine initial region based on user role
+  const getInitialRegionId = () => {
+    const isRegionalUser = !isHQRole(userRole);
+    console.log("🔍 [useAdvancedFilters] getInitialRegionId called:", {
+      userRole,
+      normalizedRole: userRole?.toLowerCase().trim(),
+      userRegionId,
+      isRegionalUser,
+      isHQRole: isHQRole(userRole),
+    });
+
+    // For regional officers/managers, use their region_id
+    if (isRegionalUser && userRegionId) {
+      console.log(
+        "✅ [useAdvancedFilters] Initializing with regional user's region:",
+        userRegionId
+      );
+      return userRegionId;
+    }
+    // For HQ users (admin, officers, etc.), start with empty (all regions)
+    console.log(
+      "🔍 [useAdvancedFilters] Initializing with empty region (HQ user)"
+    );
+    return "";
+  };
+
   // Filter state
   const [filters, setFilters] = useState<FilterConfig>({
-    selectedRegionId:
-      userRole !== "admin" && userRole !== "manager" ? userRegionId || "" : "",
+    selectedRegionId: getInitialRegionId(),
     selectedBranchId: "",
     selectedMonth: "", // Empty defaults to current year
     selectedYear: "", // Empty defaults to current year
@@ -134,14 +178,20 @@ export function useAdvancedFilters({
       const result = await response.json();
       console.log("Regions API response:", result);
 
+      // API returns: { message, count, data: Region[] }
       // Handle different response structures
       let regionData: any[] = [];
-      if (Array.isArray(result)) {
-        regionData = result;
-      } else if (result.data && Array.isArray(result.data)) {
+      if (result.data && Array.isArray(result.data)) {
+        // Standard API format: { data: Region[] }
         regionData = result.data;
+      } else if (Array.isArray(result)) {
+        // Direct array
+        regionData = result;
       } else if (result.regions && Array.isArray(result.regions)) {
+        // Alternative format
         regionData = result.regions;
+      } else {
+        console.warn("Unexpected API response structure:", result);
       }
 
       console.log("Extracted region data:", regionData);
@@ -251,33 +301,37 @@ export function useAdvancedFilters({
 
   // Fetch regions on mount
   useEffect(() => {
+    console.log(
+      "🔍 [useAdvancedFilters] useEffect triggered - calling fetchRegions"
+    );
     fetchRegions();
-  }, [fetchRegions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency - run once on mount
 
-  // Auto-select region for non-admin users when userRegionId becomes available
+  // Auto-select and lock region for regional users
   useEffect(() => {
-    const normalizedRole = userRole?.toLowerCase();
-    const isNonAdmin =
-      normalizedRole !== "admin" && normalizedRole !== "manager";
+    const isRegionalUser = !isHQRole(userRole);
 
-    console.log("🔍 [useAdvancedFilters] Auto-select check:", {
+    console.log("🔍 [useAdvancedFilters] Region sync check:", {
       userRole,
-      normalizedRole,
-      isNonAdmin,
+      normalizedRole: userRole?.toLowerCase().trim(),
+      isRegionalUser,
       userRegionId,
       currentSelectedRegionId: filters.selectedRegionId,
-      shouldAutoSelect: isNonAdmin && userRegionId && !filters.selectedRegionId,
     });
 
-    if (isNonAdmin && userRegionId && !filters.selectedRegionId) {
-      console.log(
-        "✅ [useAdvancedFilters] Auto-selecting region for regional officer:",
-        userRegionId
-      );
-      setFilters((prev) => ({
-        ...prev,
-        selectedRegionId: userRegionId,
-      }));
+    // For regional officers/managers: force their region to be selected
+    if (isRegionalUser && userRegionId) {
+      if (filters.selectedRegionId !== userRegionId) {
+        console.log(
+          "✅ [useAdvancedFilters] Locking region for regional user:",
+          userRegionId
+        );
+        setFilters((prev) => ({
+          ...prev,
+          selectedRegionId: userRegionId,
+        }));
+      }
     }
   }, [userRole, userRegionId, filters.selectedRegionId]);
 
@@ -353,10 +407,7 @@ export function useAdvancedFilters({
   // Reset filters
   const resetFilters = useCallback(() => {
     setFilters({
-      selectedRegionId:
-        userRole !== "admin" && userRole !== "manager"
-          ? userRegionId || ""
-          : "",
+      selectedRegionId: isHQRole(userRole) ? "" : userRegionId || "",
       selectedBranchId: "",
       selectedMonth: "", // Empty defaults to current year
       selectedYear: "", // Empty defaults to current year

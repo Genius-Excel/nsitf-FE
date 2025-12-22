@@ -56,15 +56,24 @@ export function LoginForm() {
 
     console.log("🔍 [LoginForm] Extracted user data:", userData);
 
-    // If userData exists but missing region_id for regional officers, fetch full profile
-    if (
-      userData &&
-      !userData.region_id &&
-      userData.role !== "admin" &&
-      userData.role !== "manager" &&
-      userData.role !== "Admin" &&
-      userData.role !== "Manager"
-    ) {
+    // Normalize role for consistent checking
+    const normalizedRole = userData?.role
+      ?.toLowerCase()
+      .trim()
+      .replace(/\s+/g, "_");
+    const isRegionalUser =
+      normalizedRole === "regional_officer" ||
+      normalizedRole === "regional_manager";
+
+    console.log("🔍 [LoginForm] Role check:", {
+      originalRole: userData?.role,
+      normalizedRole,
+      isRegionalUser,
+      hasRegionId: !!userData?.region_id,
+    });
+
+    // If regional user is missing region_id, fetch full profile
+    if (userData && isRegionalUser && !userData.region_id) {
       console.log(
         "🔍 [LoginForm] Regional user missing region_id, fetching full profile..."
       );

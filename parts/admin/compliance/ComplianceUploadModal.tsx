@@ -61,7 +61,11 @@ export const ComplianceUploadModal: React.FC<ComplianceUploadModalProps> = ({
   const user = getUserFromStorage();
   const userRegionId = user?.region_id;
   const userRole = user?.role?.toLowerCase();
-  const isRegionalOfficer = userRole !== "admin" && userRole !== "manager";
+  // Only regional_officer and regional_manager are regional roles
+  const normalizedRole = userRole?.toLowerCase().replace(/\s+/g, "_");
+  const isRegionalOfficer =
+    normalizedRole === "regional_officer" ||
+    normalizedRole === "regional_manager";
 
   // Support backend-provided list of branches the regional manager heads
   const managedBranchIds: string[] =

@@ -62,7 +62,11 @@ export const HSEUploadModal: React.FC<HSEUploadModalProps> = ({
   const user = getUserFromStorage();
   const userRegionId = user?.region_id;
   const userRole = user?.role?.toLowerCase();
-  const isRegionalOfficer = userRole !== "admin" && userRole !== "manager";
+  // Only regional_officer and regional_manager are regional roles
+  const normalizedRole = userRole?.toLowerCase().replace(/\s+/g, "_");
+  const isRegionalOfficer =
+    normalizedRole === "regional_officer" ||
+    normalizedRole === "regional_manager";
 
   // If backend provides a list of branches the regional manager heads,
   // prefer that list to restrict branch choices. Supported keys:

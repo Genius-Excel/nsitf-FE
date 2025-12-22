@@ -271,30 +271,24 @@ export function AppSidebar({
           .toLowerCase()
           .replace(/\s+/g, "_");
 
-        // Use the normalized role directly - no mapping needed
-        // Each role (regional_officer, compliance_officer, etc.) is distinct
-        const mappedRole = normalizedRole;
-
         const fetchedUser: User = {
           email: userData[0].email,
           id: userData[0].user_id,
           name: `${userData[0].first_name} ${userData[0].last_name}`,
-          role: mappedRole,
+          role: normalizedRole,
         };
         console.log("user data", userData[0]);
         console.log("normalized role", normalizedRole);
-        console.log("mapped role", mappedRole);
         // Validate role
         if (!validRoles.includes(fetchedUser.role as Role)) {
           setError(
-            `Invalid user role detected: ${mappedRole}. Expected one of: ${validRoles.join(
+            `Invalid user role detected: ${normalizedRole}. Expected one of: ${validRoles.join(
               ", "
             )}`
           );
           console.error("Role validation failed:", {
             originalRole: userData[0].role,
             normalizedRole,
-            mappedRole,
             validRoles,
           });
           setIsLoading(false);
