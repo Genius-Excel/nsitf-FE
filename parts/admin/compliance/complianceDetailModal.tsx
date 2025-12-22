@@ -264,9 +264,9 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
     setIsSubmitting(true);
     try {
       const newStatus = confirmAction === "reviewed" ? "reviewed" : "approved";
-      const success = await updateSingleCompliance(entry.id, newStatus);
+      const result = await updateSingleCompliance(entry.id, newStatus);
 
-      if (success) {
+      if (result.success) {
         const message =
           confirmAction === "reviewed"
             ? "Compliance record marked as reviewed successfully"
@@ -276,47 +276,15 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
         setShowConfirmDialog(false);
         setConfirmAction(null);
 
-        // Get current user information
-        const currentUser = getUserFromStorage();
-        const userName =
-          currentUser?.name ||
-          (currentUser?.first_name && currentUser?.last_name
-            ? `${currentUser.first_name} ${currentUser.last_name}`
-            : currentUser?.email || "Unknown User");
-
-        // Update both the local entry and editedData to reflect the new status and audit info
-        const auditUpdates = {
-          recordStatus: newStatus,
-          ...(confirmAction === "reviewed"
-            ? { reviewedBy: userName }
-            : {
-                approvedBy: userName,
-                reviewedBy: entry.reviewedBy || userName,
-              }),
-          updatedAt: new Date().toISOString(),
-        };
-
-        if (entry) {
-          Object.assign(entry, auditUpdates);
-        }
-
-        if (editedData) {
-          setEditedData({
-            ...editedData,
-            ...auditUpdates,
-          });
-        }
-
+        // Refresh to get updated audit trail from backend
         if (onRefresh) {
-          onRefresh();
+          await onRefresh();
         }
 
-        // Only close modal after approval, keep it open after review
-        if (confirmAction === "approve") {
-          setTimeout(() => {
-            onClose();
-          }, 500);
-        }
+        // Close modal to ensure fresh data is shown when reopened
+        setTimeout(() => {
+          onClose();
+        }, 300);
       } else {
         toast.error("Failed to update status");
       }

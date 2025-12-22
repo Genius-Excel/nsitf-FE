@@ -172,23 +172,30 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
     type: "text" | "number" = "text"
   ) => {
     if (isEditMode && editedData) {
+      const fieldValue = field.includes(".")
+        ? field.split(".").reduce((obj, key) => obj?.[key], editedData as any)
+        : (editedData as any)[field];
+
       return (
         <div>
-          <label className="block text-xs text-gray-600 uppercase mb-1">
+          <label
+            htmlFor={field}
+            className="text-xs text-gray-600 uppercase block mb-1"
+          >
             {label}
           </label>
           <input
+            id={field}
             type={type}
-            value={value ?? ""}
+            value={fieldValue || ""}
             onChange={(e) =>
               handleFieldChange(
                 field,
-                type === "number" ? Number(e.target.value) : e.target.value
+                type === "number" ? parseFloat(e.target.value) : e.target.value
               )
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            title={label}
-            aria-label={label}
+            placeholder={label}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
           />
         </div>
       );
