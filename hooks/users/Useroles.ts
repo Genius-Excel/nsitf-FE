@@ -48,7 +48,7 @@ export const useRoles = () => {
       // Helper function to transform API response to our format
       const transformRole = (apiRole: RoleApiResponse): Role => ({
         id: apiRole.role_id,
-        name: apiRole.display_name,
+        name: apiRole.display_name || apiRole.role_name, // Fallback to role_name if display_name is null
         roleName: apiRole.role_name,
         description: apiRole.description || "",
       });
