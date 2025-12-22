@@ -186,20 +186,20 @@ Generated on: ${new Date().toLocaleString()}
       // Build payload with snake_case field names for API
       const payload: any = {};
 
-      // Performance Metrics - performance_rate is calculated, don't send it
-
-      // Inspection Activity (use exact API field names)
+      // Inspection Activity (use exact API field names from documentation)
       if (editedData.inspectionActivity) {
-        payload.inspections_conducted =
+        payload.inspection_conducted =
           editedData.inspectionActivity.inspectionsConducted;
-        payload.demand_notices_issued =
+        payload.demand_notice =
           editedData.inspectionActivity.demandNoticesIssued;
       }
 
-      // Financial Summary (use exact API field names)
+      // Financial Summary (use exact API field names from documentation)
       if (editedData.financialSummary) {
-        payload.debt_established = editedData.financialSummary.debtEstablished;
-        payload.debt_recovered = editedData.financialSummary.debtRecovered;
+        payload.cumulative_debt_established =
+          editedData.financialSummary.debtEstablished;
+        payload.cumulative_debt_recovered =
+          editedData.financialSummary.debtRecovered;
       }
 
       // Branch Information - keep period as string "YYYY-MM"

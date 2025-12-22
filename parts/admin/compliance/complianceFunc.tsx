@@ -391,6 +391,18 @@ const ComplianceDashboard: React.FC = () => {
     detailModal.open();
   };
 
+  const handleRefreshAfterUpdate = async () => {
+    // Refresh the dashboard list and wait for it to complete
+    await refetchDashboard();
+    // After refetch, find and update the selected entry with fresh data
+    if (selectedEntry?.id && mappedEntries) {
+      const updatedEntry = mappedEntries.find((e) => e.id === selectedEntry.id);
+      if (updatedEntry) {
+        setSelectedEntry(updatedEntry);
+      }
+    }
+  };
+
   const handleOpenUpload = () => {
     if (!canManage) {
       toast.error("You don't have permission to upload compliance data");
@@ -605,7 +617,7 @@ const ComplianceDashboard: React.FC = () => {
           detailModal.close();
           setSelectedEntry(null);
         }}
-        onRefresh={refetchDashboard}
+        onRefresh={handleRefreshAfterUpdate}
       />
 
       <ComplianceUploadModal

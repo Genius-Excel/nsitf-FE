@@ -18,7 +18,7 @@ interface UseBulkComplianceActionsReturn {
   updateSingleCompliance: (
     recordId: string,
     recordStatus: "reviewed" | "approved"
-  ) => Promise<boolean>;
+  ) => Promise<{ success: boolean; data?: any }>;
   updateComplianceDetails: (recordId: string, payload: any) => Promise<boolean>;
   loading: boolean;
   error: string | null;
@@ -168,10 +168,10 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
     async (
       recordId: string,
       recordStatus: "reviewed" | "approved"
-    ): Promise<boolean> => {
+    ): Promise<{ success: boolean; data?: any }> => {
       if (!recordId) {
         setError("Record ID is required");
-        return false;
+        return { success: false };
       }
 
       try {
@@ -204,7 +204,7 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
           recordStatus
         );
 
-        return true;
+        return { success: true, data: response.data };
       } catch (err: any) {
         const errorMessage =
           err?.response?.data?.message ||
@@ -214,7 +214,7 @@ export const useBulkComplianceActions = (): UseBulkComplianceActionsReturn => {
           } compliance record`;
         setError(errorMessage);
         console.error("Update compliance record error:", err);
-        return false;
+        return { success: false };
       } finally {
         setLoading(false);
       }
