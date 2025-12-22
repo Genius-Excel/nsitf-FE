@@ -87,9 +87,12 @@ const navigationItems: NavigationItem[] = [
     roles: [
       "admin",
       "manager",
-      "regional_manager",
-      "regional_officer",
       "compliance_officer",
+      "regional_manager",
+      "claims_officer",
+      "hse_officer",
+      "legal_officer",
+      "inspection_officer",
     ] as Role[],
   },
   {
@@ -99,10 +102,13 @@ const navigationItems: NavigationItem[] = [
     roles: [
       "admin",
       "manager",
+      "user",
       "regional_manager",
-      "regional_officer",
-      "actuary",
       "claims_officer",
+      "compliance_officer",
+      "hse_officer",
+      "legal_officer",
+      "inspection_officer",
     ] as Role[],
   },
   {
@@ -112,10 +118,13 @@ const navigationItems: NavigationItem[] = [
     roles: [
       "admin",
       "manager",
+      "user",
       "regional_manager",
-      "regional_officer",
+      "claims_officer",
+      "compliance_officer",
+      "hse_officer",
+      "legal_officer",
       "inspection_officer",
-      "inspector_officer",
     ] as Role[],
   },
   {
@@ -125,9 +134,13 @@ const navigationItems: NavigationItem[] = [
     roles: [
       "admin",
       "manager",
+      "user",
       "regional_manager",
-      "regional_officer",
+      "claims_officer",
+      "compliance_officer",
       "hse_officer",
+      "legal_officer",
+      "inspection_officer",
     ] as Role[],
   },
   {
@@ -138,8 +151,11 @@ const navigationItems: NavigationItem[] = [
       "admin",
       "manager",
       "regional_manager",
-      "regional_officer",
+      "claims_officer",
+      "compliance_officer",
+      "hse_officer",
       "legal_officer",
+      "inspection_officer",
     ] as Role[],
   },
   {
@@ -271,9 +287,12 @@ export function AppSidebar({
           .toLowerCase()
           .replace(/\s+/g, "_");
 
-        // Use the normalized role directly - no mapping needed
-        // Each role (regional_officer, compliance_officer, etc.) is distinct
-        const mappedRole = normalizedRole;
+        // Map backend role names to frontend role names
+        const roleMapping: Record<string, string> = {
+          regional_officer: "compliance_officer", // Regional Officer maps to compliance_officer
+        };
+
+        const mappedRole = roleMapping[normalizedRole] || normalizedRole;
 
         const fetchedUser: User = {
           email: userData[0].email,
