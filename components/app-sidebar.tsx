@@ -56,12 +56,16 @@ const validRoles = [
   "manager",
   "user",
   "regional_manager",
+  "regional_officer",
   "claims_officer",
   "compliance_officer",
   "hse_officer",
   "legal_officer",
   "inspection_officer",
+  "inspector_officer",
   "branch_data_officer",
+  "branch_officer",
+  "actuary",
 ] as const;
 type Role = (typeof validRoles)[number];
 
@@ -366,19 +370,40 @@ export function AppSidebar({
 
   // Filter navigation items based on user role and permissions
   const filteredNavItems = useMemo(() => {
+    if (!user?.role) return [];
+
+    const normalizedRole = user.role.toLowerCase();
+
+    // Define role-to-module mapping for specific officers
+    const roleModuleMapping: Record<string, string[]> = {
+      legal_officer: ["Legal"],
+      compliance_officer: ["Compliance"],
+      inspector_officer: ["Inspection"],
+      inspection_officer: ["Inspection"],
+      hse_officer: ["OSH"],
+      actuary: ["Claims and compensation"],
+    };
+
+    // Check if user is a specific officer role
+    const allowedModules = roleModuleMapping[normalizedRole];
+
     return navigationItems.filter((item) => {
+      // For specific officer roles, only show their designated module(s)
+      if (allowedModules) {
+        return allowedModules.includes(item.title);
+      }
+
+      // For other roles (admin, manager, regional_manager, etc.), apply normal filtering
       // Check role-based access
       const hasRoleAccess =
         !item.roles ||
-        (user?.role &&
-          validRoles.includes(user.role as Role) &&
+        (validRoles.includes(user.role as Role) &&
           item.roles.includes(user.role as Role));
 
       if (!hasRoleAccess) return false;
 
       // Check permission-based access if permission is specified
-      if (item.permission && user?.role) {
-        const normalizedRole = user.role.toLowerCase();
+      if (item.permission) {
         return hasPermission(
           normalizedRole as any,
           item.permission,

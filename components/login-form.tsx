@@ -152,16 +152,35 @@ export function LoginForm() {
     console.log("🔍 [LoginForm] userRole changed to:", userRole);
     if (userRole) {
       console.log("🔍 [LoginForm] Routing user with role:", userRole);
+
+      // Normalize role name to lowercase for comparison
+      const normalizedRole = userRole.toLowerCase();
+
       // Route users based on their role
-      if (userRole === "Branch Officer") {
+      if (normalizedRole === "branch officer") {
         console.log("🔍 [LoginForm] Navigating to /branch/dashboard");
         router.push("/branch/dashboard");
-      } else if (userRole === "Regional Officer") {
+      } else if (normalizedRole === "regional officer") {
         console.log("🔍 [LoginForm] Navigating to /admin/dashboard/compliance");
         router.push("/admin/dashboard/compliance");
+      } else if (normalizedRole === "legal officer") {
+        console.log("🔍 [LoginForm] Navigating to /admin/dashboard/legal");
+        router.push("/admin/dashboard/legal");
+      } else if (normalizedRole === "compliance officer") {
+        console.log("🔍 [LoginForm] Navigating to /admin/dashboard/compliance");
+        router.push("/admin/dashboard/compliance");
+      } else if (normalizedRole === "inspector officer") {
+        console.log("🔍 [LoginForm] Navigating to /admin/dashboard/inspection");
+        router.push("/admin/dashboard/inspection");
+      } else if (normalizedRole === "hse officer") {
+        console.log("🔍 [LoginForm] Navigating to /admin/dashboard/hse");
+        router.push("/admin/dashboard/hse");
+      } else if (normalizedRole === "actuary") {
+        console.log("🔍 [LoginForm] Navigating to /admin/dashboard/claims");
+        router.push("/admin/dashboard/claims");
       } else {
         console.log("🔍 [LoginForm] Navigating to /admin/dashboard");
-        // All other users route to /admin/dashboard
+        // All other users (Admin, Manager, etc.) route to main dashboard
         router.push("/admin/dashboard");
       }
       setIsLoading(false);
