@@ -8,6 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  getRoleDefaultRoute,
+  normalizeRole,
+  isValidRole,
+} from "@/lib/role-routing";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -153,36 +158,29 @@ export function LoginForm() {
     if (userRole) {
       console.log("🔍 [LoginForm] Routing user with role:", userRole);
 
-      // Normalize role name to lowercase for comparison
-      const normalizedRole = userRole.toLowerCase();
+      // Validate and normalize the role
+      if (!isValidRole(userRole)) {
+        console.error("❌ [LoginForm] Invalid role detected:", userRole);
+        toast.error("Invalid user role. Please contact support.");
+        setIsLoading(false);
+        return;
+      }
 
-      // Route users based on their role
-      if (normalizedRole === "branch officer") {
-        console.log("🔍 [LoginForm] Navigating to /branch/dashboard");
-        router.push("/branch/dashboard");
-      } else if (normalizedRole === "regional officer") {
-        console.log("🔍 [LoginForm] Navigating to /admin/dashboard/compliance");
-        router.push("/admin/dashboard/compliance");
-      } else if (normalizedRole === "legal officer") {
-        console.log("🔍 [LoginForm] Navigating to /admin/dashboard/legal");
-        router.push("/admin/dashboard/legal");
-      } else if (normalizedRole === "compliance officer") {
-        console.log("🔍 [LoginForm] Navigating to /admin/dashboard/compliance");
-        router.push("/admin/dashboard/compliance");
-      } else if (normalizedRole === "inspector officer") {
-        console.log("🔍 [LoginForm] Navigating to /admin/dashboard/inspection");
-        router.push("/admin/dashboard/inspection");
-      } else if (normalizedRole === "hse officer") {
-        console.log("🔍 [LoginForm] Navigating to /admin/dashboard/hse");
-        router.push("/admin/dashboard/hse");
-      } else if (normalizedRole === "actuary") {
-        console.log("🔍 [LoginForm] Navigating to /admin/dashboard/claims");
-        router.push("/admin/dashboard/claims");
+      // Get the default route for this role
+      const defaultRoute = getRoleDefaultRoute(userRole);
+
+      if (defaultRoute) {
+        console.log("🔍 [LoginForm] Navigating to:", defaultRoute);
+        router.push(defaultRoute);
       } else {
-        console.log("🔍 [LoginForm] Navigating to /admin/dashboard");
-        // All other users (Admin, Manager, etc.) route to main dashboard
+        console.warn(
+          "⚠️ [LoginForm] No default route found for role:",
+          userRole
+        );
+        console.log("🔍 [LoginForm] Falling back to /admin/dashboard");
         router.push("/admin/dashboard");
       }
+
       setIsLoading(false);
     }
   }, [userRole, router]);

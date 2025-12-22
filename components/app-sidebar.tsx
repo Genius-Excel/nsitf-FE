@@ -40,6 +40,12 @@ import {
 } from "@/components/ui/tooltip";
 import { useGetUserProfile } from "@/services/auth";
 import { hasPermission } from "@/lib/permissions";
+import {
+  getRoleModules,
+  normalizeRole,
+  validRoles,
+  type Role,
+} from "@/lib/role-routing";
 
 // Define User type for TypeScript
 interface User {
@@ -49,25 +55,6 @@ interface User {
   role: string;
   permissions?: string[];
 }
-
-// Define valid roles
-const validRoles = [
-  "admin",
-  "manager",
-  "user",
-  "regional_manager",
-  "regional_officer",
-  "claims_officer",
-  "compliance_officer",
-  "hse_officer",
-  "legal_officer",
-  "inspection_officer",
-  "inspector_officer",
-  "branch_data_officer",
-  "branch_officer",
-  "actuary",
-] as const;
-type Role = (typeof validRoles)[number];
 
 // Define navigation item type
 interface NavigationItem {
@@ -372,42 +359,41 @@ export function AppSidebar({
   const filteredNavItems = useMemo(() => {
     if (!user?.role) return [];
 
-    const normalizedRole = user.role.toLowerCase();
+    // Normalize the role to handle different naming conventions
+    const normalizedRole = normalizeRole(user.role);
+    if (!normalizedRole) {
+      console.error("❌ [AppSidebar] Invalid role:", user.role);
+      return [];
+    }
 
-    // Define role-to-module mapping for specific officers
-    const roleModuleMapping: Record<string, string[]> = {
-      legal_officer: ["Legal"],
-      compliance_officer: ["Compliance"],
-      inspector_officer: ["Inspection"],
-      inspection_officer: ["Inspection"],
-      hse_officer: ["OSH"],
-      actuary: ["Claims and compensation"],
-    };
-
-    // Check if user is a specific officer role
-    const allowedModules = roleModuleMapping[normalizedRole];
+    // Get allowed modules for this specific role
+    const allowedModules = getRoleModules(user.role);
 
     return navigationItems.filter((item) => {
-      // For specific officer roles, only show their designated module(s)
-      if (allowedModules) {
-        return allowedModules.includes(item.title);
+      // For specific officer roles with restricted modules, only show their designated module(s)
+      if (allowedModules.length > 0 && allowedModules.length < 5) {
+        // This is a restricted role (not admin/manager)
+        return allowedModules.some((module) =>
+          item.title.toLowerCase().includes(module.toLowerCase())
+        );
       }
 
       // For other roles (admin, manager, regional_manager, etc.), apply normal filtering
-      // Check role-based access
+      // Check role-based access with defensive null check
       const hasRoleAccess =
         !item.roles ||
-        (validRoles.includes(user.role as Role) &&
-          item.roles.includes(user.role as Role));
+        (user?.role &&
+          validRoles.includes(normalizedRole) &&
+          item.roles.includes(normalizedRole));
 
       if (!hasRoleAccess) return false;
 
       // Check permission-based access if permission is specified
       if (item.permission) {
         return hasPermission(
-          normalizedRole as any,
+          normalizedRole,
           item.permission,
-          user.permissions
+          user?.permissions
         );
       }
 
