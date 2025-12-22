@@ -119,6 +119,7 @@ const ComplianceDashboard: React.FC = () => {
     userRegionId,
     handleFilterChange,
     resetFilters: resetAdvancedFilters,
+    fetchBranchesForRegion,
   } = useAdvancedFilters({
     module: "compliance",
   });
@@ -479,6 +480,7 @@ const ComplianceDashboard: React.FC = () => {
         filters={filters}
         onFilterChange={handleFilterChange}
         onReset={handleResetFilters}
+        onRegionChange={fetchBranchesForRegion}
         totalEntries={totalCount}
         filteredCount={filteredCount}
         userRole={filterUserRole}

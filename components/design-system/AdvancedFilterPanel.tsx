@@ -62,6 +62,7 @@ interface AdvancedFilterPanelProps {
   // Callbacks
   onFilterChange: (filters: FilterConfig) => void;
   onReset: () => void;
+  onRegionChange?: (regionId: string) => void; // For fetching branches without applying filter
 
   // Counts
   totalEntries: number;
@@ -85,6 +86,7 @@ export function AdvancedFilterPanel({
   filters,
   onFilterChange,
   onReset,
+  onRegionChange,
   totalEntries,
   filteredCount,
   userRole,
@@ -132,18 +134,18 @@ export function AdvancedFilterPanel({
 
   // Generate months
   const months = [
-    { value: "January", label: "January" },
-    { value: "February", label: "February" },
-    { value: "March", label: "March" },
-    { value: "April", label: "April" },
-    { value: "May", label: "May" },
-    { value: "June", label: "June" },
-    { value: "July", label: "July" },
-    { value: "August", label: "August" },
-    { value: "September", label: "September" },
-    { value: "October", label: "October" },
-    { value: "November", label: "November" },
-    { value: "December", label: "December" },
+    { value: "1", label: "January" },
+    { value: "2", label: "February" },
+    { value: "3", label: "March" },
+    { value: "4", label: "April" },
+    { value: "5", label: "May" },
+    { value: "6", label: "June" },
+    { value: "7", label: "July" },
+    { value: "8", label: "August" },
+    { value: "9", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" },
   ];
 
   // Generate years (current year and previous year)
@@ -199,8 +201,10 @@ export function AdvancedFilterPanel({
     };
     setPendingFilters(updatedFilters);
 
-    // Immediately apply region change to trigger branch fetching
-    onFilterChange(updatedFilters);
+    // Trigger branch fetching without applying full filter
+    if (onRegionChange) {
+      onRegionChange(newRegionId);
+    }
   };
 
   const handleBranchChange = (branchId: string) => {
@@ -251,9 +255,9 @@ export function AdvancedFilterPanel({
       // Open range picker modal
       setShowRangePicker(true);
     } else if (value === "current-year" || value === "clear") {
-      // Clear all period filters - defaults to current year
-      onFilterChange({
-        ...filters,
+      // Clear all period filters - update pending only
+      setPendingFilters({
+        ...pendingFilters,
         useRangeMode: false,
         selectedMonth: "",
         selectedYear: "",
@@ -263,8 +267,8 @@ export function AdvancedFilterPanel({
     } else {
       // Regular period selection (YYYY-MM format)
       const [year, month] = value.split("-");
-      onFilterChange({
-        ...filters,
+      setPendingFilters({
+        ...pendingFilters,
         useRangeMode: false,
         selectedMonth: month,
         selectedYear: year,
@@ -281,7 +285,7 @@ export function AdvancedFilterPanel({
       return;
     }
 
-    // Apply range mode
+    // Update pending filters with range mode
     setPendingFilters({
       ...pendingFilters,
       useRangeMode: true,
@@ -289,6 +293,7 @@ export function AdvancedFilterPanel({
       selectedYear: "",
     });
     setShowRangePicker(false);
+    // User still needs to click Apply Filters button to apply the range
   };
 
   const handleCancelRange = () => {
@@ -386,14 +391,14 @@ export function AdvancedFilterPanel({
                 Branch
               </label>
               <Select
-                value={filters.selectedBranchId || "all"}
+                value={pendingFilters.selectedBranchId || "all"}
                 onValueChange={handleBranchChange}
-                disabled={!filters.selectedRegionId && isAdmin}
+                disabled={!pendingFilters.selectedRegionId && isAdmin}
               >
                 <SelectTrigger id="branch-filter">
                   <SelectValue
                     placeholder={
-                      !filters.selectedRegionId && isAdmin
+                      !pendingFilters.selectedRegionId && isAdmin
                         ? "Select region first"
                         : "All Branches"
                     }
@@ -408,11 +413,12 @@ export function AdvancedFilterPanel({
                   ))}
                 </SelectContent>
               </Select>
-              {visibleBranches.length === 0 && filters.selectedRegionId && (
-                <p className="text-xs text-gray-500 mt-1">
-                  No branches found for selected region
-                </p>
-              )}
+              {visibleBranches.length === 0 &&
+                pendingFilters.selectedRegionId && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    No branches found for selected region
+                  </p>
+                )}
             </div>
           )}
 

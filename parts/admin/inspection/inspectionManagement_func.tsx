@@ -73,6 +73,7 @@ export default function InspectionManagement() {
     userRegionId,
     handleFilterChange,
     resetFilters,
+    fetchBranchesForRegion,
   } = useAdvancedFilters({
     module: "inspection",
   });
@@ -81,6 +82,7 @@ export default function InspectionManagement() {
   const manageInspectionsParams = useMemo(
     () => ({
       page: 1,
+      perPage: 20,
       branch_id: apiParams.branch_id || undefined,
       region_id: apiParams.region_id || undefined,
       record_status: filters.recordStatus || undefined,
@@ -407,6 +409,7 @@ export default function InspectionManagement() {
         filters={filters}
         onFilterChange={handleFilterChange}
         onReset={handleResetFilters}
+        onRegionChange={fetchBranchesForRegion}
         totalEntries={inspections.length}
         filteredCount={filteredInspections.length}
         userRole={userRole}

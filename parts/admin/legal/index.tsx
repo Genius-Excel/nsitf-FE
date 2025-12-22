@@ -97,6 +97,7 @@ export default function LegalManagementDashboard() {
     userRegionId,
     handleFilterChange,
     resetFilters,
+    fetchBranchesForRegion,
   } = useAdvancedFilters({
     module: "legal",
   });
@@ -461,6 +462,7 @@ export default function LegalManagementDashboard() {
         filters={filters}
         onFilterChange={handleFilterChange}
         onReset={handleResetFilters}
+        onRegionChange={fetchBranchesForRegion}
         totalEntries={totalCount}
         filteredCount={filteredCount}
         userRole={filterUserRole}

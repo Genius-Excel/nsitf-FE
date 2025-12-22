@@ -65,6 +65,7 @@ export default function InvestmentDashboard() {
     userRegionId,
     handleFilterChange: handleTableFilterChange,
     resetFilters: resetTableFilters,
+    fetchBranchesForRegion,
   } = useAdvancedFilters({
     module: "claims", // Use claims as it's supported, investment will work the same way
   });
@@ -381,6 +382,7 @@ export default function InvestmentDashboard() {
         filters={tableFilters}
         onFilterChange={handleTableFilterChange}
         onReset={resetTableFilters}
+        onRegionChange={fetchBranchesForRegion}
         totalEntries={totalCount}
         filteredCount={filteredCount}
         userRole={filterUserRole}
