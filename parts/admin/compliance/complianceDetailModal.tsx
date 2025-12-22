@@ -1,23 +1,28 @@
+// ============================================================================
+// ComplianceDetailModal - Refactored to match Inspection pattern
+// ============================================================================
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+
+import { useState, useEffect } from "react";
 import {
   X,
   FileText,
+  TrendingUp,
+  Building2,
   Edit,
   Loader2,
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
-import { ComplianceEntry } from "@/lib/types";
-import { formatCurrencyFull } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { formatCurrencyFull } from "@/lib/utils";
 import { getUserFromStorage, type UserRole } from "@/lib/auth";
 import { toast } from "sonner";
 import { useBulkComplianceActions } from "@/hooks/compliance";
 
 interface ComplianceDetailModalProps {
-  entry: ComplianceEntry | null;
+  entry: any | null;
   isOpen: boolean;
   onClose: () => void;
   onRefresh?: () => void;
@@ -29,8 +34,14 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   onClose,
   onRefresh,
 }) => {
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
+  const detailData = entry;
+
+  // ============= BULK ACTIONS HOOK =============
+  const {
+    updateSingleCompliance,
+    updateComplianceDetails,
+    loading: apiLoading,
+  } = useBulkComplianceActions();
 
   // State management
   const [userRole, setUserRole] = useState<UserRole | null>(null);
@@ -40,14 +51,7 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editedData, setEditedData] = useState<ComplianceEntry | null>(null);
-
-  // Use the bulk actions hook for single record updates
-  const {
-    updateSingleCompliance,
-    updateComplianceDetails,
-    loading: apiLoading,
-  } = useBulkComplianceActions();
+  const [editedData, setEditedData] = useState<any>(null);
 
   // Get user role
   useEffect(() => {
@@ -58,33 +62,12 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   // Initialize edited data when modal opens
   useEffect(() => {
     if (isOpen && entry) {
+      console.log("📊 [Modal] entry updated:", entry);
+      console.log("📊 [Modal] Audit status:", entry?.recordStatus);
       setEditedData(entry);
       setIsEditMode(false);
     }
   }, [isOpen, entry]);
-
-  useEffect(() => {
-    if (isOpen) {
-      // Focus on close button when modal opens
-      closeButtonRef.current?.focus();
-
-      // Prevent body scroll
-      document.body.style.overflow = "hidden";
-
-      // Handle escape key
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-          onClose();
-        }
-      };
-      document.addEventListener("keydown", handleEscape);
-
-      return () => {
-        document.body.style.overflow = "unset";
-        document.removeEventListener("keydown", handleEscape);
-      };
-    }
-  }, [isOpen, onClose]);
 
   if (!isOpen || !entry) return null;
 
@@ -102,11 +85,12 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
     ["regional_manager", "regional officer", "admin", "manager"].includes(
       normalizedRole
     ) &&
-    !isApproved; // Disable editing for approved records
+    !isApproved;
   const canReview =
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer" ||
-    normalizedRole === "admin";
+    normalizedRole === "admin" ||
+    normalizedRole === "manager";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
@@ -123,22 +107,17 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   };
 
   const handleSaveEdit = async () => {
-    if (!editedData || !entry?.id) {
-      console.error("❌ [ComplianceDetailModal] Cannot save: missing data", {
-        hasEditedData: !!editedData,
-        hasEntryId: !!entry?.id,
-      });
-      toast.error("Cannot save: missing record data");
+    if (!entry?.id || !editedData) {
+      toast.error("Record ID or data not found");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Only send editable fields to the API
-      const payload = {
+      // Build payload with the exact fields expected by API
+      const payload: any = {
         contributionCollected: editedData.contributionCollected,
         target: editedData.target,
-        achievement: editedData.achievement,
         employersRegistered: editedData.employersRegistered,
         employees: editedData.employees,
         registrationFees: editedData.registrationFees,
@@ -146,73 +125,18 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
         period: editedData.period,
       };
 
-      console.log("🔍 [ComplianceDetailModal] Saving edits:", {
-        recordId: entry.id,
-        originalData: entry,
-        editedData,
-        payload,
-      });
-
       const success = await updateComplianceDetails(entry.id, payload);
-
-      console.log("🔍 [ComplianceDetailModal] Save result:", success);
 
       if (success) {
         toast.success("Compliance record updated successfully");
-
-        // Update the local entry data with the edited values
-        // This ensures the modal shows the updated data immediately
-        if (entry) {
-          const updatedFields = {
-            contributionCollected: editedData.contributionCollected,
-            target: editedData.target,
-            achievement: editedData.achievement,
-            employersRegistered: editedData.employersRegistered,
-            employees: editedData.employees,
-            registrationFees: editedData.registrationFees,
-            certificateFees: editedData.certificateFees,
-            period: editedData.period,
-          };
-
-          console.log(
-            "📝 [ComplianceDetailModal] Updating modal with saved values:",
-            updatedFields
-          );
-          Object.assign(entry, updatedFields);
-
-          // Also update editedData to reflect the new state
-          setEditedData({ ...entry });
-        }
-
         setIsEditMode(false);
-
-        // Refresh the dashboard list in background (don't await)
-        // This updates the table, but the modal keeps showing the saved values
-        if (onRefresh) {
-          console.log(
-            "🔄 [ComplianceDetailModal] Refreshing dashboard list..."
-          );
-          onRefresh().catch((err: any) => {
-            console.error("❌ Failed to refresh dashboard:", err);
-          });
-        }
+        if (onRefresh) await onRefresh();
       } else {
-        console.error(
-          "❌ [ComplianceDetailModal] Update failed: success=false"
-        );
         toast.error("Failed to update compliance record");
       }
-    } catch (error: any) {
-      console.error("❌ [ComplianceDetailModal] Save error:", {
-        error,
-        message: error?.message,
-        response: error?.response,
-      });
-      toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Failed to update compliance record"
-      );
+    } catch (error) {
+      toast.error("Failed to update compliance record");
+      console.error("Error updating compliance record:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -220,25 +144,9 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
 
   const handleFieldChange = (field: string, value: any) => {
     if (!editedData) return;
-
-    setEditedData((prev) => {
-      if (!prev) return prev;
-
-      // Handle nested fields (e.g., "financial.amountRequested")
-      if (field.includes(".")) {
-        const keys = field.split(".");
-        const newData = { ...prev };
-        let current: any = newData;
-
-        for (let i = 0; i < keys.length - 1; i++) {
-          current = current[keys[i]];
-        }
-
-        current[keys[keys.length - 1]] = value;
-        return newData;
-      }
-
-      return { ...prev, [field]: value };
+    setEditedData({
+      ...editedData,
+      [field]: value,
     });
   };
 
@@ -263,33 +171,30 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      const newStatus = confirmAction === "reviewed" ? "reviewed" : "approved";
-      const result = await updateSingleCompliance(entry.id, newStatus);
+      const result = await updateSingleCompliance(
+        entry.id,
+        confirmAction === "reviewed" ? "reviewed" : "approved"
+      );
 
       if (result.success) {
-        const message =
+        toast.success(
           confirmAction === "reviewed"
             ? "Compliance record marked as reviewed successfully"
-            : "Compliance record approved successfully";
+            : "Compliance record approved successfully"
+        );
 
-        toast.success(message);
         setShowConfirmDialog(false);
         setConfirmAction(null);
 
-        // Refresh to get updated audit trail from backend
+        // Refresh to get updated data from backend
         if (onRefresh) {
           await onRefresh();
         }
-
-        // Close modal to ensure fresh data is shown when reopened
-        setTimeout(() => {
-          onClose();
-        }, 300);
       } else {
-        toast.error("Failed to update status");
+        toast.error("Failed to update compliance status");
       }
     } catch (error) {
-      toast.error("Failed to update status");
+      toast.error("Failed to update compliance status");
       console.error("Action error:", error);
     } finally {
       setIsSubmitting(false);
@@ -301,8 +206,13 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
     label: string,
     value: any,
     field: string,
-    type: "text" | "number" | "date" = "text"
+    type: "text" | "number" = "text"
   ) => {
+    console.log(`🔧 [renderField] ${field}:`, {
+      isEditMode,
+      hasEditedData: !!editedData,
+    });
+
     if (isEditMode && editedData) {
       const fieldValue = field.includes(".")
         ? field.split(".").reduce((obj, key) => obj?.[key], editedData as any)
@@ -326,8 +236,8 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
                 type === "number" ? parseFloat(e.target.value) : e.target.value
               )
             }
-            placeholder={`Enter ${label.toLowerCase()}`}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+            placeholder={label}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm font-medium"
           />
         </div>
       );
@@ -341,111 +251,48 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
     );
   };
 
-  const handleDownload = () => {
-    const content = `
-COMPLIANCE RECORD DETAILS
-=========================
-Region: ${entry.region}
-Branch: ${entry.branch || "N/A"}
-Period: ${entry.period}
-
-CONTRIBUTION SUMMARY
-====================
-Target: ${formatCurrencyFull(entry.target)}
-Collected: ${formatCurrencyFull(entry.contributionCollected)}
-Achievement: ${entry.achievement.toFixed(1)}%
-${!isTargetMet ? `Shortfall: ${formatCurrencyFull(shortfall)}` : "✓ Target Met"}
-
-EMPLOYER DATA
-=============
-Employers: ${entry.employersRegistered.toLocaleString()}
-Employees: ${entry.employees.toLocaleString()}
-Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
-    `.trim();
-
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `compliance-${entry.region.replace(
-      /\s+/g,
-      "-"
-    )}-${entry.period.replace(/\s+/g, "-")}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  // Trap focus within modal
-  const handleTabKey = (e: React.KeyboardEvent) => {
-    const focusableElements = modalRef.current?.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    if (!focusableElements || focusableElements.length === 0) return;
-
-    const firstElement = focusableElements[0] as HTMLElement;
-    const lastElement = focusableElements[
-      focusableElements.length - 1
-    ] as HTMLElement;
-
-    if (e.key === "Tab") {
-      if (e.shiftKey && document.activeElement === firstElement) {
-        e.preventDefault();
-        lastElement.focus();
-      } else if (!e.shiftKey && document.activeElement === lastElement) {
-        e.preventDefault();
-        firstElement.focus();
-      }
-    }
-  };
-
   return (
     <>
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
         onClick={onClose}
-        aria-hidden="true"
       />
 
       {/* Modal */}
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-        aria-describedby="modal-description"
-        onKeyDown={handleTabKey}
-      >
-        <div
-          ref={modalRef}
-          className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-        >
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b px-4 sm:px-6 py-4 flex items-center justify-between z-10">
+          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FileText
-                  className="w-5 h-5 text-green-600"
-                  aria-hidden="true"
-                />
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <FileText className="w-5 h-5 text-green-600" />
               </div>
-              <div className="min-w-0">
-                <h2
-                  id="modal-title"
-                  className="text-lg sm:text-xl font-bold text-gray-900 truncate"
-                >
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">
                   Compliance Record
                 </h2>
-                <p
-                  id="modal-description"
-                  className="text-xs sm:text-sm text-gray-600 truncate"
-                >
-                  {entry.region} - {entry.branch || "Main"} - {entry.period}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-gray-600">
+                    {displayData?.region} - {displayData?.branch} -{" "}
+                    {displayData?.period}
+                  </p>
+                  <Badge
+                    className={`text-xs ${
+                      displayData?.recordStatus?.toLowerCase() === "pending"
+                        ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+                        : displayData?.recordStatus?.toLowerCase() ===
+                          "reviewed"
+                        ? "bg-blue-100 text-blue-800 border-blue-300"
+                        : "bg-green-100 text-green-800 border-green-300"
+                    }`}
+                  >
+                    {displayData?.recordStatus?.toUpperCase() || "PENDING"}
+                  </Badge>
+                </div>
               </div>
             </div>
+
             <div className="flex items-center gap-2">
               {canEdit && !isEditMode && (
                 <Button
@@ -486,63 +333,59 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                 </>
               )}
               <button
-                ref={closeButtonRef}
+                type="button"
                 onClick={onClose}
-                className="flex-shrink-0 p-2 hover:bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
-                aria-label="Close modal"
+                className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600 hover:text-gray-900"
+                title="Close"
               >
-                <X className="w-5 h-5" aria-hidden="true" />
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-4 sm:p-6 space-y-6">
+          <div className="p-6 space-y-6">
             {/* Branch Information */}
-            <section>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                Branch Information
-              </h3>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase mb-1">
-                      Region
-                    </p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {displayData.region}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase mb-1">
-                      Branch
-                    </p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {displayData.branch}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase mb-1">
-                      Period
-                    </p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {displayData.period}
-                    </p>
-                  </div>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Building2 className="w-5 h-5 text-gray-600" />
+                <h3 className="font-semibold text-gray-900">
+                  Branch Information
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <p className="text-xs text-gray-600 uppercase">Region</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {displayData.region}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase">Branch</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {displayData.branch}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase">Period</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {displayData.period}
+                  </p>
                 </div>
               </div>
-            </section>
+            </div>
 
             {/* Performance Metrics */}
-            <section aria-labelledby="metrics-heading">
-              <h3
-                id="metrics-heading"
-                className="text-sm font-semibold text-gray-900 mb-3"
-              >
-                Performance Metrics
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-lg p-6 border border-green-200">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="w-5 h-5 text-green-600" />
+                <h3 className="font-semibold text-gray-900">
+                  Performance Metrics
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
                   {isEditMode ? (
                     renderField(
                       "Target",
@@ -552,16 +395,17 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                     )
                   ) : (
                     <>
-                      <p className="text-xs text-blue-600 uppercase mb-1">
+                      <p className="text-xs text-gray-600 uppercase mb-1">
                         Target
                       </p>
-                      <p className="text-xl sm:text-2xl font-bold text-blue-700">
+                      <p className="text-2xl font-bold text-blue-700">
                         {formatCurrencyFull(displayData.target)}
                       </p>
                     </>
                   )}
                 </div>
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
                   {isEditMode ? (
                     renderField(
                       "Collected",
@@ -571,15 +415,16 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                     )
                   ) : (
                     <>
-                      <p className="text-xs text-green-600 uppercase mb-1">
+                      <p className="text-xs text-gray-600 uppercase mb-1">
                         Collected
                       </p>
-                      <p className="text-xl sm:text-2xl font-bold text-green-700">
+                      <p className="text-2xl font-bold text-green-700">
                         {formatCurrencyFull(displayData.contributionCollected)}
                       </p>
                     </>
                   )}
                 </div>
+
                 <div
                   className={`${
                     isTargetMet
@@ -588,32 +433,27 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                   } p-4 rounded-lg border`}
                 >
                   {/* Achievement/Performance Rate is always non-editable (calculated field) */}
-                  <>
-                    <p
-                      className={`text-xs uppercase mb-1 ${
-                        isTargetMet ? "text-green-600" : "text-orange-600"
-                      }`}
-                    >
-                      Performance Rate
-                    </p>
-                    <p
-                      className={`text-xl sm:text-2xl font-bold ${
-                        isTargetMet ? "text-green-700" : "text-orange-700"
-                      }`}
-                    >
-                      {displayData.achievement.toFixed(1)}%
-                    </p>
-                  </>
+                  <p
+                    className={`text-xs uppercase mb-1 ${
+                      isTargetMet ? "text-green-600" : "text-orange-600"
+                    }`}
+                  >
+                    Performance Rate
+                  </p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      isTargetMet ? "text-green-700" : "text-orange-700"
+                    }`}
+                  >
+                    {displayData.achievement.toFixed(1)}%
+                  </p>
                 </div>
               </div>
-            </section>
+            </div>
 
             {/* Target Status */}
             {!isTargetMet && (
-              <div
-                className="bg-orange-50 border border-orange-200 rounded-lg p-4"
-                role="status"
-              >
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                 <p className="text-sm font-medium text-orange-800">
                   Shortfall: {formatCurrencyFull(shortfall)}
                 </p>
@@ -624,15 +464,12 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
             )}
 
             {/* Employment Metrics */}
-            <section aria-labelledby="employment-heading">
-              <h3
-                id="employment-heading"
-                className="text-sm font-semibold text-gray-900 mb-3"
-              >
+            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-4">
                 Employment Data
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
                   {isEditMode ? (
                     renderField(
                       "Total Employers",
@@ -645,13 +482,13 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                       <p className="text-xs text-gray-600 uppercase mb-1">
                         Total Employers
                       </p>
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
+                      <p className="text-2xl font-bold text-gray-900">
                         {displayData.employersRegistered.toLocaleString()}
                       </p>
                     </>
                   )}
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
                   {isEditMode ? (
                     renderField(
                       "Total Employees",
@@ -664,25 +501,22 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                       <p className="text-xs text-gray-600 uppercase mb-1">
                         Total Employees
                       </p>
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
+                      <p className="text-2xl font-bold text-gray-900">
                         {displayData.employees.toLocaleString()}
                       </p>
                     </>
                   )}
                 </div>
               </div>
-            </section>
+            </div>
 
             {/* Financial Summary */}
-            <section aria-labelledby="financial-heading">
-              <h3
-                id="financial-heading"
-                className="text-sm font-semibold text-gray-900 mb-3"
-              >
+            <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
+              <h3 className="font-semibold text-gray-900 mb-4">
                 Financial Data
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
                   {isEditMode ? (
                     renderField(
                       "Registration Fees",
@@ -692,16 +526,16 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                     )
                   ) : (
                     <>
-                      <p className="text-xs text-purple-600 uppercase mb-1">
+                      <p className="text-xs text-gray-600 uppercase mb-1">
                         Registration Fees
                       </p>
-                      <p className="text-xl sm:text-2xl font-bold text-purple-700">
+                      <p className="text-2xl font-bold text-purple-700">
                         {formatCurrencyFull(displayData.registrationFees)}
                       </p>
                     </>
                   )}
                 </div>
-                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
                   {isEditMode ? (
                     renderField(
                       "Certificate Fees",
@@ -711,107 +545,61 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                     )
                   ) : (
                     <>
-                      <p className="text-xs text-purple-600 uppercase mb-1">
+                      <p className="text-xs text-gray-600 uppercase mb-1">
                         Certificate Fees
                       </p>
-                      <p className="text-xl sm:text-2xl font-bold text-purple-700">
+                      <p className="text-2xl font-bold text-purple-700">
                         {formatCurrencyFull(displayData.certificateFees)}
                       </p>
                     </>
                   )}
                 </div>
               </div>
-            </section>
+            </div>
 
-            {/* Audit Information */}
-            <section>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                Record Status & Audit Trail
-              </h3>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase mb-1">
-                      Status
-                    </p>
-                    <Badge
-                      className={`${
-                        displayData.recordStatus?.toLowerCase() === "pending"
-                          ? "bg-yellow-100 text-yellow-800 border-yellow-300"
-                          : displayData.recordStatus?.toLowerCase() ===
-                            "reviewed"
-                          ? "bg-blue-100 text-blue-800 border-blue-300"
-                          : "bg-green-100 text-green-800 border-green-300"
-                      }`}
-                    >
-                      {displayData.recordStatus?.toUpperCase() || "PENDING"}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase mb-1">
-                      Reviewed By
-                    </p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {displayData.reviewedBy || "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase mb-1">
-                      Approved By
-                    </p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {displayData.approvedBy || "—"}
-                    </p>
-                  </div>
+            {/* Audit Trail */}
+            <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
+              <h3 className="font-semibold text-gray-900 mb-4">Audit Trail</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-gray-600 uppercase">
+                    Record Status
+                  </p>
+                  <Badge
+                    className={`mt-1 ${
+                      displayData.recordStatus === "approved"
+                        ? "bg-green-100 text-green-800"
+                        : displayData.recordStatus === "reviewed"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {displayData.recordStatus?.toUpperCase() || "PENDING"}
+                  </Badge>
                 </div>
-                <div className="pt-3 border-t border-gray-200">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-xs text-gray-600 uppercase mb-1">
-                        Created At
-                      </p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {new Date(displayData.createdAt).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }
-                        )}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600 uppercase mb-1">
-                        Updated At
-                      </p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {new Date(displayData.updatedAt).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }
-                        )}
-                      </p>
-                    </div>
-                  </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase">Reviewed By</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {displayData.reviewedBy || "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 uppercase">Approved By</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {displayData.approvedBy || "—"}
+                  </p>
                 </div>
               </div>
-            </section>
+            </div>
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-4 sm:px-6 py-4 flex flex-wrap items-center justify-end gap-3">
+          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+            {/* Dynamic buttons based on record_status */}
             {!isEditMode && (
               <>
                 {/* Pending: Show Review button */}
-                {displayData.recordStatus === "pending" &&
+                {displayData?.recordStatus === "pending" &&
                   (canReview || canApprove) && (
                     <Button
                       onClick={handleReviewedClick}
@@ -821,8 +609,8 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                       Review
                     </Button>
                   )}
-                {/* Reviewed: Show Approve button (only Admin can approve) */}
-                {displayData.recordStatus === "reviewed" && canApprove && (
+                {/* Reviewed: Show Approve button */}
+                {displayData?.recordStatus === "reviewed" && canApprove && (
                   <Button
                     onClick={handleApproveClick}
                     className="bg-green-600 hover:bg-green-700"
@@ -832,14 +620,14 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                   </Button>
                 )}
                 {/* Approved: Show approved badge */}
-                {displayData.recordStatus === "approved" && (
+                {displayData?.recordStatus === "approved" && (
                   <Badge className="bg-green-100 text-green-800 px-4 py-2 text-sm">
                     <CheckCircle className="w-4 h-4 mr-2 inline" />
                     Approved
                   </Badge>
                 )}
                 {/* Fallback buttons if recordStatus not present */}
-                {!displayData.recordStatus && canReview && (
+                {!displayData?.recordStatus && canReview && (
                   <Button
                     onClick={handleReviewedClick}
                     className="bg-blue-600 hover:bg-blue-700"
@@ -848,7 +636,7 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                     Review
                   </Button>
                 )}
-                {!displayData.recordStatus && canApprove && !canReview && (
+                {!displayData?.recordStatus && canApprove && !canReview && (
                   <Button
                     onClick={handleApproveClick}
                     className="bg-green-600 hover:bg-green-700"
@@ -860,7 +648,7 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
               </>
             )}
             <Button onClick={onClose} variant="outline">
-              Close
+              Cancel
             </Button>
           </div>
         </div>
@@ -899,8 +687,8 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                   </h3>
                   <p className="text-sm text-gray-600">
                     {confirmAction === "reviewed"
-                      ? "Are you sure you want to mark this compliance record as reviewed? This action will update the record status."
-                      : "Are you sure you want to approve this compliance record? This action will finalize the approval."}
+                      ? "Are you sure you want to mark this compliance record as reviewed?"
+                      : "Are you sure you want to approve this compliance record?"}
                   </p>
                 </div>
               </div>

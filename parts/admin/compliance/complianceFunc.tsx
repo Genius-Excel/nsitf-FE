@@ -216,9 +216,9 @@ const ComplianceDashboard: React.FC = () => {
   // Combined loading and error states
   const dashboardLoading = metricsLoading || tableLoading;
   const dashboardError = metricsError || tableError;
-  const refetchDashboard = () => {
+  const refetchDashboard = async () => {
     refetchMetrics();
-    refetchTable();
+    return await refetchTable();
   };
 
   // Fetch regions list
@@ -296,6 +296,30 @@ const ComplianceDashboard: React.FC = () => {
   const uploadModal = useModalState(false);
 
   const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
+
+  // Update selectedEntry when mappedEntries changes (reactive pattern like HSE)
+  useEffect(() => {
+    if (selectedEntry?.id && mappedEntries.length > 0) {
+      const updatedEntry = mappedEntries.find((e) => e.id === selectedEntry.id);
+      if (updatedEntry) {
+        // Only update if data has actually changed (deep comparison of key fields)
+        const hasChanged =
+          updatedEntry.contributionCollected !==
+            selectedEntry.contributionCollected ||
+          updatedEntry.target !== selectedEntry.target ||
+          updatedEntry.recordStatus !== selectedEntry.recordStatus ||
+          updatedEntry.employersRegistered !==
+            selectedEntry.employersRegistered;
+
+        if (hasChanged) {
+          console.log(
+            "📊 [Compliance] Auto-updating selectedEntry with fresh data"
+          );
+          setSelectedEntry(updatedEntry);
+        }
+      }
+    }
+  }, [mappedEntries, selectedEntry]);
 
   // ============== HANDLERS ==============
   const handleAddRegion = async (name: string) => {
@@ -392,14 +416,49 @@ const ComplianceDashboard: React.FC = () => {
   };
 
   const handleRefreshAfterUpdate = async () => {
+    console.log("🔄 [ComplianceFunc] handleRefreshAfterUpdate called");
+    console.log("🔄 [ComplianceFunc] Current selectedEntry:", selectedEntry);
+
     // Refresh the dashboard list and wait for it to complete
-    await refetchDashboard();
-    // After refetch, find and update the selected entry with fresh data
-    if (selectedEntry?.id && mappedEntries) {
-      const updatedEntry = mappedEntries.find((e) => e.id === selectedEntry.id);
+    const result = await refetchDashboard();
+
+    console.log("🔄 [ComplianceFunc] Refetch result:", result);
+
+    // After refetch completes, we need to get the fresh data
+    // The result.data will have the updated data
+    if (selectedEntry?.id && result?.data) {
+      // Find the updated entry in the fresh data
+      const freshSummary = result.data.summary || result.data || [];
+
+      console.log(
+        "🔄 [ComplianceFunc] Fresh summary length:",
+        freshSummary.length
+      );
+
+      // Map the fresh entry similar to how mappedEntries works
+      const updatedEntry = freshSummary.find(
+        (item: any) => item.id === selectedEntry.id
+      );
+
+      console.log("🔄 [ComplianceFunc] Found updated entry:", updatedEntry);
+
       if (updatedEntry) {
-        setSelectedEntry(updatedEntry);
+        // Map to ComplianceEntry format
+        const mapped = mapToComplianceEntry(updatedEntry);
+        console.log("🔄 [ComplianceFunc] Mapped entry:", mapped);
+        console.log(
+          "🔄 [ComplianceFunc] Setting selectedEntry to updated value"
+        );
+        setSelectedEntry(mapped);
+      } else {
+        console.warn(
+          "⚠️ [ComplianceFunc] Could not find updated entry in fresh data"
+        );
       }
+    } else {
+      console.warn(
+        "⚠️ [ComplianceFunc] Missing selectedEntry.id or result.data"
+      );
     }
   };
 
@@ -611,6 +670,7 @@ const ComplianceDashboard: React.FC = () => {
       />
 
       <ComplianceDetailModal
+        key={selectedEntry?.id || "new"}
         entry={selectedEntry}
         isOpen={detailModal.isOpen}
         onClose={() => {
