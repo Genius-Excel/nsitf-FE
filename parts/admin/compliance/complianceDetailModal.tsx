@@ -276,11 +276,34 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
         setShowConfirmDialog(false);
         setConfirmAction(null);
 
-        // Update the local state to reflect the new status
+        // Get current user information
+        const currentUser = getUserFromStorage();
+        const userName =
+          currentUser?.name ||
+          (currentUser?.first_name && currentUser?.last_name
+            ? `${currentUser.first_name} ${currentUser.last_name}`
+            : currentUser?.email || "Unknown User");
+
+        // Update both the local entry and editedData to reflect the new status and audit info
+        const auditUpdates = {
+          recordStatus: newStatus,
+          ...(confirmAction === "reviewed"
+            ? { reviewedBy: userName }
+            : {
+                approvedBy: userName,
+                reviewedBy: entry.reviewedBy || userName,
+              }),
+          updatedAt: new Date().toISOString(),
+        };
+
+        if (entry) {
+          Object.assign(entry, auditUpdates);
+        }
+
         if (editedData) {
           setEditedData({
             ...editedData,
-            recordStatus: newStatus,
+            ...auditUpdates,
           });
         }
 
@@ -507,10 +530,48 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
 
           {/* Content */}
           <div className="p-4 sm:p-6 space-y-6">
-            {/* Main Metrics */}
+            {/* Branch Information */}
+            <section>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                Branch Information
+              </h3>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase mb-1">
+                      Region
+                    </p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {displayData.region}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase mb-1">
+                      Branch
+                    </p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {displayData.branch}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 uppercase mb-1">
+                      Period
+                    </p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {displayData.period}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Performance Metrics */}
             <section aria-labelledby="metrics-heading">
-              <h3 id="metrics-heading" className="sr-only">
-                Financial Metrics
+              <h3
+                id="metrics-heading"
+                className="text-sm font-semibold text-gray-900 mb-3"
+              >
+                Performance Metrics
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -523,7 +584,7 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                     )
                   ) : (
                     <>
-                      <p className="text-xs text-gray-600 uppercase mb-1">
+                      <p className="text-xs text-blue-600 uppercase mb-1">
                         Target
                       </p>
                       <p className="text-xl sm:text-2xl font-bold text-blue-700">
@@ -542,7 +603,7 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                     )
                   ) : (
                     <>
-                      <p className="text-xs text-gray-600 uppercase mb-1">
+                      <p className="text-xs text-green-600 uppercase mb-1">
                         Collected
                       </p>
                       <p className="text-xl sm:text-2xl font-bold text-green-700">
@@ -560,7 +621,11 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                 >
                   {/* Achievement/Performance Rate is always non-editable (calculated field) */}
                   <>
-                    <p className="text-xs text-gray-600 uppercase mb-1">
+                    <p
+                      className={`text-xs uppercase mb-1 ${
+                        isTargetMet ? "text-green-600" : "text-orange-600"
+                      }`}
+                    >
                       Performance Rate
                     </p>
                     <p
@@ -640,20 +705,35 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
               </div>
             </section>
 
-            {/* Additional Information */}
-            <section aria-labelledby="additional-heading">
+            {/* Financial Summary */}
+            <section aria-labelledby="financial-heading">
               <h3
-                id="additional-heading"
+                id="financial-heading"
                 className="text-sm font-semibold text-gray-900 mb-3"
               >
-                Additional Information
+                Financial Data
               </h3>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
-                <div
-                  className={
-                    isEditMode ? "" : "flex justify-between items-center"
-                  }
-                >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  {isEditMode ? (
+                    renderField(
+                      "Registration Fees",
+                      formatCurrencyFull(displayData.registrationFees),
+                      "registrationFees",
+                      "number"
+                    )
+                  ) : (
+                    <>
+                      <p className="text-xs text-purple-600 uppercase mb-1">
+                        Registration Fees
+                      </p>
+                      <p className="text-xl sm:text-2xl font-bold text-purple-700">
+                        {formatCurrencyFull(displayData.registrationFees)}
+                      </p>
+                    </>
+                  )}
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
                   {isEditMode ? (
                     renderField(
                       "Certificate Fees",
@@ -663,67 +743,44 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                     )
                   ) : (
                     <>
-                      <span className="text-sm text-gray-600">
-                        Certificate Fees:
-                      </span>
-                      <span className="text-sm font-semibold text-gray-900">
+                      <p className="text-xs text-purple-600 uppercase mb-1">
+                        Certificate Fees
+                      </p>
+                      <p className="text-xl sm:text-2xl font-bold text-purple-700">
                         {formatCurrencyFull(displayData.certificateFees)}
-                      </span>
+                      </p>
                     </>
                   )}
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Region:</span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {displayData.region}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Branch:</span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {displayData.branch || "Main Branch"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Period:</span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {displayData.period}
-                  </span>
                 </div>
               </div>
             </section>
 
-            {/* Audit Trail */}
-            {displayData.recordStatus && (
-              <section
-                aria-labelledby="audit-heading"
-                className="bg-yellow-50 rounded-lg p-6 border border-yellow-200"
-              >
-                <h3
-                  id="audit-heading"
-                  className="font-semibold text-gray-900 mb-4"
-                >
-                  Audit Trail
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Audit Information */}
+            <section>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                Record Status & Audit Trail
+              </h3>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <p className="text-xs text-gray-600 uppercase">
-                      Record Status
+                    <p className="text-xs text-gray-600 uppercase mb-1">
+                      Status
                     </p>
                     <Badge
-                      className={`mt-1 ${
-                        displayData.recordStatus === "approved"
-                          ? "bg-green-100 text-green-800"
-                          : displayData.recordStatus === "reviewed"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-yellow-100 text-yellow-800"
+                      className={`${
+                        displayData.recordStatus?.toLowerCase() === "pending"
+                          ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+                          : displayData.recordStatus?.toLowerCase() ===
+                            "reviewed"
+                          ? "bg-blue-100 text-blue-800 border-blue-300"
+                          : "bg-green-100 text-green-800 border-green-300"
                       }`}
                     >
-                      {displayData.recordStatus.toUpperCase()}
+                      {displayData.recordStatus?.toUpperCase() || "PENDING"}
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 uppercase">
+                    <p className="text-xs text-gray-600 uppercase mb-1">
                       Reviewed By
                     </p>
                     <p className="text-sm font-medium text-gray-900">
@@ -731,7 +788,7 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 uppercase">
+                    <p className="text-xs text-gray-600 uppercase mb-1">
                       Approved By
                     </p>
                     <p className="text-sm font-medium text-gray-900">
@@ -739,13 +796,50 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
                     </p>
                   </div>
                 </div>
-              </section>
-            )}
+                <div className="pt-3 border-t border-gray-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs text-gray-600 uppercase mb-1">
+                        Created At
+                      </p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {new Date(displayData.createdAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 uppercase mb-1">
+                        Updated At
+                      </p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {new Date(displayData.updatedAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 border-t px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-end gap-3">
-            {/* Dynamic buttons based on recordStatus */}
+          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-4 sm:px-6 py-4 flex flex-wrap items-center justify-end gap-3">
             {!isEditMode && (
               <>
                 {/* Pending: Show Review button */}
@@ -798,7 +892,7 @@ Certificate Fees: ${formatCurrencyFull(entry.certificateFees)}
               </>
             )}
             <Button onClick={onClose} variant="outline">
-              Cancel
+              Close
             </Button>
           </div>
         </div>
