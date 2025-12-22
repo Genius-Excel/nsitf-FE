@@ -7,11 +7,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 // Mock data generator
 function generateMockData() {
   const now = new Date();
   const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
-  
+
   // Generate sample records
   const records = [
     {
@@ -99,10 +101,15 @@ function generateMockData() {
   // Calculate current totals
   const currentTotals = records.reduce(
     (acc, record) => ({
-      contributionsPrivateSector: acc.contributionsPrivateSector + record.contributionsPrivateSector,
-      contributionsPublicTreasury: acc.contributionsPublicTreasury + record.contributionsPublicTreasury,
-      contributionsPublicNonTreasury: acc.contributionsPublicNonTreasury + record.contributionsPublicNonTreasury,
-      contributionsInformalEconomy: acc.contributionsInformalEconomy + record.contributionsInformalEconomy,
+      contributionsPrivateSector:
+        acc.contributionsPrivateSector + record.contributionsPrivateSector,
+      contributionsPublicTreasury:
+        acc.contributionsPublicTreasury + record.contributionsPublicTreasury,
+      contributionsPublicNonTreasury:
+        acc.contributionsPublicNonTreasury +
+        record.contributionsPublicNonTreasury,
+      contributionsInformalEconomy:
+        acc.contributionsInformalEconomy + record.contributionsInformalEconomy,
       rentalFees: acc.rentalFees + record.rentalFees,
       debtRecovered: acc.debtRecovered + record.debtRecovered,
     }),
@@ -119,9 +126,12 @@ function generateMockData() {
   // Mock previous month values (10% less for demo)
   const previousTotals = {
     contributionsPrivateSector: currentTotals.contributionsPrivateSector * 0.9,
-    contributionsPublicTreasury: currentTotals.contributionsPublicTreasury * 0.88,
-    contributionsPublicNonTreasury: currentTotals.contributionsPublicNonTreasury * 0.92,
-    contributionsInformalEconomy: currentTotals.contributionsInformalEconomy * 0.85,
+    contributionsPublicTreasury:
+      currentTotals.contributionsPublicTreasury * 0.88,
+    contributionsPublicNonTreasury:
+      currentTotals.contributionsPublicNonTreasury * 0.92,
+    contributionsInformalEconomy:
+      currentTotals.contributionsInformalEconomy * 0.85,
     rentalFees: currentTotals.rentalFees * 0.95,
     debtRecovered: currentTotals.debtRecovered * 0.87,
   };
@@ -134,13 +144,10 @@ function generateMockData() {
   };
 
   // Status counts
-  const statusCounts = records.reduce(
-    (acc, record) => {
-      acc[record.recordStatus] = (acc[record.recordStatus] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
+  const statusCounts = records.reduce((acc, record) => {
+    acc[record.recordStatus] = (acc[record.recordStatus] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
   return {
     message: "Investment dashboard data retrieved successfully",
@@ -148,22 +155,34 @@ function generateMockData() {
       contributionsPrivateSector: {
         current: currentTotals.contributionsPrivateSector,
         previous: previousTotals.contributionsPrivateSector,
-        ...calculateChange(currentTotals.contributionsPrivateSector, previousTotals.contributionsPrivateSector),
+        ...calculateChange(
+          currentTotals.contributionsPrivateSector,
+          previousTotals.contributionsPrivateSector
+        ),
       },
       contributionsPublicTreasury: {
         current: currentTotals.contributionsPublicTreasury,
         previous: previousTotals.contributionsPublicTreasury,
-        ...calculateChange(currentTotals.contributionsPublicTreasury, previousTotals.contributionsPublicTreasury),
+        ...calculateChange(
+          currentTotals.contributionsPublicTreasury,
+          previousTotals.contributionsPublicTreasury
+        ),
       },
       contributionsPublicNonTreasury: {
         current: currentTotals.contributionsPublicNonTreasury,
         previous: previousTotals.contributionsPublicNonTreasury,
-        ...calculateChange(currentTotals.contributionsPublicNonTreasury, previousTotals.contributionsPublicNonTreasury),
+        ...calculateChange(
+          currentTotals.contributionsPublicNonTreasury,
+          previousTotals.contributionsPublicNonTreasury
+        ),
       },
       contributionsInformalEconomy: {
         current: currentTotals.contributionsInformalEconomy,
         previous: previousTotals.contributionsInformalEconomy,
-        ...calculateChange(currentTotals.contributionsInformalEconomy, previousTotals.contributionsInformalEconomy),
+        ...calculateChange(
+          currentTotals.contributionsInformalEconomy,
+          previousTotals.contributionsInformalEconomy
+        ),
       },
       rentalFees: {
         current: currentTotals.rentalFees,
@@ -173,7 +192,10 @@ function generateMockData() {
       debtRecovered: {
         current: currentTotals.debtRecovered,
         previous: previousTotals.debtRecovered,
-        ...calculateChange(currentTotals.debtRecovered, previousTotals.debtRecovered),
+        ...calculateChange(
+          currentTotals.debtRecovered,
+          previousTotals.debtRecovered
+        ),
       },
     },
     records,
@@ -186,9 +208,10 @@ function generateMockData() {
         informalEconomy: currentTotals.contributionsInformalEconomy,
         rentalFees: currentTotals.rentalFees,
         debtRecovered: currentTotals.debtRecovered,
-        totalContributions: currentTotals.contributionsPrivateSector + 
-          currentTotals.contributionsPublicTreasury + 
-          currentTotals.contributionsPublicNonTreasury + 
+        totalContributions:
+          currentTotals.contributionsPrivateSector +
+          currentTotals.contributionsPublicTreasury +
+          currentTotals.contributionsPublicNonTreasury +
           currentTotals.contributionsInformalEconomy,
       },
     ],
