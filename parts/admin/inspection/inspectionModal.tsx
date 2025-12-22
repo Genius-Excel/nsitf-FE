@@ -605,23 +605,13 @@ Generated on: ${new Date().toLocaleString()}
                 </div>
 
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  {isEditMode ? (
-                    renderField(
-                      "Notice Percentage",
-                      displayData?.inspectionActivity?.demandNoticesPercent,
-                      "inspectionActivity.demandNoticesPercent",
-                      "number"
-                    )
-                  ) : (
-                    <>
-                      <p className="text-xs text-gray-600 uppercase mb-1">
-                        Notice Percentage
-                      </p>
-                      <p className="text-3xl font-bold text-blue-700">
-                        {detailData.inspectionActivity.demandNoticesPercent}%
-                      </p>
-                    </>
-                  )}
+                  {/* Notice Percentage is calculated and non-editable */}
+                  <p className="text-xs text-gray-600 uppercase mb-1">
+                    Notice Percentage
+                  </p>
+                  <p className="text-3xl font-bold text-blue-700">
+                    {detailData.inspectionActivity.demandNoticesPercent}%
+                  </p>
                 </div>
               </div>
             </div>
