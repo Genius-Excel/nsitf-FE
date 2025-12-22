@@ -143,12 +143,6 @@ function generateMockData() {
     return { change, changePercent };
   };
 
-  // Status counts
-  const statusCounts = records.reduce((acc, record) => {
-    acc[record.recordStatus] = (acc[record.recordStatus] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
   return {
     message: "Investment dashboard data retrieved successfully",
     metrics: {
