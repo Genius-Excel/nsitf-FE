@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Users, Shield, ClipboardCheck, HardHat, Scale } from "lucide-react";
 import { getUserFromStorage, User } from "@/lib/auth";
 import { useDashboardSummary } from "@/hooks/useDashboardSummary";
@@ -68,14 +68,45 @@ export default function DashboardPage() {
   const { canView, loading: permissionLoading } =
     useCheckPermission("dashboard");
 
-  // SINGLE FETCH for all dashboard data
+  // Convert metrics filters to API params
+  const dashboardApiParams = useMemo(() => {
+    const params: { month?: number; year?: number } = {};
+
+    if (metricsFilters.selectedMonth && metricsFilters.selectedYear) {
+      const monthIndex =
+        [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ].indexOf(metricsFilters.selectedMonth) + 1;
+
+      params.month = monthIndex;
+      params.year = parseInt(metricsFilters.selectedYear);
+    }
+
+    console.log("🔍 [Dashboard] Metrics Filters:", metricsFilters);
+    console.log("🔍 [Dashboard] API Params:", params);
+
+    return params;
+  }, [metricsFilters]);
+
+  // SINGLE FETCH for all dashboard data (controlled by MetricsFilter)
   const {
     data: dashboardData,
     loading,
     error,
     refetch,
     filters,
-  } = useDashboardSummary();
+  } = useDashboardSummary(dashboardApiParams);
 
   // Transform metric cards data
   const { cards: metricCards } = useMetricCards(dashboardData);

@@ -55,7 +55,8 @@ export default function HSEDashboardContent() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  // Metrics filters state
+  // ============= METRICS FILTERS STATE =============
+  // Metrics filters state (for top cards)
   const [metricsFilters, setMetricsFilters] = useState({
     selectedMonth: undefined as string | undefined,
     selectedYear: undefined as string | undefined,
@@ -75,6 +76,7 @@ export default function HSEDashboardContent() {
       periodTo: undefined,
     });
   };
+
   const [selectedRecord, setSelectedRecord] = useState<HSERecord | null>(null);
   const [selectedRegionalRecord, setSelectedRegionalRecord] =
     useState<any>(null);
@@ -106,16 +108,78 @@ export default function HSEDashboardContent() {
     module: "hse",
   });
 
-  // Fetch HSE dashboard data (includes metrics and regionalSummary)
-  const {
-    data: dashboardData,
-    loading: dashboardLoading,
-    error: dashboardError,
-    refetch: refetchDashboard,
-  } = useHSEDashboard({});
+  // ============= API FILTERS =============
+  // Metrics API params (for top cards)
+  const metricsApiParams = useMemo(() => {
+    const params: any = {};
 
-  // Use regionalSummary from dashboard as the source for table data
-  const allRecords = dashboardData?.regionalSummary || [];
+    if (metricsFilters.selectedMonth && metricsFilters.selectedYear) {
+      const monthIndex =
+        [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ].indexOf(metricsFilters.selectedMonth) + 1;
+      const monthStr = monthIndex.toString().padStart(2, "0");
+      params.period = `${metricsFilters.selectedYear}-${monthStr}`;
+    }
+
+    if (metricsFilters.periodFrom) {
+      params.period_from = metricsFilters.periodFrom;
+    }
+    if (metricsFilters.periodTo) {
+      params.period_to = metricsFilters.periodTo;
+    }
+
+    return params;
+  }, [metricsFilters]);
+
+  // Table API params (for data table)
+  const tableApiParams = useMemo(
+    () => ({
+      period: apiParams.period || undefined,
+      period_from: apiParams.period_from || undefined,
+      period_to: apiParams.period_to || undefined,
+      region_id: apiParams.region_id || undefined,
+      branch_id: apiParams.branch_id || undefined,
+      record_status: apiParams.record_status || undefined,
+    }),
+    [apiParams]
+  );
+
+  // Fetch HSE dashboard data for metrics (controlled by MetricsFilter)
+  const {
+    data: metricsData,
+    loading: metricsLoading,
+    refetch: refetchMetrics,
+  } = useHSEDashboard(metricsApiParams);
+
+  // Fetch HSE dashboard data for table (controlled by AdvancedFilterPanel)
+  const {
+    data: tableData,
+    loading: tableLoading,
+    error: dashboardError,
+    refetch: refetchTable,
+  } = useHSEDashboard(tableApiParams);
+
+  // Combined states
+  const dashboardLoading = metricsLoading || tableLoading;
+  const refetchDashboard = () => {
+    refetchMetrics();
+    refetchTable();
+  };
+
+  // Use table data for the data table
+  const allRecords = tableData?.regionalSummary || [];
 
   // Update selectedRegionalRecord when data refreshes (to reflect status changes in modal)
   useEffect(() => {
@@ -315,7 +379,7 @@ export default function HSEDashboardContent() {
     return <ErrorState error={new Error(dashboardError || "Unknown error")} />;
   }
 
-  if (!dashboardData) {
+  if (!metricsData) {
     return <ErrorState error={new Error("No dashboard data available")} />;
   }
 
@@ -323,37 +387,37 @@ export default function HSEDashboardContent() {
   const stats: HSEStatCard[] = [
     {
       title: "Total Actual OSH Activities",
-      value: dashboardData.metricCards.totalActualOSHActivities,
+      value: metricsData.metricCards.totalActualOSHActivities,
       colorScheme: "blue",
     },
     {
       title: "Target OSH Activities",
-      value: dashboardData.metricCards.targetOSHActivities,
+      value: metricsData.metricCards.targetOSHActivities,
       colorScheme: "blue",
     },
     {
       title: "Performance Rate",
-      value: `${dashboardData.metricCards.performanceRate.toFixed(1)}%`,
+      value: `${metricsData.metricCards.performanceRate.toFixed(1)}%`,
       colorScheme:
-        dashboardData.metricCards.performanceRate >= 80
+        metricsData.metricCards.performanceRate >= 80
           ? "green"
-          : dashboardData.metricCards.performanceRate >= 60
+          : metricsData.metricCards.performanceRate >= 60
           ? "orange"
           : "gray",
     },
     {
       title: "OSH Enlightenment & Awareness",
-      value: dashboardData.metricCards.oshEnlightenment,
+      value: metricsData.metricCards.oshEnlightenment,
       colorScheme: "green",
     },
     {
       title: "OSH Inspection & Audit",
-      value: dashboardData.metricCards.oshAudit,
+      value: metricsData.metricCards.oshAudit,
       colorScheme: "orange",
     },
     {
       title: "Accident & Incident Investigation",
-      value: dashboardData.metricCards.accidentInvestigation,
+      value: metricsData.metricCards.accidentInvestigation,
       colorScheme: "purple",
     },
   ];
@@ -361,23 +425,23 @@ export default function HSEDashboardContent() {
   const summaryData = [
     {
       label: "Total Actual Activities",
-      value: dashboardData.metricCards.totalActualOSHActivities,
+      value: metricsData?.metricCards.totalActualOSHActivities || 0,
     },
     {
       label: "Target Activities",
-      value: dashboardData.metricCards.targetOSHActivities,
+      value: metricsData?.metricCards.targetOSHActivities || 0,
     },
     {
       label: "OSH Enlightenment",
-      value: dashboardData.metricCards.oshEnlightenment,
+      value: metricsData?.metricCards.oshEnlightenment || 0,
     },
     {
       label: "OSH Audit",
-      value: dashboardData.metricCards.oshAudit,
+      value: metricsData?.metricCards.oshAudit || 0,
     },
     {
       label: "Accident Investigation",
-      value: dashboardData.metricCards.accidentInvestigation,
+      value: metricsData?.metricCards.accidentInvestigation || 0,
     },
   ];
 
@@ -443,8 +507,10 @@ export default function HSEDashboardContent() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MonthlySummary data={summaryData} />
         <ComplianceRate
-          percentage={dashboardData.metricCards.performanceRate}
-          change={`Period: ${dashboardData.filters.asOf}`}
+          percentage={metricsData?.metricCards.performanceRate || 0}
+          change={`Period: ${
+            metricsData?.filters.asOf || new Date().toISOString().split("T")[0]
+          }`}
         />
       </div>
 

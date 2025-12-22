@@ -46,8 +46,11 @@ export interface ComplianceDashboardResponse {
 
 export interface ComplianceFilters {
   period?: string;
+  period_from?: string;
+  period_to?: string;
   region_id?: string;
-  branch?: string;
+  branch_id?: string;
+  record_status?: string;
 }
 
 // ============= HOOK =============
@@ -74,8 +77,13 @@ export const useComplianceDashboard = (filters?: ComplianceFilters) => {
       // Build query params
       const params = new URLSearchParams();
       if (filters?.period) params.append("period", filters.period);
+      if (filters?.period_from)
+        params.append("period_from", filters.period_from);
+      if (filters?.period_to) params.append("period_to", filters.period_to);
       if (filters?.region_id) params.append("region_id", filters.region_id);
-      if (filters?.branch) params.append("branch_id", filters.branch);
+      if (filters?.branch_id) params.append("branch_id", filters.branch_id);
+      if (filters?.record_status)
+        params.append("record_status", filters.record_status);
 
       const queryString = params.toString();
       const url = `/api/contributions/manage-contributions${

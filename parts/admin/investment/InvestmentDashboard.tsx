@@ -20,8 +20,8 @@ import { PageHeader } from "@/components/design-system/PageHeader";
 import { LoadingState } from "@/components/design-system/LoadingState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
+import { MetricsFilter } from "@/components/design-system/MetricsFilter";
 import { AdvancedFilterPanel } from "@/components/design-system/AdvancedFilterPanel";
-import { InvestmentFilters } from "./InvestmentFilters";
 import { InvestmentCharts } from "./InvestmentCharts";
 import { InvestmentTable } from "./InvestmentTable";
 import { InvestmentUploadModal } from "./InvestmentUploadModal";
@@ -47,13 +47,60 @@ export default function InvestmentDashboard() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // ============= FILTERS FOR METRICS & CHARTS =============
-  const [metricsFilters, setMetricsFilters] = useState<InvestmentFilterParams>({
-    selectedMonth: undefined,
-    selectedYear: undefined,
-    periodFrom: undefined,
-    periodTo: undefined,
-    recordStatus: undefined,
+  const [metricsFilters, setMetricsFilters] = useState({
+    selectedMonth: undefined as string | undefined,
+    selectedYear: undefined as string | undefined,
+    periodFrom: undefined as string | undefined,
+    periodTo: undefined as string | undefined,
   });
+
+  const handleMetricsFilterChange = (newFilters: typeof metricsFilters) => {
+    setMetricsFilters(newFilters);
+  };
+
+  const handleResetMetricsFilters = () => {
+    setMetricsFilters({
+      selectedMonth: undefined,
+      selectedYear: undefined,
+      periodFrom: undefined,
+      periodTo: undefined,
+    });
+  };
+
+  // Convert metricsFilters to InvestmentFilterParams
+  const metricsApiParams: InvestmentFilterParams = useMemo(() => {
+    const params: InvestmentFilterParams = {};
+
+    if (metricsFilters.selectedMonth && metricsFilters.selectedYear) {
+      const monthIndex =
+        [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ].indexOf(metricsFilters.selectedMonth) + 1;
+      const monthStr = monthIndex.toString().padStart(2, "0");
+      params.selectedMonth = metricsFilters.selectedMonth;
+      params.selectedYear = metricsFilters.selectedYear;
+    }
+
+    if (metricsFilters.periodFrom) {
+      params.periodFrom = metricsFilters.periodFrom;
+    }
+    if (metricsFilters.periodTo) {
+      params.periodTo = metricsFilters.periodTo;
+    }
+
+    return params;
+  }, [metricsFilters]);
 
   // ============= ADVANCED FILTERS FOR TABLE =============
   const {
@@ -81,7 +128,7 @@ export default function InvestmentDashboard() {
     loading,
     error,
     refetch,
-  } = useInvestmentDashboard(metricsFilters);
+  } = useInvestmentDashboard(metricsApiParams);
 
   // Map table filters to investment filters format for filtered records
   const tableInvestmentFilters: InvestmentFilterParams = useMemo(
@@ -169,20 +216,6 @@ export default function InvestmentDashboard() {
     setIsUploadModalOpen(false);
     refetch();
     refetchTable();
-  };
-
-  const handleMetricsFilterChange = (newFilters: InvestmentFilterParams) => {
-    setMetricsFilters(newFilters);
-  };
-
-  const handleResetMetricsFilters = () => {
-    setMetricsFilters({
-      selectedMonth: undefined,
-      selectedYear: undefined,
-      periodFrom: undefined,
-      periodTo: undefined,
-      recordStatus: undefined,
-    });
   };
 
   const handleBulkReview = async () => {
@@ -311,12 +344,10 @@ export default function InvestmentDashboard() {
       </div>
 
       {/* Filters for Metrics & Charts */}
-      <InvestmentFilters
+      <MetricsFilter
         filters={metricsFilters}
         onFilterChange={handleMetricsFilterChange}
         onReset={handleResetMetricsFilters}
-        totalEntries={data?.totalRecords || 0}
-        filteredCount={records.length}
       />
 
       {/* Metrics Cards */}

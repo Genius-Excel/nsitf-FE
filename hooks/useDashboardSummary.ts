@@ -12,6 +12,9 @@ export const useDashboardSummary = (params?: DashboardQueryParams) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Stringify params for stable dependency comparison
+  const paramsKey = JSON.stringify(params || {});
+
   const fetchDashboard = useCallback(async () => {
     try {
       setLoading(true);
@@ -28,6 +31,9 @@ export const useDashboardSummary = (params?: DashboardQueryParams) => {
       const url = `/api/dashboard/summary${
         queryString ? `?${queryString}` : ""
       }`;
+
+      console.log("🔍 [useDashboardSummary] Fetching with params:", params);
+      console.log("🔍 [useDashboardSummary] URL:", url);
 
       const response = await http.getData(url);
 
@@ -47,7 +53,7 @@ export const useDashboardSummary = (params?: DashboardQueryParams) => {
     } finally {
       setLoading(false);
     }
-  }, [params?.month, params?.year, params?.region_id]);
+  }, [paramsKey]); // Use stringified params for stable comparison
 
   useEffect(() => {
     fetchDashboard();

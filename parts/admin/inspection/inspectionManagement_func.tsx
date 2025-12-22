@@ -42,7 +42,8 @@ export default function InspectionManagement() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Metrics filters state
+  // ============= METRICS FILTERS STATE =============
+  // Metrics filters state (for top cards)
   const [metricsFilters, setMetricsFilters] = useState({
     selectedMonth: undefined as string | undefined,
     selectedYear: undefined as string | undefined,
@@ -78,14 +79,51 @@ export default function InspectionManagement() {
     module: "inspection",
   });
 
-  // ============= MEMOIZE PARAMS =============
-  const manageInspectionsParams = useMemo(
+  // ============= API FILTERS =============
+  // Metrics filters (for top cards) - from MetricsFilter component
+  const metricsApiParams = useMemo(() => {
+    const params: any = {};
+
+    // Single period (Month + Year)
+    if (metricsFilters.selectedMonth && metricsFilters.selectedYear) {
+      const monthIndex =
+        [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ].indexOf(metricsFilters.selectedMonth) + 1;
+      const monthStr = monthIndex.toString().padStart(2, "0");
+      params.period = `${metricsFilters.selectedYear}-${monthStr}`;
+    }
+
+    // Period range
+    if (metricsFilters.periodFrom) {
+      params.period_from = metricsFilters.periodFrom;
+    }
+    if (metricsFilters.periodTo) {
+      params.period_to = metricsFilters.periodTo;
+    }
+
+    return params;
+  }, [metricsFilters]);
+
+  // Table filters (for data table) - from AdvancedFilterPanel
+  const tableApiParams = useMemo(
     () => ({
       page: 1,
       perPage: 20,
       branch_id: apiParams.branch_id || undefined,
       region_id: apiParams.region_id || undefined,
-      record_status: filters.recordStatus || undefined,
+      record_status: apiParams.record_status || undefined,
       period: apiParams.period || undefined,
       period_from: apiParams.period_from || undefined,
       period_to: apiParams.period_to || undefined,
@@ -93,7 +131,7 @@ export default function InspectionManagement() {
     [
       apiParams.branch_id,
       apiParams.region_id,
-      filters.recordStatus,
+      apiParams.record_status,
       apiParams.period,
       apiParams.period_from,
       apiParams.period_to,
@@ -101,12 +139,12 @@ export default function InspectionManagement() {
   );
 
   // ============= API HOOKS =============
-  // 1. Fetch inspections from manage-inspections endpoint
+  // 1. Fetch inspections from manage-inspections endpoint (controlled by AdvancedFilterPanel)
   const { inspections, pagination, loading, error, refetch, setPage } =
-    useManageInspections(manageInspectionsParams);
+    useManageInspections(tableApiParams);
 
-  // 2. Fetch dashboard metrics (without filters - shows overall data)
-  const { metrics, monthlyChart } = useInspectionMetrics();
+  // 2. Fetch dashboard metrics (controlled by MetricsFilter)
+  const { metrics, monthlyChart } = useInspectionMetrics(metricsApiParams);
 
   // 3. Fetch single inspection detail (for modal)
   const {

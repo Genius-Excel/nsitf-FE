@@ -124,46 +124,8 @@ const ComplianceDashboard: React.FC = () => {
     module: "compliance",
   });
 
-  // ============== API FILTERS ==============
-  // Convert advanced filter params to compliance API format
-  const apiFilters = useMemo(
-    () => ({
-      period: apiParams.period || undefined,
-      period_from: apiParams.period_from || undefined,
-      period_to: apiParams.period_to || undefined,
-      region_id: apiParams.region_id || undefined,
-      branch_id: apiParams.branch_id || undefined,
-    }),
-    [apiParams]
-  );
-
-  // ============== DATA FETCHING ==============
-  // Single fetch - source of truth
-  const {
-    data: dashboardData,
-    loading: dashboardLoading,
-    error: dashboardError,
-    refetch: refetchDashboard,
-  } = useComplianceDashboard(apiFilters);
-
-  // Fetch regions list
-  const {
-    data: regions,
-    loading: regionsLoading,
-    error: regionsError,
-    refetch: refetchRegions,
-  } = useRegions();
-
-  // ============== CLIENT-SIDE FILTERING ==============
-  // Use backend-filtered data directly (already filtered by apiParams)
-  // Backend returns regional_summary when no region filter, branch_summary when region is selected
-  const regionalSummary =
-    dashboardData?.regional_summary ?? dashboardData?.branch_summary ?? [];
-
-  // Additional client-side search filter (optional)
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // Metrics filters state
+  // ============== METRICS FILTERS STATE ==============
+  // Metrics filters state (for top cards)
   const [metricsFilters, setMetricsFilters] = useState({
     selectedMonth: undefined as string | undefined,
     selectedYear: undefined as string | undefined,
@@ -183,6 +145,98 @@ const ComplianceDashboard: React.FC = () => {
       periodTo: undefined,
     });
   };
+
+  // ============== API FILTERS ==============
+  // Metrics filters (for top cards) - from MetricsFilter component
+  const metricsApiFilters = useMemo(() => {
+    const params: any = {};
+
+    // Single period (Month + Year)
+    if (metricsFilters.selectedMonth && metricsFilters.selectedYear) {
+      const monthIndex =
+        [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ].indexOf(metricsFilters.selectedMonth) + 1;
+      const monthStr = monthIndex.toString().padStart(2, "0");
+      params.period = `${metricsFilters.selectedYear}-${monthStr}`;
+    }
+
+    // Period range
+    if (metricsFilters.periodFrom) {
+      params.period_from = metricsFilters.periodFrom;
+    }
+    if (metricsFilters.periodTo) {
+      params.period_to = metricsFilters.periodTo;
+    }
+
+    return params;
+  }, [metricsFilters]);
+
+  // Table filters (for data table) - from AdvancedFilterPanel
+  const tableApiFilters = useMemo(
+    () => ({
+      period: apiParams.period || undefined,
+      period_from: apiParams.period_from || undefined,
+      period_to: apiParams.period_to || undefined,
+      region_id: apiParams.region_id || undefined,
+      branch_id: apiParams.branch_id || undefined,
+      record_status: apiParams.record_status || undefined,
+    }),
+    [apiParams]
+  );
+
+  // ============== DATA FETCHING ==============
+  // Metrics data (for top cards) - controlled by MetricsFilter
+  const {
+    data: metricsData,
+    loading: metricsLoading,
+    error: metricsError,
+    refetch: refetchMetrics,
+  } = useComplianceDashboard(metricsApiFilters);
+
+  // Table data - controlled by AdvancedFilterPanel
+  const {
+    data: tableData,
+    loading: tableLoading,
+    error: tableError,
+    refetch: refetchTable,
+  } = useComplianceDashboard(tableApiFilters);
+
+  // Combined loading and error states
+  const dashboardLoading = metricsLoading || tableLoading;
+  const dashboardError = metricsError || tableError;
+  const refetchDashboard = () => {
+    refetchMetrics();
+    refetchTable();
+  };
+
+  // Fetch regions list
+  const {
+    data: regions,
+    loading: regionsLoading,
+    error: regionsError,
+    refetch: refetchRegions,
+  } = useRegions();
+
+  // ============== CLIENT-SIDE FILTERING ==============
+  // Use table data for the data table (backend-filtered by AdvancedFilterPanel)
+  // Backend returns regional_summary when no region filter, branch_summary when region is selected
+  const regionalSummary =
+    tableData?.regional_summary ?? tableData?.branch_summary ?? [];
+
+  // Additional client-side search filter (optional)
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredSummary = useMemo(() => {
     if (!searchTerm) return regionalSummary;
@@ -418,15 +472,15 @@ const ComplianceDashboard: React.FC = () => {
         onReset={handleResetMetricsFilters}
       />
 
-      {/* Dashboard Cards */}
+      {/* Dashboard Cards - controlled by MetricsFilter */}
       <DashboardCards
         metrics={{
           totalActualContributions:
-            dashboardData?.metric_cards?.total_contributions ?? 0,
-          contributionsTarget: dashboardData?.metric_cards?.total_target ?? 0,
-          performanceRate: dashboardData?.metric_cards?.performance_rate ?? 0,
-          totalEmployers: dashboardData?.metric_cards?.total_employers ?? 0,
-          totalEmployees: dashboardData?.metric_cards?.total_employees ?? 0,
+            metricsData?.metric_cards?.total_contributions ?? 0,
+          contributionsTarget: metricsData?.metric_cards?.total_target ?? 0,
+          performanceRate: metricsData?.metric_cards?.performance_rate ?? 0,
+          totalEmployers: metricsData?.metric_cards?.total_employers ?? 0,
+          totalEmployees: metricsData?.metric_cards?.total_employees ?? 0,
         }}
       />
 

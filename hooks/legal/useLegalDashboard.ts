@@ -24,7 +24,9 @@ interface UseLegalDashboardReturn {
   refetch: () => Promise<void>;
 }
 
-export function useLegalDashboard(filters: Record<string, string> = {}): UseLegalDashboardReturn {
+export function useLegalDashboard(
+  filters: Record<string, string> = {}
+): UseLegalDashboardReturn {
   const [data, setData] = useState<LegalDashboard | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,10 +38,20 @@ export function useLegalDashboard(filters: Record<string, string> = {}): UseLega
 
       const httpService = new HttpService();
 
-      // Build query string from filters
-      const queryParams = new URLSearchParams(filters).toString();
-      const url = queryParams
-        ? `/api/legal-ops/dashboard?${queryParams}`
+      // Build query string from filters - only include defined values
+      const queryParams = new URLSearchParams();
+      if (filters.period) queryParams.append("period", filters.period);
+      if (filters.period_from)
+        queryParams.append("period_from", filters.period_from);
+      if (filters.period_to) queryParams.append("period_to", filters.period_to);
+      if (filters.region_id) queryParams.append("region_id", filters.region_id);
+      if (filters.branch_id) queryParams.append("branch_id", filters.branch_id);
+      if (filters.record_status)
+        queryParams.append("record_status", filters.record_status);
+
+      const queryString = queryParams.toString();
+      const url = queryString
+        ? `/api/legal-ops/dashboard?${queryString}`
         : "/api/legal-ops/dashboard";
 
       const response = await httpService.getData(url);
