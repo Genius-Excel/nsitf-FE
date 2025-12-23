@@ -51,7 +51,7 @@ export const useUserForm = () => {
 
     // Determine organizational level from user data
     // The API may return either 'organizational_level' or 'organization_level'
-    let orgLevel = user.organizational_level || user.organization_level || "";
+    let orgLevel = user.organizational_level || user.organizational_level || "";
 
     // If not directly provided, infer from other fields
     if (!orgLevel) {
