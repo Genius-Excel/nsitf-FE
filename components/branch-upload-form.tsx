@@ -14,6 +14,8 @@ import {
   MapPin,
   Building,
   Download,
+  AlertCircle,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -37,6 +40,7 @@ import {
   useBranches,
   useFileUpload,
   useUploadForm,
+  type ErrorReport,
 } from "@/hooks/useBranchData";
 import { cn } from "@/lib/utils";
 
@@ -89,10 +93,17 @@ interface FileUploadAreaProps {
   file: File | null;
   onFileChange: (file: File | null) => void;
   disabled?: boolean;
+  error?: string | null;
 }
 
-function FileUploadArea({ file, onFileChange, disabled }: FileUploadAreaProps) {
+function FileUploadArea({
+  file,
+  onFileChange,
+  disabled,
+  error,
+}: FileUploadAreaProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0] || null;
@@ -127,7 +138,8 @@ function FileUploadArea({ file, onFileChange, disabled }: FileUploadAreaProps) {
           disabled
             ? "border-gray-200 bg-gray-50 cursor-not-allowed"
             : "border-gray-300 hover:border-green-400",
-          file ? "border-green-400 bg-green-50" : ""
+          file ? "border-green-400 bg-green-50" : "",
+          error ? "border-red-300 bg-red-50" : ""
         )}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -149,9 +161,17 @@ function FileUploadArea({ file, onFileChange, disabled }: FileUploadAreaProps) {
               <FileSpreadsheet className="w-12 h-12 text-green-600 mx-auto" />
               <div>
                 <p className="font-medium text-green-800">{file.name}</p>
-                <p className="text-sm text-gray-500">
-                  {(file.size / (1024 * 1024)).toFixed(1)} MB
-                </p>
+                <div className="flex items-center justify-center space-x-2 mt-2">
+                  <Badge variant="outline">
+                    {(file.size / (1024 * 1024)).toFixed(2)} MB /{" "}
+                    {MAX_FILE_SIZE / (1024 * 1024)} MB
+                  </Badge>
+                  {file.size > MAX_FILE_SIZE && (
+                    <Badge variant="destructive" className="text-xs">
+                      File too large!
+                    </Badge>
+                  )}
+                </div>
               </div>
             </>
           ) : (
@@ -187,6 +207,12 @@ function FileUploadArea({ file, onFileChange, disabled }: FileUploadAreaProps) {
           Remove File
         </Button>
       )}
+      {error && (
+        <div className="flex items-center space-x-2 text-sm text-red-600 bg-red-50 p-3 rounded-md">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -206,10 +232,17 @@ export function BranchUploadForm({ onUploadSuccess }: BranchUploadFormProps) {
   const { branches, loading: branchesLoading } = useBranches(formData.regionId);
 
   // Upload functionality
-  const { uploading, uploadFile } = useFileUpload();
+  const { uploading, uploadFile, uploadError, errorReport } = useFileUpload();
+
+  // Local state for file validation errors
+  const [fileError, setFileError] = React.useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+
+    // Clear previous errors
+    setFileError(null);
 
     if (!isFormValid()) {
       // Show specific validation errors
@@ -223,15 +256,40 @@ export function BranchUploadForm({ onUploadSuccess }: BranchUploadFormProps) {
         return; // Select will show its own error
       }
       if (!formData.file) {
-        return; // File upload will show its own error
+        setFileError("Please select a file to upload");
+        return;
       }
       return;
     }
 
-    const success = await uploadFile(formData);
-    if (success) {
-      resetForm();
-      onUploadSuccess();
+    // Validate file type
+    if (formData.file && !formData.file.name.toLowerCase().endsWith(".xlsx")) {
+      setFileError("Invalid file type. Please upload an Excel file (.xlsx)");
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (formData.file && formData.file.size > 10 * 1024 * 1024) {
+      setFileError(
+        "File size exceeds 10MB limit. Please upload a smaller file."
+      );
+      return;
+    }
+
+    try {
+      const success = await uploadFile(formData);
+      if (success) {
+        setFileError(null);
+        resetForm();
+        // Small delay to ensure success message is seen before refresh
+        setTimeout(() => {
+          onUploadSuccess();
+        }, 500);
+      }
+      // If upload fails, errors are already set by the hook
+    } catch (error) {
+      console.error("Form submission error:", error);
+      setFileError("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -407,13 +465,84 @@ export function BranchUploadForm({ onUploadSuccess }: BranchUploadFormProps) {
             </Label>
             <FileUploadArea
               file={formData.file}
-              onFileChange={(file) => updateField("file", file)}
+              onFileChange={(file) => {
+                updateField("file", file);
+                setFileError(null); // Clear error when file changes
+              }}
               disabled={isFormDisabled}
+              error={fileError}
             />
             <p className="text-xs text-gray-500">
               Supported format: Excel (.xlsx) • Maximum size: 10MB
             </p>
           </div>
+
+          {/* Upload Error Display */}
+          {uploadError && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-medium text-red-900">Upload Failed</p>
+                      <p className="text-sm text-red-700 mt-1">{uploadError}</p>
+                    </div>
+                  </div>
+
+                  {/* Detailed Error Report */}
+                  {errorReport && (
+                    <div className="mt-4 space-y-3">
+                      <p className="text-sm font-medium text-red-900">
+                        Error Details:
+                      </p>
+                      <div className="max-h-96 overflow-y-auto bg-white rounded-md border border-red-200 p-3 space-y-4">
+                        {Object.entries(errorReport).map(
+                          ([sheetName, sheetData]) => (
+                            <div key={sheetName} className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <h4 className="font-medium text-sm text-gray-900">
+                                  {sheetName}
+                                </h4>
+                                <div className="flex items-center space-x-2 text-xs">
+                                  {sheetData.total_rows > 0 && (
+                                    <span className="text-gray-600">
+                                      {sheetData.total_rows} rows
+                                    </span>
+                                  )}
+                                  {sheetData.failed_rows > 0 && (
+                                    <span className="text-red-600 font-medium">
+                                      {sheetData.failed_rows} failed
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              {sheetData.errors.length > 0 && (
+                                <ul className="space-y-1 ml-4">
+                                  {sheetData.errors.map((error, idx) => (
+                                    <li
+                                      key={idx}
+                                      className="text-xs text-red-700 flex items-start"
+                                    >
+                                      <span className="mr-2">•</span>
+                                      <span>
+                                        {error.row && `Row ${error.row}: `}
+                                        {error.message}
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Submit Button */}
           <div className="pt-4">

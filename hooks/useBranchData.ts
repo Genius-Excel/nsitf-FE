@@ -34,6 +34,22 @@ export interface UploadFormData {
   file: File | null;
 }
 
+export interface SheetError {
+  error: string;
+  message: string;
+  row?: number;
+}
+
+export interface SheetErrorReport {
+  total_rows: number;
+  failed_rows: number;
+  errors: SheetError[];
+}
+
+export interface ErrorReport {
+  [sheetName: string]: SheetErrorReport;
+}
+
 // ============== MOCK DATA ==============
 
 const MOCK_REGIONS: Region[] = [
@@ -350,18 +366,24 @@ export function useBranches(regionId: string) {
 export function useFileUpload() {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [errorReport, setErrorReport] = useState<ErrorReport | null>(null);
 
   const uploadFile = useCallback(
     async (formData: UploadFormData): Promise<boolean> => {
+      // Clear previous errors
+      setUploadError(null);
       if (
         !formData.file ||
         !formData.regionId ||
         !formData.branchId ||
         !formData.period
       ) {
+        const errorMsg = "All fields are required";
+        setUploadError(errorMsg);
         toast({
           title: "Validation Error",
-          description: "All fields are required",
+          description: errorMsg,
           variant: "destructive",
         });
         return false;
@@ -369,9 +391,11 @@ export function useFileUpload() {
 
       // Validate file type
       if (!formData.file.name.toLowerCase().endsWith(".xlsx")) {
+        const errorMsg = "Please upload an Excel file (.xlsx)";
+        setUploadError(errorMsg);
         toast({
           title: "Invalid File Type",
-          description: "Please upload an Excel file (.xlsx)",
+          description: errorMsg,
           variant: "destructive",
         });
         return false;
@@ -379,9 +403,14 @@ export function useFileUpload() {
 
       // Validate file size (max 10MB)
       if (formData.file.size > 10 * 1024 * 1024) {
+        const errorMsg = `File size (${(
+          formData.file.size /
+          (1024 * 1024)
+        ).toFixed(2)} MB) exceeds the maximum limit of 10MB`;
+        setUploadError(errorMsg);
         toast({
           title: "File Too Large",
-          description: "File size must be less than 10MB",
+          description: errorMsg,
           variant: "destructive",
         });
         return false;
@@ -420,10 +449,40 @@ export function useFileUpload() {
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.message || result.error || "Upload failed");
+          const errorMsg = result.message || result.error || "Upload failed";
+          setUploadError(errorMsg);
+          setErrorReport(result.error_report || null);
+          throw new Error(errorMsg);
         }
 
-        // Success response based on API documentation
+        // Handle completed_with_errors status
+        if (result.status === "completed_with_errors" && result.error_report) {
+          setErrorReport(result.error_report);
+
+          // Count total errors across all sheets
+          const errorCount = Object.values(
+            result.error_report as ErrorReport
+          ).reduce(
+            (total: number, sheet: SheetErrorReport) =>
+              total + sheet.errors.length,
+            0
+          );
+
+          const errorMsg = `Upload completed with ${errorCount} error(s). Please review the error details below.`;
+          setUploadError(errorMsg);
+
+          toast({
+            title: "Upload Completed with Errors",
+            description: errorMsg,
+            variant: "destructive",
+          });
+
+          return false; // Return false so errors are displayed
+        }
+
+        // Success response
+        setUploadError(null);
+        setErrorReport(null);
         toast({
           title: "Upload Successful",
           description: `Your report has been submitted successfully. Batch ID: ${result.batch_id}. Status: ${result.status}`,
@@ -432,12 +491,14 @@ export function useFileUpload() {
         return true;
       } catch (err) {
         console.error("Upload error:", err);
+        const errorMsg =
+          err instanceof Error
+            ? err.message
+            : "Failed to upload file. Please try again.";
+        setUploadError(errorMsg);
         toast({
           title: "Upload Failed",
-          description:
-            err instanceof Error
-              ? err.message
-              : "Failed to upload file. Please try again.",
+          description: errorMsg,
           variant: "destructive",
         });
         return false;
@@ -451,6 +512,8 @@ export function useFileUpload() {
   return {
     uploading,
     uploadFile,
+    uploadError,
+    errorReport,
   };
 }
 

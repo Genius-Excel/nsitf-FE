@@ -12,7 +12,6 @@ import {
 // import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 // import { Database } from "./database/types";
 
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -184,7 +183,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 75.0,
     employersRegistered: 450,
     employees: 5600,
-    registrationFees: 5500000,  // ← ADDED THIS (was missing)
+    registrationFees: 5500000, // ← ADDED THIS (was missing)
     certificateFees: 7500000,
     period: "June 2025",
   },
@@ -197,7 +196,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 80.0,
     employersRegistered: 380,
     employees: 4800,
-    registrationFees: 4200000,  // ← ADDED THIS (was missing)
+    registrationFees: 4200000, // ← ADDED THIS (was missing)
     certificateFees: 5000000,
     period: "June 2025",
   },
@@ -210,7 +209,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 85.0,
     employersRegistered: 280,
     employees: 3500,
-    registrationFees: 3000000,  // ← ADDED THIS (was missing)
+    registrationFees: 3000000, // ← ADDED THIS (was missing)
     certificateFees: 30000000,
     period: "June 2025",
   },
@@ -223,7 +222,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 84.6,
     employersRegistered: 320,
     employees: 4200,
-    registrationFees: 3500000,  // ← ADDED THIS (was missing)
+    registrationFees: 3500000, // ← ADDED THIS (was missing)
     certificateFees: 6000000,
     period: "June 2025",
   },
@@ -236,7 +235,7 @@ export const DUMMY_DATA: ComplianceEntry[] = [
     achievement: 83.3,
     employersRegistered: 250,
     employees: 3200,
-    registrationFees: 2800000,  // ← ADDED THIS (was missing)
+    registrationFees: 2800000, // ← ADDED THIS (was missing)
     certificateFees: 2500000,
     period: "June 2025",
   },
@@ -534,6 +533,8 @@ export const formatNumber = (num: number): string => {
 /**
  * Capitalizes each word in a role string
  * Example: "admin" -> "Admin", "hse officer" -> "HSE Officer"
+ *
+ * Note: For actual role display, use getRoleDisplayName() instead to get the backend's display_name
  */
 export const capitalizeRole = (role: string | undefined | null): string => {
   if (!role) return "";
@@ -542,7 +543,11 @@ export const capitalizeRole = (role: string | undefined | null): string => {
   if (role.toLowerCase().includes("hse")) {
     return role
       .split(" ")
-      .map((word) => (word.toLowerCase() === "hse" ? "HSE" : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()))
+      .map((word) =>
+        word.toLowerCase() === "hse"
+          ? "HSE"
+          : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      )
       .join(" ");
   }
 
@@ -551,4 +556,28 @@ export const capitalizeRole = (role: string | undefined | null): string => {
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
+};
+
+/**
+ * Get role display name from roles data
+ * Returns display_name if available, otherwise falls back to capitalizeRole
+ */
+export const getRoleDisplayName = (
+  roleName: string | undefined | null,
+  roles: Array<{ roleName: string; name: string }> | null
+): string => {
+  if (!roleName) return "";
+
+  // If roles data is available, look up the display name
+  if (roles && Array.isArray(roles)) {
+    const role = roles.find(
+      (r) => r.roleName?.toLowerCase() === roleName.toLowerCase()
+    );
+    if (role && role.name) {
+      return role.name; // This is the display_name from backend
+    }
+  }
+
+  // Fallback to capitalized role name
+  return capitalizeRole(roleName);
 };

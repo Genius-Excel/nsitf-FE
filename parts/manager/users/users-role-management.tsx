@@ -192,6 +192,7 @@ export default function UsersRolesManagement() {
         {/* Users Table */}
         <UsersTable
           users={filteredUsers}
+          roles={null}
           onEdit={handleEditUser}
           onDeleteClick={handleDeleteClick}
         />

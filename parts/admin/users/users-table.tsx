@@ -28,16 +28,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { formatDate, getRoleBadgeColor, capitalizeRole } from "@/lib/utils";
+import { formatDate, getRoleBadgeColor, getRoleDisplayName } from "@/lib/utils";
 import { NewUserForm, User } from "@/lib/types";
 import { useRegions } from "@/hooks/compliance/Useregions";
-import { useBranches, useRoles } from "@/hooks/users";
+import { useBranches, useRoles, type Role } from "@/hooks/users";
 
 export const UsersTable: React.FC<{
   users: User[];
   onEdit: (user: User) => void;
   onDeleteClick: (userId: string) => void;
-}> = ({ users, onEdit, onDeleteClick }) => (
+  roles?: Role[] | null;
+}> = ({ users, onEdit, onDeleteClick, roles = null }) => (
   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
     <div className="overflow-x-auto">
       <table className="w-full divide-y divide-gray-200">
@@ -73,10 +74,10 @@ export const UsersTable: React.FC<{
               <td className="px-6 py-4 text-sm">
                 <Badge
                   className={`${getRoleBadgeColor(
-                    capitalizeRole(user.role)
+                    getRoleDisplayName(user.role, roles)
                   )} font-medium text-xs`}
                 >
-                  {capitalizeRole(user.role)}
+                  {getRoleDisplayName(user.role, roles)}
                 </Badge>
               </td>
               <td className="px-6 py-4 text-sm">
@@ -124,12 +125,7 @@ export const SearchAndFilter: React.FC<{
   onSearchChange: (value: string) => void;
   filterRole: string;
   onFilterChange: (value: string) => void;
-  roles?: Array<{
-    id: string;
-    name: string;
-    roleName: string;
-    description: string;
-  }>;
+  roles?: Role[];
 }> = ({
   searchTerm,
   onSearchChange,
@@ -156,7 +152,7 @@ export const SearchAndFilter: React.FC<{
           <SelectItem value="All Roles">All Roles</SelectItem>
           {roles.map((role) => (
             <SelectItem key={role.id} value={role.roleName}>
-              {capitalizeRole(role.name)}
+              {role.name}
             </SelectItem>
           ))}
         </SelectContent>
@@ -166,12 +162,7 @@ export const SearchAndFilter: React.FC<{
 );
 
 export const RolePermissionsOverview: React.FC<{
-  roles?: Array<{
-    id: string;
-    name: string;
-    roleName: string;
-    description: string;
-  }>;
+  roles?: Role[];
 }> = ({ roles = [] }) => (
   <div className="mt-8">
     <h2 className="text-lg font-semibold text-gray-900 mb-4">
@@ -184,9 +175,11 @@ export const RolePermissionsOverview: React.FC<{
           className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow"
         >
           <h3 className="font-semibold text-gray-900 text-sm mb-1">
-            {capitalizeRole(role.name)}
+            {role.name}
           </h3>
-          <p className="text-xs text-gray-600">{role.description}</p>
+          {role.description && (
+            <p className="text-xs text-gray-600">{role.description}</p>
+          )}
         </div>
       ))}
     </div>
@@ -346,7 +339,7 @@ export const UserFormModal: React.FC<{
                 {roles && roles.length > 0 ? (
                   roles.map((role) => (
                     <SelectItem key={role.id} value={role.id}>
-                      {capitalizeRole(role.name)}
+                      {role.name}
                     </SelectItem>
                   ))
                 ) : (

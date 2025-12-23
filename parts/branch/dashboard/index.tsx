@@ -6,17 +6,18 @@
 
 "use client";
 
-import React from 'react';
-import { FileSpreadsheet, Shield } from 'lucide-react';
-import { BranchUploadForm } from '@/components/branch-upload-form';
-import { BranchUploadHistory } from '@/components/branch-upload-history';
+import React from "react";
+import { FileSpreadsheet, Shield } from "lucide-react";
+import { BranchUploadForm } from "@/components/branch-upload-form";
+import { BranchUploadHistory } from "@/components/branch-upload-history";
 
 export default function BranchDashboard() {
-  // Handle successful upload - refresh history
+  const [refreshKey, setRefreshKey] = React.useState(0);
+
+  // Handle successful upload - refresh history without page reload
   const handleUploadSuccess = () => {
-    // The history component will automatically refetch when it regains focus
-    // or we could trigger a manual refresh here if needed
-    window.location.reload();
+    // Trigger history component refresh by updating key
+    setRefreshKey((prev) => prev + 1);
   };
 
   return (
@@ -33,7 +34,8 @@ export default function BranchDashboard() {
         </div>
         <p className="text-gray-600 max-w-2xl mx-auto">
           Submit your monthly branch reports and track their review status.
-          Upload one consolidated Excel workbook per month containing all required data.
+          Upload one consolidated Excel workbook per month containing all
+          required data.
         </p>
       </div>
 
@@ -44,8 +46,9 @@ export default function BranchDashboard() {
           <h3 className="font-medium">Secure Data Submission</h3>
         </div>
         <p className="text-green-700 text-sm mt-2">
-          All uploaded files are encrypted and securely stored. Only authorized regional managers
-          can review your submissions. Ensure your data is complete and accurate before submission.
+          All uploaded files are encrypted and securely stored. Only authorized
+          regional managers can review your submissions. Ensure your data is
+          complete and accurate before submission.
         </p>
       </div>
 
@@ -53,7 +56,7 @@ export default function BranchDashboard() {
       <BranchUploadForm onUploadSuccess={handleUploadSuccess} />
 
       {/* Upload History */}
-      <BranchUploadHistory />
+      <BranchUploadHistory key={refreshKey} />
     </div>
   );
 }
