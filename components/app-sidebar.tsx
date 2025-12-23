@@ -119,7 +119,7 @@ const navigationItems: NavigationItem[] = [
     ] as Role[],
   },
   {
-    title: "OSH",
+    title: "HSE",
     href: "/dashboard/hse",
     icon: HardHat,
     roles: [

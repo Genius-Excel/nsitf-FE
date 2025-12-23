@@ -9,9 +9,28 @@ import {
   CheckCircle2,
   AlertCircle,
   Activity,
-  DollarSign,
   Clock,
 } from "lucide-react";
+
+// Custom Naira Icon
+const NairaIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <line x1="6" y1="3" x2="6" y2="21" />
+    <line x1="18" y1="3" x2="18" y2="21" />
+    <line x1="6" y1="8" x2="18" y2="16" />
+    <line x1="2" y1="10" x2="22" y2="10" />
+    <line x1="2" y1="14" x2="22" y2="14" />
+  </svg>
+);
 
 export function KPIAnalyticsFunc() {
   const [selectedRegion, setSelectedRegion] = useState("all");
@@ -45,9 +64,13 @@ export function KPIAnalyticsFunc() {
       avg_case_duration: { value: 0, trend: 0, status: "Unknown", target: 0 },
     };
 
-    const regional_performance = kpiAnalysisData?.regional_performance || { data: [] };
+    const regional_performance = kpiAnalysisData?.regional_performance || {
+      data: [],
+    };
     const sector_distribution = kpiAnalysisData?.sector_distribution || [];
-    const monthly_kpi_comparison = kpiAnalysisData?.monthly_kpi_comparison || { data: [] };
+    const monthly_kpi_comparison = kpiAnalysisData?.monthly_kpi_comparison || {
+      data: [],
+    };
 
     // Transform KPI Cards with safe defaults
     const kpiMetrics: KPIMetric[] = [
@@ -69,7 +92,8 @@ export function KPIAnalyticsFunc() {
                 | "critical"
                 | "normal") || "normal",
         icon: FileText,
-        target: kpi_cards.total_claims?.target ?? kpi_cards.total_claims?.value ?? 0,
+        target:
+          kpi_cards.total_claims?.target ?? kpi_cards.total_claims?.value ?? 0,
         actual: kpi_cards.total_claims?.value ?? 0,
       },
       {
@@ -90,7 +114,8 @@ export function KPIAnalyticsFunc() {
                 | "critical"
                 | "normal") || "normal",
         icon: CheckCircle2,
-        target: kpi_cards.paid_claims?.target ?? kpi_cards.paid_claims?.value ?? 0,
+        target:
+          kpi_cards.paid_claims?.target ?? kpi_cards.paid_claims?.value ?? 0,
         actual: kpi_cards.paid_claims?.value ?? 0,
       },
       {
@@ -111,7 +136,10 @@ export function KPIAnalyticsFunc() {
                 | "critical"
                 | "normal") || "normal",
         icon: AlertCircle,
-        target: kpi_cards.pending_inspections?.target ?? kpi_cards.pending_inspections?.value ?? 0,
+        target:
+          kpi_cards.pending_inspections?.target ??
+          kpi_cards.pending_inspections?.value ??
+          0,
         actual: kpi_cards.pending_inspections?.value ?? 0,
       },
       {
@@ -137,7 +165,9 @@ export function KPIAnalyticsFunc() {
       },
       {
         title: "Risk Exposure (₦)",
-        value: `₦${((kpi_cards.risk_exposure?.value ?? 0) / 1000000000).toFixed(2)}B`,
+        value: `₦${((kpi_cards.risk_exposure?.value ?? 0) / 1000000000).toFixed(
+          2
+        )}B`,
         change: "0",
         trend: "up",
         status:
@@ -148,8 +178,11 @@ export function KPIAnalyticsFunc() {
                 | "warning"
                 | "critical"
                 | "normal") || "normal",
-        icon: DollarSign,
-        target: (kpi_cards.risk_exposure?.target ?? kpi_cards.risk_exposure?.value ?? 0) / 1000000000,
+        icon: NairaIcon,
+        target:
+          (kpi_cards.risk_exposure?.target ??
+            kpi_cards.risk_exposure?.value ??
+            0) / 1000000000,
         actual: (kpi_cards.risk_exposure?.value ?? 0) / 1000000000,
       },
       {
@@ -166,7 +199,10 @@ export function KPIAnalyticsFunc() {
                 | "critical"
                 | "normal") || "normal",
         icon: Clock,
-        target: kpi_cards.avg_case_duration?.target ?? kpi_cards.avg_case_duration?.value ?? 0,
+        target:
+          kpi_cards.avg_case_duration?.target ??
+          kpi_cards.avg_case_duration?.value ??
+          0,
         actual: kpi_cards.avg_case_duration?.value ?? 0,
       },
     ];
@@ -174,7 +210,7 @@ export function KPIAnalyticsFunc() {
     // Transform Regional Data with safe defaults
     const regionalData: RegionalData[] = (regional_performance?.data || []).map(
       (region: any) => ({
-        region: region?.region || '',
+        region: region?.region || "",
         claims: region?.claims ?? 0,
         paid: region?.paid ?? 0,
         pending: region?.pending ?? 0,
@@ -184,11 +220,13 @@ export function KPIAnalyticsFunc() {
     );
 
     // Transform Sector Data with safe defaults
-    const sectorData: SectorData[] = (sector_distribution || []).map((sector: any) => ({
-      name: sector?.sector || '',
-      value: sector?.count ?? 0,
-      claims: sector?.count ?? 0,
-    }));
+    const sectorData: SectorData[] = (sector_distribution || []).map(
+      (sector: any) => ({
+        name: sector?.sector || "",
+        value: sector?.count ?? 0,
+        claims: sector?.count ?? 0,
+      })
+    );
 
     // Transform Monthly KPI Data with safe defaults
     const monthlyKPIs: MonthlyKPI[] = monthly_kpi_comparison?.data || [];
