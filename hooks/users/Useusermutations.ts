@@ -58,7 +58,7 @@ export const useUserMutations = (options?: MutationOptions) => {
 
         // Add organizational fields based on level
         if (data.organizational_level === "hq") {
-          payload.organizational_level = "hq";
+          payload.organization_level = "hq";
         } else if (data.organizational_level === "region") {
           // For regional users: only region_id is needed
           if (!data.region_id) {
@@ -141,7 +141,7 @@ export const useUserMutations = (options?: MutationOptions) => {
 
         // Add organizational fields based on level
         if (data.organizational_level === "hq") {
-          payload.organizational_level = "hq";
+          payload.organization_level = "hq";
         } else if (data.organizational_level === "region") {
           // For regional users: only region_id is needed
           if (!data.region_id) {
