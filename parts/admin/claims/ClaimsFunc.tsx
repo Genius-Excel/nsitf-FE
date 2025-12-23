@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { FileText, Activity, BarChart3, DollarSign } from "lucide-react";
+import { FileText, Activity, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 
 // Custom Naira Icon

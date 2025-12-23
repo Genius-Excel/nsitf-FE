@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { FileText, Activity, DollarSign, BarChart3 } from "lucide-react";
+import { FileText, Activity, BarChart3 } from "lucide-react";
 import {
   StatisticsCards,
   ClaimsProcessingChart,
@@ -10,6 +10,26 @@ import {
 } from "./ClaimsDesign";
 import { Claim, StatCard, ChartDataPoint } from "../../../lib/types";
 import { chartData, mockClaims } from "@/lib/Constants";
+
+// Custom Naira Icon
+const NairaIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <line x1="6" y1="3" x2="6" y2="21" />
+    <line x1="18" y1="3" x2="18" y2="21" />
+    <line x1="6" y1="8" x2="18" y2="16" />
+    <line x1="2" y1="10" x2="22" y2="10" />
+    <line x1="2" y1="14" x2="22" y2="14" />
+  </svg>
+);
 
 export default function ClaimsManagement() {
   // ============== STATE ==============
@@ -127,7 +147,7 @@ export default function ClaimsManagement() {
     {
       title: "Disability Claims",
       value: disabilityClaims,
-      icon: <DollarSign />,
+      icon: <NairaIcon />,
       bgColor: "#3b82f6",
     },
     {

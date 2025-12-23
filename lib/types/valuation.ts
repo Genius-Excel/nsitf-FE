@@ -2,12 +2,7 @@
 // Valuation & Forecasting Types
 // ============================================================================
 
-import {
-  DollarSign,
-  CheckCircle2,
-  AlertTriangle,
-  TrendingUp,
-} from "lucide-react";
+import { CheckCircle2, AlertTriangle, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type {
   ClaimTrendProjection,
@@ -17,6 +12,27 @@ import type {
   ShortTermForecast,
   LongTermForecast,
 } from "./index";
+
+// Custom Naira Icon
+const NairaIcon: LucideIcon = ({ ...props }) =>
+  (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <line x1="6" y1="3" x2="6" y2="21" />
+      <line x1="18" y1="3" x2="18" y2="21" />
+      <line x1="6" y1="8" x2="18" y2="16" />
+      <line x1="2" y1="10" x2="22" y2="10" />
+      <line x1="2" y1="14" x2="22" y2="14" />
+    </svg>
+  ) as any;
 
 // API Response Types
 export interface ValuationAPIResponse {
@@ -196,7 +212,7 @@ export function formatValuationMetrics(metrics: {
       value: formatCurrency(safeMetrics.total_liabilities),
       change: formatTrend(safeMetrics.total_liabilities_trend),
       status: "warning" as const,
-      icon: DollarSign,
+      icon: NairaIcon,
     },
     {
       title: "Reserve Adequacy",
@@ -209,7 +225,10 @@ export function formatValuationMetrics(metrics: {
       title: "Outstanding Claims",
       value: formatCurrency(safeMetrics.outstanding_claims),
       change: formatTrend(safeMetrics.outstanding_claims_trend),
-      status: safeMetrics.outstanding_claims === 0 ? ("success" as const) : ("warning" as const),
+      status:
+        safeMetrics.outstanding_claims === 0
+          ? ("success" as const)
+          : ("warning" as const),
       icon: AlertTriangle,
     },
     {
@@ -240,8 +259,10 @@ export function transformValuationFromAPI(
 
   // Safe defaults for forecasting models
   const claimsData = apiData?.forecasting_models?.claims?.chart_data || [];
-  const contributionsData = apiData?.forecasting_models?.contributions?.chart_data || [];
-  const inspectionsData = apiData?.forecasting_models?.inspections?.chart_data || [];
+  const contributionsData =
+    apiData?.forecasting_models?.contributions?.chart_data || [];
+  const inspectionsData =
+    apiData?.forecasting_models?.inspections?.chart_data || [];
   const hseData = apiData?.forecasting_models?.hse?.chart_data || [];
 
   // Safe defaults for short-term forecast
@@ -249,8 +270,10 @@ export function transformValuationFromAPI(
 
   // Safe defaults for long-term forecast
   const longTermClaims = apiData?.long_term_forecast?.claims_yearly || [];
-  const longTermContributions = apiData?.long_term_forecast?.contributions_yearly || [];
-  const annualGrowth = apiData?.long_term_forecast?.average_annual_growth_pct || {
+  const longTermContributions =
+    apiData?.long_term_forecast?.contributions_yearly || [];
+  const annualGrowth = apiData?.long_term_forecast
+    ?.average_annual_growth_pct || {
     claims: 0,
     contributions: 0,
   };
@@ -266,60 +289,48 @@ export function transformValuationFromAPI(
       expectedInflows: metricCards.expected_inflows ?? 0,
       expectedInflowsTrend: metricCards.expected_inflows_trend ?? 0,
     },
-    claimTrendProjections: claimsData.map(
-      (item: any) => ({
-        period: item?.quarter || '',
-        actual: item?.actual ?? 0,
-        forecast: item?.forecast ?? 0,
-        lower: item?.forecast ? item.forecast * 0.85 : 0, // 15% lower bound
-        upper: item?.forecast ? item.forecast * 1.15 : 0, // 15% upper bound
-      })
-    ),
-    contributionGrowth: contributionsData.map(
-      (item: any) => ({
-        period: item?.quarter || '',
-        actual: item?.actual ?? 0,
-        forecast: item?.forecast ?? 0,
-        target: item?.target ?? 0,
-      })
-    ),
-    inspectionTrends: inspectionsData.map(
-      (item: any) => ({
-        period: item?.quarter || '',
-        completed: item?.completed ?? 0,
-        forecast: item?.forecast ?? 0,
-        planned: item?.planned ?? 0,
-      })
-    ),
-    hseTrends: hseData.map(
-      (item: any) => ({
-        period: item?.quarter || '',
-        total: item?.total ?? 0,
-        forecast: item?.forecast ?? 0,
-      })
-    ),
-    shortTermForecasts: shortTermData.map(
-      (item: any) => ({
-        quarter: item?.quarter || '',
-        claims: item?.claims ?? 0,
-        contributions: item?.contributions ?? 0,
-        liabilities: (metricCards.total_liabilities ?? 0) / 4, // Estimate quarterly from total
-        reserves: (metricCards.expected_inflows ?? 0) / 4, // Estimate quarterly from expected inflows
-      })
-    ),
-    longTermForecasts: longTermClaims.map(
-      (claimsItem, index) => ({
-        year: claimsItem?.year?.toString() || '',
-        claims: claimsItem?.value ?? 0,
-        contributions: longTermContributions[index]?.value ?? 0,
-        liabilities: (metricCards.total_liabilities ?? 0) * (1 + index * 0.05), // 5% growth estimate
-        reserves: (metricCards.expected_inflows ?? 0) * (1 + index * 0.05), // 5% growth estimate
-        growth: annualGrowth.claims ?? 0,
-      })
-    ),
+    claimTrendProjections: claimsData.map((item: any) => ({
+      period: item?.quarter || "",
+      actual: item?.actual ?? 0,
+      forecast: item?.forecast ?? 0,
+      lower: item?.forecast ? item.forecast * 0.85 : 0, // 15% lower bound
+      upper: item?.forecast ? item.forecast * 1.15 : 0, // 15% upper bound
+    })),
+    contributionGrowth: contributionsData.map((item: any) => ({
+      period: item?.quarter || "",
+      actual: item?.actual ?? 0,
+      forecast: item?.forecast ?? 0,
+      target: item?.target ?? 0,
+    })),
+    inspectionTrends: inspectionsData.map((item: any) => ({
+      period: item?.quarter || "",
+      completed: item?.completed ?? 0,
+      forecast: item?.forecast ?? 0,
+      planned: item?.planned ?? 0,
+    })),
+    hseTrends: hseData.map((item: any) => ({
+      period: item?.quarter || "",
+      total: item?.total ?? 0,
+      forecast: item?.forecast ?? 0,
+    })),
+    shortTermForecasts: shortTermData.map((item: any) => ({
+      quarter: item?.quarter || "",
+      claims: item?.claims ?? 0,
+      contributions: item?.contributions ?? 0,
+      liabilities: (metricCards.total_liabilities ?? 0) / 4, // Estimate quarterly from total
+      reserves: (metricCards.expected_inflows ?? 0) / 4, // Estimate quarterly from expected inflows
+    })),
+    longTermForecasts: longTermClaims.map((claimsItem, index) => ({
+      year: claimsItem?.year?.toString() || "",
+      claims: claimsItem?.value ?? 0,
+      contributions: longTermContributions[index]?.value ?? 0,
+      liabilities: (metricCards.total_liabilities ?? 0) * (1 + index * 0.05), // 5% growth estimate
+      reserves: (metricCards.expected_inflows ?? 0) * (1 + index * 0.05), // 5% growth estimate
+      growth: annualGrowth.claims ?? 0,
+    })),
     averageAnnualGrowth: annualGrowth,
     meta: {
-      modelUsed: apiData?.meta?.model_used || 'unknown',
+      modelUsed: apiData?.meta?.model_used || "unknown",
       generatedAt: apiData?.meta?.generated_at || new Date().toISOString(),
     },
   };

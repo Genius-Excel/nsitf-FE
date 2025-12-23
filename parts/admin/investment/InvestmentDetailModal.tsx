@@ -14,7 +14,6 @@ import {
   FileText,
   Building2,
   TrendingUp,
-  DollarSign,
   Calendar,
   Loader2,
   CheckCircle,
@@ -33,6 +32,26 @@ import { toast } from "sonner";
 import { useBulkInvestmentActions } from "@/hooks/investment/useBulkInvestmentActions";
 import { useSingleInvestment } from "@/hooks/investment/useSingleInvestment";
 import { updateInvestmentRecord } from "@/services/investment";
+
+// Custom Naira Icon
+const NairaIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <line x1="6" y1="3" x2="6" y2="21" />
+    <line x1="18" y1="3" x2="18" y2="21" />
+    <line x1="6" y1="8" x2="18" y2="16" />
+    <line x1="2" y1="10" x2="22" y2="10" />
+    <line x1="2" y1="14" x2="22" y2="14" />
+  </svg>
+);
 
 interface InvestmentDetailModalProps {
   investment: InvestmentRecord | null;
@@ -421,7 +440,7 @@ Generated on: ${new Date().toLocaleString()}
             {/* Contribution Collections */}
             <div className="bg-green-50 rounded-lg p-4">
               <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
+                <NairaIcon className="w-4 h-4" />
                 Contribution Collections
               </h3>
               <div className="grid grid-cols-2 gap-4">

@@ -30,11 +30,32 @@ import {
   AlertCircle,
   Activity,
   TrendingUp,
-  DollarSign,
   AlertTriangle,
   Target,
   Shield,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+// Custom Naira Icon
+const NairaIcon: LucideIcon = ({ ...props }) =>
+  (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <line x1="6" y1="3" x2="6" y2="21" />
+      <line x1="18" y1="3" x2="18" y2="21" />
+      <line x1="6" y1="8" x2="18" y2="16" />
+      <line x1="2" y1="10" x2="22" y2="10" />
+      <line x1="2" y1="14" x2="22" y2="14" />
+    </svg>
+  ) as any;
 
 export const ROLES: Role[] = [
   {
@@ -821,7 +842,7 @@ export const valuationMetrics: ValuationMetric[] = [
     value: "₦3.8B",
     change: "+5.2%",
     status: "warning",
-    icon: DollarSign,
+    icon: NairaIcon,
   },
   {
     title: "Reserve Adequacy",
