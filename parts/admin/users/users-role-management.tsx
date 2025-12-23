@@ -258,6 +258,7 @@ export default function UsersRolesManagement() {
           <div className="bg-white shadow-md rounded-lg overflow-hidden">
             <UsersTable
               users={filteredUsers}
+              roles={roles}
               onEdit={handleEditUser}
               onDeleteClick={(userId) => {
                 const user = users?.find((u: any) => u.id === userId);

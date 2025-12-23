@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { getRoleBadgeColor, capitalizeRole } from "@/lib/utils";
+import { getRoleBadgeColor, getRoleDisplayName } from "@/lib/utils";
 import { NewUserForm, User } from "@/lib/types";
 import { ROLES } from "@/lib/Constants";
 
@@ -33,7 +33,8 @@ export const UsersTable: React.FC<{
   users: User[];
   onEdit: (user: User) => void;
   onDeleteClick: (userId: string) => void;
-}> = ({ users, onEdit, onDeleteClick }) => (
+  roles?: Array<{ roleName: string; name: string }> | null;
+}> = ({ users, onEdit, onDeleteClick, roles = null }) => (
   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
     <div className="overflow-x-auto">
       <table className="w-full divide-y divide-gray-200">
@@ -69,10 +70,10 @@ export const UsersTable: React.FC<{
               <td className="px-6 py-4 text-sm">
                 <Badge
                   className={`${getRoleBadgeColor(
-                    capitalizeRole(user.role)
+                    getRoleDisplayName(user.role, roles)
                   )} font-medium text-xs`}
                 >
-                  {capitalizeRole(user.role)}
+                  {getRoleDisplayName(user.role, roles)}
                 </Badge>
               </td>
               <td className="px-6 py-4 text-sm">
