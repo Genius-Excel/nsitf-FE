@@ -23,6 +23,7 @@ import { useLegalDetail } from "@/hooks/legal/useLegalDetail";
 import type { LegalActivityRecord } from "@/lib/types/legal";
 import { formatLegalDate, formatSectors } from "@/lib/types/legal";
 import { getUserFromStorage, type UserRole } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
 import { toast } from "sonner";
 
 interface LegalDetailModalProps {
@@ -42,6 +43,7 @@ export const LegalDetailModal: React.FC<LegalDetailModalProps> = ({
 
   // State management
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmAction, setConfirmAction] = useState<
     "reviewed" | "approve" | null
@@ -50,10 +52,11 @@ export const LegalDetailModal: React.FC<LegalDetailModalProps> = ({
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedData, setEditedData] = useState<any>(null);
 
-  // Get user role
+  // Get user role and permissions
   useEffect(() => {
     const user = getUserFromStorage();
     setUserRole(user?.role || null);
+    setUserPermissions(user?.permissions || []);
   }, []);
 
   // Initialize edited data when modal opens
@@ -110,26 +113,45 @@ Generated on: ${new Date().toLocaleString()}
   // Use edited data or original data
   const displayData = editedData || detailData;
 
-  // Permission checks (case-insensitive)
+  // Hybrid permission checks: Use BOTH permission system AND role verification
   const normalizedRole = userRole?.toLowerCase();
   const isApproved = displayData?.recordStatus?.toLowerCase() === "approved";
 
-  console.log("🔍 [Legal Modal] Edit check:", {
+  // Check if user has manage_legal permission (backend or role-based)
+  const hasManagePermission = userRole
+    ? hasPermission(userRole, "manage_legal", userPermissions)
+    : false;
+
+  // Allowed roles for editing and reviewing legal records
+  const allowedEditRoles = [
+    "legal_officer",
+    "legal officer", // Backend format with space
+    "regional_manager",
+    "regional manager", // Backend format with space
+    "regional officer",
+    "admin",
+    "manager",
+  ];
+  const isAllowedRole =
+    normalizedRole && allowedEditRoles.includes(normalizedRole);
+
+  console.log("🔍 [Legal Modal] Hybrid permission check:", {
     recordStatus: displayData?.recordStatus,
-    recordStatusLower: displayData?.recordStatus?.toLowerCase(),
     isApproved,
+    userRole,
     normalizedRole,
+    hasManagePermission,
+    isAllowedRole,
+    userPermissions,
   });
 
-  const canEdit =
-    normalizedRole &&
-    ["regional_manager", "regional officer", "admin", "manager"].includes(
-      normalizedRole
-    ) &&
-    !isApproved;
-  const canReview =
-    normalizedRole === "regional_manager" ||
-    normalizedRole === "regional officer";
+  // Can edit: Must have BOTH permission AND be in allowed role AND record not approved
+  const canEdit = hasManagePermission && isAllowedRole && !isApproved;
+
+  // Can review: Must have BOTH permission AND be in allowed role
+  const canReview = hasManagePermission && isAllowedRole;
+
+  // Can approve: Only admin and manager (final approval authority)
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
