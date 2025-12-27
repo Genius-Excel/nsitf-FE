@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getUserFromStorage, type UserRole } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
 import { toast } from "sonner";
 import { useBulkLegalActions } from "@/hooks/legal/useBulkLegalActions";
 import type { LegalRecord } from "@/lib/types/legal-new";
@@ -31,6 +32,7 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
   onRefresh,
 }) => {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmAction, setConfirmAction] = useState<
     "reviewed" | "approve" | null
@@ -48,6 +50,7 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
   useEffect(() => {
     const user = getUserFromStorage();
     setUserRole(user?.role || null);
+    setUserPermissions(user?.permissions || []);
   }, []);
 
   useEffect(() => {
@@ -61,22 +64,51 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
 
   const displayData = editedData || record;
 
-  // Permission checks
+  // Hybrid permission checks: Use BOTH permission system AND role verification
   const normalizedRole = userRole?.toLowerCase();
   const isApproved = displayData?.recordStatus?.toLowerCase() === "approved";
-  const canEdit =
-    normalizedRole &&
-    ["regional_manager", "regional officer", "admin", "manager"].includes(
-      normalizedRole
-    ) &&
-    !isApproved; // Disable editing for approved records
-  const canReview =
-    normalizedRole === "regional_manager" ||
-    normalizedRole === "regional officer" ||
-    normalizedRole === "admin" ||
-    normalizedRole === "manager";
+
+  // Check if user has manage_legal permission (backend or role-based)
+  const hasManagePermission = userRole
+    ? hasPermission(userRole, "manage_legal", userPermissions)
+    : false;
+
+  // Allowed roles for editing and reviewing legal records
+  const allowedEditRoles = [
+    "legal_officer",
+    "legal officer", // Backend format with space
+    "regional_manager",
+    "regional manager", // Backend format with space
+    "regional officer",
+    "admin",
+    "manager",
+  ];
+  const isAllowedRole =
+    normalizedRole && allowedEditRoles.includes(normalizedRole);
+
+  // Can edit: Must have BOTH permission AND be in allowed role AND record not approved
+  const canEdit = hasManagePermission && isAllowedRole && !isApproved;
+
+  // Can review: Must have BOTH permission AND be in allowed role
+  const canReview = hasManagePermission && isAllowedRole;
+
+  // Can approve: Only admin and manager (final approval authority)
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
+
+  // Debug logging
+  console.log("🔍 [LegalRecordModal] Permission Debug:", {
+    userRole,
+    normalizedRole,
+    userPermissions,
+    recordStatus: displayData?.recordStatus,
+    isApproved,
+    hasManagePermission,
+    isAllowedRole,
+    canEdit,
+    canReview,
+    canApprove,
+  });
 
   const handleEdit = () => {
     setIsEditMode(true);
