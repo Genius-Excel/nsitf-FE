@@ -209,13 +209,6 @@ export const UserFormModal: React.FC<{
   // Fetch roles
   const { data: roles, loading: rolesLoading, error: rolesError } = useRoles();
 
-  // Debug roles
-  useEffect(() => {
-    console.log("Roles in modal:", roles);
-    console.log("Roles loading:", rolesLoading);
-    console.log("Roles error:", rolesError);
-  }, [roles, rolesLoading, rolesError]);
-
   // Fetch branches when region is selected
   const { data: branches, fetchBranches, clearBranches } = useBranches();
 

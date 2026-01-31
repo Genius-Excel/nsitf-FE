@@ -277,8 +277,6 @@ export function AppSidebar({
           name: `${userData[0].first_name} ${userData[0].last_name}`,
           role: normalizedRole,
         };
-        console.log("user data", userData[0]);
-        console.log("normalized role", normalizedRole);
         // Validate role
         if (!validRoles.includes(fetchedUser.role as Role)) {
           setError(

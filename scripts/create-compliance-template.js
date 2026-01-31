@@ -72,5 +72,3 @@ if (!fs.existsSync(templatesDir)) {
 // Write the file
 const outputPath = path.join(templatesDir, "compliance_template.xlsx");
 XLSX.writeFile(wb, outputPath);
-
-console.log(`✅ Compliance template created successfully at: ${outputPath}`);

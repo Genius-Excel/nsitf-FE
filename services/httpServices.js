@@ -7,7 +7,6 @@ axios.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Session expired or unauthorized
-      console.log("Session expired or unauthorized. Redirecting to login...");
 
       // Clear user data from storage
       if (typeof window !== "undefined") {
@@ -26,12 +25,12 @@ axios.interceptors.response.use(
 class HttpService {
   constructor() {
     // this.token = getAccessToken();
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://nsitf-be.geniusexcel.tech";
+    this.baseUrl =
+      process.env.NEXT_PUBLIC_API_URL || "https://nsitf-be.geniusexcel.tech";
   }
 
   postData = async (payload, url) => {
     const AuthStr = "Bearer ".concat(getAccessToken());
-    // console.log("token from HTTP: ",  {headers: { Authorization: AuthStr }});
     return axios.post(`${this.baseUrl}${url}`, payload, {
       headers: { Authorization: AuthStr },
     });
@@ -41,15 +40,14 @@ class HttpService {
     return axios.post(`${this.baseUrl}${url}`, formData, {
       headers: { Authorization: AuthStr },
     });
-  }
+  };
   patchDataJson = async (payload, url) => {
     const AuthStr = "Bearer ".concat(getAccessToken());
-    // console.log("token from HTTP: ",  {headers: { Authorization: AuthStr }});
     return axios.patch(`${this.baseUrl}${url}`, payload, {
       headers: { Authorization: AuthStr },
     });
   };
-   patchData = async (formData, url) => {
+  patchData = async (formData, url) => {
     const AuthStr = "Bearer ".concat(getAccessToken());
     return axios.patch(`${this.baseUrl}${url}`, formData, {
       headers: { Authorization: AuthStr },
@@ -57,29 +55,24 @@ class HttpService {
   };
 
   postDataWithoutToken = async (payload, url) => {
-    // console.log("HTTP services: ", this.baseUrl);
     return axios.post(`${this.baseUrl}${url}`, payload);
-
   };
   postFormDataWithoutToken = async (payload, url) => {
-    // console.log("HTTP services: ", this.baseUrl);
-    return axios.post(`${this.baseUrl}${url}`, payload,{
+    return axios.post(`${this.baseUrl}${url}`, payload, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
-
   };
 
-  getData = async (url,) => {
+  getData = async (url) => {
     const AuthStr = "Bearer ".concat(getAccessToken());
     return axios.get(`${this.baseUrl}${url}`, {
       headers: { Authorization: AuthStr },
     });
   };
 
-  getDataWithoutToken = async (url,) => {
-    // console.log(`${this.baseUrl[`${services}`]}${url}`);
+  getDataWithoutToken = async (url) => {
     return axios.get(`${this.baseUrl}${url}`);
   };
 
@@ -89,8 +82,6 @@ class HttpService {
       headers: { Authorization: AuthStr },
     });
   };
-
- 
 
   putDataWithoutToken = async (formData, url, services = "BASE_URL") => {
     return axios.put(`${this.baseUrl[`${services}`]}${url}`, formData);

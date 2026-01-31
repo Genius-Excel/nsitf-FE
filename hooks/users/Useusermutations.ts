@@ -47,7 +47,7 @@ export const useUserMutations = (options?: MutationOptions) => {
           last_name: data.last_name,
           email: data.email,
           phone_number: data.phone_number,
-          role_id: data.role,
+          role: data.role,
           password: "Nstif@12345", // Default password
         };
 
@@ -78,7 +78,7 @@ export const useUserMutations = (options?: MutationOptions) => {
 
         console.log(
           "Creating user with payload:",
-          JSON.stringify(payload, null, 2)
+          JSON.stringify(payload, null, 2),
         );
 
         const response = await http.postData(payload, "/api/admin/users");
@@ -113,7 +113,7 @@ export const useUserMutations = (options?: MutationOptions) => {
         setIsLoading(false);
       }
     },
-    [options]
+    [options],
   );
 
   // Edit existing user
@@ -131,7 +131,7 @@ export const useUserMutations = (options?: MutationOptions) => {
           last_name: data.last_name,
           email: data.email,
           phone_number: data.phone_number,
-          role_id: data.role,
+          role: data.role,
         };
 
         // Add optional fields
@@ -161,12 +161,12 @@ export const useUserMutations = (options?: MutationOptions) => {
 
         console.log(
           "Updating user with payload:",
-          JSON.stringify(payload, null, 2)
+          JSON.stringify(payload, null, 2),
         );
 
         const response = await http.patchDataJson(
           payload,
-          `/api/admin/users/${userId}`
+          `/api/admin/users/${userId}`,
         );
 
         if (!response?.data) {
@@ -199,7 +199,7 @@ export const useUserMutations = (options?: MutationOptions) => {
         setIsLoading(false);
       }
     },
-    [options]
+    [options],
   );
 
   // Delete user
@@ -229,7 +229,7 @@ export const useUserMutations = (options?: MutationOptions) => {
         setIsLoading(false);
       }
     },
-    [options]
+    [options],
   );
 
   return {

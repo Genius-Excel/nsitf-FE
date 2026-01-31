@@ -103,8 +103,6 @@ export const useManageClaims = (
         queryParams.append("period_to", params.period_to);
       }
 
-      console.log("Fetching claims with params:", queryParams.toString());
-
       const response = await http.getData(
         `/api/claims/manage-claims?${queryParams.toString()}`
       );
@@ -132,11 +130,6 @@ export const useManageClaims = (
         transformManageClaimRecord(record)
       );
 
-      console.log(
-        "Fetched and transformed claims:",
-        transformedClaims.length,
-        "records"
-      );
       setClaims(transformedClaims);
 
       // Set pagination (simple: assume all records fit on page 1 unless API returns metadata)

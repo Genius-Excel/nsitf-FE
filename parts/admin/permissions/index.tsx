@@ -7,12 +7,15 @@
 
 "use client";
 
-import React from 'react';
-import { PermissionManager } from '@/components/permission-manager';
-import { PermissionEditor } from '@/components/permission-editor';
-import { PermissionGuard } from '@/components/permission-guard';
-import { usePermissionEditor, usePermissions } from '@/hooks/usePermissionManagement';
-import type { UserWithPermissions } from '@/lib/types/permissions';
+import React from "react";
+import { PermissionManager } from "@/components/permission-manager";
+import { PermissionEditor } from "@/components/permission-editor";
+import { PermissionGuard } from "@/components/permission-guard";
+import {
+  usePermissionEditor,
+  usePermissions,
+} from "@/hooks/usePermissionManagement";
+import type { UserWithPermissions } from "@/lib/types/permissions";
 
 export default function PermissionManagementPage() {
   // Fetch permission categories
@@ -35,15 +38,21 @@ export default function PermissionManagementPage() {
   } = usePermissionEditor(null);
 
   // Currently selected user for editing
-  const [selectedUser, setSelectedUser] = React.useState<UserWithPermissions | null>(null);
+  const [selectedUser, setSelectedUser] =
+    React.useState<UserWithPermissions | null>(null);
 
   // Ref to store the update callback
-  const updateCallbackRef = React.useRef<((userId: string, newPermissions: any[]) => void) | null>(null);
+  const updateCallbackRef = React.useRef<
+    ((userId: string, newPermissions: any[]) => void) | null
+  >(null);
 
   // Handle registering the update callback
-  const handleRegisterCallback = React.useCallback((callback: (userId: string, newPermissions: any[]) => void) => {
-    updateCallbackRef.current = callback;
-  }, []);
+  const handleRegisterCallback = React.useCallback(
+    (callback: (userId: string, newPermissions: any[]) => void) => {
+      updateCallbackRef.current = callback;
+    },
+    []
+  );
 
   // Handle opening the permission editor
   const handleManagePermissions = async (user: UserWithPermissions) => {
@@ -59,16 +68,10 @@ export default function PermissionManagementPage() {
 
   // Handle save with optimistic update
   const handleSavePermissions = React.useCallback(async () => {
-    console.log('Saving permissions...');
     const success = await savePermissions();
-    console.log('Save result:', success);
-    console.log('Selected user:', selectedUser?.id);
-    console.log('Edited permissions count:', editedPermissions.length);
-    console.log('Callback exists:', !!updateCallbackRef.current);
 
     if (success && selectedUser && updateCallbackRef.current) {
       // Update the user's permissions in the table without refetching
-      console.log('Calling update callback for user:', selectedUser.id);
       updateCallbackRef.current(selectedUser.id, editedPermissions);
     }
     return success;

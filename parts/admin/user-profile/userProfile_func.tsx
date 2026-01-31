@@ -55,7 +55,6 @@ export default function UserProfileFlow() {
         setProfile(null);
       }
     }
-    console.log("Fetched user profile:", userData, "Error:", userDataError);
   }, [gettingUserData, userData, userDataError]);
 
   // ============== HANDLE EDIT PROFILE RESPONSE ==============
@@ -74,7 +73,12 @@ export default function UserProfileFlow() {
         setSuccessMessage("");
       }
     }
-  }, [editUserProfileIsLoading, editUserProfileIsSuccess, editUserProfileData, editUserProfileError]);
+  }, [
+    editUserProfileIsLoading,
+    editUserProfileIsSuccess,
+    editUserProfileData,
+    editUserProfileError,
+  ]);
 
   // ============== API HANDLERS ==============
 
@@ -139,8 +143,12 @@ export default function UserProfileFlow() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <div className="text-center">
-          <p className="text-red-600 font-semibold mb-2">Failed to load profile</p>
-          <p className="text-gray-600 text-sm mb-4">{error || "Please try again later"}</p>
+          <p className="text-red-600 font-semibold mb-2">
+            Failed to load profile
+          </p>
+          <p className="text-gray-600 text-sm mb-4">
+            {error || "Please try again later"}
+          </p>
           <button
             onClick={handleRetry}
             style={{ backgroundColor: "#00a63e" }}

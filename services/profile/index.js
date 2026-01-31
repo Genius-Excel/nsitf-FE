@@ -9,9 +9,8 @@ import { getLocalStorageItem, getUserIdFromSession } from "@/lib/utils";
 const httpService = new HttpService();
 const storage = new Storage();
 
-
-export const useGetUserProfile =({enabled = false})=>{
-   const { data, error, isLoading, refetch, setFilter } = useFetchItem({
+export const useGetUserProfile = ({ enabled = false }) => {
+  const { data, error, isLoading, refetch, setFilter } = useFetchItem({
     queryKey: ["GetUserData"],
     queryFn: () => {
       return httpService.getData(routes.getUserProfileDetails());
@@ -19,7 +18,6 @@ export const useGetUserProfile =({enabled = false})=>{
     enabled,
     retry: 2,
   });
-  console.log(data);
   return {
     gettingUserData: isLoading,
     userData: data?.data?.data || null,
@@ -27,7 +25,7 @@ export const useGetUserProfile =({enabled = false})=>{
     refetchUserData: refetch,
     filterUserData: setFilter,
   };
-}
+};
 
 export const useGetConfirmEmail = ({ enabled = false }) => {
   const { data, error, isLoading, refetch, setFilter } = useFetchItem({
@@ -38,7 +36,6 @@ export const useGetConfirmEmail = ({ enabled = false }) => {
     enabled,
     retry: 2,
   });
-  console.log(data);
   return {
     isVerifyingToken: isLoading,
     verifiedTokenData: data?.data?.message || null,
@@ -48,13 +45,10 @@ export const useGetConfirmEmail = ({ enabled = false }) => {
   };
 };
 
-export const useResendConfirmationEmail =(handleSuccess)=>{
-   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+export const useResendConfirmationEmail = (handleSuccess) => {
+  const { data, error, isPending, mutate, isSuccess } = useMutateItem({
     mutationFn: (payload) =>
-      httpService.postDataWithoutToken(
-        payload,
-        routes.resendConfirmation()
-      ),
+      httpService.postDataWithoutToken(payload, routes.resendConfirmation()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
       // console.log(requestParams?.data);
@@ -69,7 +63,7 @@ export const useResendConfirmationEmail =(handleSuccess)=>{
     resendConfirmationPayload: (requestPayload) => mutate(requestPayload),
     resendConfirmationIsSuccess: isSuccess,
   };
-}
+};
 
 export const useVerifyEmail = (handleSuccess) => {
   const { data, error, isPending, mutate } = useMutateItem({
@@ -90,14 +84,12 @@ export const useVerifyEmail = (handleSuccess) => {
   };
 };
 
-
 export const useResendEmail = (handleSuccess) => {
   const { data, error, isPending, mutate } = useMutateItem({
     mutationFn: (payload) =>
       httpService.postDataWithoutToken(payload, routes.resendEmail()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log(requestParams?.data);
       handleSuccess(resData);
     },
   });
@@ -116,7 +108,6 @@ export const useSendPasswordReset = (handleSuccess) => {
       httpService.postDataWithoutToken(payload, routes.sendPasswordReset()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log("Send password reset request", resData);
       if (handleSuccess) {
         handleSuccess(resData);
       }
@@ -138,7 +129,6 @@ export const useResetPassword = (handleSuccess) => {
       httpService.postDataWithoutToken(payload, routes.passwordReset(token)),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log("Reset password data", resData);
       if (handleSuccess) {
         handleSuccess(resData);
       }

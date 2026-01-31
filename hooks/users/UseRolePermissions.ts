@@ -7,7 +7,7 @@ import { PermissionItem } from "@/lib/types/permissions";
 export interface RolePermissionsResponse {
   message: string;
   data: {
-    role_id: string;
+    role: string;
     role_name: string;
     permissions: string[]; // Array of permission names
   };

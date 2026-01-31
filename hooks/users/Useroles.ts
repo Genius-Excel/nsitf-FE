@@ -12,9 +12,9 @@ export interface Role {
 
 // API returns this structure
 interface RoleApiResponse {
-  role_id: string;
-  role_name: string;
-  display_name: string;
+  role_id: string; // UUID identifier for the role
+  role_name: string; // This is the system/code name
+  display_name: string; // This is what we show to users
   description?: string;
 }
 
@@ -30,6 +30,9 @@ const http = new HttpService();
 /**
  * Fetch all roles from API
  * Follows regions pattern: single source of truth
+ *
+ * Note: The API returns 'role_id' (UUID) which we map to 'id'
+ * When creating/editing users, send this UUID in the 'role' field
  */
 export const useRoles = () => {
   const [data, setData] = useState<Role[] | null>(null);
@@ -41,44 +44,60 @@ export const useRoles = () => {
       setLoading(true);
       setError(null);
 
-      console.log("Fetching roles from /api/admin/roles...");
       const response = await http.getData("/api/admin/roles");
-      console.log("Roles API response:", response);
 
       // Helper function to transform API response to our format
-      const transformRole = (apiRole: RoleApiResponse): Role => ({
-        id: apiRole.role_id,
-        name: apiRole.display_name || apiRole.role_name, // Fallback to role_name if display_name is null
-        roleName: apiRole.role_name,
-        description: apiRole.description || "",
-      });
+      // The 'role_id' field from API (UUID) becomes 'id' for dropdown consistency
+      const transformRole = (apiRole: RoleApiResponse): Role => {
+        // Ensure we have a valid role identifier (UUID)
+        const roleId = apiRole.role_id || apiRole.role_name;
+
+        if (!roleId) {
+          console.warn(
+            "Role API response missing both 'role_id' and 'role_name':",
+            apiRole,
+          );
+        }
+
+        return {
+          id: roleId, // Use role_id (UUID) as the unique identifier
+          name: apiRole.display_name || apiRole.role_name, // Display name for UI
+          roleName: apiRole.role_name, // Keep original role_name
+          description: apiRole.description || "",
+        };
+      };
 
       // Try different response structures
       // Structure 1: { message, data: RoleApiResponse[] }
       if (response?.data?.data && Array.isArray(response.data.data)) {
         const apiData = response.data as RolesResponse;
-        console.log("Roles data (structure 1):", apiData.data);
-        const transformedRoles = apiData.data.map(transformRole);
-        console.log("Transformed roles:", transformedRoles);
+        const transformedRoles = apiData.data
+          .map(transformRole)
+          .filter((role) => role.id);
+        console.log("Roles loaded (Structure 1):", transformedRoles);
         setData(transformedRoles);
         return;
       }
 
       // Structure 2: Direct array of RoleApiResponse
       if (Array.isArray(response?.data)) {
-        console.log("Roles data (structure 2 - direct array):", response.data);
-        const transformedRoles = response.data.map(transformRole);
-        console.log("Transformed roles:", transformedRoles);
+        const transformedRoles = response.data
+          .map(transformRole)
+          .filter((role) => role.id);
+        console.log("Roles loaded (Structure 2):", transformedRoles);
         setData(transformedRoles);
         return;
       }
 
       // Structure 3: { data: RoleApiResponse[] } without message
       if (response?.data && !response.data.data) {
-        console.log("Roles data (structure 3):", response.data);
         // This might be a single object or needs different handling
-        setData([transformRole(response.data)]);
-        return;
+        const transformedRole = transformRole(response.data);
+        if (transformedRole.id) {
+          console.log("Roles loaded (Structure 3):", [transformedRole]);
+          setData([transformedRole]);
+          return;
+        }
       }
 
       console.error("Unexpected API response structure:", response);

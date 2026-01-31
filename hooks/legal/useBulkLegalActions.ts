@@ -46,16 +46,7 @@ export const useBulkLegalActions = (): UseBulkLegalActionsReturn => {
       const url = `/api/legal-ops/manage-legal/${recordId}`;
       const payload = { record_status: recordStatus };
 
-      console.log("🔍 [useBulkLegalActions] PATCH request:", { url, payload });
-
       const response = await http.patchData(payload, url);
-
-      console.log("🔍 [useBulkLegalActions] PATCH response:", response);
-      console.log(
-        "✅ [useBulkLegalActions] Updated legal record:",
-        recordId,
-        recordStatus
-      );
 
       return true;
     } catch (err: any) {
@@ -83,10 +74,6 @@ export const useBulkLegalActions = (): UseBulkLegalActionsReturn => {
 
       await http.patchData(payload, url);
 
-      console.log(
-        "✅ [useBulkLegalActions] Updated legal record details:",
-        recordId
-      );
       return true;
     } catch (err: any) {
       console.error("❌ [useBulkLegalActions] Update details error:", err);
@@ -118,8 +105,6 @@ export const useBulkLegalActions = (): UseBulkLegalActionsReturn => {
         },
         "/api/legal-ops/manage-legal"
       )) as unknown as BulkActionResponse;
-
-      console.log("Bulk review response:", response);
 
       if (!response?.data) {
         throw new Error("Invalid response from server");
@@ -168,8 +153,6 @@ export const useBulkLegalActions = (): UseBulkLegalActionsReturn => {
         },
         "/api/legal-ops/manage-legal"
       )) as unknown as BulkActionResponse;
-
-      console.log("Bulk approve response:", response);
 
       if (!response?.data) {
         throw new Error("Invalid response from server");

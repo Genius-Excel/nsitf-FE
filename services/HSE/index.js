@@ -9,9 +9,8 @@ import { getLocalStorageItem, getUserIdFromSession } from "@/lib/utils";
 const httpService = new HttpService();
 const storage = new Storage();
 
-
-export const useGetHSERecords =({enabled = false})=>{
-   const { data, error, isLoading, refetch, setFilter } = useFetchItem({
+export const useGetHSERecords = ({ enabled = false }) => {
+  const { data, error, isLoading, refetch, setFilter } = useFetchItem({
     queryKey: ["getHSEData"],
     queryFn: () => {
       return httpService.getData(routes.getHseRecords());
@@ -27,10 +26,10 @@ export const useGetHSERecords =({enabled = false})=>{
     refetchHSEData: refetch,
     filterHSEData: setFilter,
   };
-}
+};
 
-export const useGEtDashboardMetrics =({enabled = false})=>{
-   const { data, error, isLoading, refetch, setFilter } = useFetchItem({
+export const useGEtDashboardMetrics = ({ enabled = false }) => {
+  const { data, error, isLoading, refetch, setFilter } = useFetchItem({
     queryKey: ["getDashboardMetrics"],
     queryFn: () => {
       return httpService.getData(routes.getHSEDashboardMerics());
@@ -38,7 +37,6 @@ export const useGEtDashboardMetrics =({enabled = false})=>{
     enabled,
     retry: 2,
   });
-  console.log("hse dashboard",data);
   return {
     gettingHSErData: isLoading,
     HSEData: data?.data || null,
@@ -46,10 +44,10 @@ export const useGEtDashboardMetrics =({enabled = false})=>{
     refetchHSEData: refetch,
     filterHSEData: setFilter,
   };
-}
+};
 
-export const useGetHSESingle =({enabled = false})=>{
-   const { data, error, isLoading, refetch, setFilter } = useFetchItem({
+export const useGetHSESingle = ({ enabled = false }) => {
+  const { data, error, isLoading, refetch, setFilter } = useFetchItem({
     queryKey: ["getSingleHSEData"],
     queryFn: (dataId) => {
       return httpService.getData(routes.getHseRecords(dataId));
@@ -65,22 +63,16 @@ export const useGetHSESingle =({enabled = false})=>{
     refetchHSEData: refetch,
     filterHSEData: setFilter,
   };
-}
+};
 
-export const useCreateHSERecord =(handleSuccess)=>{
-   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
-    mutationFn: (payload) =>
-      httpService.postData(
-        payload,
-        routes.createHSE()
-      ),
+export const useCreateHSERecord = (handleSuccess) => {
+  const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+    mutationFn: (payload) => httpService.postData(payload, routes.createHSE()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log(requestParams?.data);
       handleSuccess(resData);
     },
   });
-  console.log(data);
   return {
     HSERecordData: data || {},
     HSERecordError: error ? ErrorHandler(error) : null,
@@ -88,8 +80,7 @@ export const useCreateHSERecord =(handleSuccess)=>{
     HSERecordPayload: (requestPayload) => mutate(requestPayload),
     HSERecordIsSuccess: isSuccess,
   };
-}
-
+};
 
 export const useEditHseRecord = (handleSuccess) => {
   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
@@ -118,7 +109,6 @@ export const useDeleteHseRecord = (handleSuccess) => {
       httpService.deleteData(payload, routes.deleteHseRecord()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log("Send password reset request", resData);
       if (handleSuccess) {
         handleSuccess(resData);
       }
@@ -132,6 +122,4 @@ export const useDeleteHseRecord = (handleSuccess) => {
     deleteHSEPayload: (requestPayload) => mutate(requestPayload),
     deleteHSEIsSuccess: isSuccess,
   };
-}
-
-
+};

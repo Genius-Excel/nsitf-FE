@@ -9,13 +9,10 @@ import { getLocalStorageItem, getUserIdFromSession } from "@/lib/utils";
 const httpService = new HttpService();
 const storage = new Storage();
 
-export const useAddUser =(handleSuccess)=>{
-   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+export const useAddUser = (handleSuccess) => {
+  const { data, error, isPending, mutate, isSuccess } = useMutateItem({
     mutationFn: (payload) =>
-      httpService.postData(
-        payload,
-        routes.adminAddUsers()
-      ),
+      httpService.postData(payload, routes.adminAddUsers()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
       handleSuccess(resData);
@@ -29,10 +26,10 @@ export const useAddUser =(handleSuccess)=>{
     addUserPayload: (requestPayload) => mutate(requestPayload),
     addUserIsSuccess: isSuccess,
   };
-}
+};
 
-export const useGetUsers =({enabled = false})=>{
-   const { data, error, isLoading, refetch, setFilter } = useFetchItem({
+export const useGetUsers = ({ enabled = false }) => {
+  const { data, error, isLoading, refetch, setFilter } = useFetchItem({
     queryKey: ["GetEnteredUserData"],
     queryFn: () => {
       return httpService.getData(routes.adminGetUsers());
@@ -40,7 +37,6 @@ export const useGetUsers =({enabled = false})=>{
     enabled,
     retry: 2,
   });
-  console.log(data);
   return {
     gettingUserData: isLoading,
     userData: data?.data?.data || null,
@@ -48,15 +44,12 @@ export const useGetUsers =({enabled = false})=>{
     refetchUserData: refetch,
     filterUserData: setFilter,
   };
-}
+};
 
-export const useEditUser =(handleSuccess)=>{
-   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+export const useEditUser = (handleSuccess) => {
+  const { data, error, isPending, mutate, isSuccess } = useMutateItem({
     mutationFn: (payload) =>
-      httpService.patchData(
-        payload,
-        routes.editUser(userId)
-      ),
+      httpService.patchData(payload, routes.editUser(userId)),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
       handleSuccess(resData);
@@ -70,12 +63,11 @@ export const useEditUser =(handleSuccess)=>{
     editUserPayload: (requestPayload) => mutate(requestPayload),
     editUserIsSuccess: isSuccess,
   };
-}
+};
 
 export const useDeleteUser = (handleSuccess) => {
   const { data, error, isPending, mutate } = useMutateItem({
-    mutationFn: (userId) =>
-      httpService.deleteData(routes.deleteUser(userId)),
+    mutationFn: (userId) => httpService.deleteData(routes.deleteUser(userId)),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
 
@@ -110,16 +102,12 @@ export const useGetConfirmEmail = ({ enabled = false }) => {
   };
 };
 
-export const useResendConfirmationEmail =(handleSuccess)=>{
-   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+export const useResendConfirmationEmail = (handleSuccess) => {
+  const { data, error, isPending, mutate, isSuccess } = useMutateItem({
     mutationFn: (payload) =>
-      httpService.postDataWithoutToken(
-        payload,
-        routes.resendConfirmation()
-      ),
+      httpService.postDataWithoutToken(payload, routes.resendConfirmation()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log(requestParams?.data);
       handleSuccess(resData);
     },
   });
@@ -131,7 +119,7 @@ export const useResendConfirmationEmail =(handleSuccess)=>{
     resendConfirmationPayload: (requestPayload) => mutate(requestPayload),
     resendConfirmationIsSuccess: isSuccess,
   };
-}
+};
 
 export const useVerifyEmail = (handleSuccess) => {
   const { data, error, isPending, mutate } = useMutateItem({
@@ -139,7 +127,6 @@ export const useVerifyEmail = (handleSuccess) => {
       httpService.postDataWithoutToken(payload, routes.restaurantVerifyMail()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log(requestParams?.data);
       handleSuccess(resData);
     },
   });
@@ -152,14 +139,12 @@ export const useVerifyEmail = (handleSuccess) => {
   };
 };
 
-
 export const useResendEmail = (handleSuccess) => {
   const { data, error, isPending, mutate } = useMutateItem({
     mutationFn: (payload) =>
       httpService.postDataWithoutToken(payload, routes.resendEmail()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log(requestParams?.data);
       handleSuccess(resData);
     },
   });
@@ -197,7 +182,6 @@ export const useSendPasswordReset = (handleSuccess) => {
       httpService.postDataWithoutToken(payload, routes.sendPasswordReset()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log("Send password reset request", resData);
       if (handleSuccess) {
         handleSuccess(resData);
       }
@@ -219,7 +203,6 @@ export const useResetPassword = (handleSuccess) => {
       httpService.postDataWithoutToken(payload, routes.passwordReset(token)),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log("Reset password data", resData);
       if (handleSuccess) {
         handleSuccess(resData);
       }
@@ -244,10 +227,10 @@ export const useGetVerificationStatus = ({ enabled = false, businessId }) => {
     refetch,
     setFilter,
   } = useFetchItem({
-    queryKey: ['verify_business', businessId],
+    queryKey: ["verify_business", businessId],
     queryFn: async () => {
       if (!businessId) {
-        throw new Error('Business ID is required');
+        throw new Error("Business ID is required");
       }
       const response = await httpService.getData(
         routes.getVerificationStatus(businessId)
@@ -259,7 +242,6 @@ export const useGetVerificationStatus = ({ enabled = false, businessId }) => {
     staleTime: 5 * 60 * 1000,
     cacheTime: 10 * 60 * 1000,
   });
-   console.log("Verification Status Data:", rawData?.data);
   return {
     verificationIsLoading: isLoading,
     verificationData: rawData?.data?.message,
@@ -286,4 +268,3 @@ export const useGetKPIAnalysis = ({ enabled = true }) => {
     refetchKPIAnalysis: refetch,
   };
 };
-
