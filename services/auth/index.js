@@ -12,10 +12,7 @@ const storage = new Storage();
 export const useCreateAdmin = (handleSuccess) => {
   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
     mutationFn: (payload) =>
-      httpService.postDataWithoutToken(
-        payload,
-        routes.createAdmin()
-      ),
+      httpService.postDataWithoutToken(payload, routes.createAdmin()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
       if (handleSuccess) {
@@ -33,20 +30,22 @@ export const useCreateAdmin = (handleSuccess) => {
   };
 };
 
-export const useLogin =(handleSuccess)=>{
-   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+export const useLogin = (handleSuccess) => {
+  const { data, error, isPending, mutate, isSuccess } = useMutateItem({
     mutationFn: (payload) =>
-      httpService.postDataWithoutToken(
-        payload,
-        routes.login()
-      ),
+      httpService.postDataWithoutToken(payload, routes.login()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
 
       // Store access token in localStorage
       // API returns tokens with hyphenated field names
-      const accessToken = resData["access-token"] || resData?.access || resData?.access_token || resData?.token;
-      const refreshToken = resData["refresh-token"] || resData?.refresh || resData?.refresh_token;
+      const accessToken =
+        resData["access-token"] ||
+        resData?.access ||
+        resData?.access_token ||
+        resData?.token;
+      const refreshToken =
+        resData["refresh-token"] || resData?.refresh || resData?.refresh_token;
 
       if (typeof window !== "undefined" && accessToken) {
         try {
@@ -71,18 +70,14 @@ export const useLogin =(handleSuccess)=>{
     loginPayload: (requestPayload) => mutate(requestPayload),
     loginIsSuccess: isSuccess,
   };
-}
+};
 
-export const useChangePassword =(handleSuccess)=>{
-   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+export const useChangePassword = (handleSuccess) => {
+  const { data, error, isPending, mutate, isSuccess } = useMutateItem({
     mutationFn: (payload) =>
-      httpService.postData(
-        payload,
-        routes.changePassword()
-      ),
+      httpService.postData(payload, routes.changePassword()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log(requestParams?.data);
       handleSuccess(resData);
     },
   });
@@ -94,10 +89,10 @@ export const useChangePassword =(handleSuccess)=>{
     changePasswordPayload: (requestPayload) => mutate(requestPayload),
     changePasswordIsSuccess: isSuccess,
   };
-}
+};
 
-export const useGetUserProfile =({enabled = false})=>{
-   const { data, error, isLoading, refetch, setFilter } = useFetchItem({
+export const useGetUserProfile = ({ enabled = false }) => {
+  const { data, error, isLoading, refetch, setFilter } = useFetchItem({
     queryKey: ["GetUserData"],
     queryFn: () => {
       return httpService.getData(routes.getUserProfileDetails());
@@ -105,7 +100,6 @@ export const useGetUserProfile =({enabled = false})=>{
     enabled,
     retry: 2,
   });
-  console.log(data);
   return {
     gettingUserData: isLoading,
     userData: data?.data?.data || null,
@@ -113,18 +107,14 @@ export const useGetUserProfile =({enabled = false})=>{
     refetchUserData: refetch,
     filterUserData: setFilter,
   };
-}
+};
 
-export const useEditUserProfile =(handleSuccess)=>{
-   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+export const useEditUserProfile = (handleSuccess) => {
+  const { data, error, isPending, mutate, isSuccess } = useMutateItem({
     mutationFn: (payload) =>
-      httpService.patchData(
-        payload,
-        routes.editUserProfile()
-      ),
-     onSuccess: (requestParams) => {
+      httpService.patchData(payload, routes.editUserProfile()),
+    onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log(requestParams?.data);
       handleSuccess(resData);
     },
   });
@@ -136,7 +126,7 @@ export const useEditUserProfile =(handleSuccess)=>{
     editUserProfilePayload: (requestPayload) => mutate(requestPayload),
     editUserProfileIsSuccess: isSuccess,
   };
-}
+};
 
 export const useGetConfirmEmail = ({ enabled = false }) => {
   const { data, error, isLoading, refetch, setFilter } = useFetchItem({
@@ -157,13 +147,10 @@ export const useGetConfirmEmail = ({ enabled = false }) => {
   };
 };
 
-export const useResendConfirmationEmail =(handleSuccess)=>{
-   const { data, error, isPending, mutate, isSuccess } = useMutateItem({
+export const useResendConfirmationEmail = (handleSuccess) => {
+  const { data, error, isPending, mutate, isSuccess } = useMutateItem({
     mutationFn: (payload) =>
-      httpService.postDataWithoutToken(
-        payload,
-        routes.resendConfirmation()
-      ),
+      httpService.postDataWithoutToken(payload, routes.resendConfirmation()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
       // console.log(requestParams?.data);
@@ -178,7 +165,7 @@ export const useResendConfirmationEmail =(handleSuccess)=>{
     resendConfirmationPayload: (requestPayload) => mutate(requestPayload),
     resendConfirmationIsSuccess: isSuccess,
   };
-}
+};
 
 export const useVerifyEmail = (handleSuccess) => {
   const { data, error, isPending, mutate } = useMutateItem({
@@ -186,7 +173,6 @@ export const useVerifyEmail = (handleSuccess) => {
       httpService.postDataWithoutToken(payload, routes.restaurantVerifyMail()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log(requestParams?.data);
       handleSuccess(resData);
     },
   });
@@ -273,7 +259,6 @@ export const useResendEmail = (handleSuccess) => {
       httpService.postDataWithoutToken(payload, routes.resendEmail()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log(requestParams?.data);
       handleSuccess(resData);
     },
   });
@@ -295,7 +280,6 @@ export const useOnboardingStepOne = (handleSuccess) => {
       ),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log("onboardingStepOne Response Data:", resData?.error);
       if (handleSuccess) {
         handleSuccess(resData);
         if (typeof window !== "undefined") {
@@ -324,7 +308,6 @@ export const useOnboardingStepTwo = (handleSuccess) => {
       ),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log("onboardingStepTwo Response Data:", resData);
       if (handleSuccess) {
         handleSuccess(resData);
       }
@@ -365,7 +348,6 @@ export const useSendPasswordReset = (handleSuccess) => {
       httpService.postDataWithoutToken(payload, routes.sendPasswordReset()),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log("Send password reset request", resData);
       if (handleSuccess) {
         handleSuccess(resData);
       }
@@ -387,7 +369,6 @@ export const useResetPassword = (handleSuccess) => {
       httpService.postDataWithoutToken(payload, routes.passwordReset(token)),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
-      // console.log("Reset password data", resData);
       if (handleSuccess) {
         handleSuccess(resData);
       }
@@ -412,22 +393,21 @@ export const useGetVerificationStatus = ({ enabled = false, businessId }) => {
     refetch,
     setFilter,
   } = useFetchItem({
-    queryKey: ['verify_business', businessId],
+    queryKey: ["verify_business", businessId],
     queryFn: async () => {
       if (!businessId) {
-        throw new Error('Business ID is required');
+        throw new Error("Business ID is required");
       }
       const response = await httpService.getData(
         routes.getVerificationStatus(businessId)
       );
-      return response; 
+      return response;
     },
     enabled: enabled && !!businessId,
     retry: 2,
-    staleTime: 5 * 60 * 1000, 
-    cacheTime: 10 * 60 * 1000, 
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
   });
-   console.log("Verification Status Data:", rawData?.data);
   return {
     verificationIsLoading: isLoading,
     verificationData: rawData?.data?.message,
@@ -440,7 +420,10 @@ export const useGetVerificationStatus = ({ enabled = false, businessId }) => {
 export const useCreateOrUpdateCustomLink = (businessId, handleSuccess) => {
   const { data, error, isPending, isSuccess, mutate } = useMutateItem({
     mutationFn: (payload) =>
-      httpService.patchDataJson(payload, routes.createAndUpdateCustomLink(businessId)),
+      httpService.patchDataJson(
+        payload,
+        routes.createAndUpdateCustomLink(businessId)
+      ),
     onSuccess: (requestParams) => {
       const resData = requestParams?.data || {};
       handleSuccess?.(resData);

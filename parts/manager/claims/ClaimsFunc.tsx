@@ -72,7 +72,6 @@ export default function ClaimsManagement() {
     setFilteredClaims(filtered);
   };
   const handleViewClaim = (claim: Claim) => {
-    console.log("Viewing claim:", claim);
     // TODO: Implement view claim modal or navigate to detail page
   };
 
@@ -208,7 +207,7 @@ export default function ClaimsManagement() {
         <SearchAndFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
-          onFilterClick={() => console.log("Filter clicked")}
+          onFilterClick={() => {}}
         />
 
         {/* Claims Table */}

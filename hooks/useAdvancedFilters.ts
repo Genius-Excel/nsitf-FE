@@ -73,15 +73,6 @@ export function useAdvancedFilters({
   useEffect(() => {
     // Also check what's in localStorage directly
     const storedUser = localStorage.getItem("user");
-    console.log("🔍 [useAdvancedFilters] localStorage 'user':", storedUser);
-
-    console.log("🔍 [useAdvancedFilters] User data:", {
-      fullUser: user,
-      userRole,
-      userRegionId,
-      hasRegionId: user?.region_id !== undefined,
-      userKeys: user ? Object.keys(user) : [],
-    });
   }, [user, userRole, userRegionId]);
 
   // Current month/year as default
@@ -92,26 +83,12 @@ export function useAdvancedFilters({
   // Determine initial region based on user role
   const getInitialRegionId = () => {
     const isRegionalUser = !isHQRole(userRole);
-    console.log("🔍 [useAdvancedFilters] getInitialRegionId called:", {
-      userRole,
-      normalizedRole: userRole?.toLowerCase().trim(),
-      userRegionId,
-      isRegionalUser,
-      isHQRole: isHQRole(userRole),
-    });
 
     // For regional officers/managers, use their region_id
     if (isRegionalUser && userRegionId) {
-      console.log(
-        "✅ [useAdvancedFilters] Initializing with regional user's region:",
-        userRegionId
-      );
       return userRegionId;
     }
     // For HQ users (admin, officers, etc.), start with empty (all regions)
-    console.log(
-      "🔍 [useAdvancedFilters] Initializing with empty region (HQ user)"
-    );
     return "";
   };
 
@@ -143,17 +120,10 @@ export function useAdvancedFilters({
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
       if (!token) {
-        console.warn("No access token found. User may need to log in.");
         setRegions([]);
         setRegionsLoading(false);
         return;
       }
-
-      console.log(
-        "Fetching regions from:",
-        `${API_BASE_URL}/api/admin/regions`
-      );
-      console.log("Using token:", token ? "Token present" : "No token");
 
       const response = await fetch(`${API_BASE_URL}/api/admin/regions`, {
         headers: {
@@ -165,8 +135,6 @@ export function useAdvancedFilters({
         throw err;
       });
 
-      console.log("✅ Regions response received. Status:", response.status);
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Regions API error:", errorData);
@@ -176,7 +144,6 @@ export function useAdvancedFilters({
       }
 
       const result = await response.json();
-      console.log("Regions API response:", result);
 
       // API returns: { message, count, data: Region[] }
       // Handle different response structures
@@ -194,8 +161,6 @@ export function useAdvancedFilters({
         console.warn("Unexpected API response structure:", result);
       }
 
-      console.log("Extracted region data:", regionData);
-
       // Map API response to Region format
       const mappedRegions: Region[] = regionData.map((r: any) => ({
         id: r.id || r.region_id,
@@ -203,10 +168,7 @@ export function useAdvancedFilters({
         code: r.code || r.region_code || "",
       }));
 
-      console.log(`Mapped ${mappedRegions.length} regions:`, mappedRegions);
-      console.log("First region:", mappedRegions[0]);
       setRegions(mappedRegions);
-      console.log("✅ Regions successfully set in state");
     } catch (error) {
       console.error("❌ Failed to fetch regions:", error);
       if (error instanceof Error) {
@@ -216,7 +178,6 @@ export function useAdvancedFilters({
       setRegions([]);
     } finally {
       setRegionsLoading(false);
-      console.log("Regions loading complete");
     }
   }, []);
 
@@ -233,15 +194,12 @@ export function useAdvancedFilters({
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
       if (!token) {
-        console.warn("No access token found for fetching branches");
         setBranches([]);
         setBranchesLoading(false);
         return;
       }
 
-      console.log("Fetching branches for region:", regionId);
       const url = `${API_BASE_URL}/api/admin/branches?region_id=${regionId}`;
-      console.log("Branches API URL:", url);
 
       const response = await fetch(url, {
         headers: {
@@ -250,8 +208,6 @@ export function useAdvancedFilters({
         },
       });
 
-      console.log("Branches response status:", response.status);
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Branches API error:", errorData);
@@ -259,7 +215,6 @@ export function useAdvancedFilters({
       }
 
       const result = await response.json();
-      console.log("Branches API response:", result);
 
       // Handle different response structures
       let branchData: any[] = [];
@@ -270,8 +225,6 @@ export function useAdvancedFilters({
       } else if (result.branches && Array.isArray(result.branches)) {
         branchData = result.branches;
       }
-
-      console.log("Extracted branch data:", branchData);
 
       // Map API response to Branch format
       const mappedBranches: Branch[] = branchData.map((b: any) => ({

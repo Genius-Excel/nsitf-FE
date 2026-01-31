@@ -109,7 +109,6 @@ export default function UsersRolesManagement() {
       );
       if (matchingRole) {
         roleId = matchingRole.id;
-        console.log(`Mapped role name "${user.role}" to role ID "${roleId}"`);
       }
     }
 

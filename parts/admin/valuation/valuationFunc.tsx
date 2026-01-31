@@ -30,12 +30,6 @@ export function ValuationForecastingFunc() {
     // 1. Generate a comprehensive PDF/Excel report
     // 2. Include all charts, forecasts, and valuations
     // 3. Trigger download
-    console.log(
-      "Exporting report with model:",
-      forecastModel,
-      "metric:",
-      selectedMetric
-    );
 
     if (valuationData) {
       const reportData = {
@@ -52,7 +46,6 @@ export function ValuationForecastingFunc() {
         },
       };
 
-      console.log("Report data:", reportData);
       // In production, this would call an API endpoint or generate a file
     }
   };

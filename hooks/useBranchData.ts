@@ -174,10 +174,6 @@ export function useRegions() {
       }
 
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
-      console.log(
-        "Fetching regions from:",
-        `${API_BASE_URL}/api/admin/regions`
-      );
 
       const response = await fetch(`${API_BASE_URL}/api/admin/regions`, {
         method: "GET",
@@ -187,8 +183,6 @@ export function useRegions() {
         },
       });
 
-      console.log("Regions response status:", response.status);
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Regions API error:", errorData);
@@ -196,7 +190,6 @@ export function useRegions() {
       }
 
       const result = await response.json();
-      console.log("Regions API response:", result);
 
       // Handle different response structures
       let regionData: any[] = [];
@@ -208,8 +201,6 @@ export function useRegions() {
         regionData = result.regions;
       }
 
-      console.log("Extracted region data:", regionData);
-
       // Map to Region interface
       const mappedRegions: Region[] = regionData.map((item: any) => ({
         id: item.id || item.region_id,
@@ -217,7 +208,6 @@ export function useRegions() {
         code: item.code || item.region_code || "",
       }));
 
-      console.log("Mapped regions:", mappedRegions);
       setRegions(mappedRegions);
 
       if (mappedRegions.length === 0) {
@@ -284,10 +274,6 @@ export function useBranches(regionId: string) {
       }
 
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
-      console.log(
-        "Fetching branches from:",
-        `${API_BASE_URL}/api/admin/branches?region_id=${regionId}`
-      );
 
       const response = await fetch(
         `${API_BASE_URL}/api/admin/branches?region_id=${regionId}`,
@@ -300,8 +286,6 @@ export function useBranches(regionId: string) {
         }
       );
 
-      console.log("Branches response status:", response.status);
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Branches API error:", errorData);
@@ -309,7 +293,6 @@ export function useBranches(regionId: string) {
       }
 
       const result = await response.json();
-      console.log("Branches API response:", result);
 
       // Handle different response structures
       let branchData: any[] = [];
@@ -321,8 +304,6 @@ export function useBranches(regionId: string) {
         branchData = result.branches;
       }
 
-      console.log("Extracted branch data:", branchData);
-
       // Map to Branch interface
       const mappedBranches: Branch[] = branchData.map((item: any) => ({
         id: item.id || item.branch_id,
@@ -331,7 +312,6 @@ export function useBranches(regionId: string) {
         regionId: item.region_id || item.regionId || regionId,
       }));
 
-      console.log("Mapped branches:", mappedBranches);
       setBranches(mappedBranches);
     } catch (err) {
       console.error("Fetch branches error:", err);

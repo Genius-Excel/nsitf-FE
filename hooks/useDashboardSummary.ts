@@ -32,9 +32,6 @@ export const useDashboardSummary = (params?: DashboardQueryParams) => {
         queryString ? `?${queryString}` : ""
       }`;
 
-      console.log("🔍 [useDashboardSummary] Fetching with params:", params);
-      console.log("🔍 [useDashboardSummary] URL:", url);
-
       const response = await http.getData(url);
 
       // Validate response structure

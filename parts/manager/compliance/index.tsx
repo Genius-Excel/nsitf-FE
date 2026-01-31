@@ -107,12 +107,10 @@ export default function CompliancePage() {
   });
 
   const handleEdit = (data: ComplianceData) => {
-    console.log("Edit:", data);
     // Implement edit logic
   };
 
   const handleDelete = (id: string) => {
-    console.log("Delete:", id);
     // Implement delete logic
   };
 

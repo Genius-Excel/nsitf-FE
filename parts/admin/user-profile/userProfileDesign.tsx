@@ -21,9 +21,6 @@ export const UserProfileViewPage: React.FC<{
   onEdit: () => void;
   isLoading: boolean;
 }> = ({ profile, onEdit, isLoading }) => {
-  useEffect(() => {
-    console.log("Profile data in View Page:", profile);
-  }, [profile]);
   if (isLoading || !profile) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">

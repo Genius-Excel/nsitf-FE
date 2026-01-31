@@ -277,7 +277,6 @@ export const loadFromStorage = async (): Promise<ComplianceEntry[]> => {
     }
     return DUMMY_DATA;
   } catch (error) {
-    console.log("No existing data found, using dummy data");
     return DUMMY_DATA;
   }
 };
