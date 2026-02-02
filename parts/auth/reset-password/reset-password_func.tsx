@@ -255,7 +255,8 @@ export default function ResetPasswordPage() {
                   <strong>Reset link sent!</strong>
                   <br />
                   Please check your email inbox (and spam folder) for the
-                  password reset link. The link will expire in 90 seconds.
+                  password reset link. The link will expire in{" "}
+                  {LINK_EXPIRY_TIME} seconds.
                 </p>
               </div>
             )}
