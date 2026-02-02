@@ -242,11 +242,11 @@ export const DUMMY_DATA: ComplianceEntry[] = [
 ];
 
 export const calculateMetrics = (
-  entries: ComplianceEntry[]
+  entries: ComplianceEntry[],
 ): DashboardMetrics => {
   const totalActualContributions = entries.reduce(
     (sum, e) => sum + e.contributionCollected,
-    0
+    0,
   );
   const contributionsTarget = entries.reduce((sum, e) => sum + e.target, 0);
   const performanceRate =
@@ -255,7 +255,7 @@ export const calculateMetrics = (
       : 0;
   const totalEmployers = entries.reduce(
     (sum, e) => sum + e.employersRegistered,
-    0
+    0,
   );
   const totalEmployees = entries.reduce((sum, e) => sum + e.employees, 0);
 
@@ -282,7 +282,7 @@ export const loadFromStorage = async (): Promise<ComplianceEntry[]> => {
 };
 
 export const saveToStorage = async (
-  entries: ComplianceEntry[]
+  entries: ComplianceEntry[],
 ): Promise<void> => {
   try {
     await window.storage.set(STORAGE_KEY, JSON.stringify(entries));
@@ -348,10 +348,36 @@ export const parseExcelRow = (row: any, index: number): ComplianceEntry => {
 
 // ============= FORMATTING =============
 
-export const formatCurrency = (amount: number): string => {
-  return `₦${(amount / 1000000).toFixed(2)}M`;
+/**
+ * Format currency with proper comma separators
+ * @param amount - The amount to format
+ * @param maxDigits - Maximum number of digits before truncation (default: 9)
+ * @returns Formatted string with ₦ symbol and commas
+ */
+export const formatCurrency = (
+  amount: number,
+  maxDigits: number = 9,
+): string => {
+  const absAmount = Math.abs(amount);
+  const formatted = absAmount.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+
+  // If the number has more digits than maxDigits, truncate with ellipsis
+  const digitsOnly = formatted.replace(/,/g, "");
+  if (digitsOnly.length > maxDigits) {
+    const truncated = digitsOnly.substring(0, maxDigits);
+    const withCommas = Number(truncated).toLocaleString("en-US");
+    return `₦${amount < 0 ? "-" : ""}${withCommas}...`;
+  }
+
+  return `₦${amount < 0 ? "-" : ""}${formatted}`;
 };
 
+/**
+ * Format currency with full display (no truncation)
+ */
 export const formatCurrencyFull = (amount: number): string => {
   return new Intl.NumberFormat("en-NG", {
     style: "currency",
@@ -361,15 +387,31 @@ export const formatCurrencyFull = (amount: number): string => {
   }).format(amount);
 };
 
-// export const formatNumber = (num: number): string => {
-//   return num.toLocaleString();
-// };
+/**
+ * Legacy format - kept for backward compatibility in some places
+ * Formats amount in millions (e.g., "₦0.50M")
+ */
+export const formatCurrencyShort = (amount: number): string => {
+  return `₦${(amount / 1000000).toFixed(2)}M`;
+};
+
+/**
+ * Format number with commas (no currency symbol)
+ * @param num - The number to format
+ * @returns Formatted string with commas
+ */
+export const formatNumber = (num: number): string => {
+  return num.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+};
 
 // ============= SORTING =============
 
 export const sortEntries = (
   entries: ComplianceEntry[],
-  sortConfig: SortConfig | null
+  sortConfig: SortConfig | null,
 ): ComplianceEntry[] => {
   if (!sortConfig) return entries;
 
@@ -397,7 +439,7 @@ export const sortEntries = (
 export const filterEntries = (
   entries: ComplianceEntry[],
   filterConfig: FilterConfig,
-  searchTerm: string
+  searchTerm: string,
 ): ComplianceEntry[] => {
   return entries.filter((entry) => {
     // Region filter
@@ -486,7 +528,7 @@ export const validateEntry = (entry: Partial<ComplianceEntry>): string[] => {
 
 export const calculateAchievement = (
   collected: number,
-  target: number
+  target: number,
 ): number => {
   return target > 0 ? (collected / target) * 100 : 0;
 };
@@ -523,10 +565,6 @@ export const formatDate = (date?: string | Date | null): string => {
   });
 };
 
-export const formatNumber = (num: number): string => {
-  return num.toLocaleString();
-};
-
 // ============= ROLE CAPITALIZATION =============
 
 /**
@@ -545,7 +583,7 @@ export const capitalizeRole = (role: string | undefined | null): string => {
       .map((word) =>
         word.toLowerCase() === "hse"
           ? "HSE"
-          : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
       )
       .join(" ");
   }
@@ -563,14 +601,14 @@ export const capitalizeRole = (role: string | undefined | null): string => {
  */
 export const getRoleDisplayName = (
   roleName: string | undefined | null,
-  roles: Array<{ roleName: string; name: string }> | null
+  roles: Array<{ roleName: string; name: string }> | null,
 ): string => {
   if (!roleName) return "";
 
   // If roles data is available, look up the display name
   if (roles && Array.isArray(roles)) {
     const role = roles.find(
-      (r) => r.roleName?.toLowerCase() === roleName.toLowerCase()
+      (r) => r.roleName?.toLowerCase() === roleName.toLowerCase(),
     );
     if (role && role.name) {
       return role.name; // This is the display_name from backend

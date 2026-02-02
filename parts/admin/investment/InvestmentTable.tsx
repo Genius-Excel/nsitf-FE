@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { FormattedCurrency } from "@/components/ui/formatted-currency";
 
 interface InvestmentTableProps {
   records: InvestmentRecord[];
@@ -49,11 +50,6 @@ export const InvestmentTable: React.FC<InvestmentTableProps> = ({
   const [confirmAction, setConfirmAction] = useState<
     "review" | "approve" | null
   >(null);
-
-  // Format currency
-  const formatCurrency = (value: number) => {
-    return `₦${(value / 1000000).toFixed(2)}M`;
-  };
 
   // Format period
   const formatPeriod = (period: string) => {
@@ -210,28 +206,38 @@ export const InvestmentTable: React.FC<InvestmentTableProps> = ({
                         {record.month}
                       </td>
                       <td className="px-2 py-1.5 text-xs text-gray-900 text-right whitespace-nowrap">
-                        {formatCurrency(record.contributionsPrivateSector)}
+                        <FormattedCurrency
+                          amount={record.contributionsPrivateSector}
+                        />
                       </td>
                       <td className="px-2 py-1.5 text-xs text-gray-900 text-right whitespace-nowrap">
-                        {formatCurrency(record.contributionsPublicTreasury)}
+                        <FormattedCurrency
+                          amount={record.contributionsPublicTreasury}
+                        />
                       </td>
                       <td className="px-2 py-1.5 text-xs text-gray-900 text-right whitespace-nowrap">
-                        {formatCurrency(record.contributionsPublicNonTreasury)}
+                        <FormattedCurrency
+                          amount={record.contributionsPublicNonTreasury}
+                        />
                       </td>
                       <td className="px-2 py-1.5 text-xs text-gray-900 text-right whitespace-nowrap">
-                        {formatCurrency(record.contributionsInformalEconomy)}
+                        <FormattedCurrency
+                          amount={record.contributionsInformalEconomy}
+                        />
                       </td>
                       <td className="px-2 py-1.5 text-xs text-gray-900 text-right whitespace-nowrap">
-                        {formatCurrency(record.rentalFees)}
+                        <FormattedCurrency amount={record.rentalFees} />
                       </td>
                       <td className="px-2 py-1.5 text-xs text-gray-900 text-right whitespace-nowrap">
-                        {formatCurrency(record.ecsRegistrationFees)}
+                        <FormattedCurrency
+                          amount={record.ecsRegistrationFees}
+                        />
                       </td>
                       <td className="px-2 py-1.5 text-xs text-gray-900 text-right whitespace-nowrap">
-                        {formatCurrency(record.ecsCertificateFees)}
+                        <FormattedCurrency amount={record.ecsCertificateFees} />
                       </td>
                       <td className="px-2 py-1.5 text-xs text-gray-900 text-right whitespace-nowrap">
-                        {formatCurrency(record.debtRecovered)}
+                        <FormattedCurrency amount={record.debtRecovered} />
                       </td>
                       <td className="px-2 py-1.5 text-xs text-gray-900 text-center whitespace-nowrap">
                         {formatPeriod(record.period)}

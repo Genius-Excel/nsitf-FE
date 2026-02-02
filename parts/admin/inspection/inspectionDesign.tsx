@@ -30,6 +30,7 @@ import type {
 } from "@/lib/types/inspection";
 import { MetricsGrid, MetricCard } from "@/components/design-system/MetricCard";
 import { SearchBar } from "@/components/design-system/SearchBar";
+import { FormattedCurrency } from "@/components/ui/formatted-currency";
 
 // ============= STATISTICS CARDS =============
 interface InspectionStatisticsCardsProps {
@@ -126,7 +127,7 @@ export const InspectionBarChart = React.memo<InspectionBarChartProps>(
         </div>
       </CardContent>
     </Card>
-  )
+  ),
 );
 
 // ============= UPCOMING INSPECTIONS CARD =============
@@ -192,7 +193,7 @@ export const SearchAndFilters = React.memo<SearchAndFiltersProps>(
       uploadButtonColor="green"
       showFilter={false}
     />
-  )
+  ),
 );
 
 // ============= INSPECTIONS TABLE =============
@@ -205,7 +206,7 @@ interface InspectionsTableProps {
 export const InspectionsTable = React.memo<InspectionsTableProps>(
   ({ inspections, onView, onRefresh }) => {
     const [selectedInspections, setSelectedInspections] = useState<Set<string>>(
-      new Set()
+      new Set(),
     );
     const [userRole, setUserRole] = useState<UserRole | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -258,7 +259,7 @@ export const InspectionsTable = React.memo<InspectionsTableProps>(
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
         toast.success(
-          `${selectedInspections.size} inspection(s) marked as reviewed`
+          `${selectedInspections.size} inspection(s) marked as reviewed`,
         );
         setSelectedInspections(new Set());
       } catch (error) {
@@ -285,7 +286,7 @@ export const InspectionsTable = React.memo<InspectionsTableProps>(
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
         toast.success(
-          `${selectedInspections.size} inspection(s) approved successfully`
+          `${selectedInspections.size} inspection(s) approved successfully`,
         );
         setSelectedInspections(new Set());
       } catch (error) {
@@ -303,16 +304,6 @@ export const InspectionsTable = React.memo<InspectionsTableProps>(
         </div>
       );
     }
-
-    // Helper function to format currency
-    const formatCurrency = (amount: number): string => {
-      return new Intl.NumberFormat("en-NG", {
-        style: "currency",
-        currency: "NGN",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(amount);
-    };
 
     // Helper to get performance rate color
     const getPerformanceColor = (rate: number): string => {
@@ -441,13 +432,16 @@ export const InspectionsTable = React.memo<InspectionsTableProps>(
                       {(inspection.inspectionsConducted || 0).toLocaleString()}
                     </td>
                     <td className="px-4 py-4 text-sm font-semibold text-gray-900 whitespace-nowrap">
-                      {formatCurrency(inspection.debtEstablished || 0)}
+                      <FormattedCurrency
+                        amount={inspection.debtEstablished || 0}
+                      />
                     </td>
                     <td className="px-4 py-4 text-sm whitespace-nowrap">
                       <div className="flex flex-col">
-                        <span className="font-semibold text-green-700">
-                          {formatCurrency(inspection.debtRecovered || 0)}
-                        </span>
+                        <FormattedCurrency
+                          amount={inspection.debtRecovered || 0}
+                          className="font-semibold text-green-700"
+                        />
                         <span className="text-xs text-gray-600 mt-0.5">
                           {recoveryRate}% recovered
                         </span>
@@ -456,7 +450,7 @@ export const InspectionsTable = React.memo<InspectionsTableProps>(
                     <td className="px-4 py-4 text-sm whitespace-nowrap">
                       <Badge
                         className={`${getPerformanceBadge(
-                          inspection.performanceRate || 0
+                          inspection.performanceRate || 0,
                         )} font-medium`}
                       >
                         {inspection.performanceRate || 0}%
@@ -476,9 +470,9 @@ export const InspectionsTable = React.memo<InspectionsTableProps>(
                           inspection.recordStatus?.toLowerCase() === "approved"
                             ? "bg-green-100 text-green-800"
                             : inspection.recordStatus?.toLowerCase() ===
-                              "reviewed"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-yellow-100 text-yellow-800"
+                                "reviewed"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-yellow-100 text-yellow-800"
                         }`}
                       >
                         {inspection.recordStatus || "Pending"}
@@ -503,5 +497,5 @@ export const InspectionsTable = React.memo<InspectionsTableProps>(
         </div>
       </div>
     );
-  }
+  },
 );
