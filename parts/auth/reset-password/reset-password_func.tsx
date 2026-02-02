@@ -10,24 +10,27 @@ import {
   Clock,
   Building2,
   Loader2,
+  Mail,
 } from "lucide-react";
 
-const LINK_EXPIRY_TIME = 86400; // 24 hours in seconds
+const LINK_EXPIRY_TIME = 90; // 90 seconds
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams?.get("token");
 
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState<
-    "form" | "success" | "expired" | "loading"
+    "email" | "form" | "success" | "expired" | "loading"
   >("loading");
   const [timeRemaining, setTimeRemaining] = useState(LINK_EXPIRY_TIME);
   const [isExpired, setIsExpired] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   // Password validation
   const passwordStrength = {
@@ -47,8 +50,8 @@ export default function ResetPasswordPage() {
   // Check token on mount
   useEffect(() => {
     if (!token) {
-      setStatus("expired");
-      setError("No reset token provided");
+      // If no token, show email input form instead of error
+      setStatus("email");
     } else {
       setStatus("form");
       setTimeRemaining(LINK_EXPIRY_TIME);
@@ -99,15 +102,14 @@ export default function ResetPasswordPage() {
       formDataToSend.append("password1", password);
       formDataToSend.append("password2", confirmPassword);
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nsitf-be.geniusexcel.tech";
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "https://nsitf-be.geniusexcel.tech";
       const response = await fetch(
-        `${API_URL}/api/auth/reset-password?token=${encodeURIComponent(
-          token
-        )}`,
+        `${API_URL}/api/auth/reset-password?token=${encodeURIComponent(token)}`,
         {
           method: "POST",
           body: formDataToSend,
-        }
+        },
       );
 
       const data = await response.json();
@@ -126,14 +128,14 @@ export default function ResetPasswordPage() {
             setStatus("expired");
           } else {
             setError(
-              errorMessage || "Failed to reset password. Please try again."
+              errorMessage || "Failed to reset password. Please try again.",
             );
           }
         } else {
           setError(
             data.error ||
               data.message ||
-              "Failed to reset password. Please try again."
+              "Failed to reset password. Please try again.",
           );
         }
       }
@@ -151,6 +153,55 @@ export default function ResetPasswordPage() {
     }
   };
 
+  const handleSendResetLink = async () => {
+    if (!email) {
+      setError("Please enter your email address");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("email", email);
+
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "https://nsitf-be.geniusexcel.tech";
+      const response = await fetch(`${API_URL}/api/auth/password-reset-email`, {
+        method: "POST",
+        body: formDataToSend,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setEmailSent(true);
+        setError("");
+      } else {
+        setError(data.error || "Failed to send reset link. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error sending reset link:", err);
+      setError("Network error. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEmailKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSendResetLink();
+    }
+  };
+
   // Loading State
   if (status === "loading") {
     return (
@@ -159,6 +210,100 @@ export default function ResetPasswordPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm text-center">
             <Loader2 className="w-10 h-10 text-blue-600 animate-spin mx-auto mb-4" />
             <p className="text-gray-600">Validating reset link...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Email Input State (when no token provided)
+  if (status === "email") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          {/* NSITF BRAND HEADER */}
+          <div className="flex flex-col items-center text-center space-y-2 mb-8">
+            <div className="h-12 w-12 rounded-lg bg-green-400 flex items-center justify-center border border-primary/20 text-white">
+              <Building2 className="h-6 w-6 text-white" />
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight text-balance">
+              Nigerian Social Insurance Trust Fund
+            </h1>
+            <p className="text-muted-foreground text-balance">
+              Secure access to compliance, claims, and legal management
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="w-8 h-8 text-blue-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                Reset Password
+              </h1>
+              <p className="text-sm text-gray-600">
+                Enter your email to receive a password reset link
+              </p>
+            </div>
+
+            {/* Success Message */}
+            {emailSent && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-green-700 text-center">
+                  <strong>Reset link sent!</strong>
+                  <br />
+                  Please check your email inbox (and spam folder) for the
+                  password reset link. The link will expire in 90 seconds.
+                </p>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 mb-4">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
+            {/* Form */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Email Address
+                </label>
+                <Input
+                  type="email"
+                  placeholder="user@nsitf.gov.ng"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={handleEmailKeyPress}
+                  className="border-gray-200"
+                  disabled={isLoading}
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSendResetLink}
+                disabled={isLoading || !email}
+                style={{ backgroundColor: "#00a63e" }}
+                className="w-full py-3 text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+              >
+                {isLoading ? "Sending..." : "Send Reset Link"}
+              </button>
+
+              <div className="text-center pt-4">
+                <button
+                  onClick={() => router.push("/")}
+                  className="text-sm font-medium text-gray-600 hover:text-gray-900"
+                >
+                  ← Back to Login
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -243,7 +388,8 @@ export default function ResetPasswordPage() {
             <p className="text-gray-600 mb-6">
               {isExpired
                 ? "This password reset link has expired. Please request a new password reset link."
-                : error || "This password reset link is invalid or has already been used."}
+                : error ||
+                  "This password reset link is invalid or has already been used."}
             </p>
 
             {!isExpired && timeRemaining > 0 && (
