@@ -30,6 +30,7 @@ import { useInvestmentDashboard } from "@/hooks/investment/useInvestmentDashboar
 import { useBulkInvestmentActions } from "@/hooks/investment/useBulkInvestmentActions";
 import { useAdvancedFilters } from "@/hooks/useAdvancedFilters";
 import { getUserFromStorage } from "@/lib/auth";
+import { formatCurrency } from "@/lib/utils";
 import type {
   InvestmentFilterParams,
   InvestmentRecord,
@@ -39,7 +40,7 @@ export default function InvestmentDashboard() {
   // ============= STATE =============
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [userRole, setUserRole] = useState<string | null>(null);
   const [selectedInvestment, setSelectedInvestment] =
@@ -149,7 +150,7 @@ export default function InvestmentDashboard() {
       tableFilters.recordStatus,
       apiParams.region_id,
       apiParams.branch_id,
-    ]
+    ],
   );
 
   // Fetch filtered records for table
@@ -189,11 +190,6 @@ export default function InvestmentDashboard() {
     const sign = changePercent >= 0 ? "↑" : "↓";
     const abs = Math.abs(changePercent).toFixed(1);
     return `${sign} ${abs}%`;
-  };
-
-  // Format currency
-  const formatCurrency = (value: number) => {
-    return `₦${value.toLocaleString()}`;
   };
 
   // ============= HANDLERS =============
@@ -371,7 +367,7 @@ export default function InvestmentDashboard() {
             title="PUBLIC NON-TREASURY"
             value={formatCurrency(metrics.public_non_treasury_funded.value)}
             change={formatChange(
-              metrics.public_non_treasury_funded.change_percent
+              metrics.public_non_treasury_funded.change_percent,
             )}
             icon={<Users />}
             colorScheme="purple"

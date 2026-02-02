@@ -151,16 +151,23 @@ export interface ValuationDashboardData {
   };
 }
 
-// Helper function to format currency
+// Helper function to format currency with proper comma separators
 function formatCurrency(value: number): string {
-  if (value >= 1_000_000_000) {
-    return `₦${(value / 1_000_000_000).toFixed(1)}B`;
-  } else if (value >= 1_000_000) {
-    return `₦${(value / 1_000_000).toFixed(0)}M`;
-  } else if (value >= 1_000) {
-    return `₦${(value / 1_000).toFixed(0)}K`;
+  const absValue = Math.abs(value);
+  const formatted = absValue.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+
+  // For very large numbers, show with ellipsis if too long
+  const digitsOnly = formatted.replace(/,/g, "");
+  if (digitsOnly.length > 9) {
+    const truncated = digitsOnly.substring(0, 9);
+    const withCommas = Number(truncated).toLocaleString("en-US");
+    return `₦${value < 0 ? "-" : ""}${withCommas}...`;
   }
-  return `₦${value.toFixed(0)}`;
+
+  return `₦${value < 0 ? "-" : ""}${formatted}`;
 }
 
 // Helper function to format percentage
@@ -243,7 +250,7 @@ export function formatValuationMetrics(metrics: {
 
 // Transformer function with safe defaults for empty data
 export function transformValuationFromAPI(
-  apiData: ValuationDataAPI
+  apiData: ValuationDataAPI,
 ): ValuationDashboardData {
   // Safe defaults for metric cards
   const metricCards = apiData?.metric_cards || {

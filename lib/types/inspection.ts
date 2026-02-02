@@ -182,7 +182,7 @@ export interface InspectionStatCard {
  * Transform API dashboard response to UI dashboard data
  */
 export function transformInspectionDashboardFromAPI(
-  apiData: InspectionDashboardAPI
+  apiData: InspectionDashboardAPI,
 ): InspectionDashboard {
   // Helper to extract array from either direct array or {data: array} structure
   const getArrayData = (input: any): any[] => {
@@ -246,7 +246,7 @@ export function transformInspectionDashboardFromAPI(
  * Transform API detail response to UI detail data
  */
 export function transformInspectionDetailFromAPI(
-  apiData: InspectionDetailAPI
+  apiData: InspectionDetailAPI,
 ): InspectionDetail {
   return {
     branchInformation: {
@@ -274,9 +274,29 @@ export function transformInspectionDetailFromAPI(
 }
 
 /**
- * Format currency for Nigerian Naira
+ * Format currency for Nigerian Naira with comma separators
+ * @param amount - The amount to format
+ * @param maxDigits - Maximum number of digits before truncation (default: 9)
+ * @returns Formatted currency string
  */
-export function formatInspectionCurrency(amount: number): string {
+export function formatInspectionCurrency(
+  amount: number,
+  maxDigits: number = 9,
+): string {
+  const absAmount = Math.abs(amount);
+  const formatted = absAmount.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+
+  // If the number has more digits than maxDigits, truncate with ellipsis
+  const digitsOnly = formatted.replace(/,/g, "");
+  if (digitsOnly.length > maxDigits) {
+    const truncated = digitsOnly.substring(0, maxDigits);
+    const withCommas = Number(truncated).toLocaleString("en-US");
+    return `₦${amount < 0 ? "-" : ""}${withCommas}...`;
+  }
+
   return new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
@@ -299,7 +319,7 @@ export function getInspectionPerformanceBadge(rate: number): string {
  */
 export function calculateRecoveryRate(
   established: number,
-  recovered: number
+  recovered: number,
 ): string {
   if (established === 0) return "0.0";
   return ((recovered / established) * 100).toFixed(1);
