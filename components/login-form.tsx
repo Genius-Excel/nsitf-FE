@@ -272,16 +272,6 @@ export function LoginForm() {
             {isLoading ? "Signing in..." : "Sign in"}
           </Button>
 
-          <div className="mt-4 p-3 bg-muted/30 rounded-md border border-border/50">
-            <p className="text-xs text-muted-foreground mb-2 font-medium">
-              Demo Credentials:
-            </p>
-            <div className="space-y-1 text-xs text-muted-foreground">
-              <p>Admin: admin@company.com / admin123</p>
-              <p>Manager: manager@company.com / manager123</p>
-              <p>Branch Officer: branch@company.com / branch123</p>
-            </div>
-          </div>
           <Button
             asChild
             variant="link"

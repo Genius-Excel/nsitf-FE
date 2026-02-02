@@ -1,10 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { User, Mail, Phone, Lock, AlertCircle, Loader2 } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  Lock,
+  AlertCircle,
+  Loader2,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -65,7 +75,14 @@ type AdminFormValues = z.infer<typeof adminSchema>;
 export function CreateAdminForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const { createAdminData, createAdminError, createAdminPayload, createAdminIsLoading } = useCreateAdmin(() => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const {
+    createAdminData,
+    createAdminError,
+    createAdminPayload,
+    createAdminIsLoading,
+  } = useCreateAdmin(() => {
     toast({
       title: "Success",
       description: "Admin account created successfully",
@@ -189,7 +206,7 @@ export function CreateAdminForm() {
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         type="tel"
-                        placeholder="e.g., +1234567890 or (123) 456-7890"
+                        placeholder="e.g., 08012345678"
                         className="pl-10 bg-secondary/50 border-border"
                         {...field}
                       />
@@ -209,11 +226,22 @@ export function CreateAdminForm() {
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        className="pl-10 bg-secondary/50 border-border"
+                        className="pl-10 pr-10 bg-secondary/50 border-border"
                         {...field}
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -230,11 +258,24 @@ export function CreateAdminForm() {
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        type="password"
+                        type={showConfirmPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        className="pl-10 bg-secondary/50 border-border"
+                        className="pl-10 pr-10 bg-secondary/50 border-border"
                         {...field}
                       />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   </FormControl>
                   <FormMessage />
