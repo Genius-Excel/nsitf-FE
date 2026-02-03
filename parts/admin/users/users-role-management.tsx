@@ -98,27 +98,8 @@ export default function UsersRolesManagement() {
   // ============== HANDLERS ==============
 
   const handleEditUser = (user: any) => {
-    // Map role name to role ID if needed
-    let roleId = user.role;
-
-    // If the user.role is a name string (not a UUID), find the matching role ID
-    if (roles && roleId && !roleId.includes("-")) {
-      // It's likely a role name, find the role ID
-      const matchingRole = roles.find(
-        (r) => r.name.toLowerCase() === roleId.toLowerCase()
-      );
-      if (matchingRole) {
-        roleId = matchingRole.id;
-      }
-    }
-
-    // Create a modified user object with the correct role ID
-    const userWithRoleId = {
-      ...user,
-      role: roleId,
-    };
-
-    openForEdit(userWithRoleId);
+    // Pass the roles list to openForEdit so it can properly map role name to ID
+    openForEdit(user, roles || []);
   };
 
   const handleSaveUser = async () => {
@@ -264,7 +245,7 @@ export default function UsersRolesManagement() {
                 if (user) {
                   openDeleteDialog(
                     userId,
-                    `${user.first_name} ${user.last_name}`.trim() || user.email
+                    `${user.first_name} ${user.last_name}`.trim() || user.email,
                   );
                 }
               }}

@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { User } from "./UseUsers";
+import { Role } from "./Useroles";
 
 // ============= TYPES =============
 
@@ -46,7 +47,7 @@ export const useUserForm = () => {
   }, []);
 
   // Open modal for editing existing user
-  const openForEdit = useCallback((user: User) => {
+  const openForEdit = useCallback((user: User, roles?: Role[]) => {
     setEditingUserId(user.id);
 
     // Determine organizational level from user data
@@ -64,12 +65,28 @@ export const useUserForm = () => {
       }
     }
 
+    // Find the role ID from the roles list
+    // The user.role might be a role name (like "regional_manager", "HOD")
+    // or it might already be a role ID (UUID)
+    let roleId = user.role;
+
+    if (roles && roles.length > 0) {
+      // Try to find the role by matching roleName or ID
+      const matchingRole = roles.find(
+        (r) => r.roleName === user.role || r.id === user.role,
+      );
+
+      if (matchingRole) {
+        roleId = matchingRole.id; // Use the role ID (UUID)
+      }
+    }
+
     setFormData({
       first_name: user.first_name || "",
       last_name: user.last_name || "",
       email: user.email,
       phone_number: user.phone_number || "",
-      role: user.role,
+      role: roleId, // Use the mapped role ID
       department: user.department || "",
       organizational_level: orgLevel,
       region_id: user.region_id || "",
@@ -93,7 +110,7 @@ export const useUserForm = () => {
     (field: keyof UserFormData, value: string) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
     },
-    []
+    [],
   );
 
   // Update entire form
