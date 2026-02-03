@@ -26,6 +26,7 @@ import { InspectionUploadModal } from "./inspectionUploadModal";
 import { useManageInspections } from "@/hooks/inspection/UsemanageInspections";
 import { useInspectionMetrics } from "@/hooks/inspection/UseinspectionMetrics";
 import { useSingleInspection } from "@/hooks/inspection/UsesingleInspection";
+import { formatCurrency } from "@/lib/utils";
 import type {
   InspectionRecord,
   InspectionStatCard,
@@ -135,7 +136,7 @@ export default function InspectionManagement() {
       apiParams.period,
       apiParams.period_from,
       apiParams.period_to,
-    ]
+    ],
   );
 
   // ============= API HOOKS =============
@@ -225,7 +226,7 @@ export default function InspectionManagement() {
       (inspection) =>
         inspection.branch.toLowerCase().includes(lowerSearch) ||
         inspection.region?.toLowerCase().includes(lowerSearch) ||
-        inspection.period.toLowerCase().includes(lowerSearch)
+        inspection.period.toLowerCase().includes(lowerSearch),
     );
   }, [inspections, searchTerm]);
 
@@ -238,14 +239,14 @@ export default function InspectionManagement() {
       console.log(
         "🔍 [handleViewInspection] Opening modal for:",
         inspection.id,
-        inspection
+        inspection,
       );
       setSelectedInspectionId(inspection.id);
       // Use list data directly since detail endpoint doesn't include audit fields
       fetchDetail(inspection.id);
       setIsDetailModalOpen(true);
     },
-    [fetchDetail]
+    [fetchDetail],
   );
 
   const handleCloseDetailModal = useCallback(() => {
@@ -258,13 +259,13 @@ export default function InspectionManagement() {
     console.log("🔄 [handleRefreshAfterUpdate] Refreshing data...");
     console.log(
       "🔄 [handleRefreshAfterUpdate] Selected ID:",
-      selectedInspectionId
+      selectedInspectionId,
     );
     refetch();
     if (selectedInspectionId) {
       console.log(
         "🔄 [handleRefreshAfterUpdate] Fetching detail for:",
-        selectedInspectionId
+        selectedInspectionId,
       );
       fetchDetail(selectedInspectionId);
     }
@@ -306,7 +307,7 @@ export default function InspectionManagement() {
           inspection.performanceRate,
           inspection.demandNotice,
           inspection.period,
-        ].join(",")
+        ].join(","),
       ),
     ].join("\n");
 
@@ -329,7 +330,7 @@ export default function InspectionManagement() {
 
     if (!metrics) {
       console.log(
-        "⚠️ [InspectionManagement] No metrics available, returning empty array"
+        "⚠️ [InspectionManagement] No metrics available, returning empty array",
       );
       return [];
     }
@@ -349,13 +350,13 @@ export default function InspectionManagement() {
       },
       {
         title: "Cumulative Debt Established",
-        value: `₦${(metrics.totalDebtEstablished / 1_000_000).toFixed(1)}M`,
+        value: formatCurrency(metrics.totalDebtEstablished),
         bgColor: "#f59e0b",
         icon: "file-text",
       },
       {
         title: "Cumulative Debt Recovered",
-        value: `₦${(metrics.totalDebtRecovered / 1_000_000).toFixed(1)}M`,
+        value: formatCurrency(metrics.totalDebtRecovered),
         bgColor: "#16a34a",
         icon: "naira-sign",
       },
@@ -377,8 +378,8 @@ export default function InspectionManagement() {
 
     const maxValue = Math.max(
       ...monthlyChart.map((d) =>
-        Math.max(d.debtsEstablished || 0, d.debtsRecovered || 0)
-      )
+        Math.max(d.debtsEstablished || 0, d.debtsRecovered || 0),
+      ),
     );
 
     return {
