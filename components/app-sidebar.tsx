@@ -2,24 +2,20 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import {
   LayoutDashboard,
   Users,
   Shield,
-  ClipboardCheck,
   HardHat,
   Scale,
   LogOut,
-  Building2,
-  FileCheck,
   ShieldCheck,
   FileText,
-  ChartBar,
   Activity,
   LineChart,
   AlertTriangle,
   Wallet,
-  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -220,7 +216,7 @@ const NavItem: React.FC<NavItemProps> = ({
             isActive
               ? "bg-green-500 text-white hover:bg-green-600"
               : "text-sidebar-foreground hover:bg-green-50 hover:text-green-700",
-            isCollapsed && "justify-center px-2"
+            isCollapsed && "justify-center px-2",
           )}
           onClick={onClick}
           aria-label={title}
@@ -281,8 +277,8 @@ export function AppSidebar({
         if (!validRoles.includes(fetchedUser.role as Role)) {
           setError(
             `Invalid user role detected: ${normalizedRole}. Expected one of: ${validRoles.join(
-              ", "
-            )}`
+              ", ",
+            )}`,
           );
           console.error("Role validation failed:", {
             originalRole: userData[0].role,
@@ -347,7 +343,7 @@ export function AppSidebar({
       if (allowedModules.length > 0 && allowedModules.length < 5) {
         // This is a restricted role (not admin/manager)
         return allowedModules.some((module) =>
-          item.title.toLowerCase().includes(module.toLowerCase())
+          item.title.toLowerCase().includes(module.toLowerCase()),
         );
       }
 
@@ -366,7 +362,7 @@ export function AppSidebar({
         return hasPermission(
           normalizedRole,
           item.permission,
-          user?.permissions
+          user?.permissions,
         );
       }
 
@@ -413,14 +409,18 @@ export function AppSidebar({
       <div
         className={cn(
           "fixed top-0 left-0 h-screen flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 dark:bg-gray-900 z-10",
-          isCollapsed ? "w-16" : "w-64"
+          isCollapsed ? "w-16" : "w-64",
         )}
       >
         {/* Header */}
         <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-          <div className="h-8 w-8 rounded-md bg-green-400 flex items-center justify-center">
-            <Building2 className="h-5 w-5 text-white" />
-          </div>
+          <Image
+            src="/nsitf-logo.png"
+            alt="NSITF Logo"
+            width={20}
+            height={20}
+            className="object-contain"
+          />
           {!isCollapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-sidebar-foreground dark:text-gray-200">
@@ -447,7 +447,7 @@ export function AppSidebar({
           {filteredNavItems.map((item) => {
             const roleBasedHref = getRoleBasedRoute(
               user.role as Role,
-              item.href
+              item.href,
             );
             const isActive = pathname === roleBasedHref;
             return (

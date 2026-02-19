@@ -1,4 +1,14 @@
-import type { UserRole } from "./auth";
+// Define the UserRole type
+export type UserRole =
+  | "admin"
+  | "manager"
+  | "regional_manager"
+  | "user"
+  | "claims_officer"
+  | "compliance_officer"
+  | "hse_officer"
+  | "legal_officer"
+  | "inspection_officer";
 
 // Define permissions for each role
 export const rolePermissions: Record<UserRole, string[]> = {
@@ -116,7 +126,7 @@ export const rolePermissions: Record<UserRole, string[]> = {
 export function hasPermission(
   role: UserRole,
   permission: string,
-  backendPermissions?: string[]
+  backendPermissions?: string[],
 ): boolean {
   // Check backend permissions first if available
   if (backendPermissions && Array.isArray(backendPermissions)) {
@@ -175,7 +185,7 @@ export function hasPermission(
 
     const backendPerms = permissionMapping[permission] || [];
     const hasMappedPermission = backendPerms.some((p) =>
-      backendPermissions.includes(p)
+      backendPermissions.includes(p),
     );
 
     if (hasMappedPermission) return true;

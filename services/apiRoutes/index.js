@@ -32,6 +32,8 @@ export const routes = {
   getSingleHseRecord: (recordId) => `/api/hse-ops/hse-records/${recordId}`,
   editHseRecord: (recordId) => `/api/hse-ops/hse-records/${recordId}`,
   deleteHseRecord: (recordId) => `/api/hse-ops/hse-records/${recordId}`,
+  updateManageHseRecord: (uuid) => `/api/hse-ops/manage-hse/${uuid}`,
+  getSingleManageHseRecord: (uuid) => `/api/hse-ops/manage-hse/${uuid}`,
   getHSEDashboardMetrics: () => "/api/hse-ops/hse-dashboard-metrics",
   getHSEDashboardTable: () => "/api/hse-ops/dashboard?view=table",
   getHSEDashboardActivities: () => "/api/hse-ops/dashboard?view=activities",

@@ -104,7 +104,7 @@ export const ManageBranchesModal: React.FC<ManageBranchesModalProps> = ({
             </div>
             <button
               onClick={handleClose}
-              className="p-2 hover:bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              className="p-2 hover:bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" aria-hidden="true" />
@@ -119,7 +119,8 @@ export const ManageBranchesModal: React.FC<ManageBranchesModalProps> = ({
                 Branch Management
               </h3>
               <p className="text-sm text-gray-600 mb-3">
-                Create branches for a specific region. Select a region first, then add branches.
+                Create branches for a specific region. Select a region first,
+                then add branches.
               </p>
 
               <div className="space-y-3">
@@ -135,7 +136,7 @@ export const ManageBranchesModal: React.FC<ManageBranchesModalProps> = ({
                     id="branch-region-select"
                     value={selectedRegionForBranch}
                     onChange={(e) => setSelectedRegionForBranch(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
                     <option value="">Select a region</option>
                     {regions.map((region) => (
@@ -161,7 +162,7 @@ export const ManageBranchesModal: React.FC<ManageBranchesModalProps> = ({
                             handleAddBranch();
                           }
                         }}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         aria-label="New branch name"
                       />
                       <input
@@ -175,7 +176,7 @@ export const ManageBranchesModal: React.FC<ManageBranchesModalProps> = ({
                             handleAddBranch();
                           }
                         }}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         aria-label="New branch code"
                       />
                     </div>
@@ -183,7 +184,7 @@ export const ManageBranchesModal: React.FC<ManageBranchesModalProps> = ({
                       type="button"
                       onClick={handleAddBranch}
                       disabled={!newBranchName.trim()}
-                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Add new branch"
                     >
                       <div className="flex items-center justify-center gap-2">
@@ -196,7 +197,13 @@ export const ManageBranchesModal: React.FC<ManageBranchesModalProps> = ({
                     {branches && branches.length > 0 && (
                       <div className="mt-3">
                         <p className="text-xs text-gray-600 mb-2">
-                          Branches in {regions.find((r) => r.id === selectedRegionForBranch)?.name}:
+                          Branches in{" "}
+                          {
+                            regions.find(
+                              (r) => r.id === selectedRegionForBranch,
+                            )?.name
+                          }
+                          :
                         </p>
                         <div
                           className="flex flex-wrap gap-2"
@@ -206,7 +213,7 @@ export const ManageBranchesModal: React.FC<ManageBranchesModalProps> = ({
                           {branches.map((branch) => (
                             <div
                               key={branch.id}
-                              className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full"
+                              className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full"
                               role="listitem"
                             >
                               <span className="text-sm font-medium">
@@ -219,8 +226,10 @@ export const ManageBranchesModal: React.FC<ManageBranchesModalProps> = ({
                               </span>
                               <button
                                 type="button"
-                                onClick={() => onDeleteBranch(branch.id, branch.name)}
-                                className="p-1 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                                onClick={() =>
+                                  onDeleteBranch(branch.id, branch.name)
+                                }
+                                className="p-1 rounded-md hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
                                 aria-label={`Delete ${branch.name} branch`}
                                 title={`Delete ${branch.name}`}
                               >
@@ -245,7 +254,7 @@ export const ManageBranchesModal: React.FC<ManageBranchesModalProps> = ({
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
             >
               Close
             </button>

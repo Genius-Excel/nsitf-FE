@@ -3,15 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import {
-  Lock,
-  Check,
-  AlertCircle,
-  Clock,
-  Building2,
-  Loader2,
-  Mail,
-} from "lucide-react";
+import { Lock, Check, AlertCircle, Clock, Loader2, Mail } from "lucide-react";
+import Image from "next/image";
 
 const LINK_EXPIRY_TIME = 90; // 90 seconds
 
@@ -223,9 +216,14 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-md">
           {/* NSITF BRAND HEADER */}
           <div className="flex flex-col items-center text-center space-y-2 mb-8">
-            <div className="h-12 w-12 rounded-lg bg-green-400 flex items-center justify-center border border-primary/20 text-white">
-              <Building2 className="h-6 w-6 text-white" />
-            </div>
+            <Image
+              src="/nsitf-logo.png"
+              alt="NSITF Logo"
+              width={64}
+              height={64}
+              priority
+              className="object-contain"
+            />
             <h1 className="text-2xl font-semibold tracking-tight text-balance">
               Nigerian Social Insurance Trust Fund
             </h1>
@@ -318,9 +316,13 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-md">
           {/* NSITF BRAND HEADER */}
           <div className="flex flex-col items-center text-center space-y-2 mb-8">
-            <div className="h-12 w-12 rounded-lg bg-green-400 flex items-center justify-center border border-primary/20 text-white">
-              <Building2 className="h-6 w-6 text-white" />
-            </div>
+            <Image
+              src="/nsitf-logo.png"
+              alt="NSITF Logo"
+              width={64}
+              height={64}
+              className="object-contain"
+            />
             <h1 className="text-2xl font-semibold tracking-tight text-balance">
               Nigerian Social Insurance Trust Fund
             </h1>
@@ -367,9 +369,13 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-md">
           {/* NSITF BRAND HEADER */}
           <div className="flex flex-col items-center text-center space-y-2 mb-8">
-            <div className="h-12 w-12 rounded-lg bg-green-400 flex items-center justify-center border border-primary/20 text-white">
-              <Building2 className="h-6 w-6 text-white" />
-            </div>
+            <Image
+              src="/nsitf-logo.png"
+              alt="NSITF Logo"
+              width={64}
+              height={64}
+              className="object-contain"
+            />
             <h1 className="text-2xl font-semibold tracking-tight text-balance">
               Nigerian Social Insurance Trust Fund
             </h1>
@@ -437,9 +443,13 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-md">
         {/* NSITF BRAND HEADER */}
         <div className="flex flex-col items-center text-center space-y-2 mb-8">
-          <div className="h-12 w-12 rounded-lg bg-green-400 flex items-center justify-center border border-primary/20 text-white">
-            <Building2 className="h-6 w-6 text-white" />
-          </div>
+          <Image
+            src="/nsitf-logo.png"
+            alt="NSITF Logo"
+            width={64}
+            height={64}
+            className="object-contain"
+          />
           <h1 className="text-2xl font-semibold tracking-tight text-balance">
             Nigerian Social Insurance Trust Fund
           </h1>

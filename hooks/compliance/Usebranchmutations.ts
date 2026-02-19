@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import HttpService from "@/services/httpServices";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 // ============= TYPES =============
 
@@ -24,11 +24,29 @@ interface UpdateBranchPayload {
 
 const http = new HttpService();
 
-/**
- * Branch mutations (create, update, delete)
- * Uses pessimistic updates: only refetch on success
- * Consistent error handling via toast notifications
- */
+/** Extracts a user-friendly message from an Axios error, never exposing raw status codes. */
+function extractErrorMessage(err: any, fallback: string): string {
+  const data = err?.response?.data;
+  // Try all common API error fields first
+  const apiMessage =
+    data?.message ||
+    data?.Message ||
+    data?.userMessage ||
+    data?.detail ||
+    data?.error ||
+    data?.title ||
+    (data?.errors ? Object.values(data.errors)?.[0]?.[0] : null) ||
+    data?.validationMessages?.[0];
+
+  if (apiMessage) return String(apiMessage);
+
+  // Suppress Axios "Request failed with status code XXX" — not user-friendly
+  const rawMsg: string = err?.message ?? "";
+  if (/request failed with status code/i.test(rawMsg)) return fallback;
+  if (!rawMsg) return fallback;
+  return rawMsg;
+}
+
 export const useBranchMutations = (options?: MutationOptions) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,10 +78,7 @@ export const useBranchMutations = (options?: MutationOptions) => {
 
         return response.data;
       } catch (err: any) {
-        const message =
-          err?.response?.data?.message ||
-          err.message ||
-          "Failed to create branch";
+        const message = extractErrorMessage(err, "Failed to create branch");
 
         console.error("Create branch error:", err);
         setError(message);
@@ -75,7 +90,7 @@ export const useBranchMutations = (options?: MutationOptions) => {
         setIsLoading(false);
       }
     },
-    [options]
+    [options],
   );
 
   // Update existing branch
@@ -87,7 +102,7 @@ export const useBranchMutations = (options?: MutationOptions) => {
 
         const response = await http.patchDataJson(
           data,
-          `/api/admin/branches/${branchId}`
+          `/api/admin/branches/${branchId}`,
         );
 
         if (!response?.data) {
@@ -99,10 +114,7 @@ export const useBranchMutations = (options?: MutationOptions) => {
 
         return response.data;
       } catch (err: any) {
-        const message =
-          err?.response?.data?.message ||
-          err.message ||
-          "Failed to update branch";
+        const message = extractErrorMessage(err, "Failed to update branch");
 
         console.error("Update branch error:", err);
         setError(message);
@@ -114,7 +126,7 @@ export const useBranchMutations = (options?: MutationOptions) => {
         setIsLoading(false);
       }
     },
-    [options]
+    [options],
   );
 
   // Delete branch
@@ -129,10 +141,7 @@ export const useBranchMutations = (options?: MutationOptions) => {
         toast.success(`Branch "${branchName}" deleted successfully`);
         options?.onSuccess?.();
       } catch (err: any) {
-        const message =
-          err?.response?.data?.message ||
-          err.message ||
-          "Failed to delete branch";
+        const message = extractErrorMessage(err, "Failed to delete branch");
 
         console.error("Delete branch error:", err);
         setError(message);
@@ -144,7 +153,7 @@ export const useBranchMutations = (options?: MutationOptions) => {
         setIsLoading(false);
       }
     },
-    [options]
+    [options],
   );
 
   return {

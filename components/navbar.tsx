@@ -22,16 +22,20 @@ const NavBar = () => {
     <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
       <div className="px-4 lg:px-6 h-16 flex items-center justify-between max-w-7xl mx-auto">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2" aria-label="DiasporaBase Home">
+        <Link
+          href="/"
+          className="flex items-center gap-2"
+          aria-label="NSITF Home"
+        >
           <Image
-            src="/svg/logo.svg"
-            alt="DiasporaBase Logo"
-            width={32}
-            height={32}
+            src="/nsitf-logo.png"
+            alt="NSITF Logo"
+            width={40}
+            height={40}
             priority
-            className="w-8 h-8"
+            className="w-10 h-10 object-contain"
           />
-          <span className="text-lg font-semibold text-gray-900">DiasporaBase</span>
+          <span className="text-lg font-semibold text-gray-900">NSITF</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -62,7 +66,9 @@ const NavBar = () => {
       {/* Mobile Navigation */}
       <nav
         className={`md:hidden bg-white border-t transition-all duration-300 ease-in-out ${
-          isMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0 overflow-hidden"
+          isMenuOpen
+            ? "max-h-screen opacity-100"
+            : "max-h-0 opacity-0 overflow-hidden"
         }`}
       >
         <ul className="flex flex-col items-start px-4 py-2">
