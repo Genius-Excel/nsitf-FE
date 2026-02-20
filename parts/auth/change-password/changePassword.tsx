@@ -7,12 +7,12 @@ import {
   Lock,
   Check,
   AlertCircle,
-  Building2,
   Eye,
   EyeOff,
   ArrowLeft,
   Mail,
 } from "lucide-react";
+import Image from "next/image";
 import { useChangePassword } from "@/services/auth";
 
 export default function ChangePasswordPage() {
@@ -129,7 +129,7 @@ export default function ChangePasswordPage() {
       } else {
         setError(
           changePasswordError ||
-            "Failed to change password. Please check your email or current password."
+            "Failed to change password. Please check your email or current password.",
         );
       }
     } catch (err) {
@@ -155,9 +155,14 @@ export default function ChangePasswordPage() {
       <div className="w-full max-w-md">
         {/* NSITF BRAND HEADER */}
         <div className="flex flex-col items-center text-center space-y-2 mb-8">
-          <div className="h-12 w-12 rounded-lg bg-green-400 flex items-center justify-center border border-primary/20 text-white">
-            <Building2 className="h-6 w-6 text-white" />
-          </div>
+          <Image
+            src="/nsitf-logo.png"
+            alt="NSITF Logo"
+            width={64}
+            height={64}
+            priority
+            className="object-contain"
+          />
           <h1 className="text-2xl font-semibold tracking-tight text-balance">
             Nigerian Social Insurance Trust Fund
           </h1>

@@ -1,4 +1,17 @@
-import type { UserRole } from "./auth";
+// Define the UserRole type
+export type UserRole =
+  | "admin"
+  | "manager"
+  | "regional_manager"
+  | "user"
+  | "claims_officer"
+  | "compliance_officer"
+  | "hse_officer"
+  | "HSE Officer" // API returns this exact string
+  | "legal_officer"
+  | "inspection_officer"
+  | "actuary_officer"
+  | "Actuary"; // API returns this exact string
 
 // Define permissions for each role
 export const rolePermissions: Record<UserRole, string[]> = {
@@ -84,6 +97,7 @@ export const rolePermissions: Record<UserRole, string[]> = {
     "view_dashboard",
     "view_hse",
     "manage_hse",
+    "can_review",
     "view_claims",
     "view_compliance",
     "view_legal",
@@ -111,12 +125,45 @@ export const rolePermissions: Record<UserRole, string[]> = {
     "view_hse",
     "view_legal",
   ],
+
+  // Actuary Officer - review access by default
+  actuary_officer: [
+    "view_dashboard",
+    "can_review",
+    "view_claims",
+    "view_compliance",
+    "view_hse",
+    "view_legal",
+    "view_inspection",
+  ],
+
+  // API string variants (exact values returned by backend)
+  "HSE Officer": [
+    "view_dashboard",
+    "view_hse",
+    "manage_hse",
+    "can_review",
+    "view_claims",
+    "view_compliance",
+    "view_legal",
+    "view_inspection",
+  ],
+
+  Actuary: [
+    "view_dashboard",
+    "can_review",
+    "view_claims",
+    "view_compliance",
+    "view_hse",
+    "view_legal",
+    "view_inspection",
+  ],
 };
 
 export function hasPermission(
   role: UserRole,
   permission: string,
-  backendPermissions?: string[]
+  backendPermissions?: string[],
 ): boolean {
   // Check backend permissions first if available
   if (backendPermissions && Array.isArray(backendPermissions)) {
@@ -175,7 +222,7 @@ export function hasPermission(
 
     const backendPerms = permissionMapping[permission] || [];
     const hasMappedPermission = backendPerms.some((p) =>
-      backendPermissions.includes(p)
+      backendPermissions.includes(p),
     );
 
     if (hasMappedPermission) return true;

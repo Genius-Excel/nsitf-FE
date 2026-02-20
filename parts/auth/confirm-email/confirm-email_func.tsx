@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, AlertCircle, Loader2, Building2 } from "lucide-react";
+import { Check, AlertCircle, Loader2 } from "lucide-react";
+import Image from "next/image";
 import { useGetConfirmEmail } from "@/services/auth";
 
 const EMAIL_SUCCESS = "Email successfully confirmed!";
@@ -10,17 +11,25 @@ export default function EmailConfirmationFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams?.get("token");
-  const { filterVerifyToken, isVerifyingToken, verifiedTokenData, verifyTokenError } =
-    useGetConfirmEmail({ enabled: !!token });
+  const {
+    filterVerifyToken,
+    isVerifyingToken,
+    verifiedTokenData,
+    verifyTokenError,
+  } = useGetConfirmEmail({ enabled: !!token });
 
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading",
+  );
   const [message, setMessage] = useState<string>("");
 
   // Verify email on mount
   useEffect(() => {
     if (!token) {
       setStatus("error");
-      setMessage("No verification token provided. Please request a new confirmation email.");
+      setMessage(
+        "No verification token provided. Please request a new confirmation email.",
+      );
       return;
     }
 
@@ -29,7 +38,10 @@ export default function EmailConfirmationFlow() {
 
     if (verifyTokenError) {
       setStatus("error");
-      setMessage(verifyTokenError || "We couldn't verify your email address. The link may have expired or is invalid.");
+      setMessage(
+        verifyTokenError ||
+          "We couldn't verify your email address. The link may have expired or is invalid.",
+      );
     } else if (verifiedTokenData === EMAIL_SUCCESS) {
       setStatus("success");
       setMessage(verifiedTokenData);
@@ -50,9 +62,14 @@ export default function EmailConfirmationFlow() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <div className="flex flex-col items-center text-center space-y-2 mb-8">
-            <div className="h-12 w-12 rounded-lg bg-green-400 flex items-center justify-center border border-primary/20 text-white">
-              <Building2 className="h-6 w-6" aria-hidden="true" />
-            </div>
+            <Image
+              src="/nsitf-logo.png"
+              alt="NSITF Logo"
+              width={64}
+              height={64}
+              priority
+              className="object-contain"
+            />
             <h1 className="text-2xl font-semibold tracking-tight text-balance">
               Nigerian Social Insurance Trust Fund
             </h1>
@@ -63,10 +80,17 @@ export default function EmailConfirmationFlow() {
 
           <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm text-center">
             <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Loader2 className="w-10 h-10 text-blue-600 animate-spin" aria-hidden="true" />
+              <Loader2
+                className="w-10 h-10 text-blue-600 animate-spin"
+                aria-hidden="true"
+              />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">Verifying Your Email</h1>
-            <p className="text-gray-600 mb-4">Please wait while we confirm your email address...</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">
+              Verifying Your Email
+            </h1>
+            <p className="text-gray-600 mb-4">
+              Please wait while we confirm your email address...
+            </p>
           </div>
         </div>
       </div>
@@ -79,9 +103,13 @@ export default function EmailConfirmationFlow() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <div className="flex flex-col items-center text-center space-y-2 mb-8">
-            <div className="h-12 w-12 rounded-lg bg-green-400 flex items-center justify-center border border-primary/20 text-white">
-              <Building2 className="h-6 w-6" aria-hidden="true" />
-            </div>
+            <Image
+              src="/nsitf-logo.png"
+              alt="NSITF Logo"
+              width={64}
+              height={64}
+              className="object-contain"
+            />
             <h1 className="text-2xl font-semibold tracking-tight text-balance">
               Nigerian Social Insurance Trust Fund
             </h1>
@@ -94,7 +122,9 @@ export default function EmailConfirmationFlow() {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Check className="w-10 h-10 text-green-600" aria-hidden="true" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">Email Confirmed!</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">
+              Email Confirmed!
+            </h1>
             <p className="text-gray-600 mb-8">{message}</p>
             <button
               type="button"
@@ -115,9 +145,13 @@ export default function EmailConfirmationFlow() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center text-center space-y-2 mb-8">
-          <div className="h-12 w-12 rounded-lg bg-green-400 flex items-center justify-center border border-primary/20 text-white">
-            <Building2 className="h-6 w-6" aria-hidden="true" />
-          </div>
+          <Image
+            src="/nsitf-logo.png"
+            alt="NSITF Logo"
+            width={64}
+            height={64}
+            className="object-contain"
+          />
           <h1 className="text-2xl font-semibold tracking-tight text-balance">
             Nigerian Social Insurance Trust Fund
           </h1>
@@ -128,14 +162,20 @@ export default function EmailConfirmationFlow() {
 
         <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm text-center">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertCircle className="w-10 h-10 text-red-600" aria-hidden="true" />
+            <AlertCircle
+              className="w-10 h-10 text-red-600"
+              aria-hidden="true"
+            />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">Verification Failed</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">
+            Verification Failed
+          </h1>
           <p className="text-gray-600 mb-8">{message}</p>
           {message?.toLowerCase().includes("expired") && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 text-left">
               <p className="text-sm text-yellow-800">
-                <strong>Note:</strong> Email confirmation links expire after 24 hours for security reasons.
+                <strong>Note:</strong> Email confirmation links expire after 24
+                hours for security reasons.
               </p>
             </div>
           )}

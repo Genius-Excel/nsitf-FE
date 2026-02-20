@@ -120,7 +120,7 @@ function generateMockData() {
       contributionsInformalEconomy: 0,
       rentalFees: 0,
       debtRecovered: 0,
-    }
+    },
   );
 
   // Mock previous month values (10% less for demo)
@@ -151,7 +151,7 @@ function generateMockData() {
         previous: previousTotals.contributionsPrivateSector,
         ...calculateChange(
           currentTotals.contributionsPrivateSector,
-          previousTotals.contributionsPrivateSector
+          previousTotals.contributionsPrivateSector,
         ),
       },
       contributionsPublicTreasury: {
@@ -159,7 +159,7 @@ function generateMockData() {
         previous: previousTotals.contributionsPublicTreasury,
         ...calculateChange(
           currentTotals.contributionsPublicTreasury,
-          previousTotals.contributionsPublicTreasury
+          previousTotals.contributionsPublicTreasury,
         ),
       },
       contributionsPublicNonTreasury: {
@@ -167,7 +167,7 @@ function generateMockData() {
         previous: previousTotals.contributionsPublicNonTreasury,
         ...calculateChange(
           currentTotals.contributionsPublicNonTreasury,
-          previousTotals.contributionsPublicNonTreasury
+          previousTotals.contributionsPublicNonTreasury,
         ),
       },
       contributionsInformalEconomy: {
@@ -175,7 +175,7 @@ function generateMockData() {
         previous: previousTotals.contributionsInformalEconomy,
         ...calculateChange(
           currentTotals.contributionsInformalEconomy,
-          previousTotals.contributionsInformalEconomy
+          previousTotals.contributionsInformalEconomy,
         ),
       },
       rentalFees: {
@@ -188,7 +188,7 @@ function generateMockData() {
         previous: previousTotals.debtRecovered,
         ...calculateChange(
           currentTotals.debtRecovered,
-          previousTotals.debtRecovered
+          previousTotals.debtRecovered,
         ),
       },
     },
@@ -239,19 +239,19 @@ export async function GET(request: NextRequest) {
     // Apply filters if provided
     if (recordStatus && recordStatus !== "") {
       data.records = data.records.filter(
-        (record) => record.record_status === recordStatus
+        (record) => record.recordStatus === recordStatus,
       );
     }
 
     if (regionId) {
       data.records = data.records.filter((record) =>
-        record.region.toLowerCase().includes(regionId.toLowerCase())
+        record.region.toLowerCase().includes(regionId.toLowerCase()),
       );
     }
 
     if (branchId) {
       data.records = data.records.filter((record) =>
-        record.branch.toLowerCase().includes(branchId.toLowerCase())
+        record.branch.toLowerCase().includes(branchId.toLowerCase()),
       );
     }
 
@@ -266,7 +266,7 @@ export async function GET(request: NextRequest) {
         error: "Failed to fetch investment data",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

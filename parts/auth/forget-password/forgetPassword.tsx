@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Mail, AlertCircle, Building2 } from "lucide-react";
+import { Mail, AlertCircle } from "lucide-react";
+import Image from "next/image";
 
 export default function ForgetPasswordPage() {
   const router = useRouter();
@@ -33,14 +34,12 @@ export default function ForgetPasswordPage() {
       const formDataToSend = new FormData();
       formDataToSend.append("email", email);
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nsitf-be.geniusexcel.tech";
-      const response = await fetch(
-        `${API_URL}/api/auth/password-reset-email`,
-        {
-          method: "POST",
-          body: formDataToSend,
-        }
-      );
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "https://nsitf-be.geniusexcel.tech";
+      const response = await fetch(`${API_URL}/api/auth/password-reset-email`, {
+        method: "POST",
+        body: formDataToSend,
+      });
 
       const data = await response.json();
 
@@ -69,9 +68,14 @@ export default function ForgetPasswordPage() {
       <div className="w-full max-w-md">
         {/* ===================== NSITF BRAND HEADER ===================== */}
         <div className="flex flex-col items-center text-center space-y-2 mb-8">
-          <div className="h-12 w-12 rounded-lg bg-green-400 flex items-center justify-center border border-primary/20 text-white">
-            <Building2 className="h-6 w-6 text-white" />
-          </div>
+          <Image
+            src="/nsitf-logo.png"
+            alt="NSITF Logo"
+            width={64}
+            height={64}
+            priority
+            className="object-contain"
+          />
           <h1 className="text-2xl font-semibold tracking-tight text-balance">
             Nigerian Social Insurance Trust Fund
           </h1>

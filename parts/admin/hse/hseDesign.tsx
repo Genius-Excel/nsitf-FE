@@ -114,7 +114,7 @@ export const RecentHSEActivities: React.FC<{
               <div className="flex items-center gap-3">
                 <Badge
                   className={`${getActivityStatusColor(
-                    activity.status
+                    activity.status,
                   )} font-medium text-xs`}
                 >
                   {activity.status}
@@ -415,9 +415,16 @@ export const ViewDetailsModal: React.FC<{
   const isApproved = activity?.status?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
-    ["admin", "manager", "regional_manager", "regional officer"].includes(
-      normalizedRole
-    ) &&
+    [
+      "admin",
+      "manager",
+      "regional_manager",
+      "regional officer",
+      "hse_officer",
+      "hse officer",
+      "actuary_officer",
+      "actuary",
+    ].includes(normalizedRole) &&
     !isApproved; // Disable editing for approved records
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
@@ -439,7 +446,7 @@ export const ViewDetailsModal: React.FC<{
             </div>
             <Badge
               className={`${getActivityStatusColor(
-                activity.status
+                activity.status,
               )} font-medium text-xs`}
             >
               {activity.status}
@@ -575,15 +582,26 @@ export const RegionalRecordViewModal: React.FC<{
   const isApproved = displayData?.record_status?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
-    ["regional_manager", "regional officer", "admin", "manager"].includes(
-      normalizedRole
-    ) &&
+    [
+      "regional_manager",
+      "regional officer",
+      "admin",
+      "manager",
+      "hse_officer",
+      "hse officer",
+      "actuary_officer",
+      "actuary",
+    ].includes(normalizedRole) &&
     !isApproved; // Disable editing for approved records
   const canReview =
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer" ||
     normalizedRole === "admin" ||
-    normalizedRole === "manager";
+    normalizedRole === "manager" ||
+    normalizedRole === "hse_officer" ||
+    normalizedRole === "hse officer" ||
+    normalizedRole === "actuary_officer" ||
+    normalizedRole === "actuary";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
@@ -622,7 +640,7 @@ export const RegionalRecordViewModal: React.FC<{
 
       await httpService.patchData(
         payload,
-        `/api/hse-ops/manage-hse/${record.id}`
+        `/api/hse-ops/manage-hse/${record.id}`,
       );
 
       toast.success("HSE record updated successfully");
@@ -697,7 +715,7 @@ export const RegionalRecordViewModal: React.FC<{
         toast.success(
           confirmAction === "reviewed"
             ? "HSE record marked as reviewed successfully"
-            : "HSE record approved successfully"
+            : "HSE record approved successfully",
         );
         setShowConfirmDialog(false);
         setConfirmAction(null);
@@ -715,7 +733,7 @@ export const RegionalRecordViewModal: React.FC<{
     label: string,
     value: any,
     field: string,
-    type: "text" | "number" = "text"
+    type: "text" | "number" = "text",
   ) => {
     if (isEditMode && editedData) {
       return (
@@ -727,7 +745,7 @@ export const RegionalRecordViewModal: React.FC<{
             onChange={(e) =>
               handleFieldChange(
                 field,
-                type === "number" ? parseFloat(e.target.value) : e.target.value
+                type === "number" ? parseFloat(e.target.value) : e.target.value,
               )
             }
             placeholder={`Enter ${label.toLowerCase()}`}
@@ -768,9 +786,9 @@ export const RegionalRecordViewModal: React.FC<{
                         displayData.record_status.toLowerCase() === "pending"
                           ? "bg-yellow-100 text-yellow-800 border-yellow-300"
                           : displayData.record_status.toLowerCase() ===
-                            "reviewed"
-                          ? "bg-blue-100 text-blue-800 border-blue-300"
-                          : "bg-green-100 text-green-800 border-green-300"
+                              "reviewed"
+                            ? "bg-blue-100 text-blue-800 border-blue-300"
+                            : "bg-green-100 text-green-800 border-green-300"
                       }
                     >
                       {displayData.record_status}
@@ -857,7 +875,7 @@ export const RegionalRecordViewModal: React.FC<{
                       "Total Actual OSH Activities",
                       displayData.totalActualOSHActivities,
                       "totalActualOSHActivities",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -876,7 +894,7 @@ export const RegionalRecordViewModal: React.FC<{
                       "Target OSH Activities",
                       displayData.targetOSHActivities,
                       "targetOSHActivities",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -911,7 +929,7 @@ export const RegionalRecordViewModal: React.FC<{
                       "OSH Enlightenment & Awareness",
                       displayData.oshEnlightenment,
                       "oshEnlightenment",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -930,7 +948,7 @@ export const RegionalRecordViewModal: React.FC<{
                       "OSH Inspection & Audit",
                       displayData.oshInspectionAudit,
                       "oshInspectionAudit",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -949,7 +967,7 @@ export const RegionalRecordViewModal: React.FC<{
                       "Accident Investigation",
                       displayData.accidentInvestigation,
                       "accidentInvestigation",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -981,9 +999,9 @@ export const RegionalRecordViewModal: React.FC<{
                         displayData.record_status.toLowerCase() === "approved"
                           ? "bg-green-100 text-green-800"
                           : displayData.record_status.toLowerCase() ===
-                            "reviewed"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-yellow-100 text-yellow-800"
+                              "reviewed"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
                       {displayData.record_status.toUpperCase()}
@@ -1157,7 +1175,7 @@ export const RegionalOSHSummaryTable: React.FC<{
   onReview?: (recordId: string) => void;
 }> = ({ regionalData, onRefresh, onView, onReview }) => {
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [userRole, setUserRole] = useState<UserRole | null>(null);
 
@@ -1177,7 +1195,11 @@ export const RegionalOSHSummaryTable: React.FC<{
   const normalizedRole = userRole?.toLowerCase();
   const canReview =
     normalizedRole === "regional_manager" ||
-    normalizedRole === "regional officer";
+    normalizedRole === "regional officer" ||
+    normalizedRole === "hse_officer" ||
+    normalizedRole === "hse officer" ||
+    normalizedRole === "actuary_officer" ||
+    normalizedRole === "actuary";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
@@ -1366,7 +1388,7 @@ export const RegionalOSHSummaryTable: React.FC<{
                 <td className="px-4 py-4 text-sm text-center whitespace-nowrap">
                   <Badge
                     className={`${getPerformanceBadge(
-                      data.performanceRate
+                      data.performanceRate,
                     )} font-medium`}
                   >
                     {data.performanceRate}%
@@ -1390,8 +1412,8 @@ export const RegionalOSHSummaryTable: React.FC<{
                       data.record_status?.toLowerCase() === "approved"
                         ? "bg-green-100 text-green-800"
                         : data.record_status?.toLowerCase() === "reviewed"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-yellow-100 text-yellow-800"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
                     {data.record_status || "Pending"}
@@ -1408,17 +1430,6 @@ export const RegionalOSHSummaryTable: React.FC<{
                         <Eye className="w-4 h-4" />
                       </button>
                     )}
-                    {onReview &&
-                      canReview &&
-                      normalizedRole !== "regional officer" && (
-                        <button
-                          onClick={() => onReview(data.id)}
-                          className="text-orange-600 hover:text-orange-800 transition-colors"
-                          title="Review"
-                        >
-                          <FileCheck className="w-4 h-4" />
-                        </button>
-                      )}
                   </div>
                 </td>
               </tr>
@@ -1436,7 +1447,7 @@ export const HSERecordsTable: React.FC<{
   onViewDetails: (record: HSERecord) => void;
 }> = ({ records, onViewDetails }) => {
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1451,7 +1462,11 @@ export const HSERecordsTable: React.FC<{
   const normalizedRole = userRole?.toLowerCase();
   const canReview =
     normalizedRole === "regional_manager" ||
-    normalizedRole === "regional officer";
+    normalizedRole === "regional officer" ||
+    normalizedRole === "hse_officer" ||
+    normalizedRole === "hse officer" ||
+    normalizedRole === "actuary_officer" ||
+    normalizedRole === "actuary";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
@@ -1632,7 +1647,7 @@ export const HSERecordsTable: React.FC<{
                 <td className="px-4 py-4 text-sm whitespace-nowrap">
                   <Badge
                     className={`${getComplianceBadge(
-                      record.safetyComplianceRate
+                      record.safetyComplianceRate,
                     )} font-medium`}
                   >
                     {record.safetyComplianceRate}%
@@ -1641,7 +1656,7 @@ export const HSERecordsTable: React.FC<{
                 <td className="px-4 py-4 text-sm whitespace-nowrap">
                   <Badge
                     className={`${getHSEStatusColor(
-                      record.status
+                      record.status,
                     )} font-medium`}
                   >
                     {record.status}

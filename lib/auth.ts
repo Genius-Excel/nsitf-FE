@@ -6,6 +6,9 @@ export type UserRole =
   | "claims_officer"
   | "compliance_officer"
   | "hse_officer"
+  | "HSE Officer" // API returns this exact string
+  | "actuary_officer"
+  | "Actuary" // API returns this exact string
   | "legal_officer"
   | "inspection_officer"
   | "branch_data_officer"
@@ -29,6 +32,7 @@ export interface User {
   is_active?: boolean;
   last_login?: string;
   date_joined?: string;
+  tutorial_video?: string; // Tutorial video URL for user's role (from backend)
 }
 
 // Mock user database
@@ -64,7 +68,7 @@ const MOCK_USERS: Record<string, { password: string; user: User }> = {
 
 export async function login(
   email: string,
-  password: string
+  password: string,
 ): Promise<User | null> {
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 500));

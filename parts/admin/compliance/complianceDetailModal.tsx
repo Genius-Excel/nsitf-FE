@@ -82,15 +82,26 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   const isApproved = displayData.recordStatus?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
-    ["regional_manager", "regional officer", "admin", "manager"].includes(
-      normalizedRole
-    ) &&
+    [
+      "regional_manager",
+      "regional officer",
+      "admin",
+      "manager",
+      "hse_officer",
+      "hse officer",
+      "actuary_officer",
+      "actuary",
+    ].includes(normalizedRole) &&
     !isApproved;
   const canReview =
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer" ||
     normalizedRole === "admin" ||
-    normalizedRole === "manager";
+    normalizedRole === "manager" ||
+    normalizedRole === "hse_officer" ||
+    normalizedRole === "hse officer" ||
+    normalizedRole === "actuary_officer" ||
+    normalizedRole === "actuary";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
@@ -173,14 +184,14 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
     try {
       const result = await updateSingleCompliance(
         entry.id,
-        confirmAction === "reviewed" ? "reviewed" : "approved"
+        confirmAction === "reviewed" ? "reviewed" : "approved",
       );
 
       if (result.success) {
         toast.success(
           confirmAction === "reviewed"
             ? "Compliance record marked as reviewed successfully"
-            : "Compliance record approved successfully"
+            : "Compliance record approved successfully",
         );
 
         setShowConfirmDialog(false);
@@ -206,7 +217,7 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
     label: string,
     value: any,
     field: string,
-    type: "text" | "number" = "text"
+    type: "text" | "number" = "text",
   ) => {
     console.log(`🔧 [renderField] ${field}:`, {
       isEditMode,
@@ -233,7 +244,7 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
             onChange={(e) =>
               handleFieldChange(
                 field,
-                type === "number" ? parseFloat(e.target.value) : e.target.value
+                type === "number" ? parseFloat(e.target.value) : e.target.value,
               )
             }
             placeholder={label}
@@ -282,9 +293,9 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
                       displayData?.recordStatus?.toLowerCase() === "pending"
                         ? "bg-yellow-100 text-yellow-800 border-yellow-300"
                         : displayData?.recordStatus?.toLowerCase() ===
-                          "reviewed"
-                        ? "bg-blue-100 text-blue-800 border-blue-300"
-                        : "bg-green-100 text-green-800 border-green-300"
+                            "reviewed"
+                          ? "bg-blue-100 text-blue-800 border-blue-300"
+                          : "bg-green-100 text-green-800 border-green-300"
                     }`}
                   >
                     {displayData?.recordStatus?.toUpperCase() || "PENDING"}
@@ -391,7 +402,7 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
                       "Target",
                       formatCurrencyFull(displayData.target),
                       "target",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -411,7 +422,7 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
                       "Collected",
                       formatCurrencyFull(displayData.contributionCollected),
                       "contributionCollected",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -475,7 +486,7 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
                       "Total Employers",
                       displayData.employersRegistered.toLocaleString(),
                       "employersRegistered",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -494,7 +505,7 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
                       "Total Employees",
                       displayData.employees.toLocaleString(),
                       "employees",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -522,7 +533,7 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
                       "Registration Fees",
                       formatCurrencyFull(displayData.registrationFees),
                       "registrationFees",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -541,7 +552,7 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
                       "Certificate Fees",
                       formatCurrencyFull(displayData.certificateFees),
                       "certificateFees",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -570,8 +581,8 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
                       displayData.recordStatus === "approved"
                         ? "bg-green-100 text-green-800"
                         : displayData.recordStatus === "reviewed"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-yellow-100 text-yellow-800"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
                     {displayData.recordStatus?.toUpperCase() || "PENDING"}

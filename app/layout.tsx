@@ -12,34 +12,38 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "NSTIF",
+  title: "NSITF",
   description:
-    "Connect volunteers with opportunities and manage agencies and projects.",
+    "Secure access to Automated and Digital Actuarial Data Structure",
   generator: "Next.js",
-  applicationName: "NSTIF",
+  applicationName: "NSITF",
   keywords: [
-    "volunteer",
-    "community",
-    "non-profit",
+    "NSITF",
+    "Nigeria Social Insurance Trust Fund",
     "agency management",
     "project management",
-    "volunteer opportunities",
+    "actuarial data",
   ],
-  authors: [{ name: "DiasporaBase Team", url: "https://diasporabase.com" }],
-  creator: "DiasporaBase Team",
-  publisher: "DiasporaBase",
+  authors: [{ name: "NSITF", url: "https://nsitf.gov.ng" }],
+  creator: "NSITF",
+  publisher: "NSITF",
+  icons: {
+    icon: "/nsitf-logo.png",
+    shortcut: "/nsitf-logo.png",
+    apple: "/nsitf-logo.png",
+  },
   openGraph: {
-    title: "NSTIF",
+    title: "NSITF",
     description:
-      "Connect volunteers with opportunities and manage agencies and projects.",
-    url: "https://diasporabase.com",
-    siteName: "NSTIF",
+      "Secure access to Automated and Digital Actuarial Data Structure",
+    url: "https://nsitf.gov.ng",
+    siteName: "NSITF",
     images: [
       {
-        url: "https://diasporabase.com/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "DiasporaBase Open Graph Image",
+        url: "/nsitf-logo.png",
+        width: 300,
+        height: 297,
+        alt: "NSITF Logo",
       },
     ],
     locale: "en_US",
@@ -47,10 +51,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "NSTIF",
+    title: "NSITF",
     description:
-      "Connect volunteers with opportunities and manage agencies and projects.",
-    images: ["https://diasporabase.com/og-image.png"],
+      "Secure access to Automated and Digital Actuarial Data Structure",
+    images: ["/nsitf-logo.png"],
   },
 };
 
