@@ -84,7 +84,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
-      normalizedRole
+      normalizedRole,
     ) &&
     !isApproved; // Disable editing for approved records
 
@@ -93,7 +93,11 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer" ||
     normalizedRole === "admin" ||
-    normalizedRole === "manager";
+    normalizedRole === "manager" ||
+    normalizedRole === "hse_officer" ||
+    normalizedRole === "hse officer" ||
+    normalizedRole === "actuary_officer" ||
+    normalizedRole === "actuary";
 
   // Check if user can approve (Admin, HQ, HOD)
   const canApprove =
@@ -238,7 +242,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
 
     const success = await updateSingleClaim(
       claimId,
-      confirmAction === "reviewed" ? "reviewed" : "approved"
+      confirmAction === "reviewed" ? "reviewed" : "approved",
     );
 
     console.log("Update result:", success);
@@ -248,7 +252,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
       toast.success(
         confirmAction === "reviewed"
           ? "Claim marked as reviewed successfully"
-          : "Claim approved successfully"
+          : "Claim approved successfully",
       );
 
       setShowConfirmDialog(false);
@@ -286,7 +290,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
     label: string,
     value: any,
     field: string,
-    type: "text" | "number" | "date" = "text"
+    type: "text" | "number" | "date" = "text",
   ) => {
     if (isEditMode && editedData) {
       const fieldValue = field.includes(".")
@@ -308,7 +312,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
             onChange={(e) =>
               handleFieldChange(
                 field,
-                type === "number" ? parseFloat(e.target.value) : e.target.value
+                type === "number" ? parseFloat(e.target.value) : e.target.value,
               )
             }
             placeholder={`Enter ${label.toLowerCase()}`}
@@ -422,14 +426,14 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                 <div className="flex items-center justify-between">
                   <Badge
                     className={`${getStatusBadgeColor(
-                      claimDetail.status
+                      claimDetail.status,
                     )} font-medium text-sm px-4 py-2`}
                   >
                     {claimDetail.status}
                   </Badge>
                   <span
                     className={`font-semibold text-sm ${getTypeTextColor(
-                      claimDetail.type
+                      claimDetail.type,
                     )}`}
                   >
                     {claimDetail.type}
@@ -449,17 +453,17 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                       {renderField(
                         "Company Name",
                         displayData?.employer,
-                        "employer"
+                        "employer",
                       )}
                       {renderField(
                         "Sector",
                         displayData?.classification.sector || "—",
-                        "classification.sector"
+                        "classification.sector",
                       )}
                       {renderField(
                         "Class",
                         displayData?.classification.class || "—",
-                        "classification.class"
+                        "classification.class",
                       )}
                     </div>
                   </div>
@@ -475,7 +479,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                       {renderField(
                         "Full Name",
                         displayData?.claimant,
-                        "claimant"
+                        "claimant",
                       )}
                       <div>
                         <p className="text-xs text-gray-600 uppercase">
@@ -512,10 +516,10 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                         renderField(
                           "Amount Requested",
                           formatCurrency(
-                            displayData?.financial.amountRequested || 0
+                            displayData?.financial.amountRequested || 0,
                           ),
                           "financial.amountRequested",
-                          "number"
+                          "number",
                         )
                       ) : (
                         <>
@@ -524,7 +528,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                           </p>
                           <p className="text-2xl font-bold text-gray-900">
                             {formatCurrency(
-                              claimDetail.financial.amountRequested
+                              claimDetail.financial.amountRequested,
                             )}
                           </p>
                         </>
@@ -536,10 +540,10 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                         renderField(
                           "Amount Paid",
                           formatCurrency(
-                            displayData?.financial.amountPaid || 0
+                            displayData?.financial.amountPaid || 0,
                           ),
                           "financial.amountPaid",
-                          "number"
+                          "number",
                         )
                       ) : (
                         <>
@@ -566,7 +570,7 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                       >
                         {claimDetail.financial.difference > 0 ? "-" : "+"}
                         {formatCurrency(
-                          Math.abs(claimDetail.financial.difference)
+                          Math.abs(claimDetail.financial.difference),
                         )}
                       </p>
                       <p className="text-xs text-gray-600 mt-1">
@@ -680,8 +684,8 @@ export const ClaimDetailModal: React.FC<ClaimDetailModalProps> = ({
                             claimDetail.audit.recordStatus === "approved"
                               ? "bg-green-100 text-green-800"
                               : claimDetail.audit.recordStatus === "reviewed"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-yellow-100 text-yellow-800"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-yellow-100 text-yellow-800"
                           }`}
                         >
                           {claimDetail.audit.recordStatus.toUpperCase()}

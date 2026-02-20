@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TutorialVideoModal } from "@/components/tutorial-video-modal";
+// import { TutorialVideoModal } from "@/components/tutorial-video-modal";
 import Image from "next/image";
 import {
   Card,
@@ -26,6 +26,8 @@ import { toast } from "sonner";
 /**
  * Mock Dashboard for Testing Tutorial Video Feature
  * Matches the design and color scheme of the main application
+ *
+ * NOTE: Tutorial video feature is currently commented out
  */
 export default function MockDashboardPage() {
   const router = useRouter();
@@ -73,7 +75,7 @@ export default function MockDashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Tutorial Video Modal - Auto-shows for new users */}
-      <TutorialVideoModal />
+      {/* <TutorialVideoModal /> */}
 
       {/* Header */}
       <header className="border-b bg-card">
@@ -133,23 +135,36 @@ export default function MockDashboardPage() {
             </CardTitle>
             <CardDescription className="text-green-700 dark:text-green-300">
               This is a mock dashboard designed for testing the tutorial video
-              feature
+              feature (Currently disabled)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="text-sm text-green-800 dark:text-green-200">
               <p className="mb-2">
-                <strong>✨ What's happening:</strong>
+                <strong>✨ Tutorial Features (Currently Disabled):</strong>
               </p>
               <ul className="space-y-1 list-disc list-inside ml-2">
                 <li>
-                  The tutorial video modal should have appeared when you first
-                  landed on this page
+                  <s>
+                    The tutorial video modal should have appeared when you first
+                    landed on this page
+                  </s>
                 </li>
-                <li>The video starts at 11 seconds with autoplay enabled</li>
-                <li>You can test the "Don't show me again" functionality</li>
-                <li>Logout and login again to test the dismissal behavior</li>
+                <li>
+                  <s>The video starts at 11 seconds with autoplay enabled</s>
+                </li>
+                <li>
+                  <s>You can test the "Don't show me again" functionality</s>
+                </li>
+                <li>
+                  <s>Logout and login again to test the dismissal behavior</s>
+                </li>
               </ul>
+              <p className="mt-3 text-xs text-green-600 dark:text-green-400">
+                💡 All tutorial video code has been commented out to prevent
+                issues. Uncomment the TutorialVideoModal in this file to
+                re-enable the feature.
+              </p>
             </div>
           </CardContent>
         </Card>

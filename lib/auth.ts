@@ -6,6 +6,9 @@ export type UserRole =
   | "claims_officer"
   | "compliance_officer"
   | "hse_officer"
+  | "HSE Officer" // API returns this exact string
+  | "actuary_officer"
+  | "Actuary" // API returns this exact string
   | "legal_officer"
   | "inspection_officer"
   | "branch_data_officer"

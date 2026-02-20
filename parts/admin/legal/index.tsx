@@ -51,17 +51,17 @@ export default function LegalManagementDashboard() {
 
   // ============= STATE =============
   const [selectedRecord, setSelectedRecord] = useState<LegalRecord | null>(
-    null
+    null,
   );
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
   const [minRecalcitrant, setMinRecalcitrant] = useState<number | undefined>(
-    undefined
+    undefined,
   );
   const [selectedActivities, setSelectedActivities] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -147,7 +147,7 @@ export default function LegalManagementDashboard() {
       periodTo: apiParams.period_to || undefined,
       recordStatus: apiParams.record_status || undefined,
     }),
-    [apiParams]
+    [apiParams],
   );
 
   // Fetch metrics data (controlled by MetricsFilter)
@@ -198,24 +198,24 @@ export default function LegalManagementDashboard() {
     () => ({
       recalcitrantEmployers: metricsRecords.reduce(
         (sum, r) => sum + r.recalcitrantEmployers,
-        0
+        0,
       ),
       defaultingEmployers: metricsRecords.reduce(
         (sum, r) => sum + r.defaultingEmployers,
-        0
+        0,
       ),
       planIssued: metricsRecords.reduce((sum, r) => sum + r.planIssued, 0),
       adrCases: metricsRecords.reduce(
         (sum, r) => sum + r.alternateDisputeResolution,
-        0
+        0,
       ),
       casesInstituted: metricsRecords.reduce(
         (sum, r) => sum + r.casesInstitutedInCourt,
-        0
+        0,
       ),
       casesWon: metricsRecords.reduce((sum, r) => sum + r.casesWon, 0),
     }),
-    [metricsRecords]
+    [metricsRecords],
   );
 
   // Sync selectedRecord when data refreshes
@@ -243,7 +243,7 @@ export default function LegalManagementDashboard() {
       !apiParams.region_id ||
       (() => {
         const selectedRegion = regions.find(
-          (r) => r.id === apiParams.region_id
+          (r) => r.id === apiParams.region_id,
         );
         const result = selectedRegion
           ? record.region === selectedRegion.name
@@ -264,7 +264,7 @@ export default function LegalManagementDashboard() {
       !apiParams.branch_id ||
       (() => {
         const selectedBranch = branches.find(
-          (b) => b.id === apiParams.branch_id
+          (b) => b.id === apiParams.branch_id,
         );
         const result = selectedBranch
           ? record.branch === selectedBranch.name
@@ -333,7 +333,7 @@ export default function LegalManagementDashboard() {
 
   // ============= COMPUTED VALUES =============
   const uniqueRegions = Array.from(
-    new Set(allRecords.map((r) => r.region))
+    new Set(allRecords.map((r) => r.region)),
   ).filter(Boolean);
   const hasActiveFilters =
     searchTerm || regionFilter || minRecalcitrant !== undefined;
@@ -349,7 +349,11 @@ export default function LegalManagementDashboard() {
   const normalizedRole = userRole?.toLowerCase();
   const canReview =
     normalizedRole === "regional_manager" ||
-    normalizedRole === "regional officer";
+    normalizedRole === "regional officer" ||
+    normalizedRole === "hse_officer" ||
+    normalizedRole === "hse officer" ||
+    normalizedRole === "actuary_officer" ||
+    normalizedRole === "actuary";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
@@ -677,8 +681,8 @@ export default function LegalManagementDashboard() {
                           record.recordStatus?.toLowerCase() === "approved"
                             ? "bg-green-100 text-green-800"
                             : record.recordStatus?.toLowerCase() === "reviewed"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-yellow-100 text-yellow-800"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-yellow-100 text-yellow-800"
                         }`}
                       >
                         {record.recordStatus || "Pending"}

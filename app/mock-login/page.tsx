@@ -22,6 +22,8 @@ import Link from "next/link";
  *
  * This simulates a new user logging in with different roles.
  * Each role gets the tutorial video which will pop up on their dashboard.
+ *
+ * NOTE: Tutorial video feature is currently commented out
  */
 export default function MockLoginPage() {
   const router = useRouter();
@@ -31,8 +33,8 @@ export default function MockLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showTestAccounts, setShowTestAccounts] = useState(false);
 
-  // Test video URL (starts at 11 seconds)
-  const testVideoUrl = "https://www.youtube.com/watch?v=4n4rBrs5-LY";
+  // Test video URL (starts at 11 seconds) - COMMENTED OUT
+  // const testVideoUrl = "https://www.youtube.com/watch?v=4n4rBrs5-LY";
 
   // Test accounts for different roles
   const testAccounts = {
@@ -107,7 +109,8 @@ export default function MockLoginPage() {
 
     // Simulate API delay
     setTimeout(() => {
-      // Clear any existing tutorial dismissal to simulate new user
+      // Clear any existing tutorial dismissal to simulate new user - COMMENTED OUT
+      /*
       if (typeof window !== "undefined") {
         const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -121,15 +124,16 @@ export default function MockLoginPage() {
           "[MockLogin] Cleared tutorial dismissal flags for new user simulation",
         );
       }
+      */
 
-      // Create mock user data with tutorial_video
+      // Create mock user data (tutorial_video field commented out)
       const mockUserData = {
         user_id: `test_${account.role}_${Date.now()}`,
         email: email,
         first_name: account.displayName.split(" ")[0],
         last_name: account.displayName.split(" ")[1] || "User",
         role: account.role,
-        tutorial_video: testVideoUrl,
+        // tutorial_video: testVideoUrl,  // COMMENTED OUT
         is_active: true,
         email_verified: true,
       };
@@ -141,10 +145,10 @@ export default function MockLoginPage() {
       localStorage.setItem("user", JSON.stringify(mockUserData));
 
       console.log("🔍 [MockLogin] Stored mock user data:", mockUserData);
-      console.log(
-        "✅ [MockLogin] Tutorial video URL:",
-        mockUserData.tutorial_video,
-      );
+      // console.log(
+      //   "✅ [MockLogin] Tutorial video URL:",
+      //   mockUserData.tutorial_video,
+      // );
 
       toast.success(`Login successful! Welcome ${account.displayName}`);
 
@@ -330,9 +334,15 @@ export default function MockLoginPage() {
               </h3>
               <ul className="text-xs text-green-800 dark:text-green-200 space-y-1 list-disc list-inside">
                 <li>You're redirected to the mock dashboard</li>
-                <li>Tutorial video modal pops up automatically</li>
-                <li>Video starts at 11 seconds with autoplay</li>
-                <li>Test the "Don't show again" functionality</li>
+                <li>
+                  <strike>Tutorial video modal pops up automatically</strike>{" "}
+                  (Currently disabled)
+                </li>
+                <li>
+                  <strike>Video starts at 11 seconds with autoplay</strike>{" "}
+                  (Currently disabled)
+                </li>
+                <li>Mock dashboard with test data displayed</li>
               </ul>
             </div>
 

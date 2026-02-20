@@ -114,16 +114,16 @@ Demand Notices Percentage: ${
 FINANCIAL SUMMARY
 =================
 Debt Established: ${formatInspectionCurrency(
-      detailData.financialSummary.debtEstablished
+      detailData.financialSummary.debtEstablished,
     )}
 Debt Recovered: ${formatInspectionCurrency(
-      detailData.financialSummary.debtRecovered
+      detailData.financialSummary.debtRecovered,
     )}
 Outstanding Debt: ${formatInspectionCurrency(
-      detailData.financialSummary.outstandingDebt
+      detailData.financialSummary.outstandingDebt,
     )}
 Average Debt per Inspection: ${formatInspectionCurrency(
-      detailData.financialSummary.averageDebtPerInspection
+      detailData.financialSummary.averageDebtPerInspection,
     )}
 
 Generated on: ${new Date().toLocaleString()}
@@ -149,14 +149,18 @@ Generated on: ${new Date().toLocaleString()}
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
-      normalizedRole
+      normalizedRole,
     ) &&
     !isApproved; // Disable editing for approved records
   const canReview =
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer" ||
     normalizedRole === "admin" ||
-    normalizedRole === "manager";
+    normalizedRole === "manager" ||
+    normalizedRole === "hse_officer" ||
+    normalizedRole === "hse officer" ||
+    normalizedRole === "actuary_officer" ||
+    normalizedRole === "actuary";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
@@ -273,7 +277,7 @@ Generated on: ${new Date().toLocaleString()}
 
     const success = await updateSingleInspection(
       detailData.id,
-      confirmAction === "reviewed" ? "reviewed" : "approved"
+      confirmAction === "reviewed" ? "reviewed" : "approved",
     );
 
     console.log("Update result:", success);
@@ -283,7 +287,7 @@ Generated on: ${new Date().toLocaleString()}
       toast.success(
         confirmAction === "reviewed"
           ? "Inspection marked as reviewed successfully"
-          : "Inspection approved successfully"
+          : "Inspection approved successfully",
       );
 
       setShowConfirmDialog(false);
@@ -316,7 +320,7 @@ Generated on: ${new Date().toLocaleString()}
     label: string,
     value: any,
     field: string,
-    type: "text" | "number" = "text"
+    type: "text" | "number" = "text",
   ) => {
     if (isEditMode && editedData) {
       const fieldValue = field.includes(".")
@@ -333,7 +337,7 @@ Generated on: ${new Date().toLocaleString()}
             onChange={(e) =>
               handleFieldChange(
                 field,
-                type === "number" ? parseFloat(e.target.value) : e.target.value
+                type === "number" ? parseFloat(e.target.value) : e.target.value,
               )
             }
             placeholder={`Enter ${label.toLowerCase()}`}
@@ -429,9 +433,9 @@ Generated on: ${new Date().toLocaleString()}
                       "pending"
                         ? "bg-yellow-100 text-yellow-800 border-yellow-300"
                         : detailData?.audit?.recordStatus?.toLowerCase() ===
-                          "reviewed"
-                        ? "bg-blue-100 text-blue-800 border-blue-300"
-                        : "bg-green-100 text-green-800 border-green-300"
+                            "reviewed"
+                          ? "bg-blue-100 text-blue-800 border-blue-300"
+                          : "bg-green-100 text-green-800 border-green-300"
                     }`}
                   >
                     {detailData?.audit?.recordStatus?.toUpperCase() ||
@@ -538,7 +542,7 @@ Generated on: ${new Date().toLocaleString()}
                     </p>
                     <Badge
                       className={`${getInspectionPerformanceBadge(
-                        detailData.performanceMetrics.performanceRate
+                        detailData.performanceMetrics.performanceRate,
                       )} font-semibold text-lg px-3 py-1 border`}
                     >
                       {detailData.performanceMetrics.performanceRate}%
@@ -569,7 +573,7 @@ Generated on: ${new Date().toLocaleString()}
                       "Inspections Conducted",
                       displayData?.inspectionActivity?.inspectionsConducted,
                       "inspectionActivity.inspectionsConducted",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -590,7 +594,7 @@ Generated on: ${new Date().toLocaleString()}
                       "Demand Notices Issued",
                       displayData?.inspectionActivity?.demandNoticesIssued,
                       "inspectionActivity.demandNoticesIssued",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -629,7 +633,7 @@ Generated on: ${new Date().toLocaleString()}
                       "Debt Established",
                       displayData?.financialSummary?.debtEstablished,
                       "financialSummary.debtEstablished",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -638,7 +642,7 @@ Generated on: ${new Date().toLocaleString()}
                       </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {formatInspectionCurrency(
-                          detailData.financialSummary.debtEstablished
+                          detailData.financialSummary.debtEstablished,
                         )}
                       </p>
                     </>
@@ -651,7 +655,7 @@ Generated on: ${new Date().toLocaleString()}
                       "Debt Recovered",
                       displayData?.financialSummary?.debtRecovered,
                       "financialSummary.debtRecovered",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -660,7 +664,7 @@ Generated on: ${new Date().toLocaleString()}
                       </p>
                       <p className="text-2xl font-bold text-green-700">
                         {formatInspectionCurrency(
-                          detailData.financialSummary.debtRecovered
+                          detailData.financialSummary.debtRecovered,
                         )}
                       </p>
                       <p className="text-xs text-green-600 mt-1">
@@ -684,7 +688,7 @@ Generated on: ${new Date().toLocaleString()}
                       }`}
                     >
                       {formatInspectionCurrency(
-                        detailData.financialSummary.outstandingDebt
+                        detailData.financialSummary.outstandingDebt,
                       )}
                     </p>
                     {detailData.financialSummary.outstandingDebt < 0 && (
@@ -703,7 +707,7 @@ Generated on: ${new Date().toLocaleString()}
                     </p>
                     <p className="text-xl font-bold text-gray-900">
                       {formatInspectionCurrency(
-                        detailData.financialSummary.averageDebtPerInspection
+                        detailData.financialSummary.averageDebtPerInspection,
                       )}
                     </p>
                   </>
@@ -727,8 +731,8 @@ Generated on: ${new Date().toLocaleString()}
                         detailData.audit.recordStatus === "approved"
                           ? "bg-green-100 text-green-800"
                           : detailData.audit.recordStatus === "reviewed"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-yellow-100 text-yellow-800"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
                       {detailData.audit.recordStatus.toUpperCase()}

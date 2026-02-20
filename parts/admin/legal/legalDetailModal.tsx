@@ -131,6 +131,10 @@ Generated on: ${new Date().toLocaleString()}
     "regional officer",
     "admin",
     "manager",
+    "hse_officer",
+    "hse officer", // API format
+    "actuary_officer",
+    "actuary", // API format
   ];
   const isAllowedRole =
     normalizedRole && allowedEditRoles.includes(normalizedRole);
@@ -253,7 +257,7 @@ Generated on: ${new Date().toLocaleString()}
     value: any,
     field: string,
     type: "text" | "number" = "text",
-    editable: boolean = true
+    editable: boolean = true,
   ) => {
     if (isEditMode && editedData && editable) {
       const fieldValue = field.includes(".")
@@ -495,18 +499,18 @@ Generated on: ${new Date().toLocaleString()}
                         "Recalcitrant Employers",
                         displayData?.metrics?.recalcitrantEmployers,
                         "metrics.recalcitrantEmployers",
-                        "number"
+                        "number",
                       )}
                       {renderField(
                         "Defaulting Employers",
                         displayData?.metrics?.defaultingEmployers,
                         "metrics.defaultingEmployers",
-                        "number"
+                        "number",
                       )}
                       {renderField(
                         "ECS Number",
                         displayData?.metrics?.ecsNumber,
-                        "metrics.ecsNumber"
+                        "metrics.ecsNumber",
                       )}
                     </>
                   ) : (
@@ -554,19 +558,19 @@ Generated on: ${new Date().toLocaleString()}
                         "Plan Issued",
                         displayData?.legalActions?.planIssued,
                         "legalActions.planIssued",
-                        "number"
+                        "number",
                       )}
                       {renderField(
                         "ADR",
                         displayData?.legalActions?.adr,
                         "legalActions.adr",
-                        "number"
+                        "number",
                       )}
                       {renderField(
                         "Cases Instituted",
                         displayData?.legalActions?.casesInstituted,
                         "legalActions.casesInstituted",
-                        "number"
+                        "number",
                       )}
                     </>
                   ) : (

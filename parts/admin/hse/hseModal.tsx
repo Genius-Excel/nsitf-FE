@@ -252,16 +252,20 @@ export const ViewDetailsModal: React.FC<{
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
-      normalizedRole
+      normalizedRole,
     ) &&
     !isApproved; // Disable editing for approved records
 
-  // Check if user can review (Regional Officer and Admin)
+  // Check if user can review (Regional Officer, Admin, HSE Officer, Actuary Officer)
   const canReview =
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer" ||
     normalizedRole === "admin" ||
-    normalizedRole === "manager";
+    normalizedRole === "manager" ||
+    normalizedRole === "hse_officer" ||
+    normalizedRole === "hse officer" ||
+    normalizedRole === "actuary_officer" ||
+    normalizedRole === "actuary";
 
   // Check if user can approve (Admin, HQ, HOD)
   const canApprove =
@@ -324,7 +328,7 @@ export const ViewDetailsModal: React.FC<{
       toast.success(
         confirmAction === "reviewed"
           ? "HSE record marked as reviewed successfully"
-          : "HSE record approved successfully"
+          : "HSE record approved successfully",
       );
 
       setShowConfirmDialog(false);
@@ -349,7 +353,7 @@ export const ViewDetailsModal: React.FC<{
     label: string,
     value: any,
     field: string,
-    type: "text" | "number" | "date" = "text"
+    type: "text" | "number" | "date" = "text",
   ) => {
     if (isEditMode && editedData) {
       const fieldValue = (editedData as any)[field];
@@ -369,7 +373,7 @@ export const ViewDetailsModal: React.FC<{
             onChange={(e) =>
               handleFieldChange(
                 field,
-                type === "number" ? parseFloat(e.target.value) : e.target.value
+                type === "number" ? parseFloat(e.target.value) : e.target.value,
               )
             }
             placeholder={`Enter ${label.toLowerCase()}`}
@@ -420,10 +424,10 @@ export const ViewDetailsModal: React.FC<{
                         displayData.status?.toLowerCase() === "pending"
                           ? "bg-yellow-100 text-yellow-800 border-yellow-300"
                           : displayData.status?.toLowerCase() === "reviewed"
-                          ? "bg-blue-100 text-blue-800 border-blue-300"
-                          : displayData.status?.toLowerCase() === "approved"
-                          ? "bg-green-100 text-green-800 border-green-300"
-                          : "bg-gray-100 text-gray-800 border-gray-300"
+                            ? "bg-blue-100 text-blue-800 border-blue-300"
+                            : displayData.status?.toLowerCase() === "approved"
+                              ? "bg-green-100 text-green-800 border-green-300"
+                              : "bg-gray-100 text-gray-800 border-gray-300"
                       }`}
                     >
                       {displayData.status}
@@ -500,20 +504,20 @@ export const ViewDetailsModal: React.FC<{
                       "Activity Type",
                       displayData.type,
                       "type",
-                      "text"
+                      "text",
                     )}
                     {renderField(
                       "Organization",
                       displayData.organization,
                       "organization",
-                      "text"
+                      "text",
                     )}
                     {renderField("Date", displayData.date, "date", "date")}
                     {renderField(
                       "Status",
                       displayData.status,
                       "status",
-                      "text"
+                      "text",
                     )}
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { TutorialVideoModal } from "@/components/tutorial-video-modal";
+// import { TutorialVideoModal } from "@/components/tutorial-video-modal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +17,8 @@ import { PlayCircle, RefreshCcw, Trash2 } from "lucide-react";
  *
  * This page allows you to test the tutorial video feature without logging in.
  * It simulates a new user login experience.
+ *
+ * NOTE: Tutorial video feature is currently commented out
  */
 export default function TutorialPrototypePage() {
   const [showModal, setShowModal] = useState(false);
@@ -176,13 +178,13 @@ export default function TutorialPrototypePage() {
       </Card>
 
       {/* The Modal Component with Test Props */}
-      {showModal && (
+      {/* {showModal && (
         <TutorialVideoModal
           testVideoUrl={testVideoUrl}
           forceShow={true}
           autoShow={true}
         />
-      )}
+      )} */}
     </div>
   );
 }

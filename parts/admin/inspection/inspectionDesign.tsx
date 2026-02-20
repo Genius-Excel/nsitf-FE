@@ -221,7 +221,11 @@ export const InspectionsTable = React.memo<InspectionsTableProps>(
     const normalizedRole = userRole?.toLowerCase();
     const canReview =
       normalizedRole === "regional_manager" ||
-      normalizedRole === "regional officer";
+      normalizedRole === "regional officer" ||
+      normalizedRole === "hse_officer" ||
+      normalizedRole === "hse officer" ||
+      normalizedRole === "actuary_officer" ||
+      normalizedRole === "actuary";
     const canApprove =
       normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
