@@ -82,9 +82,16 @@ export const ComplianceDetailModal: React.FC<ComplianceDetailModalProps> = ({
   const isApproved = displayData.recordStatus?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
-    ["regional_manager", "regional officer", "admin", "manager"].includes(
-      normalizedRole,
-    ) &&
+    [
+      "regional_manager",
+      "regional officer",
+      "admin",
+      "manager",
+      "hse_officer",
+      "hse officer",
+      "actuary_officer",
+      "actuary",
+    ].includes(normalizedRole) &&
     !isApproved;
   const canReview =
     normalizedRole === "regional_manager" ||

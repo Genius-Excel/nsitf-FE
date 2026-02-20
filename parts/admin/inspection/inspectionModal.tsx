@@ -148,9 +148,16 @@ Generated on: ${new Date().toLocaleString()}
     detailData?.audit?.recordStatus?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
-    ["regional_manager", "regional officer", "admin", "manager"].includes(
-      normalizedRole,
-    ) &&
+    [
+      "regional_manager",
+      "regional officer",
+      "admin",
+      "manager",
+      "hse_officer",
+      "hse officer",
+      "actuary_officer",
+      "actuary",
+    ].includes(normalizedRole) &&
     !isApproved; // Disable editing for approved records
   const canReview =
     normalizedRole === "regional_manager" ||

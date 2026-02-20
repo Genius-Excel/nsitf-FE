@@ -415,9 +415,16 @@ export const ViewDetailsModal: React.FC<{
   const isApproved = activity?.status?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
-    ["admin", "manager", "regional_manager", "regional officer"].includes(
-      normalizedRole,
-    ) &&
+    [
+      "admin",
+      "manager",
+      "regional_manager",
+      "regional officer",
+      "hse_officer",
+      "hse officer",
+      "actuary_officer",
+      "actuary",
+    ].includes(normalizedRole) &&
     !isApproved; // Disable editing for approved records
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
@@ -575,9 +582,16 @@ export const RegionalRecordViewModal: React.FC<{
   const isApproved = displayData?.record_status?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
-    ["regional_manager", "regional officer", "admin", "manager"].includes(
-      normalizedRole,
-    ) &&
+    [
+      "regional_manager",
+      "regional officer",
+      "admin",
+      "manager",
+      "hse_officer",
+      "hse officer",
+      "actuary_officer",
+      "actuary",
+    ].includes(normalizedRole) &&
     !isApproved; // Disable editing for approved records
   const canReview =
     normalizedRole === "regional_manager" ||

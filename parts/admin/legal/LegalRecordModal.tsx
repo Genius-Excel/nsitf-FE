@@ -82,6 +82,10 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
     "regional officer",
     "admin",
     "manager",
+    "hse_officer",
+    "hse officer", // API format
+    "actuary_officer",
+    "actuary", // API format
   ];
   const isAllowedRole =
     normalizedRole && allowedEditRoles.includes(normalizedRole);
@@ -176,14 +180,14 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
     try {
       const success = await updateSingleLegal(
         record.id,
-        confirmAction === "reviewed" ? "reviewed" : "approved"
+        confirmAction === "reviewed" ? "reviewed" : "approved",
       );
 
       if (success) {
         toast.success(
           confirmAction === "reviewed"
             ? "Legal record marked as reviewed successfully"
-            : "Legal record approved successfully"
+            : "Legal record approved successfully",
         );
         setShowConfirmDialog(false);
         setConfirmAction(null);
@@ -201,7 +205,7 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
     label: string,
     value: any,
     field: string,
-    type: "text" | "number" = "text"
+    type: "text" | "number" = "text",
   ) => {
     if (isEditMode && editedData) {
       const fieldValue = field.includes(".")
@@ -223,7 +227,7 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
             onChange={(e) =>
               handleFieldChange(
                 field,
-                type === "number" ? parseFloat(e.target.value) : e.target.value
+                type === "number" ? parseFloat(e.target.value) : e.target.value,
               )
             }
             placeholder={label}
@@ -260,9 +264,9 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
                         displayData.recordStatus.toLowerCase() === "pending"
                           ? "bg-yellow-100 text-yellow-800 border-yellow-300"
                           : displayData.recordStatus.toLowerCase() ===
-                            "reviewed"
-                          ? "bg-blue-100 text-blue-800 border-blue-300"
-                          : "bg-green-100 text-green-800 border-green-300"
+                              "reviewed"
+                            ? "bg-blue-100 text-blue-800 border-blue-300"
+                            : "bg-green-100 text-green-800 border-green-300"
                       }
                     >
                       {displayData.recordStatus}
@@ -341,7 +345,7 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
                       "Recalcitrant Employers",
                       displayData.recalcitrantEmployers,
                       "recalcitrantEmployers",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -360,7 +364,7 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
                       "Defaulting Employers",
                       displayData.defaultingEmployers,
                       "defaultingEmployers",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -388,7 +392,7 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
                       "ECS Number",
                       displayData.ecsNumber,
                       "ecsNumber",
-                      "text"
+                      "text",
                     )
                   ) : (
                     <>
@@ -432,7 +436,7 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
                       "Plan Issued",
                       displayData.planIssued,
                       "planIssued",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -451,7 +455,7 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
                       "Alternate Dispute Resolution",
                       displayData.alternateDisputeResolution,
                       "alternateDisputeResolution",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -479,7 +483,7 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
                       "Cases Instituted in Court",
                       displayData.casesInstitutedInCourt,
                       "casesInstitutedInCourt",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -498,7 +502,7 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
                       "Cases Won",
                       displayData.casesWon,
                       "casesWon",
-                      "number"
+                      "number",
                     )
                   ) : (
                     <>
@@ -530,9 +534,9 @@ export const LegalRecordModal: React.FC<LegalRecordModalProps> = ({
                         displayData.recordStatus.toLowerCase() === "approved"
                           ? "bg-green-100 text-green-800"
                           : displayData.recordStatus.toLowerCase() ===
-                            "reviewed"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-yellow-100 text-yellow-800"
+                              "reviewed"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
                       {displayData.recordStatus.toUpperCase()}

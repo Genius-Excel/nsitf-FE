@@ -251,9 +251,16 @@ export const ViewDetailsModal: React.FC<{
   const isApproved = activity?.status?.toLowerCase() === "approved";
   const canEdit =
     normalizedRole &&
-    ["regional_manager", "regional officer", "admin", "manager"].includes(
-      normalizedRole,
-    ) &&
+    [
+      "regional_manager",
+      "regional officer",
+      "admin",
+      "manager",
+      "hse_officer",
+      "hse officer",
+      "actuary_officer",
+      "actuary",
+    ].includes(normalizedRole) &&
     !isApproved; // Disable editing for approved records
 
   // Check if user can review (Regional Officer, Admin, HSE Officer, Actuary Officer)
