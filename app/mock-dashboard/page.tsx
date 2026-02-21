@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-// import { TutorialVideoModal } from "@/components/tutorial-video-modal";
+import { TutorialVideoModal } from "@/components/tutorial-video-modal";
 import Image from "next/image";
 import {
   Card,
@@ -75,7 +75,7 @@ export default function MockDashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Tutorial Video Modal - Auto-shows for new users */}
-      {/* <TutorialVideoModal /> */}
+      <TutorialVideoModal />
 
       {/* Header */}
       <header className="border-b bg-card">

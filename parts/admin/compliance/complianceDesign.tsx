@@ -278,7 +278,7 @@ export const ComplianceTable: React.FC<{
   onRefresh?: () => void;
 }> = ({ entries, onViewDetails, sortConfig, onSort, onRefresh }) => {
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [userRole, setUserRole] = useState<UserRole | null>(null);
 
@@ -296,7 +296,7 @@ export const ComplianceTable: React.FC<{
     // Validate selected records still exist after data refresh
     const currentEntryIds = new Set(entries.map((e) => e.id));
     const validSelected = Array.from(selectedRecords).filter((id) =>
-      currentEntryIds.has(id)
+      currentEntryIds.has(id),
     );
     if (validSelected.length !== selectedRecords.size) {
       setSelectedRecords(new Set(validSelected));
@@ -308,7 +308,11 @@ export const ComplianceTable: React.FC<{
   const canReview =
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer" ||
-    normalizedRole === "admin";
+    normalizedRole === "admin" ||
+    normalizedRole === "hse_officer" ||
+    normalizedRole === "hse officer" ||
+    normalizedRole === "actuary_officer" ||
+    normalizedRole === "actuary";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
@@ -725,7 +729,7 @@ export const ComplianceTable: React.FC<{
                   <td className="px-3 sm:px-4 py-3 text-sm text-right">
                     <span
                       className={`font-semibold ${getAchievementTextColor(
-                        entry.achievement
+                        entry.achievement,
                       )}`}
                     >
                       {entry.achievement.toFixed(1)}%
@@ -752,8 +756,8 @@ export const ComplianceTable: React.FC<{
                         entry.recordStatus?.toLowerCase() === "approved"
                           ? "bg-green-100 text-green-800"
                           : entry.recordStatus?.toLowerCase() === "reviewed"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-yellow-100 text-yellow-800"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
                       {entry.recordStatus || "Pending"}
@@ -1068,7 +1072,7 @@ export const ComplianceUploadModal: React.FC<{
     if (isRegionalOfficer && userRegionId) {
       console.log(
         "🔍 [ComplianceUploadModal] Auto-selecting region for regional officer:",
-        userRegionId
+        userRegionId,
       );
       setSelectedRegionId(userRegionId);
     }
@@ -1079,7 +1083,7 @@ export const ComplianceUploadModal: React.FC<{
     if (selectedRegionId) {
       console.log(
         "🔍 [ComplianceUploadModal] Fetching branches for region:",
-        selectedRegionId
+        selectedRegionId,
       );
       fetchBranches(selectedRegionId);
     } else {
@@ -1427,7 +1431,7 @@ export const ComplianceUploadModal: React.FC<{
                           {summary.rows_with_errors} errors
                         </span>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               </div>

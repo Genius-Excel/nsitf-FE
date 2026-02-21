@@ -143,14 +143,18 @@ export const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
   const canEdit =
     normalizedRole &&
     ["regional_manager", "regional officer", "admin", "manager"].includes(
-      normalizedRole
+      normalizedRole,
     ) &&
     !isApproved; // Disable editing for approved records
   const canReview =
     normalizedRole === "regional_manager" ||
     normalizedRole === "regional officer" ||
     normalizedRole === "admin" ||
-    normalizedRole === "manager";
+    normalizedRole === "manager" ||
+    normalizedRole === "hse_officer" ||
+    normalizedRole === "hse officer" ||
+    normalizedRole === "actuary_officer" ||
+    normalizedRole === "actuary";
   const canApprove =
     normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
@@ -214,7 +218,7 @@ export const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
 
   const handleFieldChange = (
     field: keyof InvestmentRecord,
-    value: number | string
+    value: number | string,
   ) => {
     setEditedData((prev) => ({
       ...prev,
@@ -242,7 +246,7 @@ export const InvestmentDetailModal: React.FC<InvestmentDetailModalProps> = ({
         toast.success(
           `Investment record ${
             confirmAction === "reviewed" ? "reviewed" : "approved"
-          } successfully`
+          } successfully`,
         );
         setShowConfirmDialog(false);
         setConfirmAction(null);
@@ -271,10 +275,10 @@ CONTRIBUTION COLLECTIONS
 ========================
 Private Sector: ${formatCurrency(investment.contributionsPrivateSector)}
 Public Treasury Funded: ${formatCurrency(
-      investment.contributionsPublicTreasury
+      investment.contributionsPublicTreasury,
     )}
 Public Non-Treasury: ${formatCurrency(
-      investment.contributionsPublicNonTreasury
+      investment.contributionsPublicNonTreasury,
     )}
 Informal Economy: ${formatCurrency(investment.contributionsInformalEconomy)}
 
@@ -295,7 +299,7 @@ ${formatCurrency(
     investment.rentalFees +
     (investment.ecsRegistrationFees || 0) +
     (investment.ecsCertificateFees || 0) +
-    investment.debtRecovered
+    investment.debtRecovered,
 )}
 
 Status: ${investment.recordStatus || "Pending"}
@@ -308,7 +312,7 @@ Generated on: ${new Date().toLocaleString()}
     a.href = url;
     a.download = `investment-${(investment.branch || "record").replace(
       /\s+/g,
-      "-"
+      "-",
     )}-${investment.period}.txt`;
     document.body.appendChild(a);
     a.click();
@@ -457,7 +461,7 @@ Generated on: ${new Date().toLocaleString()}
                       onChange={(e) =>
                         handleFieldChange(
                           "contributionsPrivateSector",
-                          parseFloat(e.target.value) || 0
+                          parseFloat(e.target.value) || 0,
                         )
                       }
                       className="h-8"
@@ -467,7 +471,7 @@ Generated on: ${new Date().toLocaleString()}
                   ) : (
                     <p className="text-sm font-medium text-gray-900">
                       {formatCurrency(
-                        investment?.contributionsPrivateSector || 0
+                        investment?.contributionsPrivateSector || 0,
                       )}
                     </p>
                   )}
@@ -487,7 +491,7 @@ Generated on: ${new Date().toLocaleString()}
                       onChange={(e) =>
                         handleFieldChange(
                           "contributionsPublicTreasury",
-                          parseFloat(e.target.value) || 0
+                          parseFloat(e.target.value) || 0,
                         )
                       }
                       className="h-8"
@@ -497,7 +501,7 @@ Generated on: ${new Date().toLocaleString()}
                   ) : (
                     <p className="text-sm font-medium text-gray-900">
                       {formatCurrency(
-                        investment?.contributionsPublicTreasury || 0
+                        investment?.contributionsPublicTreasury || 0,
                       )}
                     </p>
                   )}
@@ -517,7 +521,7 @@ Generated on: ${new Date().toLocaleString()}
                       onChange={(e) =>
                         handleFieldChange(
                           "contributionsPublicNonTreasury",
-                          parseFloat(e.target.value) || 0
+                          parseFloat(e.target.value) || 0,
                         )
                       }
                       className="h-8"
@@ -527,7 +531,7 @@ Generated on: ${new Date().toLocaleString()}
                   ) : (
                     <p className="text-sm font-medium text-gray-900">
                       {formatCurrency(
-                        investment?.contributionsPublicNonTreasury || 0
+                        investment?.contributionsPublicNonTreasury || 0,
                       )}
                     </p>
                   )}
@@ -545,7 +549,7 @@ Generated on: ${new Date().toLocaleString()}
                       onChange={(e) =>
                         handleFieldChange(
                           "contributionsInformalEconomy",
-                          parseFloat(e.target.value) || 0
+                          parseFloat(e.target.value) || 0,
                         )
                       }
                       className="h-8"
@@ -555,7 +559,7 @@ Generated on: ${new Date().toLocaleString()}
                   ) : (
                     <p className="text-sm font-medium text-gray-900">
                       {formatCurrency(
-                        investment?.contributionsInformalEconomy || 0
+                        investment?.contributionsInformalEconomy || 0,
                       )}
                     </p>
                   )}
@@ -581,7 +585,7 @@ Generated on: ${new Date().toLocaleString()}
                       onChange={(e) =>
                         handleFieldChange(
                           "rentalFees",
-                          parseFloat(e.target.value) || 0
+                          parseFloat(e.target.value) || 0,
                         )
                       }
                       className="h-8"
@@ -609,7 +613,7 @@ Generated on: ${new Date().toLocaleString()}
                       onChange={(e) =>
                         handleFieldChange(
                           "ecsRegistrationFees",
-                          parseFloat(e.target.value) || 0
+                          parseFloat(e.target.value) || 0,
                         )
                       }
                       className="h-8"
@@ -637,7 +641,7 @@ Generated on: ${new Date().toLocaleString()}
                       onChange={(e) =>
                         handleFieldChange(
                           "ecsCertificateFees",
-                          parseFloat(e.target.value) || 0
+                          parseFloat(e.target.value) || 0,
                         )
                       }
                       className="h-8"
@@ -663,7 +667,7 @@ Generated on: ${new Date().toLocaleString()}
                       onChange={(e) =>
                         handleFieldChange(
                           "debtRecovered",
-                          parseFloat(e.target.value) || 0
+                          parseFloat(e.target.value) || 0,
                         )
                       }
                       className="h-8"
@@ -689,7 +693,7 @@ Generated on: ${new Date().toLocaleString()}
                   </p>
                   <Badge
                     className={`mt-1 ${getStatusBadgeColor(
-                      investment?.recordStatus || "pending"
+                      investment?.recordStatus || "pending",
                     )}`}
                   >
                     {investment?.recordStatus?.toUpperCase() || "PENDING"}
@@ -729,7 +733,7 @@ Generated on: ${new Date().toLocaleString()}
                     (editedData.ecsCertificateFees ??
                       (investment?.ecsCertificateFees || 0)) +
                     (editedData.debtRecovered ??
-                      (investment?.debtRecovered || 0))
+                      (investment?.debtRecovered || 0)),
                 )}
               </p>
             </div>
