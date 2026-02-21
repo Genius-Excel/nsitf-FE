@@ -3,7 +3,8 @@
 import type React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Building2 } from "lucide-react";
+import Image from "next/image";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -70,9 +71,13 @@ export default function BranchLayout({
           <div className="flex justify-between items-center h-16">
             {/* Logo and Title */}
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-600 text-white rounded-lg flex items-center justify-center">
-                <Building2 className="w-6 h-6" />
-              </div>
+              <Image
+                src="/nsitf-logo.png"
+                alt="NSITF Logo"
+                width={40}
+                height={40}
+                className="rounded-lg"
+              />
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">
                   NSITF Branch Reporting Portal
@@ -87,10 +92,11 @@ export default function BranchLayout({
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">
-                  {user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim()}
+                  {user.name ||
+                    `${user.first_name || ""} ${user.last_name || ""}`.trim()}
                 </p>
                 <p className="text-xs text-gray-500 capitalize">
-                  {user.role.replace('_', ' ')}
+                  {user.role.replace("_", " ")}
                 </p>
               </div>
               <Button
@@ -129,10 +135,7 @@ export default function BranchLayout({
             >
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleLogout}
-            >
+            <Button variant="destructive" onClick={handleLogout}>
               Logout
             </Button>
           </DialogFooter>
