@@ -56,7 +56,7 @@ export const ClaimsProcessingChart = React.memo<ClaimsProcessingChartProps>(
   ({ data, maxValue, ticks }) => {
     // Determine the maximum value across all data points
     const maxDataValue = Math.max(
-      ...data.map((d) => Math.max(d.processed || 0, d.target || 0))
+      ...data.map((d) => Math.max(d.processed || 0, d.target || 0)),
     );
 
     // Format function for Y-axis based on value range
@@ -133,7 +133,7 @@ export const ClaimsProcessingChart = React.memo<ClaimsProcessingChartProps>(
         </div>
       </div>
     );
-  }
+  },
 );
 
 interface ClaimTypeCardsProps {
@@ -157,7 +157,7 @@ export const ClaimTypeCards = React.memo<ClaimTypeCardsProps>(
         </div>
       ))}
     </div>
-  )
+  ),
 );
 
 interface SearchAndFiltersProps {
@@ -187,7 +187,7 @@ export const SearchAndFilters = React.memo<SearchAndFiltersProps>(
       uploadButtonColor="green"
       showFilter={false}
     />
-  )
+  ),
 );
 
 interface ClaimsTableProps {
@@ -199,7 +199,7 @@ interface ClaimsTableProps {
 export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
   ({ claims, onView, onRefresh }) => {
     const [selectedClaims, setSelectedClaims] = useState<Set<string>>(
-      new Set()
+      new Set(),
     );
     const [userRole, setUserRole] = useState<UserRole | null>(null);
 
@@ -216,7 +216,11 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
     const normalizedRole = userRole?.toLowerCase();
     const canReview =
       normalizedRole === "regional_manager" ||
-      normalizedRole === "regional officer";
+      normalizedRole === "regional officer" ||
+      normalizedRole === "hse_officer" ||
+      normalizedRole === "hse officer" ||
+      normalizedRole === "actuary_officer" ||
+      normalizedRole === "actuary";
     const canApprove =
       normalizedRole && ["admin", "manager"].includes(normalizedRole);
 
@@ -427,7 +431,7 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
               {claims.map((claim) => {
                 const difference = calculateDifference(
                   claim.amountRequested,
-                  claim.amountPaid
+                  claim.amountPaid,
                 );
 
                 return (
@@ -479,7 +483,7 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                     <td className="px-1 py-1 text-center text-[11px] whitespace-nowrap">
                       <Badge
                         className={`${getStatusBadgeColor(
-                          claim.status
+                          claim.status,
                         )} font-medium text-[10px]`}
                       >
                         {claim.status}
@@ -513,8 +517,8 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
                           claim.record_status === "approved"
                             ? "bg-green-100 text-green-800 border-green-200"
                             : claim.record_status === "reviewed"
-                            ? "bg-blue-100 text-blue-800 border-blue-200"
-                            : "bg-yellow-100 text-yellow-800 border-yellow-200"
+                              ? "bg-blue-100 text-blue-800 border-blue-200"
+                              : "bg-yellow-100 text-yellow-800 border-yellow-200"
                         } font-medium text-[10px] capitalize`}
                       >
                         {claim.record_status || "pending"}
@@ -545,5 +549,5 @@ export const ClaimsTable: React.FC<ClaimsTableProps> = React.memo(
         </div>
       </div>
     );
-  }
+  },
 );

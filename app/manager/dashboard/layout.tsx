@@ -8,6 +8,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { DashboardNavbarUser } from "@/components/dashboard-navbar-user";
 import { cn } from "@/lib/utils";
+import { TutorialVideoModal } from "@/components/tutorial-video-modal";
 
 export default function DashboardLayout({
   children,
@@ -28,10 +29,12 @@ export default function DashboardLayout({
           isCollapsed={isSidebarCollapsed}
           setIsCollapsed={setIsSidebarCollapsed}
         />
-        <div className={cn(
-          "flex flex-col flex-1 transition-all duration-300",
-          isSidebarCollapsed ? "ml-16" : "ml-64"
-        )}>
+        <div
+          className={cn(
+            "flex flex-col flex-1 transition-all duration-300",
+            isSidebarCollapsed ? "ml-16" : "ml-64",
+          )}
+        >
           <header className="flex h-14 items-center justify-between gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 py-2 z-20">
             <div className="flex items-center gap-4">
               <Button
@@ -56,6 +59,7 @@ export default function DashboardLayout({
             <DashboardNavbarUser />
           </header>
           <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-gray-50">
+            <TutorialVideoModal />
             {children}
           </main>
         </div>

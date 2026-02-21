@@ -34,7 +34,7 @@ export default function MockLoginPage() {
   const [showTestAccounts, setShowTestAccounts] = useState(false);
 
   // Test video URL (starts at 11 seconds) - COMMENTED OUT
-  // const testVideoUrl = "https://www.youtube.com/watch?v=4n4rBrs5-LY";
+  const testVideoUrl = "https://www.youtube.com/watch?v=4n4rBrs5-LY";
 
   // Test accounts for different roles
   const testAccounts = {
@@ -133,7 +133,7 @@ export default function MockLoginPage() {
         first_name: account.displayName.split(" ")[0],
         last_name: account.displayName.split(" ")[1] || "User",
         role: account.role,
-        // tutorial_video: testVideoUrl,  // COMMENTED OUT
+        tutorial_video: testVideoUrl,
         is_active: true,
         email_verified: true,
       };

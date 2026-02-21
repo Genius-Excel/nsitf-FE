@@ -1,120 +1,49 @@
-import { useState, useEffect } from "react";
-import { User } from "@/lib/auth";
-
-const TUTORIAL_DISMISSED_PREFIX = "tutorial_dismissed_";
+import { useState } from "react";
+import { useGetTutorialVideo, useDismissTutorial } from "@/services/tutorial";
 
 /**
- * Custom hook to manage tutorial video display
- * Handles checking if tutorial should show and managing dismissal state
+ * Manages tutorial video display logic.
+ *
+ * - Calls GET /api/tutorial on every mount (no cache).
+ * - The backend's `show_tutorial` flag is the single source of truth — derived
+ *   directly so there is no timing gap from useEffect + state.
+ * - `dismissed` state lets the user hide the modal instantly before the next
+ *   API call confirms the dismissal.
  */
 export function useTutorial() {
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [shouldShowTutorial, setShouldShowTutorial] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState(false);
 
-  useEffect(() => {
-    // Get user data from localStorage
-    const getUserData = (): User | null => {
-      if (typeof window === "undefined") return null;
+  const { tutorialData, tutorialIsLoading, tutorialError } =
+    useGetTutorialVideo();
 
-      try {
-        const userStr = localStorage.getItem("user");
-        if (!userStr) return null;
-        return JSON.parse(userStr) as User;
-      } catch (error) {
-        console.error("[useTutorial] Failed to parse user data:", error);
-        return null;
-      }
-    };
+  const { dismissTutorial: callDismissAPI, dismissIsLoading } =
+    useDismissTutorial(() => {});
 
-    // Check if tutorial has been dismissed for this user
-    const isTutorialDismissed = (userId: string): boolean => {
-      if (typeof window === "undefined") return true;
+  // Derive directly from API data — no intermediate state, no timing gap.
+  // Handle both nested { data: { video_url } } and flat { video_url } shapes.
+  const videoUrl =
+    tutorialData?.data?.video_url || tutorialData?.video_url || null;
 
-      try {
-        const dismissedFlag = localStorage.getItem(
-          `${TUTORIAL_DISMISSED_PREFIX}${userId}`,
-        );
-        return dismissedFlag === "true";
-      } catch (error) {
-        console.error("[useTutorial] Failed to check dismissal status:", error);
-        return false;
-      }
-    };
+  const videoTitle = tutorialData?.data?.title || tutorialData?.title || null;
 
-    const initializeTutorial = () => {
-      const user = getUserData();
+  const shouldShowTutorial =
+    !tutorialIsLoading &&
+    !dismissed &&
+    tutorialData?.show_tutorial === true &&
+    !!videoUrl;
 
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
-      // Get user ID (handle different possible field names)
-      const userIdentifier = user.user_id || user.id || user.email;
-      setUserId(userIdentifier || null);
-
-      // Get video URL from user data
-      const tutorialVideo = (user as any).tutorial_video;
-
-      if (tutorialVideo) {
-        setVideoUrl(tutorialVideo);
-
-        // Check if already dismissed
-        if (userIdentifier) {
-          const dismissed = isTutorialDismissed(userIdentifier);
-          setShouldShowTutorial(!dismissed);
-        } else {
-          // If no user ID, show tutorial anyway
-          setShouldShowTutorial(true);
-        }
-      } else {
-        // No tutorial video for this user/role
-        setShouldShowTutorial(false);
-      }
-
-      setIsLoading(false);
-    };
-
-    initializeTutorial();
-  }, []);
-
-  /**
-   * Mark tutorial as dismissed for current user
-   */
   const dismissTutorial = () => {
-    if (!userId || typeof window === "undefined") return;
-
-    try {
-      localStorage.setItem(`${TUTORIAL_DISMISSED_PREFIX}${userId}`, "true");
-      setShouldShowTutorial(false);
-      console.log("[useTutorial] Tutorial dismissed for user:", userId);
-    } catch (error) {
-      console.error("[useTutorial] Failed to dismiss tutorial:", error);
-    }
-  };
-
-  /**
-   * Reset tutorial dismissal (for testing or if user wants to see again)
-   */
-  const resetTutorial = () => {
-    if (!userId || typeof window === "undefined") return;
-
-    try {
-      localStorage.removeItem(`${TUTORIAL_DISMISSED_PREFIX}${userId}`);
-      setShouldShowTutorial(true);
-      console.log("[useTutorial] Tutorial reset for user:", userId);
-    } catch (error) {
-      console.error("[useTutorial] Failed to reset tutorial:", error);
-    }
+    setDismissed(true); // instant hide — no re-show until next page load
+    callDismissAPI(); // persist on backend
   };
 
   return {
     videoUrl,
+    videoTitle,
     shouldShowTutorial,
     dismissTutorial,
-    resetTutorial,
-    isLoading,
+    isLoading: tutorialIsLoading,
+    isDismissing: dismissIsLoading,
+    error: tutorialError,
   };
 }

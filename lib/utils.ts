@@ -79,10 +79,15 @@ export function getLocalStorageItem(key: string) {
 export function getAccessToken() {
   if (typeof window !== "undefined") {
     try {
+      // Login stores the token as a standalone key
+      const standalone = localStorage.getItem("access_token");
+      if (standalone) return standalone;
+
+      // Fallback: check inside user object
       const userData = localStorage.getItem("user");
       if (userData) {
         const parsedData = JSON.parse(userData);
-        return parsedData["access-token"] || null;
+        return parsedData["access-token"] || parsedData["access_token"] || null;
       }
       return null;
     } catch (error) {
