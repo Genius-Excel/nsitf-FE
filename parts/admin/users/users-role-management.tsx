@@ -5,7 +5,7 @@ import {
   Plus,
   Shield,
   ChevronDown,
-  GitBranch,
+  Building2,
   MapPin,
   UserPlus,
 } from "lucide-react";
@@ -41,6 +41,7 @@ import {
 } from "@/hooks/compliance";
 import { AddRegionModal } from "@/parts/admin/compliance/complianceAddRegionModal";
 import { ManageBranchesModal } from "@/parts/admin/compliance/complianceManageBranchesModal";
+import { toast } from "sonner";
 
 /**
  * REFACTORED Users & Roles Management
@@ -128,8 +129,7 @@ export default function UsersRolesManagement() {
     // Validate form
     const { isValid, errors } = validate();
     if (!isValid) {
-      // Show first error (toast already shown by mutation hook)
-      console.error("Validation errors:", errors);
+      errors.forEach((err) => toast.error(err));
       return;
     }
 
@@ -254,7 +254,7 @@ export default function UsersRolesManagement() {
                   onClick={() => branchModal.open()}
                   className="cursor-pointer"
                 >
-                  <GitBranch className="w-4 h-4 mr-2 text-green-600" />
+                  <Building2 className="w-4 h-4 mr-2 text-green-600" />
                   Manage Branch
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
