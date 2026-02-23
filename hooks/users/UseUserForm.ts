@@ -130,6 +130,10 @@ export const useUserForm = () => {
       errors.push("Email is required");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.push("Invalid email format");
+    } else if (!formData.email.toLowerCase().endsWith("@nsitf.gov.ng")) {
+      errors.push(
+        "Only official NSITF email addresses (@nsitf.gov.ng) are allowed",
+      );
     }
 
     if (!formData.role) {
