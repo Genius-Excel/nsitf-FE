@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Search, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +32,6 @@ import { formatDate, getRoleBadgeColor, getRoleDisplayName } from "@/lib/utils";
 import { NewUserForm, User } from "@/lib/types";
 import { useRegions } from "@/hooks/compliance/Useregions";
 import { useBranches, useRoles, type Role } from "@/hooks/users";
-import { toast } from "sonner";
 
 export const UsersTable: React.FC<{
   users: User[];
@@ -211,13 +210,7 @@ export const UserFormModal: React.FC<{
   const { data: roles, loading: rolesLoading, error: rolesError } = useRoles();
 
   // Fetch branches when region is selected
-  const {
-    data: branches,
-    loading: branchesLoading,
-    fetchBranches,
-    clearBranches,
-  } = useBranches();
-  const wasBranchesLoadingRef = useRef(false);
+  const { data: branches, fetchBranches, clearBranches } = useBranches();
 
   // Fetch branches when region changes
   useEffect(() => {
@@ -227,28 +220,6 @@ export const UserFormModal: React.FC<{
       clearBranches();
     }
   }, [formData.region_id, fetchBranches, clearBranches]);
-
-  // Toast when selected region has no branches
-  useEffect(() => {
-    if (wasBranchesLoadingRef.current && !branchesLoading) {
-      if (
-        Array.isArray(branches) &&
-        branches.length === 0 &&
-        formData.region_id &&
-        formData.organizational_level === "branch"
-      ) {
-        toast.warning(
-          "The selected region has no branches configured. Please contact your administrator.",
-        );
-      }
-    }
-    wasBranchesLoadingRef.current = branchesLoading;
-  }, [
-    branchesLoading,
-    branches,
-    formData.region_id,
-    formData.organizational_level,
-  ]);
 
   // Clear region and branch when organizational level changes
   const handleOrgLevelChange = (value: string) => {
@@ -473,21 +444,10 @@ export const UserFormModal: React.FC<{
                   </SelectContent>
                 </Select>
               ) : (
-                <>
-                  <Input
-                    placeholder="Enter branch ID"
-                    value={formData.branch_id}
-                    onChange={(e) =>
-                      onFormChange({ ...formData, branch_id: e.target.value })
-                    }
-                    className="mt-1 border-gray-200 text-sm"
-                    disabled={isSaving}
-                  />
-                  <p className="text-xs text-amber-600 mt-1">
-                    ⚠️ This region does not have any branches configured. Please
-                    contact your administrator.
-                  </p>
-                </>
+                <p className="mt-1 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                  This region does not have a branch. Please create a branch for
+                  this region.
+                </p>
               )}
             </div>
           )}
