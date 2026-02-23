@@ -1,9 +1,23 @@
 "use client";
 
 import React from "react";
-import { Plus, Shield } from "lucide-react";
+import {
+  Plus,
+  Shield,
+  ChevronDown,
+  GitBranch,
+  MapPin,
+  UserPlus,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   DeleteConfirmationDialog,
   RolePermissionsOverview,
@@ -19,6 +33,14 @@ import {
   useDeleteDialog,
   useRoles,
 } from "@/hooks/users";
+import {
+  useRegions,
+  useRegionMutations,
+  useBranchMutations,
+  useModalState,
+} from "@/hooks/compliance";
+import { AddRegionModal } from "@/parts/admin/compliance/complianceAddRegionModal";
+import { ManageBranchesModal } from "@/parts/admin/compliance/complianceManageBranchesModal";
 
 /**
  * REFACTORED Users & Roles Management
@@ -143,6 +165,51 @@ export default function UsersRolesManagement() {
     router.push("/admin/dashboard/permissions");
   };
 
+  // ============== REGIONS & BRANCHES ==============
+  const { data: regions, refetch: refetchRegions } = useRegions();
+
+  const { createRegion, deleteRegion } = useRegionMutations({
+    onSuccess: () => refetchRegions(),
+  });
+
+  const { createBranch, deleteBranch } = useBranchMutations({
+    onSuccess: () => refetchRegions(),
+  });
+
+  const regionModal = useModalState(false);
+  const branchModal = useModalState(false);
+
+  const handleAddRegion = async (name: string) => {
+    try {
+      await createRegion({ name });
+    } catch (_) {}
+  };
+
+  const handleDeleteRegion = async (name: string) => {
+    const region = regions?.find((r: any) => r.name === name);
+    if (region) {
+      try {
+        await deleteRegion(region.id, region.name);
+      } catch (_) {}
+    }
+  };
+
+  const handleAddBranch = async (
+    name: string,
+    regionId: string,
+    code?: string,
+  ) => {
+    try {
+      await createBranch({ name, region_id: regionId, code });
+    } catch (_) {}
+  };
+
+  const handleDeleteBranch = async (branchId: string, branchName: string) => {
+    try {
+      await deleteBranch(branchId, branchName);
+    } catch (_) {}
+  };
+
   // ============== RENDER ==============
 
   return (
@@ -158,24 +225,48 @@ export default function UsersRolesManagement() {
               Manage staff accounts and role assignments
             </p>
           </div>
-          <div className="flex gap-3">
-            <Button
-              onClick={handleManagePermissions}
-              variant="outline"
-              className="border-green-600 text-green-600 hover:bg-green-50 text-sm font-medium transition-colors duration-200"
-              aria-label="Manage permissions"
-            >
-              <Shield className="w-4 h-4 mr-2" />
-              Manage Permissions
-            </Button>
-            <Button
-              onClick={openForCreate}
-              className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors duration-200"
-              aria-label="Add new user"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add New User
-            </Button>
+          <div className="flex gap-3 flex-wrap">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors duration-200">
+                  Management
+                  <ChevronDown className="w-4 h-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem
+                  onClick={openForCreate}
+                  className="cursor-pointer"
+                >
+                  <UserPlus className="w-4 h-4 mr-2 text-green-600" />
+                  Add New User
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleManagePermissions}
+                  className="cursor-pointer"
+                >
+                  <Shield className="w-4 h-4 mr-2 text-green-600" />
+                  Manage Permissions
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => branchModal.open()}
+                  className="cursor-pointer"
+                >
+                  <GitBranch className="w-4 h-4 mr-2 text-green-600" />
+                  Manage Branch
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => regionModal.open()}
+                  className="cursor-pointer"
+                >
+                  <MapPin className="w-4 h-4 mr-2 text-green-600" />
+                  Manage Region
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -296,6 +387,28 @@ export default function UsersRolesManagement() {
           onConfirm={handleConfirmDelete}
           userName={deleteUserName}
           isDeleting={isDeleting}
+        />
+
+        {/* Manage Region Modal */}
+        <AddRegionModal
+          isOpen={regionModal.isOpen}
+          onClose={regionModal.close}
+          onAddEntry={() => {}}
+          regions={regions || []}
+          regionNames={(regions || []).map((r: any) => r.name)}
+          onAddRegion={handleAddRegion}
+          onDeleteRegion={handleDeleteRegion}
+          onAddBranch={handleAddBranch}
+          onDeleteBranch={handleDeleteBranch}
+        />
+
+        {/* Manage Branch Modal */}
+        <ManageBranchesModal
+          isOpen={branchModal.isOpen}
+          onClose={branchModal.close}
+          regions={regions || []}
+          onAddBranch={handleAddBranch}
+          onDeleteBranch={handleDeleteBranch}
         />
       </div>
     </div>
