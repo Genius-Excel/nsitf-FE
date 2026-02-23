@@ -50,7 +50,7 @@ const mapToComplianceEntry = (summary: RegionalSummary): ComplianceEntry => ({
   certificateFees: summary.certificate_fees,
   period: summary.period,
   recordStatus: (["pending", "reviewed", "approved"].includes(
-    summary.record_status as string
+    summary.record_status as string,
   )
     ? summary.record_status
     : undefined) as "pending" | "reviewed" | "approved" | undefined,
@@ -85,7 +85,7 @@ const ComplianceDashboard: React.FC = () => {
           (p) =>
             p === "can_upload_compliance" ||
             p === "can_create_compliance_record" ||
-            p === "can_edit_compliance_record"
+            p === "can_edit_compliance_record",
         );
         setCanManage(hasBackendPermission);
       } else {
@@ -96,7 +96,7 @@ const ComplianceDashboard: React.FC = () => {
       // Only admin and manager can manage regions
       const normalizedRole = user.role?.toLowerCase();
       setCanManageRegion(
-        normalizedRole === "admin" || normalizedRole === "manager"
+        normalizedRole === "admin" || normalizedRole === "manager",
       );
 
       // Admin, manager, regional_manager, and regional_officer can manage branches
@@ -104,7 +104,7 @@ const ComplianceDashboard: React.FC = () => {
         normalizedRole === "admin" ||
           normalizedRole === "manager" ||
           normalizedRole === "regional_manager" ||
-          normalizedRole === "regional_officer"
+          normalizedRole === "regional_officer",
       );
     }
   }, []);
@@ -193,7 +193,7 @@ const ComplianceDashboard: React.FC = () => {
       branch_id: apiParams.branch_id || undefined,
       record_status: apiParams.record_status || undefined,
     }),
-    [apiParams]
+    [apiParams],
   );
 
   // ============== DATA FETCHING ==============
@@ -245,7 +245,7 @@ const ComplianceDashboard: React.FC = () => {
     return regionalSummary.filter(
       (entry: any) =>
         entry.region?.toLowerCase().includes(searchLower) ||
-        entry.branch?.toLowerCase().includes(searchLower)
+        entry.branch?.toLowerCase().includes(searchLower),
     );
   }, [regionalSummary, searchTerm]);
 
@@ -257,7 +257,7 @@ const ComplianceDashboard: React.FC = () => {
 
   // Map filtered summary to ComplianceEntry format
   const mappedEntries: ComplianceEntry[] = (filteredSummary || []).map(
-    mapToComplianceEntry
+    mapToComplianceEntry,
   );
 
   const totalCount = regionalSummary.length;
@@ -313,7 +313,7 @@ const ComplianceDashboard: React.FC = () => {
 
         if (hasChanged) {
           console.log(
-            "📊 [Compliance] Auto-updating selectedEntry with fresh data"
+            "📊 [Compliance] Auto-updating selectedEntry with fresh data",
           );
           setSelectedEntry(updatedEntry);
         }
@@ -363,7 +363,7 @@ const ComplianceDashboard: React.FC = () => {
   const handleAddBranch = async (
     name: string,
     regionId: string,
-    code?: string
+    code?: string,
   ) => {
     if (!canManage) {
       toast.error("You don't have permission to create branches");
@@ -432,12 +432,12 @@ const ComplianceDashboard: React.FC = () => {
 
       console.log(
         "🔄 [ComplianceFunc] Fresh summary length:",
-        freshSummary.length
+        freshSummary.length,
       );
 
       // Map the fresh entry similar to how mappedEntries works
       const updatedEntry = freshSummary.find(
-        (item: any) => item.id === selectedEntry.id
+        (item: any) => item.id === selectedEntry.id,
       );
 
       console.log("🔄 [ComplianceFunc] Found updated entry:", updatedEntry);
@@ -447,17 +447,17 @@ const ComplianceDashboard: React.FC = () => {
         const mapped = mapToComplianceEntry(updatedEntry);
         console.log("🔄 [ComplianceFunc] Mapped entry:", mapped);
         console.log(
-          "🔄 [ComplianceFunc] Setting selectedEntry to updated value"
+          "🔄 [ComplianceFunc] Setting selectedEntry to updated value",
         );
         setSelectedEntry(mapped);
       } else {
         console.warn(
-          "⚠️ [ComplianceFunc] Could not find updated entry in fresh data"
+          "⚠️ [ComplianceFunc] Could not find updated entry in fresh data",
         );
       }
     } else {
       console.warn(
-        "⚠️ [ComplianceFunc] Missing selectedEntry.id or result.data"
+        "⚠️ [ComplianceFunc] Missing selectedEntry.id or result.data",
       );
     }
   };
@@ -570,31 +570,6 @@ const ComplianceDashboard: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-2 sm:gap-3">
-          {/* Only admin and manager can manage regions */}
-          {canManageRegion && (
-            <Button
-              onClick={handleCreateRegionClick}
-              className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
-            >
-              <Plus size={18} />
-              <span>Manage Region</span>
-            </Button>
-          )}
-          {/* Admin, manager, and regional users can manage branches */}
-          {canManageBranches && (
-            <Button
-              onClick={() => branchModal.open()}
-              variant="outline"
-              className="flex-1 sm:flex-none border-green-600 text-green-600 hover:bg-green-50"
-            >
-              <Plus size={18} />
-              <span>Manage Branches</span>
-            </Button>
-          )}
         </div>
       </div>
 
